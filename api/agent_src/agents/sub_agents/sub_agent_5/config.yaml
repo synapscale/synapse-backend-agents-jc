@@ -1,0 +1,22 @@
+# Configuration for Sub-agent 5 Orchestrator (src/agents/sub_agents/sub_agent_5/agent.py)
+# This file defines high-level settings for sub-agent 5.
+
+agent_name: "SubAgent5_Specialist"
+agent_id: "sub_agent_5"
+
+# Description of this sub-agent's specific function or domain.
+# Example: "Integrates with external API X to fetch real-time data."
+agent_description: "[Defina aqui a função específica do Sub-agente 5]"
+
+# Default behavior settings for this sub-agent
+default_language: "pt-BR"
+
+# Feature flags specific to this sub-agent
+feature_flags:
+  log_sub_agent_trace: true
+
+# Configuration for how this sub-agent should handle errors
+error_handling:
+  error_reporting_strategy: "return_error_message"
+  default_error_prefix: "Erro no Sub-agente 5: "
+

@@ -1,0 +1,80 @@
+# Arquivo de Configuração de Ferramentas para o Agente Principal
+# Localização: src/agents/main_agent/agent.py (que pode carregar e usar esta configuração)
+#
+# Este arquivo define as "ferramentas" que o agente principal tem à sua disposição.
+# No contexto de um agente orquestrador, as principais "ferramentas" são frequentemente
+# os subagentes especializados e capacidades fundamentais como a busca em base de conhecimento (RAG).
+#
+# O LLM do agente principal usará as descrições fornecidas aqui para decidir qual ferramenta
+# (ou subagente) é mais apropriada para lidar com uma parte específica da solicitação do usuário.
+#
+# Boas Práticas e Considerações AI-Friendly:
+# - Descrições Claras e Concisas: A descrição de cada ferramenta deve ser muito clara
+#   para o LLM, explicando o que a ferramenta faz, quando deve ser usada, e que tipo de
+#   input ela espera (implicitamente ou explicitamente).
+# - Nomes Significativos: O `name` da ferramenta deve ser único e fácil de ser referenciado pelo LLM.
+# - Especificidade vs. Generalidade: Descrições muito genéricas podem confundir o LLM.
+#   Descrições muito específicas podem limitar a flexibilidade. Encontre um equilíbrio.
+# - Consistência com o Prompt: As descrições aqui devem estar alinhadas com como as ferramentas
+#   são apresentadas ao LLM no template de prompt (`inputs/prompt_template.j2`).
+# - Modularidade: Definir ferramentas aqui permite adicionar ou modificar capacidades do agente
+#   sem alterar profundamente a lógica central do agente, apenas atualizando este arquivo
+#   e implementando o `wrapper` correspondente (se necessário).
+
+tools:
+  # --- Ferramentas de Roteamento para Subagentes Especializados ---
+  # Cada subagente é exposto como uma "ferramenta" que o agente principal pode "chamar".
+  # O `sub_agent_id` é crucial para que a lógica de orquestração em `agent.py` saiba
+  # qual subagente instanciar e executar.
+
+  - name: "roteador_sub_agente_analise_dados"
+    description: "Delega tarefas complexas de análise de dados, interpretação de grandes volumes de informação numérica ou textual, e geração de insights a partir de dados para o Subagente de Análise de Dados. Use para perguntas como 'Qual a tendência de vendas?', 'Compare o desempenho X e Y', 'Resuma estes relatórios'. Input esperado: descrição da tarefa de análise e os dados ou referências aos dados."
+    sub_agent_id: "sub_agent_1" # Corresponde à pasta src/agents/sub_agents/sub_agent_1
+    # A lógica em `agent.py` (ou um `tool_wrapper`) usará este ID para chamar o subagente correto.
+    # O prompt do agente principal deve instruir o LLM a formatar o input para este subagente
+    # de acordo com o `schema.yaml` do `sub_agent_1`.
+
+  - name: "roteador_sub_agente_busca_especializada"
+    description: "Delega tarefas de busca profunda e recuperação de informações em fontes de conhecimento muito específicas ou não cobertas pela RAG principal (ex: bases de dados legadas, documentação técnica complexa, artigos científicos específicos) para o Subagente de Busca Especializada. Use quando a RAG principal não for suficiente. Input esperado: consulta de busca detalhada e escopo da busca."
+    sub_agent_id: "sub_agent_2" # Corresponde à pasta src/agents/sub_agents/sub_agent_2
+
+  - name: "roteador_sub_agente_interacao_api_externa"
+    description: "Delega tarefas que requerem interação com APIs externas (ex: agendar reuniões, verificar status de pedidos em um CRM, obter cotações de voos) para o Subagente de Interação com APIs. Input esperado: nome da API, endpoint, parâmetros da requisição e credenciais (se gerenciadas de forma segura)."
+    sub_agent_id: "sub_agent_3" # Corresponde à pasta src/agents/sub_agents/sub_agent_3
+
+  - name: "roteador_sub_agente_geracao_conteudo_criativo"
+    description: "Delega tarefas de geração de conteúdo criativo e elaborado (ex: escrever um artigo de blog, criar um roteiro, compor um poema, brainstorming de ideias) para o Subagente de Geração de Conteúdo Criativo. Input esperado: tema, estilo desejado, palavras-chave e quaisquer restrições."
+    sub_agent_id: "sub_agent_4" # Corresponde à pasta src/agents/sub_agents/sub_agent_4
+
+  - name: "roteador_sub_agente_perfil_usuario_preferencias"
+    description: "Delega tarefas relacionadas ao gerenciamento do perfil do usuário, como atualizar preferências, recuperar histórico de interações específicas ou personalizar a experiência do usuário com base em dados de perfil, para o Subagente de Perfil de Usuário. Input esperado: ID do usuário e a ação desejada (ex: 'atualizar preferência de idioma para EN', 'mostrar últimos 5 pedidos')."
+    sub_agent_id: "sub_agent_5" # Corresponde à pasta src/agents/sub_agents/sub_agent_5
+
+  # --- Ferramentas Fundamentais (ex: RAG) ---
+  - name: "search_knowledge_base_rag"
+    description: "Realiza uma busca na base de conhecimento vetorial (Supabase) para encontrar informações relevantes e factuais para responder às perguntas do usuário. Use esta ferramenta como primeira opção para perguntas que podem ser respondidas por documentos, FAQs, ou manuais existentes na base. Input esperado: uma string de consulta clara e específica."
+    # A implementação real desta ferramenta é geralmente uma função Python (um "wrapper")
+    # que interage com `src/agents/main_agent/data_connectors/supabase_vector.py`.
+    # Exemplo de wrapper (a ser definido em `tools/wrappers.py`):
+    # wrapper_function_path: "src.agents.main_agent.tools.wrappers.search_supabase_knowledge_base"
+    # 
+    # O schema de input para esta ferramenta (se definido programaticamente via Pydantic)
+    # poderia ser algo como:
+    # class SearchKnowledgeBaseInput(BaseModel):
+    #   query: str = Field(description="A pergunta ou termos de busca para a base de conhecimento.")
+    #   top_k: Optional[int] = Field(default=3, description="Número de resultados a retornar.")
+    #
+    # Para o LLM, a descrição acima é o mais importante. A lógica em `agent.py` ou no wrapper
+    # cuidará de como invocar a funcionalidade RAG.
+
+# Nota sobre a Invocação:
+# A forma como estas ferramentas são efetivamente chamadas depende da implementação em `agent.py`:
+# 1. O LLM pode gerar um JSON ou uma estrutura específica indicando a ferramenta e seus argumentos.
+# 2. `agent.py` parseia essa indicação e chama a função Python correspondente (um "wrapper" em `tools/wrappers.py`)
+#    ou diretamente a lógica do subagente.
+#
+# Este arquivo `tools.yaml` serve primariamente como:
+#   a) Uma declaração para o LLM das capacidades disponíveis.
+#   b) Uma configuração que a lógica do agente pode carregar para mapear nomes de ferramentas
+#      para suas implementações ou IDs de subagentes.
+

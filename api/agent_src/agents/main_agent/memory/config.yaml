@@ -1,0 +1,58 @@
+# Arquivo de Configuração para a Memória de Chat (usando Redis)
+# Localização: src/agents/main_agent/memory/redis_memory.py (que carrega esta configuração)
+#
+# Este arquivo define como o `RedisChatMemory` deve se conectar e interagir com o servidor Redis.
+# A memória de chat é crucial para que o agente mantenha o contexto ao longo de uma conversa com o usuário.
+# Assim como outras configurações, prioriza-se o uso de variáveis de ambiente para flexibilidade.
+
+# Nome da variável de ambiente que armazena o hostname ou endereço IP do servidor Redis.
+# Exemplo em .env: REDIS_HOST="localhost"
+host_env_var: "REDIS_HOST"
+
+# Nome da variável de ambiente que armazena a porta do servidor Redis.
+# A porta padrão do Redis é 6379.
+# Exemplo em .env: REDIS_PORT="6379"
+port_env_var: "REDIS_PORT"
+
+# Nome da variável de ambiente que armazena a senha para autenticação no Redis.
+# Se o seu servidor Redis não requer senha, esta variável pode ser deixada em branco no arquivo .env.
+# Exemplo em .env: REDIS_PASSWORD="yourSecurePassword"
+password_env_var: "REDIS_PASSWORD"
+
+# Nome da variável de ambiente que armazena o número do banco de dados Redis a ser usado.
+# Servidores Redis podem ter múltiplos bancos de dados (tipicamente 0 a 15).
+# O padrão é geralmente 0.
+# Exemplo em .env: REDIS_DB="0"
+db_env_var: "REDIS_DB"
+
+# Nome da variável de ambiente para o prefixo das chaves de sessão armazenadas no Redis.
+# Usar um prefixo ajuda a organizar as chaves, especialmente se a instância Redis for
+# compartilhada com outras aplicações. Também facilita a busca e o gerenciamento dessas chaves.
+# Exemplo em .env: REDIS_SESSION_PREFIX="vertical_agent_chat_session_"
+session_prefix_env_var: "REDIS_SESSION_PREFIX"
+
+# Nome da variável de ambiente para o tempo de vida (TTL - Time-To-Live) das sessões de chat, em segundos.
+# Após este período de inatividade (sem novas mensagens na sessão), o Redis pode automaticamente
+# expirar (deletar) os dados da sessão. Isso ajuda a gerenciar o uso de memória no Redis.
+# Exemplo: 7200 segundos = 2 horas.
+# Exemplo em .env: REDIS_SESSION_TTL_SECONDS="7200"
+ttl_seconds_env_var: "REDIS_SESSION_TTL_SECONDS"
+
+# Opcional: Número máximo de mensagens a serem recuperadas do histórico para uma sessão.
+# Isso é útil para limitar a quantidade de contexto passado para o LLM, ajudando a gerenciar
+# o tamanho da janela de contexto do LLM e os custos associados.
+# A classe `RedisChatMemory` em `redis_memory.py` pode usar este valor se implementado.
+# Se não definido aqui, a lógica em `redis_memory.py` pode ter um padrão ou ser controlada por parâmetro de método.
+# Exemplo:
+# max_history_length: 10 # Recupera as últimas 10 trocas de mensagens (usuário + assistente)
+
+# Considerações AI-Friendly e Boas Práticas:
+# - Persistência de Contexto: Usar Redis para memória de chat garante que o agente "lembre" de interações
+#   anteriores na mesma sessão, levando a conversas mais coerentes e naturais.
+# - Gerenciamento de Janela de Contexto: Limitar o `max_history_length` é uma técnica importante para
+#   evitar exceder a janela de contexto do LLM, o que pode levar a erros ou truncamento de informação.
+# - Eficiência: Redis é uma solução de armazenamento em memória rápida, ideal para o acesso frequente
+#   que a memória de chat exige.
+# - Escalabilidade: Redis pode ser configurado em cluster para alta disponibilidade e escalabilidade
+#   em aplicações de grande porte.
+

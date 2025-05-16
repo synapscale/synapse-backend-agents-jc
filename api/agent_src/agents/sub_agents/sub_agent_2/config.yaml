@@ -1,0 +1,22 @@
+# Configuration for Sub-agent 2 Orchestrator (src/agents/sub_agents/sub_agent_2/agent.py)
+# This file defines high-level settings for sub-agent 2.
+
+agent_name: "SubAgent2_Specialist"
+agent_id: "sub_agent_2"
+
+# Description of this sub-agent's specific function or domain.
+# Example: "Performs customer sentiment analysis on provided text."
+agent_description: "[Defina aqui a função específica do Sub-agente 2]"
+
+# Default behavior settings for this sub-agent
+default_language: "pt-BR"
+
+# Feature flags specific to this sub-agent
+feature_flags:
+  log_sub_agent_trace: true
+
+# Configuration for how this sub-agent should handle errors
+error_handling:
+  error_reporting_strategy: "return_error_message"
+  default_error_prefix: "Erro no Sub-agente 2: "
+
