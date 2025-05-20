@@ -6,7 +6,7 @@ import { useRef } from "react"
 import { Send, Paperclip } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { useTextarea } from "@/hooks/use-textarea"
+import { useTextarea } from "../../apps/ai-agents-sidebar/hooks/use-textarea"
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void

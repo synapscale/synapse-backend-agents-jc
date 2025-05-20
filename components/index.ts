@@ -1,26 +1,22 @@
-// Arquivo de exportação para todos os componentes
-// Este arquivo facilita a importação de componentes em outros arquivos
+import * as React from "react";
 
-// Importar e re-exportar o componente Canvas
-import { Canvas } from "./canvas"
-export { Canvas }
+// Exportação dos componentes principais
+export { default as Sidebar } from "./sidebar/Sidebar";
+export { SidebarNavItem } from "./sidebar/SidebarNavItem";
+export { SidebarNavSection } from "./sidebar/SidebarNavSection";
 
-// Exportar outros componentes
-export { ExecutionControls } from "./execution-controls"
-export { NodePanel } from "./node-panel"
-export { NodeDetailsPanel } from "./node-details-panel"
-export { Sidebar } from "./sidebar"
-export { WorkflowHeader } from "./workflow-header"
-export { WorkflowCanvas } from "./workflow-canvas"
-export { WorkflowNode } from "./workflow-node"
-export { WorkflowConnection } from "./workflow-connection"
-export { WorkflowEditor } from "./workflow-editor"
-export { CanvasControls } from "./canvas-controls"
-export { MiniMap } from "./mini-map"
-export { CommandPalette } from "./command-palette"
-export { KeyboardShortcuts } from "./keyboard-shortcuts"
-export { NodeContextMenu } from "./node-context-menu"
-export { CanvasContextMenu } from "./canvas-context-menu"
-export { ConnectionContextMenu } from "./connection-context-menu"
-export { SelectionBox } from "./selection-box"
-export { ExecutionsView } from "./executions-view"
+// Exportação dos componentes de chat
+export * from "./chat";
+
+// Exportação dos componentes de workflow
+export * from "./workflow";
+
+// Exportação dos componentes de UI
+export { default as SidebarProvider, useSidebar } from "./ui/sidebar";
+
+// Exportação padrão para facilitar importações
+const Components = {
+  // Adicionar aqui todos os componentes principais à medida que forem criados
+};
+
+export default Components;

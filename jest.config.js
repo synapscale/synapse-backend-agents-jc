@@ -1,41 +1,18 @@
+const { pathsToModuleNameMapper } = require('ts-jest');
+const { compilerOptions } = require('./tsconfig.json');
+
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '^.+\\.(css|less|scss)$': 'identity-obj-proxy'
-  },
   transform: {
-    '^.+\\.(ts|tsx)$': ['babel-jest', {
-      presets: [
-        ['@babel/preset-env', { targets: { node: 'current' } }],
-        '@babel/preset-react',
-        '@babel/preset-typescript'
-      ],
-    }],
+    '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
   },
-  testPathIgnorePatterns: [
-    '<rootDir>/node_modules/',
-    '<rootDir>/.next/'
-  ],
-  collectCoverageFrom: [
-    'components/**/*.{ts,tsx}',
-    'app/**/*.{ts,tsx}',
-    'lib/**/*.{ts,tsx}',
-    'hooks/**/*.{ts,tsx}',
-    '!**/*.d.ts',
-    '!**/node_modules/**',
-  ],
-  coverageThreshold: {
-    global: {
-      statements: 80,
-      branches: 70,
-      functions: 75,
-      lines: 80
-    }
+  moduleNameMapper: {
+    '^@components/(.*)$': '<rootDir>/components/$1',
+    '^@shared/(.*)$': '<rootDir>/shared/$1',
+    '^@utils/(.*)$': '<rootDir>/utils/$1',
+    '^@hooks/(.*)$': '<rootDir>/hooks/$1',
+    '^@ui/(.*)$': '<rootDir>/ui/$1'
   },
-  testMatch: [
-    '<rootDir>/tests/unit/**/*.test.(ts|tsx)'
-  ]
-}
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+};

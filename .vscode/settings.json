@@ -1,6 +1,0 @@
-{
-    "github.copilot.chat.search.keywordSuggestions": true,
-    "githubPullRequests.experimental.chat": true,
-    "githubPullRequests.experimental.useQuickChat": true,
-    "githubPullRequests.experimental.notificationsView": true
-}

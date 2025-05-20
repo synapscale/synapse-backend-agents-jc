@@ -1,28 +1,32 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "target": "ES6",
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
+    "baseUrl": "./",
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "jsx": "react-jsx",
+    "lib": ["es2015", "dom"],
     "paths": {
-      "@/*": ["./*"]
-    },
-    "baseUrl": "."
+      "@themePkg/*": ["packages/theme/theme-provider/*"],
+      "@shared/*": ["shared/*"],
+      "@hooks/*": ["shared/hooks/*"],
+      "@ui/*": ["shared/ui/*"],
+      "@theme/*": ["shared/theme-provider/*"],
+      "@components/*": ["apps/ai-agents-sidebar/components/*"],
+      "@lib/*": ["apps/ai-agents-sidebar/lib/*"],
+      "@utils/*": ["shared/utils/*"],
+      "@utils": ["packages/utils/index.ts"],
+      "@types/*": ["packages/types/*"],
+      "@constants/*": ["packages/constants/*"],
+      "@shared/hooks": ["shared/hooks/index.ts"],
+      "@shared/ui": ["shared/ui/index.ts"],
+      "@shared/types": ["shared/types/index.ts"],
+      "@ui": ["packages/ui/index.ts"]
+    }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "files": ["tests/global.d.ts"],
+  "include": [
+    "tests/global.d.ts",
+    "packages/ui"
+  ],
+  "references": []
 }
+

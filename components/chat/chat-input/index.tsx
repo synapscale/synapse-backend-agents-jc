@@ -1,15 +1,19 @@
 "use client"
 
+// Junta classes CSS condicionalmente (igual ao clsx/tailwind-merge)
+function cn(...classes: (string | undefined | null | false)[]): string {
+  return classes.filter(Boolean).join(" ");
+}
+
 import type React from "react"
 
 import { useRef, useCallback, useState, useEffect, useMemo } from "react"
 import { Send } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Button } from "../../../components/ui/button";
+import { Card } from "../../ui/card";
 import { FileUploadButton } from "./file-upload-button"
 import { UploadedFilesList } from "./uploaded-files-list"
 import type { ChatInputParams } from "./types"
-import { cn } from "@/lib/utils"
 
 /**
  * ChatInput component
@@ -265,6 +269,28 @@ export function ChatInput({
     fileInputRef.current?.click()
   }, [])
 
+  // Ajusta os tipos para os manipuladores de eventos de arrastar e soltar
+  const handleDragOver: React.DragEventHandler<HTMLTextAreaElement> = (event) => {
+    event.preventDefault();
+    if (onDragOver) {
+      onDragOver(event);
+    }
+  };
+
+  const handleDragLeave: React.DragEventHandler<HTMLTextAreaElement> = (event) => {
+    event.preventDefault();
+    if (onDragLeave) {
+      onDragLeave(event);
+    }
+  };
+
+  const handleDrop: React.DragEventHandler<HTMLTextAreaElement> = (event) => {
+    event.preventDefault();
+    if (onDrop) {
+      onDrop(event);
+    }
+  };
+
   // Memoized values
 
   // Determine if the submit button should be disabled
@@ -376,9 +402,6 @@ export function ChatInput({
       <Card
         className={allClasses}
         style={combinedStyle}
-        onDragOver={enableDragAndDrop ? onDragOver : undefined}
-        onDragLeave={enableDragAndDrop ? onDragLeave : undefined}
-        onDrop={enableDragAndDrop ? onDrop : undefined}
         ref={chatAreaRef}
         id={id}
         tabIndex={tabIndex}
@@ -445,9 +468,9 @@ export function ChatInput({
                 autoCorrect={enableAutoCorrect ? "on" : "off"}
                 autoCapitalize={enableAutoCapitalize ? "on" : "off"}
                 maxLength={maxLength > 0 ? maxLength : undefined}
-                onDragOver={enableDragAndDrop ? onDragOver : undefined}
-                onDragLeave={enableDragAndDrop ? onDragLeave : undefined}
-                onDrop={enableDragAndDrop ? onDrop : undefined}
+                onDragOver={enableDragAndDrop ? handleDragOver : undefined}
+                onDragLeave={enableDragAndDrop ? handleDragLeave : undefined}
+                onDrop={enableDragAndDrop ? handleDrop : undefined}
               />
             )}
 

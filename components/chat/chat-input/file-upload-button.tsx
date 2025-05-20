@@ -4,13 +4,17 @@ import type React from "react"
 
 import { useRef } from "react"
 import { Paperclip } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { TooltipWrapper } from "@/components/common/tooltip-wrapper"
-import type { DisableableProps } from "@/types/shared"
+import { Button } from "../../ui/button"
+import { TooltipWrapper } from "../../../../shared/tooltip-wrapper"
+import type { DisableableProps } from "../../../../shared/types/component-types"
 
 interface FileUploadButtonProps extends DisableableProps {
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => void
   acceptedFileTypes: string[]
+  disabled?: boolean
+  maxFileSize?: number
+  maxFiles?: number
+  multiple?: boolean
 }
 
 export function FileUploadButton({ onFileSelect, acceptedFileTypes, disabled = false }: FileUploadButtonProps) {

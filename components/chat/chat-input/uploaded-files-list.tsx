@@ -3,6 +3,11 @@
 interface UploadedFilesListProps {
   files: File[]
   onRemoveFile: (index: number) => void
+  showPreviews?: boolean
+  showSizes?: boolean
+  showTypes?: boolean
+  showProgress?: boolean
+  showErrors?: boolean
 }
 
 export function UploadedFilesList({ files, onRemoveFile }: UploadedFilesListProps) {
