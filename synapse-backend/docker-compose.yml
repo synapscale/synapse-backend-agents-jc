@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  uploads:
+    build: ./services/uploads
+    container_name: synapse_uploads
+    ports:
+      - "8005:8005"
+    environment:
+      - UPLOAD_DIR=/app/storage
+      - MAX_FILE_SIZE=10485760
+      - ALLOWED_ORIGINS=*
+    volumes:
+      - ./services/uploads/storage:/app/storage
+    restart: unless-stopped
