@@ -1,0 +1,20 @@
+[MESSAGES CONTROL]
+disable=C0111,R0903,R0913,W0622,C0103,R0801,W0613
+
+[FORMAT]
+max-line-length=88
+indent-string='    '
+
+[BASIC]
+good-names=i,j,k,ex,Run,_,id,db,app
+
+[DESIGN]
+max-args=7
+max-locals=15
+max-returns=6
+max-branches=12
+max-statements=50
+max-parents=7
+max-attributes=7
+max-public-methods=20
+max-bool-expr=5
