@@ -224,26 +224,26 @@ const FileUploader = ({ token, onUploadSuccess, onUploadError }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!file) {
       onUploadError('Selecione um arquivo para upload');
       return;
     }
-    
+
     const formData = new FormData();
     formData.append('file', file);
-    
+
     if (description) {
       formData.append('description', description);
     }
-    
+
     if (tags) {
       formData.append('tags', tags);
     }
-    
+
     setLoading(true);
     setProgress(0);
-    
+
     try {
       const response = await axios.post('https://api.synapse.com/uploads/', formData, {
         headers: {
@@ -255,21 +255,21 @@ const FileUploader = ({ token, onUploadSuccess, onUploadError }) => {
           setProgress(percentCompleted);
         }
       });
-      
+
       setLoading(false);
       onUploadSuccess(response.data);
-      
+
       // Limpar formulário
       setFile(null);
       setDescription('');
       setTags('');
       setProgress(0);
-      
+
     } catch (error) {
       setLoading(false);
-      
+
       let errorMessage = 'Erro ao fazer upload do arquivo';
-      
+
       if (error.response) {
         // Erros do servidor
         switch (error.response.status) {
@@ -292,7 +292,7 @@ const FileUploader = ({ token, onUploadSuccess, onUploadError }) => {
             errorMessage = `Erro ${error.response.status}: ${error.response.data.detail || 'Erro desconhecido'}`;
         }
       }
-      
+
       onUploadError(errorMessage);
     }
   };
@@ -302,14 +302,14 @@ const FileUploader = ({ token, onUploadSuccess, onUploadError }) => {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="file">Arquivo:</label>
-          <input 
-            type="file" 
-            id="file" 
-            onChange={handleFileChange} 
+          <input
+            type="file"
+            id="file"
+            onChange={handleFileChange}
             disabled={loading}
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="description">Descrição:</label>
           <textarea
@@ -319,7 +319,7 @@ const FileUploader = ({ token, onUploadSuccess, onUploadError }) => {
             disabled={loading}
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="tags">Tags (separadas por vírgula):</label>
           <input
@@ -330,17 +330,17 @@ const FileUploader = ({ token, onUploadSuccess, onUploadError }) => {
             disabled={loading}
           />
         </div>
-        
+
         {loading && (
           <div className="progress-bar">
-            <div 
-              className="progress" 
+            <div
+              className="progress"
               style={{ width: `${progress}%` }}
             ></div>
             <span>{progress}%</span>
           </div>
         )}
-        
+
         <button type="submit" disabled={loading || !file}>
           {loading ? 'Enviando...' : 'Enviar Arquivo'}
         </button>
@@ -369,28 +369,28 @@ const FileList = ({ token, category, onFileSelect, onDeleteSuccess }) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       let url = `https://api.synapse.com/uploads/?page=${pageNum}&limit=10`;
-      
+
       if (category) {
         url += `&category=${category}`;
       }
-      
+
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       if (pageNum === 1) {
         setFiles(response.data);
       } else {
         setFiles(prev => [...prev, ...response.data]);
       }
-      
+
       setHasMore(response.data.length === 10);
       setPage(pageNum);
-      
+
     } catch (error) {
       setError('Erro ao carregar arquivos');
       console.error(error);
@@ -411,20 +411,20 @@ const FileList = ({ token, category, onFileSelect, onDeleteSuccess }) => {
     if (!window.confirm('Tem certeza que deseja excluir este arquivo?')) {
       return;
     }
-    
+
     try {
       await axios.delete(`https://api.synapse.com/uploads/${fileId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       setFiles(files.filter(file => file.file_id !== fileId));
-      
+
       if (onDeleteSuccess) {
         onDeleteSuccess(fileId);
       }
-      
+
     } catch (error) {
       alert('Erro ao excluir arquivo');
       console.error(error);
@@ -465,9 +465,9 @@ const FileList = ({ token, category, onFileSelect, onDeleteSuccess }) => {
             {files.map(file => (
               <tr key={file.file_id}>
                 <td>
-                  <a 
-                    href={file.url} 
-                    target="_blank" 
+                  <a
+                    href={file.url}
+                    target="_blank"
                     rel="noopener noreferrer"
                   >
                     {file.filename}
@@ -477,13 +477,13 @@ const FileList = ({ token, category, onFileSelect, onDeleteSuccess }) => {
                 <td>{formatFileSize(file.size)}</td>
                 <td>{formatDate(file.created_at)}</td>
                 <td>
-                  <button 
+                  <button
                     onClick={() => onFileSelect(file)}
                     className="btn-view"
                   >
                     Ver
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(file.file_id)}
                     className="btn-delete"
                   >
@@ -495,11 +495,11 @@ const FileList = ({ token, category, onFileSelect, onDeleteSuccess }) => {
           </tbody>
         </table>
       )}
-      
+
       {loading && <div className="loading">Carregando...</div>}
-      
+
       {hasMore && !loading && (
-        <button 
+        <button
           onClick={handleLoadMore}
           className="btn-load-more"
         >
