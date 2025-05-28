@@ -167,36 +167,7 @@ async def list_providers():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/providers-test", response_model=Dict[str, Any], tags=["llm"])
-async def list_providers_test():
-    """
-    Endpoint de teste para listar provedores sem autenticação.
-    """
-    try:
-        logger.info("Requisição de teste de listagem de provedores recebida")
-        
-        result = unified_service.list_providers()
-        
-        return result
-    except Exception as e:
-        logger.error(f"Erro ao listar provedores (teste): {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.get("/test-providers", response_model=Dict[str, Any], tags=["llm"])
-async def test_list_providers():
-    """
-    Endpoint temporário para testar listagem de provedores sem autenticação.
-    """
-    try:
-        logger.info("Requisição de teste de listagem de provedores recebida")
-        
-        result = unified_service.list_providers()
-        
-        return result
-    except Exception as e:
-        logger.error(f"Erro ao listar provedores (teste): {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{provider}/generate", response_model=Dict[str, Any], tags=["llm"])
