@@ -79,10 +79,10 @@ def app(temp_storage_dir):
     # Sobrescrever configurações
     settings.DATABASE_URL = TEST_DATABASE_URL
     settings.STORAGE_BASE_PATH = str(temp_storage_dir)
-    
+
     # Sobrescrever dependências
     main_app.dependency_overrides[get_db] = override_get_db
-    
+
     return main_app
 
 
@@ -130,30 +130,25 @@ def test_upload_file(client, auth_headers, temp_storage_dir):
     """Testa o endpoint de upload de arquivo."""
     # Preparar arquivo de teste
     file_content = b"test file content"
-    files = {
-        "file": ("test_file.txt", io.BytesIO(file_content), "text/plain")
-    }
+    files = {"file": ("test_file.txt", io.BytesIO(file_content), "text/plain")}
     data = {
         "category": "document",
         "tags": "test,example",
         "description": "Test file description",
-        "is_public": "false"
+        "is_public": "false",
     }
-    
+
     # Enviar requisição
     response = client.post(
-        "/api/v1/files/upload",
-        files=files,
-        data=data,
-        headers=auth_headers
+        "/api/v1/files/upload", files=files, data=data, headers=auth_headers
     )
-    
+
     # Verificar resposta
     assert response.status_code == 201
     assert "file_id" in response.json()
     assert "message" in response.json()
     assert response.json()["message"] == "Arquivo enviado com sucesso"
-    
+
     # Verificar se arquivo foi salvo
     file_id = response.json()["file_id"]
     return file_id
@@ -164,13 +159,10 @@ def test_list_files(client, auth_headers):
     """Testa o endpoint de listagem de arquivos."""
     # Primeiro fazer upload de um arquivo
     file_id = test_upload_file(client, auth_headers, None)
-    
+
     # Enviar requisição de listagem
-    response = client.get(
-        "/api/v1/files",
-        headers=auth_headers
-    )
-    
+    response = client.get("/api/v1/files", headers=auth_headers)
+
     # Verificar resposta
     assert response.status_code == 200
     assert "items" in response.json()
@@ -179,7 +171,7 @@ def test_list_files(client, auth_headers):
     assert "size" in response.json()
     assert "pages" in response.json()
     assert response.json()["total"] >= 1
-    
+
     # Verificar se o arquivo enviado está na lista
     found = False
     for item in response.json()["items"]:
@@ -188,7 +180,7 @@ def test_list_files(client, auth_headers):
             assert item["filename"] == "test_file.txt"
             assert item["category"] == "document"
             assert item["mime_type"] == "text/plain"
-    
+
     assert found, "Arquivo enviado não encontrado na listagem"
 
 
@@ -197,13 +189,10 @@ def test_get_file(client, auth_headers):
     """Testa o endpoint de obtenção de informações de arquivo."""
     # Primeiro fazer upload de um arquivo
     file_id = test_upload_file(client, auth_headers, None)
-    
+
     # Enviar requisição
-    response = client.get(
-        f"/api/v1/files/{file_id}",
-        headers=auth_headers
-    )
-    
+    response = client.get(f"/api/v1/files/{file_id}", headers=auth_headers)
+
     # Verificar resposta
     assert response.status_code == 200
     assert response.json()["id"] == file_id
@@ -218,13 +207,10 @@ def test_download_file(client, auth_headers):
     """Testa o endpoint de geração de URL para download."""
     # Primeiro fazer upload de um arquivo
     file_id = test_upload_file(client, auth_headers, None)
-    
+
     # Enviar requisição
-    response = client.get(
-        f"/api/v1/files/{file_id}/download",
-        headers=auth_headers
-    )
-    
+    response = client.get(f"/api/v1/files/{file_id}/download", headers=auth_headers)
+
     # Verificar resposta
     assert response.status_code == 200
     assert "download_url" in response.json()
@@ -236,21 +222,19 @@ def test_update_file(client, auth_headers):
     """Testa o endpoint de atualização de informações de arquivo."""
     # Primeiro fazer upload de um arquivo
     file_id = test_upload_file(client, auth_headers, None)
-    
+
     # Dados de atualização
     update_data = {
         "tags": ["updated", "tags"],
         "description": "Updated description",
-        "is_public": True
+        "is_public": True,
     }
-    
+
     # Enviar requisição
     response = client.patch(
-        f"/api/v1/files/{file_id}",
-        json=update_data,
-        headers=auth_headers
+        f"/api/v1/files/{file_id}", json=update_data, headers=auth_headers
     )
-    
+
     # Verificar resposta
     assert response.status_code == 200
     assert response.json()["id"] == file_id
@@ -264,19 +248,13 @@ def test_delete_file(client, auth_headers):
     """Testa o endpoint de remoção de arquivo."""
     # Primeiro fazer upload de um arquivo
     file_id = test_upload_file(client, auth_headers, None)
-    
+
     # Enviar requisição
-    response = client.delete(
-        f"/api/v1/files/{file_id}",
-        headers=auth_headers
-    )
-    
+    response = client.delete(f"/api/v1/files/{file_id}", headers=auth_headers)
+
     # Verificar resposta
     assert response.status_code == 204
-    
+
     # Verificar se arquivo foi removido
-    get_response = client.get(
-        f"/api/v1/files/{file_id}",
-        headers=auth_headers
-    )
+    get_response = client.get(f"/api/v1/files/{file_id}", headers=auth_headers)
     assert get_response.status_code == 404

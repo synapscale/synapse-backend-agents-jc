@@ -5,6 +5,7 @@ a engine, sessão e modelos base.
 """
 
 import logging
+import os
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -16,9 +17,14 @@ from synapse.config import settings
 logger = logging.getLogger(__name__)
 
 # Criar engine assíncrona
+# Forçar o uso do driver aiosqlite
+db_url = settings.SQLALCHEMY_DATABASE_URI
+if db_url.startswith('sqlite:///'):
+    db_url = db_url.replace('sqlite:///', 'sqlite+aiosqlite:///')
+
 engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
+    db_url,
+    echo=False,  # Não usar debug em produção
     future=True,
 )
 
@@ -35,7 +41,7 @@ Base = declarative_base()
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependência para obter sessão de banco de dados.
-    
+
     Yields:
         Sessão de banco de dados
     """
@@ -48,7 +54,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db() -> None:
     """Inicializa o banco de dados.
-    
+
     Esta função cria todas as tabelas definidas nos modelos.
     Em produção, deve-se usar migrações Alembic em vez desta função.
     """

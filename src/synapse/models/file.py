@@ -17,9 +17,9 @@ from synapse.db.base import Base
 
 class File(Base):
     """Modelo de dados para arquivos armazenados no sistema."""
-    
+
     __tablename__ = "files"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String(255), nullable=False, index=True)
     original_filename = Column(String(255), nullable=False)
@@ -27,25 +27,34 @@ class File(Base):
     file_size = Column(Integer, nullable=False)
     file_hash = Column(String(64), unique=True, nullable=False, index=True)
     storage_path = Column(String(500), nullable=False)
-    
+
     # MUDANÇA: ARRAY → JSON para compatibilidade SQLite
     tags = Column(JSON, nullable=True, default=list)
-    
+
     description = Column(Text, nullable=True)
-    
+
     # MUDANÇA: Boolean → String para compatibilidade SQLite
     is_public = Column(String(10), default="false", nullable=False)
-    
+
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
     # Índices para performance
     __table_args__ = (
-        Index('idx_file_filename', 'filename'),
-        Index('idx_file_created_at', 'created_at'),
-        Index('idx_file_file_hash', 'file_hash'),
+        Index("idx_file_filename", "filename"),
+        Index("idx_file_created_at", "created_at"),
+        Index("idx_file_file_hash", "file_hash"),
     )
-    
+
     def __repr__(self):
-        return f"<File(id={self.id}, filename='{self.filename}', size={self.file_size})>"
+        return (
+            f"<File(id={self.id}, filename='{self.filename}', size={self.file_size})>"
+        )

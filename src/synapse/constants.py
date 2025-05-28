@@ -9,23 +9,23 @@ FILE_CATEGORIES = {
     "video": ["mp4", "avi", "mkv", "mov", "wmv", "flv", "webm"],
     "audio": ["mp3", "wav", "ogg", "m4a", "flac", "aac"],
     "document": ["pdf", "doc", "docx", "txt", "rtf", "odt"],
-    "archive": ["zip", "rar", "7z", "tar", "gz", "bz2"]
+    "archive": ["zip", "rar", "7z", "tar", "gz", "bz2"],
 }
 
 # Tamanhos máximos por categoria (em bytes)
 MAX_FILE_SIZES = {
-    "image": 10 * 1024 * 1024,      # 10MB
-    "video": 500 * 1024 * 1024,     # 500MB
-    "audio": 50 * 1024 * 1024,      # 50MB
-    "document": 25 * 1024 * 1024,   # 25MB
-    "archive": 100 * 1024 * 1024    # 100MB
+    "image": 10 * 1024 * 1024,  # 10MB
+    "video": 500 * 1024 * 1024,  # 500MB
+    "audio": 50 * 1024 * 1024,  # 50MB
+    "document": 25 * 1024 * 1024,  # 25MB
+    "archive": 100 * 1024 * 1024,  # 100MB
 }
 
 # Tipos MIME permitidos
 ALLOWED_MIME_TYPES: Dict[str, List[str]] = {
     "image": [
         "image/jpeg",
-        "image/png", 
+        "image/png",
         "image/gif",
         "image/bmp",
         "image/webp",
@@ -89,27 +89,26 @@ EXECUTABLE_SIGNATURES = [
 ]
 
 # Configurações de rate limiting
-RATE_LIMITS = {
-    "uploads_per_minute": 10,
-    "requests_per_minute": 100,
-    "burst_limit": 20
-}
+RATE_LIMITS = {"uploads_per_minute": 10, "requests_per_minute": 100, "burst_limit": 20}
 
 # Configurações de segurança
 SECURITY_CONFIG = {
     "jwt_algorithm": "HS256",
     "access_token_expire_minutes": 30,
-    "refresh_token_expire_days": 7
+    "refresh_token_expire_days": 7,
 }
+
 
 # Status de processamento de arquivos
 class FileStatus(str, Enum):
     """Status de processamento de arquivos."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
     DELETED = "deleted"
+
 
 # Status de processamento de arquivos (dict version para compatibilidade)
 FILE_PROCESSING_STATUSES = {

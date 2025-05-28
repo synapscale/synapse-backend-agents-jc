@@ -26,12 +26,12 @@ class RateLimiter:
 
     def __init__(
         self,
-        redis_url: str = settings.redis_url,
-        default_limit: int = settings.rate_limit,
-        default_window: int = settings.rate_limit_window,
+        redis_url: str = settings.REDIS_URL,
+        default_limit: int = settings.RATE_LIMIT,
+        default_window: int = settings.RATE_LIMIT_WINDOW,
     ):
         """Inicializa o limitador de taxa.
-        
+
         Args:
             redis_url: URL de conexão com o Redis
             default_limit: Limite padrão de requisições
@@ -45,7 +45,7 @@ class RateLimiter:
     @property
     def redis_client(self) -> redis.Redis:
         """Obtém cliente Redis, inicializando se necessário.
-        
+
         Returns:
             Cliente Redis ou implementação em memória
         """
@@ -68,12 +68,12 @@ class RateLimiter:
         self, key: str, limit: Optional[int] = None, window: Optional[int] = None
     ) -> Tuple[bool, Dict[str, int]]:
         """Verifica se uma chave está limitada por taxa.
-        
+
         Args:
             key: Chave única para identificar o cliente
             limit: Limite de requisições (opcional)
             window: Janela de tempo em segundos (opcional)
-            
+
         Returns:
             Tupla com (está_limitado, info_limite)
         """
@@ -86,21 +86,23 @@ class RateLimiter:
         try:
             # Incrementar contador
             current = self.redis_client.incr(redis_key)
-            
+
             # Definir TTL na primeira requisição
             if current == 1:
                 self.redis_client.expire(redis_key, window)
-            
+
             # Obter TTL restante
             ttl = self.redis_client.ttl(redis_key)
-            
+
             # Verificar se excedeu o limite
             is_limited = current > limit
-            
+
             # Registrar no log se estiver limitado
             if is_limited:
-                logger.warning(f"Rate limit excedido para chave {key}: {current}/{limit}")
-            
+                logger.warning(
+                    f"Rate limit excedido para chave {key}: {current}/{limit}"
+                )
+
             return is_limited, {
                 "total": limit,
                 "remaining": max(0, limit - current),
@@ -128,27 +130,27 @@ class InMemoryRateLimiter:
 
     def incr(self, key: str) -> int:
         """Incrementa o contador para uma chave.
-        
+
         Args:
             key: Chave única
-            
+
         Returns:
             Valor atual do contador
         """
         now = datetime.now()
         if key not in self.limits:
             self.limits[key] = {"count": 0, "reset_at": now + timedelta(seconds=3600)}
-        
+
         self.limits[key]["count"] += 1
         return self.limits[key]["count"]
 
     def expire(self, key: str, seconds: int) -> bool:
         """Define o tempo de expiração para uma chave.
-        
+
         Args:
             key: Chave única
             seconds: Tempo de expiração em segundos
-            
+
         Returns:
             True se a operação foi bem-sucedida
         """
@@ -158,26 +160,26 @@ class InMemoryRateLimiter:
 
     def ttl(self, key: str) -> int:
         """Retorna o tempo restante para expiração.
-        
+
         Args:
             key: Chave única
-            
+
         Returns:
             Tempo restante em segundos ou -2 se a chave não existir
         """
         if key not in self.limits:
             return -2
-        
+
         remaining = (self.limits[key]["reset_at"] - datetime.now()).total_seconds()
         if remaining <= 0:
             del self.limits[key]
             return -2
-        
+
         return int(remaining)
 
     def ping(self) -> bool:
         """Simula ping do Redis.
-        
+
         Returns:
             Sempre True
         """
@@ -190,64 +192,66 @@ rate_limiter = RateLimiter()
 
 def rate_limit(limit: Optional[int] = None, window: Optional[int] = None):
     """Dependência para aplicar rate limiting em endpoints.
-    
+
     Args:
         limit: Limite de requisições por janela de tempo
         window: Janela de tempo em segundos
-        
+
     Returns:
         Função de dependência para FastAPI
     """
+
     async def _rate_limit(
         request: Request, current_user: Dict = Depends(get_current_user)
     ):
         # Usar ID do usuário como chave para rate limiting
         key = f"user:{current_user['id']}"
-        
+
         # Verificar limite
         is_limited, info = await rate_limiter.is_rate_limited(key, limit, window)
-        
+
         # Adicionar headers de rate limit
         request.state.rate_limit_info = info
-        
+
         if is_limited:
             raise rate_limit_exception(
                 "Limite de requisições excedido. Tente novamente mais tarde.",
-                info["reset"]
+                info["reset"],
             )
-        
+
         return current_user
-    
+
     return _rate_limit
 
 
 def setup_rate_limiting(app: FastAPI) -> None:
     """Configura o middleware de rate limiting na aplicação.
-    
+
     Args:
         app: Aplicação FastAPI
     """
+
     @app.middleware("http")
     async def add_rate_limit_headers(request: Request, call_next: Callable) -> Response:
         """Middleware para adicionar headers de rate limit às respostas.
-        
+
         Args:
             request: Requisição HTTP
             call_next: Próxima função na cadeia de middlewares
-            
+
         Returns:
             Resposta HTTP
         """
         # Processar a requisição
         response = await call_next(request)
-        
+
         # Adicionar headers de rate limit se disponíveis
         if hasattr(request.state, "rate_limit_info"):
             info = request.state.rate_limit_info
             response.headers["X-RateLimit-Limit"] = str(info["total"])
             response.headers["X-RateLimit-Remaining"] = str(info["remaining"])
             response.headers["X-RateLimit-Reset"] = str(info["reset"])
-        
+
         return response
-    
+
     logger.info("Middleware de rate limiting configurado")

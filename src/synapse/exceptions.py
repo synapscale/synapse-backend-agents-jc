@@ -9,10 +9,10 @@ from fastapi import HTTPException, status
 
 class SynapseBaseException(Exception):
     """Exceção base para todas as exceções personalizadas do SynapScale."""
-    
+
     def __init__(self, message: str = "Erro interno"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -22,10 +22,10 @@ class SynapseBaseException(Exception):
 
 class FileValidationError(SynapseBaseException):
     """Exceção lançada quando um arquivo não passa nas validações."""
-    
+
     def __init__(self, message: str = "O arquivo não passou nas validações"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -34,10 +34,10 @@ class FileValidationError(SynapseBaseException):
 
 class StorageError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro no armazenamento."""
-    
+
     def __init__(self, message: str = "Erro ao armazenar ou recuperar arquivo"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -46,10 +46,10 @@ class StorageError(SynapseBaseException):
 
 class DatabaseError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro no banco de dados."""
-    
+
     def __init__(self, message: str = "Erro no banco de dados"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -58,10 +58,10 @@ class DatabaseError(SynapseBaseException):
 
 class AuthenticationError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro de autenticação."""
-    
+
     def __init__(self, message: str = "Erro de autenticação"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -70,10 +70,10 @@ class AuthenticationError(SynapseBaseException):
 
 class AuthorizationError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro de autorização."""
-    
+
     def __init__(self, message: str = "Permissão negada"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -82,10 +82,10 @@ class AuthorizationError(SynapseBaseException):
 
 class RateLimitError(SynapseBaseException):
     """Exceção lançada quando o limite de taxa é excedido."""
-    
+
     def __init__(self, message: str = "Limite de requisições excedido"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -94,10 +94,10 @@ class RateLimitError(SynapseBaseException):
 
 class NotFoundError(SynapseBaseException):
     """Exceção lançada quando um recurso não é encontrado."""
-    
+
     def __init__(self, message: str = "Recurso não encontrado"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -106,10 +106,10 @@ class NotFoundError(SynapseBaseException):
 
 class ValidationError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro de validação."""
-    
+
     def __init__(self, message: str = "Erro de validação"):
         """Inicializa a exceção com uma mensagem.
-        
+
         Args:
             message: Mensagem de erro
         """
@@ -118,12 +118,13 @@ class ValidationError(SynapseBaseException):
 
 # Funções auxiliares para converter exceções em HTTPExceptions
 
+
 def file_validation_exception(message: str) -> HTTPException:
     """Cria uma HTTPException para erro de validação de arquivo.
-    
+
     Args:
         message: Mensagem de erro
-        
+
     Returns:
         HTTPException configurada
     """
@@ -135,10 +136,10 @@ def file_validation_exception(message: str) -> HTTPException:
 
 def storage_exception(message: str) -> HTTPException:
     """Cria uma HTTPException para erro de armazenamento.
-    
+
     Args:
         message: Mensagem de erro
-        
+
     Returns:
         HTTPException configurada
     """
@@ -150,10 +151,10 @@ def storage_exception(message: str) -> HTTPException:
 
 def authentication_exception(message: str) -> HTTPException:
     """Cria uma HTTPException para erro de autenticação.
-    
+
     Args:
         message: Mensagem de erro
-        
+
     Returns:
         HTTPException configurada
     """
@@ -166,10 +167,10 @@ def authentication_exception(message: str) -> HTTPException:
 
 def authorization_exception(message: str) -> HTTPException:
     """Cria uma HTTPException para erro de autorização.
-    
+
     Args:
         message: Mensagem de erro
-        
+
     Returns:
         HTTPException configurada
     """
@@ -181,11 +182,11 @@ def authorization_exception(message: str) -> HTTPException:
 
 def rate_limit_exception(message: str, reset_time: int) -> HTTPException:
     """Cria uma HTTPException para erro de limite de taxa.
-    
+
     Args:
         message: Mensagem de erro
         reset_time: Tempo em segundos para reset do limite
-        
+
     Returns:
         HTTPException configurada
     """
@@ -200,10 +201,10 @@ def rate_limit_exception(message: str, reset_time: int) -> HTTPException:
 
 def not_found_exception(message: str) -> HTTPException:
     """Cria uma HTTPException para recurso não encontrado.
-    
+
     Args:
         message: Mensagem de erro
-        
+
     Returns:
         HTTPException configurada
     """
@@ -215,10 +216,10 @@ def not_found_exception(message: str) -> HTTPException:
 
 def validation_exception(message: str) -> HTTPException:
     """Cria uma HTTPException para erro de validação.
-    
+
     Args:
         message: Mensagem de erro
-        
+
     Returns:
         HTTPException configurada
     """

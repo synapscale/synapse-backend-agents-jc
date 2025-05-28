@@ -30,41 +30,41 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gerencia o ciclo de vida da aplicação.
-    
+
     Args:
         app: Aplicação FastAPI
     """
     # Startup
     logger.info("🚀 Iniciando serviço de uploads...")
-    
+
     # Inicializar banco de dados
     await init_db()
-    
+
     # Criar diretórios necessários
-    os.makedirs(settings.storage_base_path, exist_ok=True)
-    for category in settings.allowed_file_categories:
-        os.makedirs(os.path.join(settings.storage_base_path, category), exist_ok=True)
-    
+    os.makedirs(settings.STORAGE_BASE_PATH, exist_ok=True)
+    for category in settings.ALLOWED_EXTENSIONS:
+        os.makedirs(os.path.join(settings.STORAGE_BASE_PATH, category), exist_ok=True)
+
     logger.info("✅ Serviço de uploads inicializado com sucesso")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("👋 Encerrando serviço de uploads...")
 
 
 # Criar aplicação
 app = FastAPI(
-    title=settings.project_name,
+    title=settings.PROJECT_NAME,
     description="API para gerenciamento de uploads de arquivos",
-    version=settings.version,
+    version="1.0.0",  # Valor fixo já que VERSION não existe no Settings
     docs_url=None,  # Desabilitar Swagger UI padrão
     redoc_url=None,  # Desabilitar ReDoc padrão
     lifespan=lifespan,
 )
 
 # Configurar CORS
-origins = settings.backend_cors_origins
+origins = settings.BACKEND_CORS_ORIGINS
 if origins:
     app.add_middleware(
         CORSMiddleware,
@@ -83,26 +83,26 @@ setup_rate_limiting(app)
 @app.middleware("http")
 async def log_requests(request: Request, call_next: Callable) -> Response:
     """Middleware para logging de requisições.
-    
+
     Args:
         request: Requisição HTTP
         call_next: Próxima função na cadeia de middlewares
-        
+
     Returns:
         Resposta HTTP
     """
     path = request.url.path
     method = request.method
-    
+
     # Não logar requisições de health check
     if path == "/health" or path == "/":
         return await call_next(request)
-    
+
     logger.info(f"{method} {path}")
-    
+
     # Processar requisição
     response = await call_next(request)
-    
+
     logger.info(f"{method} {path} - {response.status_code}")
     return response
 
@@ -111,7 +111,7 @@ async def log_requests(request: Request, call_next: Callable) -> Response:
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
     """Endpoint para Swagger UI personalizado.
-    
+
     Returns:
         HTML do Swagger UI
     """
@@ -127,7 +127,7 @@ async def custom_swagger_ui_html():
 @app.get("/redoc", include_in_schema=False)
 async def redoc_html():
     """Endpoint para ReDoc personalizado.
-    
+
     Returns:
         HTML do ReDoc
     """
@@ -141,20 +141,20 @@ async def redoc_html():
 # Personalizar schema OpenAPI
 def custom_openapi():
     """Personaliza o schema OpenAPI.
-    
+
     Returns:
         Schema OpenAPI personalizado
     """
     if app.openapi_schema:
         return app.openapi_schema
-    
+
     openapi_schema = get_openapi(
         title=app.title,
         version=app.version,
         description=app.description,
         routes=app.routes,
     )
-    
+
     # Adicionar componentes de segurança
     openapi_schema["components"]["securitySchemes"] = {
         "Bearer": {
@@ -163,10 +163,10 @@ def custom_openapi():
             "bearerFormat": "JWT",
         }
     }
-    
+
     # Aplicar segurança globalmente
     openapi_schema["security"] = [{"Bearer": []}]
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -178,34 +178,34 @@ app.openapi = custom_openapi
 @app.get("/health", tags=["health"])
 async def health_check():
     """Endpoint para verificação de saúde da aplicação.
-    
+
     Returns:
         Status da aplicação
     """
-    return {"status": "ok", "version": settings.version}
+    return {"status": "ok", "version": "1.0.0"}  # Valor fixo já que VERSION não existe no Settings
 
 
 # Rota raiz
 @app.get("/", tags=["root"])
 async def root():
     """Endpoint raiz da aplicação.
-    
+
     Returns:
         Informações básicas da API
     """
     return {
-        "name": settings.project_name,
-        "version": settings.version,
+        "name": settings.PROJECT_NAME,
+        "version": "1.0.0",  # Valor fixo já que VERSION não existe no Settings
         "docs": "/docs",
         "redoc": "/redoc",
     }
 
 
 # Incluir rotas da API v1
-app.include_router(v1_router, prefix=settings.api_v1_str)
+app.include_router(v1_router, prefix=settings.API_V1_STR)
 
 # Log de inicialização
 logger.info(
-    f"Aplicação {settings.project_name} v{settings.version} "
-    f"configurada no ambiente {settings.environment}"
+    f"Aplicação {settings.PROJECT_NAME} v1.0.0 "  # Valor fixo já que VERSION não existe no Settings
+    f"configurada no ambiente {settings.ENVIRONMENT}"
 )
