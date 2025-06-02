@@ -11,7 +11,7 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from synapse.config import settings
+from src.synapse.config import settings
 
 # Logger
 logger = logging.getLogger(__name__)

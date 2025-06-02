@@ -12,8 +12,8 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from synapse.config import settings
-from synapse.exceptions import authentication_exception
+from src.synapse.config import settings
+from src.synapse.exceptions import authentication_exception
 
 # Configuração do OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

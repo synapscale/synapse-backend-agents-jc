@@ -9,9 +9,9 @@ from typing import Dict, Any, List, Optional
 import random
 import logging
 
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.config import settings
-from synapse.logging import get_logger
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.config import settings
+from src.synapse.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -229,5 +229,5 @@ def _get_fallback_connector(self) -> BaseLLMConnector:
         raise ValueError(f"Provedor alternativo não suportado: {fallback_provider}")
 
 # Adicionar o método à classe LLMFactory
-from synapse.core.llm.factory import LLMFactory
+from src.synapse.core.llm.factory import LLMFactory
 LLMFactory._get_fallback_connector = _get_fallback_connector

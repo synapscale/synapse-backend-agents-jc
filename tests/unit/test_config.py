@@ -9,7 +9,7 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 
-from synapse.config import Settings
+from src.synapse.config import Settings
 
 
 @pytest.fixture

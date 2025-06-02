@@ -11,7 +11,7 @@ import hashlib
 from unittest.mock import patch, MagicMock, AsyncMock
 import time
 
-from synapse.core.llm.cache import CacheService
+from src.synapse.core.llm.cache import CacheService
 
 
 @pytest.fixture

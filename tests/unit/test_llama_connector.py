@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock
 import json
 import asyncio
 
-from synapse.core.llm.llama import LlamaConnector
+from src.synapse.core.llm.llama import LlamaConnector
 
 
 class TestLlamaConnector:

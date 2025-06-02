@@ -9,7 +9,7 @@ import pytest
 import time
 from unittest.mock import patch
 
-from synapse.core.llm.cache import CacheService
+from src.synapse.core.llm.cache import CacheService
 
 
 def test_cache_set_get():

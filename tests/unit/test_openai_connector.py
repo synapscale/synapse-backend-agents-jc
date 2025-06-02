@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock
 import json
 import asyncio
 
-from synapse.core.llm.openai import OpenAIConnector
+from src.synapse.core.llm.openai import OpenAIConnector
 
 
 class TestOpenAIConnector:

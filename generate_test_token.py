@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 # Adicionar o diretório src ao path para importar os módulos
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from synapse.core.auth.jwt import create_access_token
+from src.synapse.core.auth.jwt import create_access_token
 
 
 def main():

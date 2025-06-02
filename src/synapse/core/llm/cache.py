@@ -10,7 +10,7 @@ import json
 import hashlib
 from typing import Any, Dict, Optional, List
 
-from synapse.logging import get_logger
+from src.synapse.logging import get_logger
 
 logger = get_logger(__name__)
 

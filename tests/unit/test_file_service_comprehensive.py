@@ -12,10 +12,10 @@ from datetime import datetime
 from fastapi import UploadFile, HTTPException
 import io
 
-from synapse.services.file_service import FileService
-from synapse.models.file import File
-from synapse.core.security.file_validation import validate_file_extension, validate_file_size
-from synapse.config import settings
+from src.synapse.services.file_service import FileService
+from src.synapse.models.file import File
+from src.synapse.core.security.file_validation import validate_file_extension, validate_file_size
+from src.synapse.config import settings
 
 
 @pytest.fixture

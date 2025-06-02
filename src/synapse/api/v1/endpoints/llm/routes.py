@@ -6,89 +6,162 @@ Modelos de Linguagem de Grande Escala (LLMs).
 """
 
 from typing import Dict, Any, List, Optional, Union
-from fastapi import APIRouter, Depends, HTTPException, Body, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Body, Query, Path, Form
 from pydantic import BaseModel, Field
+from enum import Enum
 
-from synapse.api.deps import get_current_user
-from synapse.core.llm import unified_service
-from synapse.logging import get_logger
+from src.synapse.api.deps import get_current_user
+from src.synapse.core.llm import unified_service
+from src.synapse.logging import get_logger
+from src.synapse.schemas.llm import LLMProvider
+from src.synapse.api.v1.endpoints.llm.schemas import (
+    GenerateTextRequest, 
+    CountTokensRequest, 
+    GenerateTextWithProviderRequest,
+    GenerateTextResponse,
+    CountTokensResponse,
+    ListModelsResponse,
+    ListProvidersResponse
+)
 
 logger = get_logger(__name__)
 
 router = APIRouter()
 
+class ProviderEnum(str, Enum):
+    openai = "openai"
+    claude = "claude"
+    gemini = "gemini"
+    llama = "llama"
+    grok = "grok"
+    deepseek = "deepseek"
+    tess = "tess"
 
-class GenerateTextRequest(BaseModel):
-    """Modelo para requisição de geração de texto."""
-    
-    prompt: str = Field(..., description="Texto de entrada para o modelo")
-    provider: Optional[str] = Field(None, description="Provedor de LLM a ser usado")
-    model: Optional[str] = Field(None, description="Modelo específico a ser usado")
-    max_tokens: Optional[int] = Field(1000, description="Número máximo de tokens a gerar")
-    temperature: Optional[float] = Field(0.7, description="Temperatura para amostragem (0.0-1.0)")
-    top_p: Optional[float] = Field(0.95, description="Valor de top-p para amostragem nucleus")
-    top_k: Optional[int] = Field(40, description="Valor de top-k para amostragem")
-    use_cache: Optional[bool] = Field(True, description="Se deve usar o cache (se disponível)")
-    
-    class Config:
-        schema_extra = {
-            "example": {
-                "prompt": "Explique o conceito de machine learning em termos simples.",
-                "provider": "claude",
-                "model": "claude-3-sonnet-20240229",
-                "max_tokens": 500,
-                "temperature": 0.7
-            }
-        }
-
-
-class CountTokensRequest(BaseModel):
-    """Modelo para requisição de contagem de tokens."""
-    
-    text: str = Field(..., description="Texto para contar tokens")
-    provider: Optional[str] = Field(None, description="Provedor de LLM a ser usado")
-    model: Optional[str] = Field(None, description="Modelo específico a ser usado")
-    
-    class Config:
-        schema_extra = {
-            "example": {
-                "text": "Este é um exemplo de texto para contar tokens.",
-                "provider": "claude"
-            }
-        }
+class ModelEnum(str, Enum):
+    gpt_4o = "gpt-4o"
+    gpt_4_turbo = "gpt-4-turbo"
+    gpt_35_turbo = "gpt-3.5-turbo"
+    claude_3_opus = "claude-3-opus"
+    claude_3_sonnet = "claude-3-sonnet-20240229"
+    claude_3_haiku = "claude-3-haiku"
+    gemini_pro = "gemini-1.5-pro"
+    gemini_flash = "gemini-1.5-flash"
+    llama_3_70b = "llama-3-70b"
+    llama_3_8b = "llama-3-8b"
+    llama_2_70b = "llama-2-70b"
+    grok_1 = "grok-1"
+    deepseek_chat = "deepseek-chat"
+    deepseek_coder = "deepseek-coder"
 
 
-@router.post("/generate", response_model=Dict[str, Any], tags=["llm"])
+@router.post("/generate", response_model=GenerateTextResponse, tags=["llm"])
 async def generate_text(
-    request: GenerateTextRequest = Body(...),
+    prompt: str = Query(
+        ..., 
+        description="Texto de entrada para o modelo processar",
+        example="Explique o conceito de machine learning em termos simples."
+    ),
+    provider: Optional[ProviderEnum] = Query(
+        None, 
+        description="Provedor LLM a ser usado",
+        example="openai"
+    ),
+    model: Optional[str] = Query(
+        None, 
+        description="Modelo específico do provedor",
+        example="gpt-4o"
+    ),
+    max_tokens: Optional[int] = Query(
+        1000, 
+        description="Limite máximo de tokens na resposta",
+        ge=1,
+        le=8192,
+        example=500
+    ),
+    temperature: Optional[float] = Query(
+        0.7, 
+        description="Controle de aleatoriedade (0.0-1.0)",
+        ge=0.0,
+        le=1.0,
+        example=0.7
+    ),
+    top_p: Optional[float] = Query(
+        None,
+        description="Probabilidade acumulada para amostragem de núcleo (0.0-1.0)",
+        ge=0.0,
+        le=1.0,
+        example=0.95
+    ),
+    top_k: Optional[int] = Query(
+        None,
+        description="Número de tokens mais prováveis a considerar",
+        ge=1,
+        le=100,
+        example=40
+    ),
+    use_cache: Optional[bool] = Query(
+        None,
+        description="Se deve usar cache para respostas idênticas",
+        example=True
+    ),
     current_user = Depends(get_current_user)
 ):
     """
-    Gera texto a partir de um prompt usando o provedor padrão ou especificado.
+    Gera texto a partir de um prompt usando o provedor de LLM escolhido.
     
-    - **prompt**: Texto de entrada para o modelo
-    - **provider**: Provedor de LLM a ser usado (opcional)
-    - **model**: Modelo específico a ser usado (opcional)
-    - **max_tokens**: Número máximo de tokens a gerar (padrão: 1000)
-    - **temperature**: Temperatura para amostragem (0.0-1.0) (padrão: 0.7)
-    - **top_p**: Valor de top-p para amostragem nucleus (padrão: 0.95)
-    - **top_k**: Valor de top-k para amostragem (padrão: 40)
-    - **use_cache**: Se deve usar o cache (padrão: True)
+    ## Função
+    Este endpoint permite gerar texto usando qualquer provedor de LLM disponível na plataforma.
+    É o principal endpoint para interações com modelos de linguagem.
     
-    Retorna o texto gerado e metadados sobre a geração.
+    ## Quando Usar
+    - Quando precisar gerar conteúdo de texto baseado em um prompt
+    - Quando quiser obter respostas de um LLM específico
+    - Para criar resumos, explicações, traduções ou qualquer geração de texto
+    
+    ## Parâmetros Importantes
+    - **prompt**: O texto que você envia para o modelo processar (obrigatório)
+    - **provider**: Qual provedor de LLM usar (ex: openai, claude, gemini)
+    - **model**: Modelo específico a ser usado (ex: gpt-4o, claude-3-opus)
+    - **temperature**: Controla a aleatoriedade das respostas (0.0 = determinístico, 1.0 = muito aleatório)
+    - **max_tokens**: Limite máximo de tokens na resposta
+    
+    ## Resultado Esperado
+    Retorna um objeto JSON contendo:
+    - O texto gerado pelo modelo
+    - Informações sobre o provedor e modelo utilizados
+    - Estatísticas de uso (tokens)
+    - Metadados adicionais sobre a geração
+    
+    ## Exemplo de Uso
+    ```python
+    import requests
+    
+    url = "https://api.synapscale.com/api/v1/llm/generate"
+    headers = {"Authorization": "Bearer seu_token"}
+    params = {
+        "prompt": "Explique o conceito de machine learning em termos simples.",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "max_tokens": 500,
+        "temperature": 0.7
+    }
+    
+    response = requests.post(url, params=params, headers=headers)
+    print(response.json()["text"])
+    ```
     """
     try:
-        logger.info(f"Requisição de geração de texto recebida: {request.prompt[:50]}...")
+        logger.info(f"Requisição de geração de texto recebida: {prompt[:50]}...")
         
         result = await unified_service.generate_text(
-            prompt=request.prompt,
-            provider=request.provider,
-            model=request.model,
-            max_tokens=request.max_tokens,
-            temperature=request.temperature,
-            top_p=request.top_p,
-            top_k=request.top_k,
-            use_cache=request.use_cache
+            prompt=prompt,
+            provider=provider.value if provider else None,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            top_k=top_k,
+            use_cache=use_cache
         )
         
         return result
@@ -97,27 +170,70 @@ async def generate_text(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/count-tokens", response_model=Dict[str, Any], tags=["llm"])
+@router.post("/count-tokens", response_model=CountTokensResponse, tags=["llm"])
 async def count_tokens(
-    request: CountTokensRequest = Body(...),
+    text: str = Query(
+        ...,
+        description="Texto para contar os tokens",
+        example="Este é um exemplo de texto para contar tokens."
+    ),
+    provider: Optional[ProviderEnum] = Query(
+        None,
+        description="Provedor LLM a ser usado para a contagem",
+        example="openai"
+    ),
+    model: Optional[str] = Query(
+        None,
+        description="Modelo específico a ser usado para a contagem",
+        example="gpt-4o"
+    ),
     current_user = Depends(get_current_user)
 ):
     """
-    Conta o número de tokens em um texto.
+    Conta o número de tokens em um texto usando o tokenizador do provedor especificado.
     
-    - **text**: Texto para contar tokens
-    - **provider**: Provedor de LLM a ser usado (opcional)
-    - **model**: Modelo específico a ser usado (opcional)
+    ## Função
+    Este endpoint calcula quantos tokens existem em um texto, usando o mesmo tokenizador 
+    que o modelo de LLM utilizaria. Isso é útil para estimar custos e verificar limites.
     
-    Retorna a contagem de tokens e metadados.
+    ## Quando Usar
+    - Antes de enviar textos muito longos para verificar se estão dentro dos limites do modelo
+    - Para estimar custos de uso de APIs de LLM que cobram por token
+    - Para otimizar prompts e garantir que caibam no contexto do modelo
+    
+    ## Parâmetros Importantes
+    - **text**: O texto para contar os tokens (obrigatório)
+    - **provider**: Qual provedor de LLM usar para a contagem (ex: openai, claude)
+    - **model**: Modelo específico a ser usado para a contagem
+    
+    ## Resultado Esperado
+    Retorna um objeto JSON contendo:
+    - O número total de tokens no texto
+    - Informações sobre o provedor e modelo utilizados para a contagem
+    - Metadados adicionais sobre a tokenização
+    
+    ## Exemplo de Uso
+    ```python
+    import requests
+    
+    url = "https://api.synapscale.com/api/v1/llm/count-tokens"
+    headers = {"Authorization": "Bearer seu_token"}
+    params = {
+        "text": "Este é um exemplo de texto para contar tokens.",
+        "provider": "openai"
+    }
+    
+    response = requests.post(url, params=params, headers=headers)
+    print(f"Número de tokens: {response.json()['token_count']}")
+    ```
     """
     try:
-        logger.info(f"Requisição de contagem de tokens recebida: {request.text[:50]}...")
+        logger.info(f"Requisição de contagem de tokens recebida: {text[:50]}...")
         
         result = await unified_service.count_tokens(
-            text=request.text,
-            provider=request.provider,
-            model=request.model
+            text=text,
+            provider=provider.value if provider else None,
+            model=model
         )
         
         return result
@@ -126,22 +242,61 @@ async def count_tokens(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/models", response_model=Dict[str, Any], tags=["llm"])
+@router.get("/models", response_model=ListModelsResponse, tags=["llm"])
 async def list_models(
-    provider: Optional[str] = Query(None, description="Filtrar por provedor específico"),
+    provider: Optional[ProviderEnum] = Query(
+        None, 
+        description="Filtrar por provedor específico",
+        example="openai"
+    ),
     current_user = Depends(get_current_user)
 ):
     """
-    Lista todos os modelos disponíveis.
+    Lista todos os modelos de LLM disponíveis na plataforma.
     
-    - **provider**: Filtrar por provedor específico (opcional)
+    ## Função
+    Este endpoint retorna informações detalhadas sobre todos os modelos de LLM 
+    disponíveis para uso, incluindo suas capacidades e características.
     
-    Retorna a lista de modelos agrupados por provedor.
+    ## Quando Usar
+    - Quando precisar descobrir quais modelos estão disponíveis
+    - Para comparar capacidades entre diferentes modelos
+    - Antes de fazer uma chamada de geração, para escolher o modelo mais adequado
+    
+    ## Parâmetros Importantes
+    - **provider**: Filtrar a lista para mostrar apenas modelos de um provedor específico (opcional)
+    
+    ## Resultado Esperado
+    Retorna um objeto JSON contendo:
+    - Lista de modelos disponíveis, agrupados por provedor
+    - Para cada modelo: ID, nome, capacidades, tamanho de contexto, etc.
+    - Status de disponibilidade de cada modelo
+    
+    ## Exemplo de Uso
+    ```python
+    import requests
+    
+    # Listar todos os modelos
+    url = "https://api.synapscale.com/api/v1/llm/models"
+    headers = {"Authorization": "Bearer seu_token"}
+    
+    response = requests.get(url, headers=headers)
+    
+    # Ou filtrar por provedor
+    url = "https://api.synapscale.com/api/v1/llm/models?provider=openai"
+    response = requests.get(url, headers=headers)
+    
+    for provider, models in response.json()["models"].items():
+        print(f"Provedor: {provider}")
+        for model in models:
+            print(f"  - {model['name']}")
+    ```
     """
     try:
-        logger.info(f"Requisição de listagem de modelos recebida, provedor: {provider or 'todos'}")
+        provider_value = provider.value if provider else None
+        logger.info(f"Requisição de listagem de modelos recebida, provedor: {provider_value or 'todos'}")
         
-        result = await unified_service.list_models(provider=provider)
+        result = await unified_service.list_models(provider=provider_value)
         
         return result
     except Exception as e:
@@ -149,12 +304,40 @@ async def list_models(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/providers", response_model=Dict[str, Any], tags=["llm"])
+@router.get("/providers", response_model=ListProvidersResponse, tags=["llm"])
 async def list_providers():
     """
-    Lista todos os provedores disponíveis.
+    Lista todos os provedores de LLM disponíveis na plataforma.
     
-    Retorna a lista de provedores disponíveis e suas capacidades.
+    ## Função
+    Este endpoint retorna informações sobre todos os provedores de LLM 
+    integrados à plataforma, incluindo seus status e capacidades.
+    
+    ## Quando Usar
+    - Quando precisar saber quais provedores estão disponíveis
+    - Para verificar o status operacional de cada provedor
+    - Para comparar capacidades entre diferentes provedores
+    
+    ## Resultado Esperado
+    Retorna um objeto JSON contendo:
+    - Lista de provedores disponíveis
+    - Para cada provedor: ID, nome, descrição, status
+    - Número de modelos disponíveis por provedor
+    - Links para documentação e websites oficiais
+    
+    ## Exemplo de Uso
+    ```python
+    import requests
+    
+    url = "https://api.synapscale.com/api/v1/llm/providers"
+    headers = {"Authorization": "Bearer seu_token"}
+    
+    response = requests.get(url, headers=headers)
+    
+    for provider in response.json()["providers"]:
+        print(f"{provider['name']}: {provider['status']}")
+        print(f"  Modelos disponíveis: {provider['models_count']}")
+    ```
     """
     try:
         logger.info("Requisição de listagem de provedores recebida")
@@ -167,92 +350,267 @@ async def list_providers():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-
-
-@router.post("/{provider}/generate", response_model=Dict[str, Any], tags=["llm"])
+@router.post("/{provider}/generate", response_model=GenerateTextResponse, tags=["llm"])
 async def generate_text_with_provider(
-    provider: str = Path(..., description="Nome do provedor"),
-    request: GenerateTextRequest = Body(...),
+    provider: ProviderEnum = Path(
+        ..., 
+        description="Nome do provedor",
+        example="openai"
+    ),
+    prompt: str = Query(
+        ..., 
+        description="Texto de entrada para o modelo processar",
+        example="Explique o conceito de machine learning em termos simples."
+    ),
+    model: Optional[str] = Query(
+        None, 
+        description="Modelo específico do provedor",
+        example="gpt-4o"
+    ),
+    max_tokens: Optional[int] = Query(
+        1000, 
+        description="Limite máximo de tokens na resposta",
+        ge=1,
+        le=8192,
+        example=500
+    ),
+    temperature: Optional[float] = Query(
+        0.7, 
+        description="Controle de aleatoriedade (0.0-1.0)",
+        ge=0.0,
+        le=1.0,
+        example=0.7
+    ),
+    presence_penalty: Optional[float] = Query(
+        None,
+        description="Penalidade de presença (apenas OpenAI)",
+        ge=-2.0,
+        le=2.0,
+        example=0.2
+    ),
+    frequency_penalty: Optional[float] = Query(
+        None,
+        description="Penalidade de frequência (apenas OpenAI)",
+        ge=-2.0,
+        le=2.0,
+        example=0.3
+    ),
+    top_p: Optional[float] = Query(
+        None,
+        description="Probabilidade acumulada para amostragem de núcleo (0.0-1.0)",
+        ge=0.0,
+        le=1.0,
+        example=0.95
+    ),
+    top_k: Optional[int] = Query(
+        None,
+        description="Número de tokens mais prováveis a considerar",
+        ge=1,
+        le=100,
+        example=40
+    ),
     current_user = Depends(get_current_user)
 ):
     """
-    Gera texto a partir de um prompt usando o provedor especificado.
+    Gera texto a partir de um prompt usando um provedor específico de LLM.
     
-    - **provider**: Nome do provedor (ex: "claude", "gemini")
-    - **prompt**: Texto de entrada para o modelo
-    - **model**: Modelo específico a ser usado (opcional)
-    - **max_tokens**: Número máximo de tokens a gerar (padrão: 1000)
-    - **temperature**: Temperatura para amostragem (0.0-1.0) (padrão: 0.7)
-    - **top_p**: Valor de top-p para amostragem nucleus (padrão: 0.95)
-    - **top_k**: Valor de top-k para amostragem (padrão: 40)
-    - **use_cache**: Se deve usar o cache (padrão: True)
+    ## Função
+    Este endpoint permite gerar texto usando um provedor específico de LLM,
+    com acesso a parâmetros específicos desse provedor.
     
-    Retorna o texto gerado e metadados sobre a geração.
+    ## Quando Usar
+    - Quando precisar usar parâmetros específicos de um provedor
+    - Quando quiser garantir que um provedor específico seja usado
+    - Para testar ou comparar resultados de um provedor específico
+    
+    ## Parâmetros Importantes
+    - **provider**: O provedor de LLM a ser usado (especificado na URL)
+    - **prompt**: O texto que você envia para o modelo processar (obrigatório)
+    - **model**: Modelo específico a ser usado
+    - **temperature**: Controla a aleatoriedade das respostas
+    - **max_tokens**: Limite máximo de tokens na resposta
+    - **presence_penalty**: Penalidade para tokens já presentes (OpenAI)
+    - **frequency_penalty**: Penalidade para tokens frequentes (OpenAI)
+    - **top_p**: Probabilidade acumulada para amostragem de núcleo
+    - **top_k**: Número de tokens mais prováveis a considerar
+    
+    ## Resultado Esperado
+    Retorna um objeto JSON contendo:
+    - O texto gerado pelo modelo
+    - Informações sobre o provedor e modelo utilizados
+    - Estatísticas de uso (tokens)
+    - Metadados adicionais sobre a geração
+    
+    ## Exemplo de Uso
+    ```python
+    import requests
+    
+    url = "https://api.synapscale.com/api/v1/llm/openai/generate"
+    headers = {"Authorization": "Bearer seu_token"}
+    params = {
+        "prompt": "Explique o conceito de machine learning em termos simples.",
+        "model": "gpt-4o",
+        "max_tokens": 500,
+        "temperature": 0.7,
+        "presence_penalty": 0.2,
+        "frequency_penalty": 0.3
+    }
+    
+    response = requests.post(url, params=params, headers=headers)
+    print(response.json()["text"])
+    ```
     """
     try:
-        logger.info(f"Requisição de geração de texto com provedor {provider} recebida: {request.prompt[:50]}...")
+        logger.info(f"Requisição de geração de texto com provedor {provider.value} recebida: {prompt[:50]}...")
         
-        # Sobrescrever o provedor na requisição com o do path
-        request_dict = request.dict()
-        request_dict["provider"] = provider
+        # Construir dicionário de parâmetros específicos do provedor
+        provider_params = {}
+        if presence_penalty is not None:
+            provider_params["presence_penalty"] = presence_penalty
+        if frequency_penalty is not None:
+            provider_params["frequency_penalty"] = frequency_penalty
+        if top_p is not None:
+            provider_params["top_p"] = top_p
+        if top_k is not None:
+            provider_params["top_k"] = top_k
         
-        result = await unified_service.generate_text(**request_dict)
-        
-        return result
-    except Exception as e:
-        logger.error(f"Erro ao gerar texto com provedor {provider}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/{provider}/count-tokens", response_model=Dict[str, Any], tags=["llm"])
-async def count_tokens_with_provider(
-    provider: str = Path(..., description="Nome do provedor"),
-    request: CountTokensRequest = Body(...),
-    current_user = Depends(get_current_user)
-):
-    """
-    Conta o número de tokens em um texto usando o provedor especificado.
-    
-    - **provider**: Nome do provedor (ex: "claude", "gemini")
-    - **text**: Texto para contar tokens
-    - **model**: Modelo específico a ser usado (opcional)
-    
-    Retorna a contagem de tokens e metadados.
-    """
-    try:
-        logger.info(f"Requisição de contagem de tokens com provedor {provider} recebida: {request.text[:50]}...")
-        
-        result = await unified_service.count_tokens(
-            text=request.text,
-            provider=provider,
-            model=request.model
+        result = await unified_service.generate_text(
+            prompt=prompt,
+            provider=provider.value,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            **provider_params
         )
         
         return result
     except Exception as e:
-        logger.error(f"Erro ao contar tokens com provedor {provider}: {str(e)}")
+        logger.error(f"Erro ao gerar texto com provedor {provider.value}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{provider}/models", response_model=Dict[str, Any], tags=["llm"])
-async def list_models_for_provider(
-    provider: str = Path(..., description="Nome do provedor"),
+@router.post("/{provider}/count-tokens", response_model=CountTokensResponse, tags=["llm"])
+async def count_tokens_with_provider(
+    provider: ProviderEnum = Path(
+        ..., 
+        description="Nome do provedor",
+        example="openai"
+    ),
+    text: str = Query(
+        ...,
+        description="Texto para contar os tokens",
+        example="Este é um exemplo de texto para contar tokens."
+    ),
+    model: Optional[str] = Query(
+        None,
+        description="Modelo específico a ser usado para a contagem",
+        example="gpt-4o"
+    ),
     current_user = Depends(get_current_user)
 ):
     """
-    Lista os modelos disponíveis para o provedor especificado.
+    Conta o número de tokens em um texto usando o tokenizador de um provedor específico.
     
-    - **provider**: Nome do provedor (ex: "claude", "gemini")
+    ## Função
+    Este endpoint calcula quantos tokens existem em um texto, usando o tokenizador
+    de um provedor específico de LLM.
     
-    Retorna a lista de modelos para o provedor.
+    ## Quando Usar
+    - Quando precisar contar tokens usando um tokenizador específico
+    - Para verificar diferenças de contagem entre diferentes provedores
+    - Para estimar custos de uso de um provedor específico
+    
+    ## Parâmetros Importantes
+    - **provider**: O provedor de LLM a ser usado (especificado na URL)
+    - **text**: O texto para contar os tokens (obrigatório)
+    - **model**: Modelo específico a ser usado para a contagem
+    
+    ## Resultado Esperado
+    Retorna um objeto JSON contendo:
+    - O número total de tokens no texto
+    - Informações sobre o provedor e modelo utilizados para a contagem
+    - Metadados adicionais sobre a tokenização
+    
+    ## Exemplo de Uso
+    ```python
+    import requests
+    
+    url = "https://api.synapscale.com/api/v1/llm/openai/count-tokens"
+    headers = {"Authorization": "Bearer seu_token"}
+    params = {
+        "text": "Este é um exemplo de texto para contar tokens.",
+        "model": "gpt-4o"
+    }
+    
+    response = requests.post(url, params=params, headers=headers)
+    print(f"Número de tokens: {response.json()['token_count']}")
+    ```
     """
     try:
-        logger.info(f"Requisição de listagem de modelos para provedor {provider} recebida")
+        logger.info(f"Requisição de contagem de tokens com provedor {provider.value} recebida: {text[:50]}...")
         
-        result = await unified_service.list_models(provider=provider)
+        result = await unified_service.count_tokens(
+            text=text,
+            provider=provider.value,
+            model=model
+        )
         
         return result
     except Exception as e:
-        logger.error(f"Erro ao listar modelos para provedor {provider}: {str(e)}")
+        logger.error(f"Erro ao contar tokens com provedor {provider.value}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{provider}/models", response_model=ListModelsResponse, tags=["llm"])
+async def list_models_for_provider(
+    provider: ProviderEnum = Path(
+        ..., 
+        description="Nome do provedor",
+        example="openai"
+    ),
+    current_user = Depends(get_current_user)
+):
+    """
+    Lista todos os modelos disponíveis para um provedor específico.
+    
+    ## Função
+    Este endpoint retorna informações detalhadas sobre todos os modelos
+    disponíveis para um provedor específico de LLM.
+    
+    ## Quando Usar
+    - Quando precisar saber quais modelos estão disponíveis para um provedor específico
+    - Para comparar capacidades entre diferentes modelos do mesmo provedor
+    - Antes de fazer uma chamada de geração, para escolher o modelo mais adequado
+    
+    ## Parâmetros Importantes
+    - **provider**: O provedor de LLM a ser consultado (especificado na URL)
+    
+    ## Resultado Esperado
+    Retorna um objeto JSON contendo:
+    - Lista de modelos disponíveis para o provedor especificado
+    - Para cada modelo: ID, nome, capacidades, tamanho de contexto, etc.
+    - Status de disponibilidade de cada modelo
+    
+    ## Exemplo de Uso
+    ```python
+    import requests
+    
+    url = "https://api.synapscale.com/api/v1/llm/openai/models"
+    headers = {"Authorization": "Bearer seu_token"}
+    
+    response = requests.get(url, headers=headers)
+    
+    for model in response.json()["models"]["openai"]:
+        print(f"Modelo: {model['name']}")
+        print(f"  Capacidades: {', '.join(model['capabilities'])}")
+    ```
+    """
+    try:
+        logger.info(f"Requisição de listagem de modelos para provedor {provider.value} recebida")
+        
+        result = await unified_service.list_models(provider=provider.value)
+        
+        return result
+    except Exception as e:
+        logger.error(f"Erro ao listar modelos para provedor {provider.value}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -10,7 +10,7 @@ from unittest.mock import patch, MagicMock
 import json
 import os
 
-from synapse.core.llm.tess import TessAIConnector
+from src.synapse.core.llm.tess import TessAIConnector
 
 
 class TestTessAIConnector:

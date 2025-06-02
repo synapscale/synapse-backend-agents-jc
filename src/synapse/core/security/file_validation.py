@@ -12,13 +12,13 @@ from typing import Dict, List, Optional, Tuple
 
 from PIL import Image
 
-from synapse.config import settings
-from synapse.constants import (
+from src.synapse.config import settings
+from src.synapse.constants import (
     ALLOWED_MIME_TYPES,
     DANGEROUS_EXTENSIONS,
     EXECUTABLE_SIGNATURES,
 )
-from synapse.exceptions import FileValidationError, file_validation_exception
+from src.synapse.exceptions import FileValidationError, file_validation_exception
 
 # Logger
 logger = logging.getLogger(__name__)

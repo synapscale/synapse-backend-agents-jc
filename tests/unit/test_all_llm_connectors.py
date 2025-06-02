@@ -11,15 +11,15 @@ import asyncio
 from unittest.mock import MagicMock, AsyncMock, patch
 
 # Importar os conectores
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.core.llm.claude import ClaudeConnector
-from synapse.core.llm.gemini import GeminiConnector
-from synapse.core.llm.grok import GrokConnector
-from synapse.core.llm.deepseek import DeepSeekConnector
-from synapse.core.llm.tess import TessAIConnector
-from synapse.core.llm.openai import OpenAIConnector
-from synapse.core.llm.llama import LlamaConnector
-from synapse.core.llm.fallback import FallbackConnector
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.core.llm.claude import ClaudeConnector
+from src.synapse.core.llm.gemini import GeminiConnector
+from src.synapse.core.llm.grok import GrokConnector
+from src.synapse.core.llm.deepseek import DeepSeekConnector
+from src.synapse.core.llm.tess import TessAIConnector
+from src.synapse.core.llm.openai import OpenAIConnector
+from src.synapse.core.llm.llama import LlamaConnector
+from src.synapse.core.llm.fallback import FallbackConnector
 
 
 @pytest.mark.asyncio

@@ -11,9 +11,9 @@ import time
 import requests
 from typing import Dict, List, Any, Optional, Union, Tuple
 
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.config import settings
-from synapse.logging import get_logger
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.config import settings
+from src.synapse.logging import get_logger
 
 logger = get_logger(__name__)
 

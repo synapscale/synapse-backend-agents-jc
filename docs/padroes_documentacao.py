@@ -12,7 +12,7 @@ Este módulo contém utilitários para [descrição da funcionalidade].
 
 Exemplo:
     ```python
-    from synapse.utils import helper
+    from src.synapse.utils import helper
     result = helper.format_data(data)
     ```
 """
@@ -170,7 +170,7 @@ Breve descrição do componente e seu propósito no sistema.
 
 ```python
 # Exemplo de código mostrando como usar o componente
-from synapse.component import Feature
+from src.synapse.component import Feature
 
 feature = Feature()
 result = feature.process(data)

@@ -10,9 +10,9 @@ from typing import Dict, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-from synapse.config import settings
-from synapse.core.auth.jwt import decode_token, verify_token
-from synapse.logging import get_logger
+from src.synapse.config import settings
+from src.synapse.core.auth.jwt import decode_token, verify_token
+from src.synapse.logging import get_logger
 
 logger = get_logger(__name__)
 

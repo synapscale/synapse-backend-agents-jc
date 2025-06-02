@@ -3,9 +3,9 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
-from synapse.api.v1.router import api_router
-from synapse.db.base import get_db
-from synapse.middlewares.rate_limiting import rate_limit
+from src.synapse.api.v1.router import api_router
+from src.synapse.db.base import get_db
+from src.synapse.middlewares.rate_limiting import rate_limit
 
 # Teste adicional para endpoints de arquivos
 @pytest.mark.asyncio

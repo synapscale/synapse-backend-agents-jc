@@ -12,9 +12,9 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 
-from synapse.config import settings
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.logging import get_logger
+from src.synapse.config import settings
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.logging import get_logger
 
 logger = get_logger(__name__)
 

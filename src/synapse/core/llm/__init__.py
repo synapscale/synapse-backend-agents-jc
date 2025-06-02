@@ -5,13 +5,13 @@ Este módulo fornece uma interface unificada para interagir com diversos
 provedores de LLMs como Claude, Gemini, Grok e DeepSeek.
 """
 
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.core.llm.factory import LLMFactory
-from synapse.core.llm.cache import CacheService
-from synapse.core.llm.unified import UnifiedLLMService
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.core.llm.factory import LLMFactory
+from src.synapse.core.llm.cache import CacheService
+from src.synapse.core.llm.unified import UnifiedLLMService
 
 # Inicialização do serviço unificado
-from synapse.config import settings
+from src.synapse.config import settings
 
 # Singleton para uso em toda a aplicação
 factory = LLMFactory(settings)
