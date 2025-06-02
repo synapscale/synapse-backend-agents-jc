@@ -11,11 +11,11 @@ async def create_database_correctly():
     print("=== CRIAÇÃO CORRETA DO BANCO ===")
     
     # PASSO 1: Importar Base primeiro
-    from synapse.db.base import Base, init_db, engine
+    from src.synapse.db.base import Base, init_db, engine
     print(f"1. Base importado. Tabelas registradas: {list(Base.metadata.tables.keys())}")
     
     # PASSO 2: Importar o modelo File para registrá-lo
-    from synapse.models.file import File
+    from src.synapse.models.file import File
     print(f"2. Modelo File importado. Tabelas registradas: {list(Base.metadata.tables.keys())}")
     
     # PASSO 3: Verificar se o modelo foi registrado corretamente

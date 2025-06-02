@@ -13,8 +13,8 @@ from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from synapse.main import app
-from synapse.core.auth.jwt import create_access_token
+from src.synapse.main import app
+from src.synapse.core.auth.jwt import create_access_token
 
 
 @pytest.fixture

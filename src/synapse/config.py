@@ -20,7 +20,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = secrets.token_urlsafe(32)
     SERVER_NAME: str = "SynapScale API"
     SERVER_HOST: AnyHttpUrl = Field(default="http://localhost")
-    PROJECT_NAME: str = "SynapScale"
+    PROJECT_NAME: str = "SynapScale Backend API"
+    PROJECT_DESCRIPTION: str = "API completa para integração com múltiplos provedores de LLM, gerenciamento de arquivos e processamento de dados."
+    PROJECT_VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"
@@ -29,7 +31,10 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS_STR: str = Field(default="*", alias="BACKEND_CORS_ORIGINS")
     
     # Configurações de banco de dados
-    SQLALCHEMY_DATABASE_URI: str = "sqlite+aiosqlite:///./synapse.db"
+    SQLALCHEMY_DATABASE_URI: str = os.getenv(
+        "DATABASE_URL",
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/synapse"
+    )
     
     # Configurações de LLM
     CLAUDE_API_KEY: Optional[str] = None

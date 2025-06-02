@@ -10,8 +10,8 @@ import json
 import base64
 from typing import List, Dict, Any, Optional, Union
 
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.logging import get_logger
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.logging import get_logger
 
 logger = get_logger(__name__)
 

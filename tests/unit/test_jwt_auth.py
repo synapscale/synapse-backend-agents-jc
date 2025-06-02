@@ -10,8 +10,8 @@ import jwt
 from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 
-from synapse.core.auth.jwt import create_access_token, decode_token, verify_token
-from synapse.config import settings
+from src.synapse.core.auth.jwt import create_access_token, decode_token, verify_token
+from src.synapse.config import settings
 
 
 @pytest.fixture

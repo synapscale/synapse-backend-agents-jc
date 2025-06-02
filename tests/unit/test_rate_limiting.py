@@ -10,8 +10,8 @@ from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi import FastAPI, Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from synapse.middlewares.rate_limiting import RateLimitingMiddleware, setup_rate_limiting
-from synapse.config import settings
+from src.synapse.middlewares.rate_limiting import RateLimitingMiddleware, setup_rate_limiting
+from src.synapse.config import settings
 
 
 @pytest.fixture

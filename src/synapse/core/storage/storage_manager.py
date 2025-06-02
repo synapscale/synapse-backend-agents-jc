@@ -15,8 +15,8 @@ from typing import Dict, List, Optional, Protocol, Union
 
 import aiofiles
 
-from synapse.config import settings
-from synapse.exceptions import StorageError
+from src.synapse.config import settings
+from src.synapse.exceptions import StorageError
 
 # Logger
 logger = logging.getLogger(__name__)

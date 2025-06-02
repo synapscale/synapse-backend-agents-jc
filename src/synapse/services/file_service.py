@@ -13,11 +13,11 @@ from fastapi import UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from synapse.core.security.file_validation import SecurityValidator, sanitize_filename
-from synapse.core.storage.storage_manager import StorageManager
-from synapse.exceptions import NotFoundError, StorageError, not_found_exception
-from synapse.models.file import File
-from synapse.schemas.file import FileCreate, FileInDB, FileUpdate
+from src.synapse.core.security.file_validation import SecurityValidator, sanitize_filename
+from src.synapse.core.storage.storage_manager import StorageManager
+from src.synapse.exceptions import NotFoundError, StorageError, not_found_exception
+from src.synapse.models.file import File
+from src.synapse.schemas.file import FileCreate, FileInDB, FileUpdate
 
 # Logger
 logger = logging.getLogger(__name__)

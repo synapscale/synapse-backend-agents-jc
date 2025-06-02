@@ -4,15 +4,15 @@ Este módulo fornece uma fábrica para criar instâncias de conectores
 de LLM de forma dinâmica, baseado na configuração.
 """
 from typing import Dict, Any, List, Optional
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.core.llm.claude import ClaudeConnector
-from synapse.core.llm.gemini import GeminiConnector
-from synapse.core.llm.grok import GrokConnector
-from synapse.core.llm.deepseek import DeepSeekConnector
-from synapse.core.llm.tess import TessAIConnector
-from synapse.core.llm.openai import OpenAIConnector
-from synapse.core.llm.llama import LlamaConnector
-from synapse.logging import get_logger
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.core.llm.claude import ClaudeConnector
+from src.synapse.core.llm.gemini import GeminiConnector
+from src.synapse.core.llm.grok import GrokConnector
+from src.synapse.core.llm.deepseek import DeepSeekConnector
+from src.synapse.core.llm.tess import TessAIConnector
+from src.synapse.core.llm.openai import OpenAIConnector
+from src.synapse.core.llm.llama import LlamaConnector
+from src.synapse.logging import get_logger
 
 logger = get_logger(__name__)
 

@@ -13,9 +13,9 @@ import redis
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 
-from synapse.config import settings
-from synapse.core.auth.jwt import get_current_user
-from synapse.exceptions import rate_limit_exception
+from src.synapse.config import settings
+from src.synapse.core.auth.jwt import get_current_user
+from src.synapse.exceptions import rate_limit_exception
 
 # Logger
 logger = logging.getLogger(__name__)

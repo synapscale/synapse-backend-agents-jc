@@ -13,7 +13,7 @@ if 'from sqlalchemy.ext.declarative import declarative_base' in content:
     print("\n❌ PROBLEMA ENCONTRADO: File está criando seu próprio Base!")
     content = content.replace(
         'from sqlalchemy.ext.declarative import declarative_base\n\nBase = declarative_base()',
-        'from synapse.db.base import Base'
+        'from src.synapse.db.base import Base'
     )
 elif 'declarative_base()' in content:
     print("\n❌ PROBLEMA ENCONTRADO: File está criando Base local!")
@@ -21,7 +21,7 @@ else:
     print("\n✅ Import do Base parece correto")
 
 # Verificar se já importa corretamente
-if 'from synapse.db.base import Base' in content:
+if 'from src.synapse.db.base import Base' in content:
     print("✅ Import correto do Base encontrado")
 else:
     print("❌ Import do Base não encontrado - adicionando...")
@@ -34,7 +34,7 @@ else:
         new_lines.append(line)
         # Adicionar após imports do SQLAlchemy
         if 'from sqlalchemy' in line and not import_added:
-            new_lines.append('from synapse.db.base import Base')
+            new_lines.append('from src.synapse.db.base import Base')
             import_added = True
     
     content = '\n'.join(new_lines)

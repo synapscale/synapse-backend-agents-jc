@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-from synapse.constants import FILE_CATEGORIES
+from src.synapse.constants import FILE_CATEGORIES
 
 
 class FileBase(BaseModel):

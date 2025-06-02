@@ -8,10 +8,10 @@ diferentes provedores de LLM através de uma API consistente.
 import time
 from typing import Dict, Any, List, Optional, Union
 
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.core.llm.factory import LLMFactory
-from synapse.core.llm.cache import CacheService
-from synapse.logging import get_logger
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.core.llm.factory import LLMFactory
+from src.synapse.core.llm.cache import CacheService
+from src.synapse.logging import get_logger
 
 logger = get_logger(__name__)
 

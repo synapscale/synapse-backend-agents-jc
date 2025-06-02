@@ -1,0 +1,290 @@
+Biblioteca Anthropic não encontrada. O conector Claude não estará disponível.
+Biblioteca Google Generative AI não encontrada. O conector Gemini não estará disponível.
+Biblioteca xai não instalada. O conector Grok funcionará apenas em modo de teste.
+Biblioteca deepseek não instalada. O conector DeepSeek funcionará apenas em modo de teste.
+/home/ubuntu/.cache/pypoetry/virtualenvs/synapse-backend-d3ONqTod-py3.11/lib/python3.11/site-packages/pydantic/_internal/_config.py:373: UserWarning: Valid config keys have changed in V2:
+* 'schema_extra' has been renamed to 'json_schema_extra'
+  warnings.warn(message, UserWarning)
+2025-06-02 16:32:30,057 - INFO - root - Logging configurado: nível=INFO, ambiente=development
+2025-06-02 16:32:30,057 - INFO - src.synapse.main - CORS configurado com origens: ['*']
+2025-06-02 16:32:30,057 - INFO - src.synapse.middlewares.rate_limiting - Middleware de rate limiting configurado
+INFO:     Started server process [55412]
+INFO:     Waiting for application startup.
+2025-06-02 16:32:30,069 - INFO - src.synapse.main - 🚀 Iniciando serviço de uploads...
+2025-06-02 16:32:30,123 - INFO - src.synapse.db.base - Banco de dados inicializado com sucesso
+2025-06-02 16:32:30,123 - INFO - src.synapse.main - ✅ Serviço de uploads inicializado com sucesso
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-06-02 16:32:40,071 - INFO - src.synapse.main - GET /docs
+2025-06-02 16:32:40,072 - INFO - src.synapse.main - GET /docs - 200
+INFO:     127.0.0.1:37036 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 16:32:40,097 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 16:32:40,169 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     127.0.0.1:37036 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 16:32:40,700 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:32:40,721 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     127.0.0.1:37036 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 16:33:24,162 - INFO - src.synapse.main - GET /docs
+2025-06-02 16:33:24,163 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.162.108.1:59130 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 16:33:24,320 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 16:33:24,321 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     10.162.108.1:59132 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 16:33:24,495 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:33:24,497 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.162.108.1:59142 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 16:43:44,021 - INFO - src.synapse.main - GET /docs
+2025-06-02 16:43:44,024 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:43098 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 16:43:44,046 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 16:43:44,047 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     10.48.143.1:43100 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 16:43:44,448 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:43:44,450 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:43108 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 16:44:01,562 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:44:01,564 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:49074 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 16:44:01,644 - INFO - src.synapse.main - GET /favicon.ico
+2025-06-02 16:44:01,645 - INFO - src.synapse.main - GET /favicon.ico - 404
+INFO:     10.48.143.1:49078 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+2025-06-02 16:44:21,757 - INFO - src.synapse.main - GET /docs
+2025-06-02 16:44:21,757 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:45018 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 16:44:21,776 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 16:44:21,777 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:45024 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 16:44:21,875 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:44:21,877 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:45032 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 16:45:45,201 - INFO - src.synapse.main - HEAD /docs](https://8000-iin2xxmafd4k49go077ku-72b27711.manusvm.computer/docs)
+2025-06-02 16:45:45,202 - INFO - src.synapse.main - HEAD /docs](https://8000-iin2xxmafd4k49go077ku-72b27711.manusvm.computer/docs) - 404
+INFO:     10.48.143.1:51836 - "HEAD /docs%5D%28https%3A//8000-iin2xxmafd4k49go077ku-72b27711.manusvm.computer/docs%29 HTTP/1.1" 404 Not Found
+2025-06-02 16:45:45,208 - INFO - src.synapse.main - GET /docs](https://8000-iin2xxmafd4k49go077ku-72b27711.manusvm.computer/docs)
+2025-06-02 16:45:45,209 - INFO - src.synapse.main - GET /docs](https://8000-iin2xxmafd4k49go077ku-72b27711.manusvm.computer/docs) - 404
+INFO:     10.48.143.1:51846 - "GET /docs%5D%28https%3A//8000-iin2xxmafd4k49go077ku-72b27711.manusvm.computer/docs%29 HTTP/1.1" 404 Not Found
+2025-06-02 16:46:24,595 - INFO - src.synapse.main - GET /docs
+2025-06-02 16:46:24,596 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:58038 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 16:46:24,751 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 16:46:24,753 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     10.48.143.1:58050 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 16:46:24,924 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:46:24,926 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:58058 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 16:46:49,181 - INFO - src.synapse.main - POST /api/v1/llm/count-tokens
+2025-06-02 16:46:49,182 - INFO - src.synapse.main - POST /api/v1/llm/count-tokens - 401
+INFO:     10.48.143.1:34964 - "POST /api/v1/llm/count-tokens HTTP/1.1" 401 Unauthorized
+2025-06-02 16:53:24,411 - INFO - src.synapse.main - GET /docs
+2025-06-02 16:53:24,412 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:44316 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 16:53:24,568 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 16:53:24,570 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     10.48.143.1:44332 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 16:53:24,741 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:53:24,743 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:44338 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 16:56:36,183 - INFO - src.synapse.main - GET /docs
+2025-06-02 16:56:36,184 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:57362 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 16:56:36,339 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 16:56:36,341 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:57374 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 16:56:36,509 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:56:36,511 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:57378 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 16:58:13,520 - INFO - src.synapse.main - GET /docs
+2025-06-02 16:58:13,521 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:44020 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 16:58:13,551 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 16:58:13,552 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     10.48.143.1:44034 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 16:58:13,644 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 16:58:13,646 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:44048 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:00:29,029 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:00:29,030 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:42326 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:00:29,187 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:00:29,188 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:42328 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:00:29,354 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:00:29,356 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:42342 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:01:47,885 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:01:47,887 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:42762 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:01:48,048 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:01:48,050 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:42774 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:01:48,215 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:01:48,217 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:42786 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:03:25,151 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:03:25,152 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:49010 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:03:25,308 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:03:25,310 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:49018 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:03:25,476 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:03:25,478 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:46420 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:05:42,567 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:05:42,568 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:58588 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:05:42,592 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:05:42,593 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     10.48.143.1:58598 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 17:05:42,693 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:05:42,694 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:58608 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:05:48,774 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:05:48,775 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:40360 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:05:48,933 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:05:48,934 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     10.48.143.1:40370 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 17:05:49,105 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:05:49,107 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:40384 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:10:51,646 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:10:51,647 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:43664 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:10:51,806 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:10:51,807 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:43672 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:10:51,975 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:10:51,977 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:43678 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:13:42,847 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:13:42,849 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:47200 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:13:43,007 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:13:43,009 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:47206 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:13:43,180 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:13:43,182 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:47208 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:13:55,529 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:13:55,530 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:53354 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:13:55,554 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:13:55,555 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:53358 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:13:55,664 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:13:55,666 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:53362 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:14:18,736 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:14:18,737 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:36996 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:14:18,917 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:14:18,919 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:36998 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:17:32,475 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:17:32,476 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:33554 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:17:32,633 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:17:32,634 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:33566 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:17:32,805 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:17:32,807 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:33580 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:21:03,303 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:21:03,304 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:54240 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:21:03,461 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:21:03,462 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:54244 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:21:03,634 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:21:03,637 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:54250 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:21:54,023 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:21:54,024 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:58806 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:21:54,047 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:21:54,048 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:58822 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:21:54,151 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:21:54,153 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:58834 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:23:31,132 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:23:31,133 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:42640 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:23:31,291 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:23:31,292 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:42644 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:23:31,462 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:23:31,464 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:42650 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:26:57,287 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:26:57,288 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:41796 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:26:57,445 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:26:57,446 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:41810 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:26:57,617 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:26:57,619 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:41816 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:27:10,914 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:27:10,915 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:55754 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:27:10,939 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:27:10,940 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:55770 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:27:11,045 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:27:11,047 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:55772 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:28:17,663 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:28:17,663 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:32914 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:28:17,847 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:28:17,849 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:32930 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:29:46,911 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:29:46,912 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:45454 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:29:47,070 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:29:47,071 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:45464 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:29:47,240 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:29:47,243 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:45468 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:31:39,789 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:31:39,790 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:56792 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:31:39,974 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:31:39,976 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:56796 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:31:58,110 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:31:58,111 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:51124 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:31:58,131 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:31:58,132 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:51130 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:31:58,235 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:31:58,237 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:51134 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:35:01,440 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:35:01,441 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:60736 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:35:01,600 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:35:01,601 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 304
+INFO:     10.48.143.1:60740 - "GET /static/custom-swagger-ui.css HTTP/1.1" 304 Not Modified
+2025-06-02 17:35:01,772 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:35:01,774 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:60752 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:37:38,695 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:37:38,696 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:46682 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:37:38,719 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css
+2025-06-02 17:37:38,720 - INFO - src.synapse.main - GET /static/custom-swagger-ui.css - 200
+INFO:     10.48.143.1:46686 - "GET /static/custom-swagger-ui.css HTTP/1.1" 200 OK
+2025-06-02 17:37:38,814 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:37:38,816 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:46698 - "GET /openapi.json HTTP/1.1" 200 OK
+2025-06-02 17:38:00,134 - INFO - src.synapse.main - GET /docs
+2025-06-02 17:38:00,135 - INFO - src.synapse.main - GET /docs - 200
+INFO:     10.48.143.1:39738 - "GET /docs HTTP/1.1" 200 OK
+2025-06-02 17:38:00,316 - INFO - src.synapse.main - GET /openapi.json
+2025-06-02 17:38:00,318 - INFO - src.synapse.main - GET /openapi.json - 200
+INFO:     10.48.143.1:39754 - "GET /openapi.json HTTP/1.1" 200 OK

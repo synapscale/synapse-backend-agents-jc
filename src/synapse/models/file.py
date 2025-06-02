@@ -12,7 +12,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 # CORREÇÃO: Importar Base do arquivo correto ao invés de criar um novo
-from synapse.db.base import Base
+from src.synapse.db.base import Base
 
 
 class File(Base):

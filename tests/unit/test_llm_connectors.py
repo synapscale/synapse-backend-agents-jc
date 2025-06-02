@@ -9,11 +9,11 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import json
 
-from synapse.core.llm.base import BaseLLMConnector
-from synapse.core.llm.claude import ClaudeConnector
-from synapse.core.llm.gemini import GeminiConnector
-from synapse.core.llm.grok import GrokConnector
-from synapse.core.llm.deepseek import DeepSeekConnector
+from src.synapse.core.llm.base import BaseLLMConnector
+from src.synapse.core.llm.claude import ClaudeConnector
+from src.synapse.core.llm.gemini import GeminiConnector
+from src.synapse.core.llm.grok import GrokConnector
+from src.synapse.core.llm.deepseek import DeepSeekConnector
 
 
 @pytest.fixture

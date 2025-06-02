@@ -2,10 +2,10 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import UploadFile, HTTPException
-from synapse.core.security.file_validation import validate_file
-from synapse.services.file_service import FileService
-from synapse.models.file import File
-from synapse.core.storage.storage_manager import StorageManager
+from src.synapse.core.security.file_validation import validate_file
+from src.synapse.services.file_service import FileService
+from src.synapse.models.file import File
+from src.synapse.core.storage.storage_manager import StorageManager
 
 # Teste adicional para validação de arquivo
 @pytest.mark.asyncio
