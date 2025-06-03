@@ -1,11 +1,11 @@
 """Script para inicializar o banco de dados corretamente."""
-import asyncio
 import sqlite3
-from src.synapse.database import Base, engine
-from src.synapse.database import create_tables
+from src.synapse.database import Base, engine, create_tables
 from src.synapse.models.file import File  # IMPORTANTE: Importar o modelo
 
-async def create_database():
+
+def create_database():
+    """Cria o banco de dados e todas as tabelas."""
     print("=== INICIALIZANDO BANCO DE DADOS ===")
     
     # Verificar se o modelo foi registrado
@@ -13,7 +13,7 @@ async def create_database():
     
     # Criar todas as tabelas
     print("Criando tabelas...")
-    await init_db()
+    create_tables()
     
     # Verificar tabelas criadas
     print("\n=== VERIFICANDO TABELAS CRIADAS ===")
@@ -23,7 +23,7 @@ async def create_database():
     tables = cursor.fetchall()
     print(f"Tabelas no banco: {[table[0] for table in tables]}")
     
-    # Ver estrutura da tabela files
+    # Ver estrutura da tabela files se existir
     if ('files',) in tables:
         print("\n=== ESTRUTURA DA TABELA FILES ===")
         cursor.execute("PRAGMA table_info(files);")
@@ -32,7 +32,8 @@ async def create_database():
             print(f"  {col[1]} ({col[2]})")
     
     conn.close()
-    print("\n✅ Banco inicializado com sucesso!")
+    print("✅ Banco de dados inicializado com sucesso!")
+
 
 if __name__ == "__main__":
-    asyncio.run(create_database())
+    create_database()

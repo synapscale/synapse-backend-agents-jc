@@ -13,7 +13,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # Importar os modelos
-from src.synapse.db.base import Base
+from src.synapse.database import Base
 from src.synapse.models import *
 
 # Configuração do Alembic
