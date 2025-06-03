@@ -35,6 +35,35 @@ class User(Base):
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     executions = relationship("Execution", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    variables = relationship("UserVariable", back_populates="user", cascade="all, delete-orphan")
+    workflow_executions = relationship("WorkflowExecution", back_populates="user", cascade="all, delete-orphan")
+    
+    # Relacionamentos de templates
+    created_templates = relationship("WorkflowTemplate", back_populates="author", cascade="all, delete-orphan")
+    template_reviews = relationship("TemplateReview", back_populates="user", cascade="all, delete-orphan")
+    template_downloads = relationship("TemplateDownload", back_populates="user", cascade="all, delete-orphan")
+    favorite_templates = relationship("TemplateFavorite", back_populates="user", cascade="all, delete-orphan")
+    template_collections = relationship("TemplateCollection", back_populates="creator", cascade="all, delete-orphan")
+    template_usage = relationship("TemplateUsage", back_populates="user", cascade="all, delete-orphan")
+    
+    # Relacionamentos de marketplace
+    marketplace_components = relationship("MarketplaceComponent", back_populates="author", cascade="all, delete-orphan")
+    component_ratings = relationship("ComponentRating", back_populates="user", cascade="all, delete-orphan")
+    component_downloads = relationship("ComponentDownload", back_populates="user", cascade="all, delete-orphan")
+    component_purchases = relationship("ComponentPurchase", back_populates="user", cascade="all, delete-orphan")
+    
+    # Relacionamentos de workspaces
+    owned_workspaces = relationship("Workspace", back_populates="owner", cascade="all, delete-orphan")
+    workspace_memberships = relationship("WorkspaceMember", back_populates="user", cascade="all, delete-orphan")
+    workspace_invitations_sent = relationship("WorkspaceInvitation", foreign_keys="WorkspaceInvitation.inviter_id", back_populates="inviter")
+    workspace_invitations_received = relationship("WorkspaceInvitation", foreign_keys="WorkspaceInvitation.invited_user_id", back_populates="invited_user")
+    
+    # Relacionamentos de analytics
+    analytics_events = relationship("AnalyticsEvent", back_populates="user", cascade="all, delete-orphan")
+    behavior_metrics = relationship("UserBehaviorMetric", back_populates="user", cascade="all, delete-orphan")
+    custom_reports = relationship("CustomReport", back_populates="user", cascade="all, delete-orphan")
+    user_insights = relationship("UserInsight", back_populates="user", cascade="all, delete-orphan")
+    analytics_dashboards = relationship("AnalyticsDashboard", back_populates="user", cascade="all, delete-orphan")
 
     def verify_password(self, password: str) -> bool:
         """Verifica se a senha fornecida está correta"""

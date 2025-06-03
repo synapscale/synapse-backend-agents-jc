@@ -1,8 +1,7 @@
 """Script para inicializar o banco de dados corretamente."""
 import asyncio
 import sqlite3
-from src.synapse.database import Base, engine
-from src.synapse.database import create_tables
+from src.synapse.db.base import init_db, Base, engine
 from src.synapse.models.file import File  # IMPORTANTE: Importar o modelo
 
 async def create_database():
