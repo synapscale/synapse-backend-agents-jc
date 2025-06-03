@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
+    BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
     FRONTEND_URL: str = "http://localhost:3000"
     
     # Email SMTP
