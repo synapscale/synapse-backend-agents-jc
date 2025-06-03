@@ -227,3 +227,10 @@ def validation_exception(message: str) -> HTTPException:
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         detail=message,
     )
+
+
+# Aliases para compatibilidade
+NotFoundException = NotFoundError
+ForbiddenException = AuthorizationError
+BadRequestException = ValidationError
+

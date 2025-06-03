@@ -6,6 +6,8 @@ from typing import List, Optional
 import os
 
 class Settings(BaseSettings):
+    model_config = {"extra": "allow", "env_file": ".env", "case_sensitive": True}
+    
     # Configurações gerais
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
@@ -33,7 +35,7 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS
-    BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
+    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
     FRONTEND_URL: str = "http://localhost:3000"
     
     # Email SMTP
@@ -66,7 +68,7 @@ class Settings(BaseSettings):
     GCS_CREDENTIALS_PATH: Optional[str] = None
     
     # Provedores LLM
-    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = "demo-key-for-development"
     OPENAI_ORG_ID: Optional[str] = None
     CLAUDE_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
@@ -97,6 +99,7 @@ class Settings(BaseSettings):
     ENABLE_HTTPS_REDIRECT: bool = False
     SECURE_COOKIES: bool = False
     CSRF_PROTECTION: bool = True
+    ENCRYPTION_KEY: str = "c3luYXBzZS1kZXYtZW5jcnlwdGlvbi1rZXktMzJi"
     
     # Cache
     CACHE_TTL_DEFAULT: int = 300  # 5 minutos
@@ -132,10 +135,6 @@ class Settings(BaseSettings):
     SHOW_DOCS: bool = True
     ENABLE_PROFILING: bool = False
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        
     def get_database_url(self) -> str:
         """Retorna URL do banco de dados formatada"""
         return self.DATABASE_URL

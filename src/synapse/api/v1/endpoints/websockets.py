@@ -12,11 +12,11 @@ from sqlalchemy.orm import Session
 import jwt
 
 from src.synapse.database import get_db
+from src.synapse.api.deps import get_current_user
 from src.synapse.models.user import User
 from src.synapse.models.workflow_execution import WorkflowExecution
 from src.synapse.core.websockets.execution_manager import execution_websocket_manager
 from src.synapse.core.auth.jwt import jwt_manager
-from src.synapse.api.deps import get_current_user
 from src.synapse.config import settings
 
 logger = logging.getLogger(__name__)

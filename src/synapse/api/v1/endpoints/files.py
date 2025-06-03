@@ -21,7 +21,7 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.synapse.constants import FILE_CATEGORIES
-from src.synapse.core.auth.jwt import get_current_user
+from src.synapse.api.deps import get_current_user
 from src.synapse.database import get_db
 from src.synapse.exceptions import file_validation_exception
 from src.synapse.middlewares.rate_limiting import rate_limit

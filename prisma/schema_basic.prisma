@@ -1,0 +1,17 @@
+cd hello-prisma && npx prisma migrate dev --name init// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo básico para introspecção
+model temp_table {
+  id Int @id @default(autoincrement())
+}

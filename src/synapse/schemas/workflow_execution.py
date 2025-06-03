@@ -11,6 +11,7 @@ from enum import Enum
 
 from src.synapse.models.workflow_execution import ExecutionStatus, NodeExecutionStatus
 
+
 # Schemas base para execução
 class ExecutionBase(BaseModel):
     """Schema base para execução de workflows"""

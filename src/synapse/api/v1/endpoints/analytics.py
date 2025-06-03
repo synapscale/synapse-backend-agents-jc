@@ -20,7 +20,7 @@ from src.synapse.schemas.analytics import (
     FunnelResult, CohortAnalysis, CohortResult, ABTestConfig, ABTestResult,
     ExportRequest, ExportResponse, RealTimeStats, AlertRule, AlertResponse
 )
-from src.synapse.api.deps import get_current_user, get_current_admin_user
+from src.synapse.api.deps import get_current_user, get_admin_user
 
 router = APIRouter()
 
@@ -84,7 +84,7 @@ async def get_system_performance_metrics(
     start_date: datetime = Query(..., description="Data de início"),
     end_date: datetime = Query(..., description="Data de fim"),
     granularity: str = Query("hour", pattern="^(minute|hour|day)$"),
-    current_admin: User = Depends(get_current_admin_user),
+    current_admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     """Obtém métricas de performance do sistema"""
@@ -96,7 +96,7 @@ async def get_business_metrics(
     start_date: datetime = Query(..., description="Data de início"),
     end_date: datetime = Query(..., description="Data de fim"),
     granularity: str = Query("day", pattern="^(day|week|month)$"),
-    current_admin: User = Depends(get_current_admin_user),
+    current_admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     """Obtém métricas de negócio"""
@@ -362,7 +362,7 @@ async def generate_insights(
 @router.get("/insights/system", response_model=SystemInsights)
 async def get_system_insights(
     days: int = Query(7, ge=1, le=90, description="Período em dias"),
-    current_admin: User = Depends(get_current_admin_user),
+    current_admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     """Obtém insights do sistema"""
@@ -571,7 +571,7 @@ async def resume_alert(
 
 @router.get("/admin/stats")
 async def get_admin_analytics_stats(
-    current_admin: User = Depends(get_current_admin_user),
+    current_admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     """Obtém estatísticas administrativas de analytics"""
@@ -581,7 +581,7 @@ async def get_admin_analytics_stats(
 @router.post("/admin/cleanup")
 async def cleanup_old_data(
     days: int = Query(90, ge=30, le=365, description="Manter dados dos últimos N dias"),
-    current_admin: User = Depends(get_current_admin_user),
+    current_admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     """Limpa dados antigos de analytics"""
@@ -591,10 +591,10 @@ async def cleanup_old_data(
 
 @router.post("/admin/recompute-metrics")
 async def recompute_metrics(
+    background_tasks: BackgroundTasks,
     start_date: datetime = Query(..., description="Data de início"),
     end_date: datetime = Query(..., description="Data de fim"),
-    background_tasks: BackgroundTasks,
-    current_admin: User = Depends(get_current_admin_user),
+    current_admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     """Recomputa métricas para um período"""

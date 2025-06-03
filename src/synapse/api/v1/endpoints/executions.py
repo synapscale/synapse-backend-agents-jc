@@ -10,7 +10,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from src.synapse.database import get_db
-from src.synapse.core.auth import get_current_user
+from src.synapse.api.deps import get_current_user
 from src.synapse.models.user import User
 from src.synapse.schemas.workflow_execution import (
     ExecutionCreate, ExecutionUpdate, ExecutionResponse,

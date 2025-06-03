@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""
+Script para criar um schema Prisma simplificado e funcional
+Remove relações problemáticas e modelos sem ID válido
+"""
+
+def create_simplified_schema():
+    schema_content = """
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo principal de usuários
+model users {
+  id                      String    @id
+  email                   String    @unique(map: "ix_users_email")
+  password_hash           String
+  first_name              String?
+  last_name               String?
+  avatar_url              String?
+  is_active               Boolean?
+  is_verified             Boolean?
+  role                    String?
+  subscription_plan       String?
+  preferences             String?
+  created_at              DateTime? @default(now())
+  updated_at              DateTime? @default(now())
+  
+  // Relacionamentos diretos que funcionam
+  conversations           conversations[]
+  messages                messages[]
+  email_verification_tokens email_verification_tokens[]
+  password_reset_tokens   password_reset_tokens[]
+  refresh_tokens          refresh_tokens[]
+}
+
+// Conversas
+model conversations {
+  id                String    @id
+  title             String?
+  user_id           String
+  agent_id          String?
+  status            String?
+  context           String?
+  settings          String?
+  total_messages    Int?
+  total_tokens      Int?
+  created_at        DateTime? @default(now())
+  updated_at        DateTime? @default(now())
+  
+  users             users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messages          messages[]
+  
+  @@index([user_id], map: "ix_conversations_user_id")
+}
+
+// Mensagens
+model messages {
+  id                String    @id
+  conversation_id   String
+  user_id           String?
+  role              String
+  content           String
+  attachments       String?
+  token_count       Int?
+  model_used        String?
+  response_time     Float?
+  created_at        DateTime? @default(now())
+  
+  conversations     conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users             users?        @relation(fields: [user_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  
+  @@index([conversation_id], map: "ix_messages_conversation_id")
+  @@index([user_id], map: "ix_messages_user_id")
+}
+
+// Tokens de verificação de email
+model email_verification_tokens {
+  id         String    @id
+  user_id    String
+  token      String    @unique
+  created_at DateTime? @default(now())
+  expires_at DateTime
+  used_at    DateTime?
+  
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  
+  @@index([user_id], map: "ix_email_verification_tokens_user_id")
+}
+
+// Tokens de reset de senha
+model password_reset_tokens {
+  id         String    @id
+  user_id    String
+  token      String    @unique
+  created_at DateTime? @default(now())
+  expires_at DateTime
+  used_at    DateTime?
+  
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  
+  @@index([user_id], map: "ix_password_reset_tokens_user_id")
+}
+
+// Refresh tokens
+model refresh_tokens {
+  id         String    @id
+  user_id    String
+  token      String    @unique
+  created_at DateTime? @default(now())
+  expires_at DateTime
+  revoked_at DateTime?
+  
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  
+  @@index([user_id], map: "ix_refresh_tokens_user_id")
+}
+
+// Tabelas analytics sem relacionamentos (para evitar conflitos de tipos)
+model analytics_alerts {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  name       String
+  condition  String
+  threshold  String?
+  is_active  Boolean?
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+  
+  @@index([user_id], map: "idx_analytics_alerts_user")
+}
+
+model analytics_dashboards {
+  id          Int       @id @default(autoincrement())
+  user_id     Int
+  name        String
+  description String?
+  layout      String?
+  is_public   Boolean?
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now())
+  
+  @@index([user_id], map: "idx_analytics_dashboards_user")
+}
+
+model analytics_events {
+  id         Int       @id @default(autoincrement())
+  user_id    Int?
+  event_type String
+  event_data String?
+  ip_address String?
+  user_agent String?
+  timestamp  DateTime? @default(now())
+  session_id String?
+  page_url   String?
+  referrer   String?
+  
+  @@index([user_id], map: "idx_analytics_events_user")
+}
+
+// Execuções de workflow
+model workflow_executions {
+  id               String    @id
+  workflow_id      String
+  user_id          String
+  status           String?
+  input_data       String?
+  output_data      String?
+  context_data     String?
+  variables        String?
+  started_at       DateTime?
+  completed_at     DateTime?
+  error_message    String?
+  error_details    String?
+  execution_time   Float?
+  tokens_used      Int?
+  cost_usd         Float?
+  debug_info       String?
+  tags             String?
+  metadata         String?
+  created_at       DateTime? @default(now())
+  updated_at       DateTime? @default(now())
+  
+  @@index([user_id], map: "ix_workflow_executions_user_id")
+  @@index([workflow_id], map: "ix_workflow_executions_workflow_id")
+}
+
+// Sistema de métricas
+model system_performance_metrics {
+  id              Int       @id @default(autoincrement())
+  metric_name     String
+  metric_value    Float
+  metric_unit     String?
+  tags            String?
+  recorded_at     DateTime? @default(now())
+  
+  @@index([metric_name], map: "idx_system_performance_metrics_name")
+}
+
+// Execuções de relatórios
+model report_executions {
+  id                       Int       @id @default(autoincrement())
+  report_id                Int
+  executed_by              String?
+  execution_time           Float?
+  status                   String?
+  result_size              Int?
+  parameters_used          String?
+  created_at               DateTime? @default(now())
+}
+
+// Métricas de execução
+model execution_metrics {
+  id                       Int       @id @default(autoincrement())
+  node_execution_id        String
+  metric_name              String
+  value_numeric            Float?
+  value_string             String?
+  value_json               String?
+  tags                     String?
+  recorded_at              DateTime? @default(now())
+}
+
+// Component versions
+model component_versions {
+  id                       Int       @id @default(autoincrement())
+  component_id             Int
+  version_number           String
+  changelog                String?
+  download_url             String?
+  file_size                Int?
+  checksum                 String?
+  compatibility_info       String?
+  created_at               DateTime? @default(now())
+}
+"""
+    
+    schema_path = "/workspaces/synapse-backend-agents-jc/prisma/schema.prisma"
+    
+    with open(schema_path, 'w') as f:
+        f.write(schema_content)
+    
+    print("✅ Schema Prisma simplificado criado!")
+    print("- Removidas relações com tipos incompatíveis")
+    print("- Mantidos modelos principais: users, conversations, messages")
+    print("- Adicionadas tabelas de tokens e autenticação")
+    print("- Tabelas analytics sem relacionamentos")
+    print("- Schema deve gerar cliente sem erros")
+
+if __name__ == "__main__":
+    create_simplified_schema()

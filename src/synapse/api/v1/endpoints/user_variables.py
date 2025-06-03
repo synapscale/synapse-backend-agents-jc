@@ -25,7 +25,7 @@ from src.synapse.schemas.user_variable import (
     UserVariableBulkValidation
 )
 from src.synapse.services.variable_service import VariableService
-from src.synapse.exceptions import NotFoundError, ValidationError
+from src.synapse.exceptions import NotFoundException, BadRequestException
 
 router = APIRouter(prefix="/variables", tags=["User Variables"])
 
@@ -382,7 +382,7 @@ async def get_all_categories_internal(
     """
     Endpoint interno para obter todas as categorias do sistema
     """
-    from src.synapse.models.user_variable import UserVariable
+    from ..models.user_variable import UserVariable
     
     categories = db.query(UserVariable.category).filter(
         UserVariable.category.isnot(None)

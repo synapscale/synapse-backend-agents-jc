@@ -2,7 +2,7 @@
 Modelo de mensagem para conversações
 """
 from sqlalchemy import Column, String, Boolean, DateTime, Text, JSON, Integer, Float, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid

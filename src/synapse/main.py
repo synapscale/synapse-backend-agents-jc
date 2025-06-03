@@ -71,8 +71,9 @@ async def lifespan(app: FastAPI):
     # Verificar conectividade do banco
     try:
         from src.synapse.database import get_db
+        from sqlalchemy import text
         db = next(get_db())
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         logger.info("✅ Conectividade com banco de dados verificada")
     except Exception as e:

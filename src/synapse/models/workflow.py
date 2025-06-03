@@ -2,7 +2,7 @@
 Modelo completo de Workflow com todas as funcionalidades
 """
 from sqlalchemy import Column, String, Boolean, DateTime, Text, JSON, Integer, ForeignKey, Enum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
@@ -18,11 +18,11 @@ class WorkflowStatus(enum.Enum):
 class Workflow(Base):
     __tablename__ = "workflows"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False)
     description = Column(Text)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=True, index=True)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    workspace_id = Column(String(36), ForeignKey("workspaces.id"), nullable=True, index=True)
     is_public = Column(Boolean, default=False)
     category = Column(String(100))
     tags = Column(JSON, default=list)
@@ -122,9 +122,9 @@ class Workflow(Base):
 class WorkflowNode(Base):
     __tablename__ = "workflow_nodes"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=False, index=True)
-    node_id = Column(UUID(as_uuid=True), ForeignKey("nodes.id"), nullable=False, index=True)
+    id = Column(String(36), primary_key=True, default=uuid.uuid4)
+    workflow_id = Column(String(36), ForeignKey("workflows.id"), nullable=False, index=True)
+    node_id = Column(String(36), ForeignKey("nodes.id"), nullable=False, index=True)
     instance_name = Column(String(200))
     position_x = Column(Integer, nullable=False)
     position_y = Column(Integer, nullable=False)
@@ -151,10 +151,10 @@ class WorkflowNode(Base):
 class WorkflowConnection(Base):
     __tablename__ = "workflow_connections"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=False, index=True)
-    source_node_id = Column(UUID(as_uuid=True), ForeignKey("workflow_nodes.id"), nullable=False)
-    target_node_id = Column(UUID(as_uuid=True), ForeignKey("workflow_nodes.id"), nullable=False)
+    id = Column(String(36), primary_key=True, default=uuid.uuid4)
+    workflow_id = Column(String(36), ForeignKey("workflows.id"), nullable=False, index=True)
+    source_node_id = Column(String(36), ForeignKey("workflow_nodes.id"), nullable=False)
+    target_node_id = Column(String(36), ForeignKey("workflow_nodes.id"), nullable=False)
     source_port = Column(String(100))
     target_port = Column(String(100))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -175,4 +175,4 @@ class WorkflowConnection(Base):
             "target_port": self.target_port,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
-    
+

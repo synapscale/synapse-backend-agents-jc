@@ -18,7 +18,7 @@ from src.synapse.schemas.template import (
     CollectionCreate, CollectionUpdate, CollectionResponse, TemplateInstall,
     TemplateInstallResponse, MarketplaceStats
 )
-from src.synapse.core.auth import get_current_user
+from src.synapse.api.deps import get_current_user
 
 router = APIRouter()
 template_service = TemplateService()

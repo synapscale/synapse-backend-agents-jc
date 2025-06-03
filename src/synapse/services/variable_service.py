@@ -22,7 +22,7 @@ from ..schemas.user_variable import (
     UserVariableStats,
     UserVariableValidation
 )
-from ..exceptions import NotFoundError, AuthorizationError, ValidationError
+from ..exceptions import NotFoundException, ForbiddenException, BadRequestException
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class VariableService:
         ).first()
         
         if not variable:
-            raise NotFoundError(f"Variável com ID {variable_id} não encontrada")
+            raise NotFoundException(f"Variável com ID {variable_id} não encontrada")
         
         return variable
     
@@ -129,7 +129,7 @@ class VariableService:
         # Verificar se já existe uma variável com a mesma chave
         existing = VariableService.get_variable_by_key(db, variable_data.key, user_id)
         if existing:
-            raise ValidationError(f"Já existe uma variável com a chave '{variable_data.key}'")
+            raise BadRequestException(f"Já existe uma variável com a chave '{variable_data.key}'")
         
         # Criar nova variável
         variable = UserVariable.create_variable(
@@ -202,12 +202,12 @@ class VariableService:
         Cria múltiplas variáveis em lote
         """
         if len(variables_data) > 50:
-            raise ValidationError("Máximo de 50 variáveis por operação em lote")
+            raise BadRequestException("Máximo de 50 variáveis por operação em lote")
         
         # Verificar chaves duplicadas no lote
         keys = [v.key.upper() for v in variables_data]
         if len(keys) != len(set(keys)):
-            raise ValidationError("Existem chaves duplicadas no lote")
+            raise BadRequestException("Existem chaves duplicadas no lote")
         
         # Verificar chaves existentes no banco
         existing_keys = db.query(UserVariable.key).filter(
@@ -217,7 +217,7 @@ class VariableService:
         
         if existing_keys:
             existing = [k[0] for k in existing_keys]
-            raise ValidationError(f"Já existem variáveis com as chaves: {', '.join(existing)}")
+            raise BadRequestException(f"Já existem variáveis com as chaves: {', '.join(existing)}")
         
         # Criar variáveis
         variables = []
@@ -250,7 +250,7 @@ class VariableService:
         Atualiza múltiplas variáveis em lote
         """
         if len(updates) > 50:
-            raise ValidationError("Máximo de 50 variáveis por operação em lote")
+            raise BadRequestException("Máximo de 50 variáveis por operação em lote")
         
         result = {}
         for variable_id, data in updates.items():
@@ -274,7 +274,7 @@ class VariableService:
         Remove múltiplas variáveis em lote
         """
         if len(variable_ids) > 50:
-            raise ValidationError("Máximo de 50 variáveis por operação em lote")
+            raise BadRequestException("Máximo de 50 variáveis por operação em lote")
         
         result = db.query(UserVariable).filter(
             UserVariable.id.in_(variable_ids),
@@ -429,7 +429,7 @@ class VariableService:
             }
         
         else:
-            raise ValidationError(f"Formato de exportação não suportado: {export_data.format}")
+            raise BadRequestException(f"Formato de exportação não suportado: {export_data.format}")
     
     @staticmethod
     def get_stats(db: Session, user_id: int) -> UserVariableStats:

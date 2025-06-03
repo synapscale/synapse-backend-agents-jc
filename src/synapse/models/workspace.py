@@ -314,7 +314,7 @@ class WorkspaceActivity(Base):
     
     # Detalhes
     description = Column(String(500), nullable=False)
-    meta_info = Column(JSON, default=dict)
+    meta_data = Column(JSON, default=dict)
     
     # Contexto
     ip_address = Column(String(45))

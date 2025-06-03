@@ -89,7 +89,7 @@ class WorkflowExecution(Base):
     
     # Metadados
     tags = Column(JSON, nullable=True)  # Tags para organização
-    workflow_meta_info = Column(JSON, nullable=True)  # Metadados específicos do workflow
+    meta_data = Column(JSON, nullable=True)  # Metadados adicionais
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -181,7 +181,7 @@ class NodeExecution(Base):
     dependents = Column(JSON, nullable=True)  # IDs dos nós que dependem deste
     
     # Metadados
-    meta_info = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -245,7 +245,7 @@ class ExecutionQueue(Base):
     max_retries = Column(Integer, default=3)
     
     # Metadados
-    meta_info = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

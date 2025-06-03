@@ -10,7 +10,7 @@ import uuid
 
 from src.synapse.database import get_db
 from src.synapse.models.user import User, RefreshToken, PasswordResetToken, EmailVerificationToken
-from src.synapse.core.auth.jwt import jwt_manager, get_current_user, get_current_active_user
+from src.synapse.api.deps import get_current_user, get_current_active_user
 from src.synapse.core.email.service import email_service
 from src.synapse.schemas.auth import (
     UserCreate, UserResponse, Token, RefreshTokenRequest,

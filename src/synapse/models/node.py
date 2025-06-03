@@ -2,7 +2,7 @@
 Modelo completo de Node com todas as funcionalidades
 """
 from sqlalchemy import Column, String, Boolean, DateTime, Text, JSON, Integer, ForeignKey, Enum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
@@ -30,13 +30,13 @@ class NodeStatus(enum.Enum):
 class Node(Base):
     __tablename__ = "nodes"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False)
     description = Column(Text)
     type = Column(Enum(NodeType), nullable=False)
     category = Column(String(100))
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=True, index=True)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    workspace_id = Column(String(36), ForeignKey("workspaces.id"), nullable=True, index=True)
     is_public = Column(Boolean, default=False)
     status = Column(Enum(NodeStatus), default=NodeStatus.DRAFT)
     
@@ -174,12 +174,12 @@ class Node(Base):
 class NodeCategory(Base):
     __tablename__ = "node_categories"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), unique=True, nullable=False)
     description = Column(Text)
     icon = Column(String(10), default="📁")
     color = Column(String(7), default="#6366f1")
-    parent_id = Column(UUID(as_uuid=True), ForeignKey("node_categories.id"), nullable=True)
+    parent_id = Column(String(36), ForeignKey("node_categories.id"), nullable=True)
     sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -205,7 +205,7 @@ class NodeCategory(Base):
 class NodeTemplate(Base):
     __tablename__ = "node_templates"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False)
     description = Column(Text)
     type = Column(Enum(NodeType), nullable=False)
