@@ -11,8 +11,8 @@ from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
-# CORREÇÃO: Importar Base do arquivo correto ao invés de criar um novo
-from src.synapse.db.base import Base
+# Importar Base do arquivo database.py
+from src.synapse.database import Base
 
 
 class File(Base):

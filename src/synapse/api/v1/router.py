@@ -1,15 +1,19 @@
-"""Roteador principal da API v1.
-Este módulo configura o roteador principal da API v1, incluindo
-todos os endpoints disponíveis nesta versão.
+"""
+Router principal da API v1
 """
 from fastapi import APIRouter
+
+# Importar apenas os routers que existem
+from .endpoints.auth import router as auth_router
 from .endpoints.files import router as files_router
 from .endpoints.llm import router as llm_router
+from .endpoints.conversations import router as conversations_router
 
-# Criar roteador principal
-router = APIRouter()
+# Router principal da API v1
+api_router = APIRouter()
 
-# Incluir sub-roteadores
-# LLM router deve vir antes do files router para evitar conflitos com {file_id}
-router.include_router(llm_router, prefix="/llm")
-router.include_router(files_router)
+# Incluir todos os routers de endpoints existentes
+api_router.include_router(auth_router, prefix="/auth", tags=["authentication"])
+api_router.include_router(files_router, prefix="/files", tags=["files"])
+api_router.include_router(llm_router, prefix="/llm", tags=["llm"])
+api_router.include_router(conversations_router, prefix="/conversations", tags=["conversations"])

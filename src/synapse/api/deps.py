@@ -5,99 +5,110 @@ Este módulo define as dependências comuns utilizadas pelos endpoints da API,
 como autenticação, validação e injeção de dependências.
 """
 
-from typing import Dict, Optional
-
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
 
 from src.synapse.config import settings
-from src.synapse.core.auth.jwt import decode_token, verify_token
-from src.synapse.logging import get_logger
-
-logger = get_logger(__name__)
+from src.synapse.database import get_db
+from src.synapse.models.user import User
+from src.synapse.core.auth.jwt import verify_token, verify_token
 
 # Esquema de autenticação OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
-
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict:
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> User:
     """
     Obtém o usuário atual a partir do token JWT.
     
     Args:
         token: Token JWT de autenticação
+        db: Sessão do banco de dados
         
     Returns:
-        Dados do usuário autenticado
+        Objeto User do usuário autenticado
         
     Raises:
-        HTTPException: Se o token for inválido ou expirado
+        HTTPException: Se o token for inválido ou usuário não encontrado
     """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Não foi possível validar as credenciais",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
     try:
-        # Verificar token
-        is_valid = verify_token(token)
-        if not is_valid:
-            logger.warning(f"Token inválido: {token[:10]}...")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token de autenticação inválido",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+        # Verificar e decodificar token
+        if not verify_token(token):
+            raise credentials_exception
+            
+        payload = verify_token(token)
+        user_id: str = payload.get("sub")
         
-        # Decodificar token
-        payload = decode_token(token)
+        if user_id is None:
+            raise credentials_exception
+            
+    except Exception:
+        raise credentials_exception
+    
+    # Buscar usuário no banco de dados
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if user is None:
+        raise credentials_exception
         
-        # Verificar se o usuário existe
-        user_id = payload.get("sub")
-        if not user_id:
-            logger.warning("Token sem identificação de usuário")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token de autenticação inválido",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        
-        # Em uma implementação real, aqui verificaríamos o usuário no banco de dados
-        # Por simplicidade, retornamos os dados do token
-        user_data = {
-            "id": user_id,
-            "username": payload.get("username", "unknown"),
-            "email": payload.get("email", "unknown@example.com"),
-            "roles": payload.get("roles", ["user"]),
-        }
-        
-        return user_data
-        
-    except HTTPException:
-        # Repassar exceções HTTP
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao autenticar usuário: {str(e)}")
+    # Verificar se usuário está ativo
+    if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Falha na autenticação",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Usuário inativo"
         )
+    
+    return user
 
-
-async def get_admin_user(current_user: Dict = Depends(get_current_user)) -> Dict:
+async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
     """
     Verifica se o usuário atual é um administrador.
     
     Args:
-        current_user: Dados do usuário atual
+        current_user: Usuário atual
         
     Returns:
-        Dados do usuário administrador
+        Objeto User do administrador
         
     Raises:
         HTTPException: Se o usuário não for administrador
     """
-    if "admin" not in current_user.get("roles", []):
-        logger.warning(f"Acesso de administrador negado para usuário {current_user['id']}")
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Permissão de administrador necessária",
+            detail="Permissão de administrador necessária"
         )
     
     return current_user
+
+async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+    """
+    Verifica se o usuário atual está ativo.
+    
+    Args:
+        current_user: Usuário atual
+        
+    Returns:
+        Objeto User ativo
+        
+    Raises:
+        HTTPException: Se o usuário estiver inativo
+    """
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Usuário inativo"
+        )
+    
+    return current_user
+

@@ -1,187 +1,210 @@
-"""Utilitários para autenticação JWT.
-
-Este módulo contém funções para criação, validação e gerenciamento
-de tokens JWT para autenticação de usuários.
 """
-
-import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Union
-
+Sistema JWT completo para autenticação e autorização
+"""
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Dict, Any
 import jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-
+from fastapi import HTTPException, status, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
 from src.synapse.config import settings
-from src.synapse.exceptions import authentication_exception
+from src.synapse.database import get_db
+from src.synapse.models.user import User, RefreshToken
+import secrets
+import uuid
 
-# Configuração do OAuth2
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+security = HTTPBearer()
 
-# Logger
-logger = logging.getLogger(__name__)
+class JWTManager:
+    def __init__(self):
+        self.secret_key = settings.JWT_SECRET_KEY
+        self.algorithm = settings.JWT_ALGORITHM
+        self.access_token_expire_minutes = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        self.refresh_token_expire_days = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
 
+    def create_access_token(self, data: Dict[str, Any]) -> str:
+        """Cria um token de acesso JWT"""
+        to_encode = data.copy()
+        expire = datetime.now(timezone.utc) + timedelta(minutes=self.access_token_expire_minutes)
+        to_encode.update({
+            "exp": expire,
+            "iat": datetime.now(timezone.utc),
+            "type": "access"
+        })
+        return jwt.encode(to_encode, self.secret_key, algorithm=self.algorithm)
 
-def create_access_token(
-    data: Dict[str, Any], expires_delta: Optional[timedelta] = None
-) -> str:
-    """Cria um token JWT com as informações do usuário.
-
-    Args:
-        data: Dados a serem codificados no token
-        expires_delta: Tempo de expiração personalizado (opcional)
-
-    Returns:
-        Token JWT codificado
-
-    Raises:
-        ValueError: Se a SECRET_KEY não estiver definida
-    """
-    if not settings.SECRET_KEY:
-        raise ValueError("SECRET_KEY não definida. Impossível criar token.")
-
-    to_encode = data.copy()
-
-    # Definir expiração
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(
-            minutes=30  # Valor padrão se não estiver configurado
+    def create_refresh_token(self, user_id: str, db: Session) -> str:
+        """Cria um token de refresh e salva no banco"""
+        token = secrets.token_urlsafe(32)
+        expire = datetime.now(timezone.utc) + timedelta(days=self.refresh_token_expire_days)
+        
+        # Criar registro no banco
+        refresh_token = RefreshToken(
+            token=token,
+            user_id=uuid.UUID(user_id),
+            expires_at=expire
         )
+        db.add(refresh_token)
+        db.commit()
+        
+        return token
 
-    to_encode.update({"exp": expire})
+    def verify_token(self, token: str) -> Dict[str, Any]:
+        """Verifica e decodifica um token JWT"""
+        try:
+            payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expirado"
+            )
+        except jwt.JWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token inválido"
+            )
 
-    # Codificar token
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm="HS256"
-    )
+    def refresh_access_token(self, refresh_token: str, db: Session) -> Optional[str]:
+        """Gera um novo token de acesso usando refresh token"""
+        # Buscar refresh token no banco
+        token_record = db.query(RefreshToken).filter(
+            RefreshToken.token == refresh_token,
+            RefreshToken.is_revoked == False
+        ).first()
 
-    return encoded_jwt
+        if not token_record or not token_record.is_valid():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token inválido ou expirado"
+            )
 
+        # Buscar usuário
+        user = db.query(User).filter(User.id == token_record.user_id).first()
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Usuário inativo"
+            )
 
-def decode_token(token: str) -> Dict[str, Any]:
-    """Decodifica um token JWT e retorna seu payload.
+        # Criar novo access token
+        access_token = self.create_access_token(data={"sub": user.email, "user_id": str(user.id)})
+        return access_token
 
-    Args:
-        token: Token JWT a ser decodificado
+    def revoke_refresh_token(self, refresh_token: str, db: Session):
+        """Revoga um refresh token"""
+        token_record = db.query(RefreshToken).filter(
+            RefreshToken.token == refresh_token
+        ).first()
+        
+        if token_record:
+            token_record.is_revoked = True
+            db.commit()
 
-    Returns:
-        Payload do token decodificado
+    def revoke_all_user_tokens(self, user_id: str, db: Session):
+        """Revoga todos os refresh tokens de um usuário"""
+        db.query(RefreshToken).filter(
+            RefreshToken.user_id == uuid.UUID(user_id)
+        ).update({"is_revoked": True})
+        db.commit()
 
-    Raises:
-        jwt.PyJWTError: Se o token for inválido ou expirado
-    """
+# Instância global do gerenciador JWT
+jwt_manager = JWTManager()
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """Dependency para obter o usuário atual autenticado"""
+    token = credentials.credentials
+    
     try:
-        # Decodificar token
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=["HS256"]
-        )
-        return payload
-    except jwt.PyJWTError as exc:
-        logger.error(f"Erro ao decodificar token JWT: {str(exc)}")
-        raise exc
-
-
-def verify_token(token: str) -> bool:
-    """Verifica se um token JWT é válido.
-
-    Args:
-        token: Token JWT a ser verificado
-
-    Returns:
-        True se o token for válido, False caso contrário
-    """
-    try:
-        # Tentar decodificar o token
-        decode_token(token)
-        return True
+        payload = jwt_manager.verify_token(token)
+        email: str = payload.get("sub")
+        user_id: str = payload.get("user_id")
+        
+        if email is None or user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token inválido"
+            )
+    except HTTPException:
+        raise
     except Exception:
-        return False
-
-
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> Dict[str, Any]:
-    """Valida o token JWT e retorna informações do usuário.
-
-    Args:
-        token: Token JWT de autenticação
-
-    Returns:
-        Dicionário com informações do usuário autenticado
-
-    Raises:
-        HTTPException: Se o token for inválido ou expirado
-    """
-    try:
-        # Decodificar token
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=["HS256"]
-        )
-
-        # Extrair ID do usuário
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            logger.warning("Token sem subject (sub) encontrado")
-            raise authentication_exception("Credenciais inválidas")
-
-        return {
-            "id": user_id,
-            "username": payload.get("username", "unknown"),
-            "role": payload.get("role", "user"),
-            "scopes": payload.get("scopes", []),
-        }
-    except jwt.PyJWTError as exc:
-        logger.error(f"Erro na validação do token JWT: {str(exc)}")
-        raise authentication_exception("Credenciais inválidas") from exc
-
-
-def verify_admin_access(
-    current_user: Dict[str, Any] = Depends(get_current_user),
-) -> Dict[str, Any]:
-    """Verifica se o usuário tem acesso de administrador.
-
-    Args:
-        current_user: Informações do usuário atual
-
-    Returns:
-        Informações do usuário se tiver acesso de administrador
-
-    Raises:
-        HTTPException: Se o usuário não tiver permissão de administrador
-    """
-    if current_user.get("role") != "admin":
-        logger.warning(
-            f"Tentativa de acesso administrativo negada para usuário {current_user.get('id')}"
-        )
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Permissão negada. Acesso de administrador necessário.",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Não foi possível validar as credenciais"
+        )
+
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuário não encontrado"
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuário inativo"
+        )
+
+    return user
+
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Dependency para obter usuário ativo"""
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Usuário inativo"
         )
     return current_user
 
+async def get_current_verified_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Dependency para obter usuário verificado"""
+    if not current_user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email não verificado"
+        )
+    return current_user
 
-def verify_scope(required_scope: str):
-    """Cria uma dependência que verifica se o usuário tem o escopo necessário.
-
-    Args:
-        required_scope: Escopo necessário para acessar o recurso
-
-    Returns:
-        Função de dependência que verifica o escopo do usuário
-    """
-
-    def _verify_scope(
-        current_user: Dict[str, Any] = Depends(get_current_user),
-    ) -> Dict[str, Any]:
-        if required_scope not in current_user.get("scopes", []):
-            logger.warning(
-                f"Acesso negado por escopo insuficiente para usuário {current_user.get('id')}: "
-                f"requer '{required_scope}'"
-            )
+def require_permission(permission: str):
+    """Decorator para exigir permissão específica"""
+    def permission_checker(current_user: User = Depends(get_current_user)) -> User:
+        if not current_user.has_permission(permission):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permissão negada. Escopo '{required_scope}' necessário.",
+                detail=f"Permissão '{permission}' necessária"
             )
         return current_user
+    return permission_checker
 
-    return _verify_scope
+def require_role(role: str):
+    """Decorator para exigir role específico"""
+    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role != role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Role '{role}' necessário"
+            )
+        return current_user
+    return role_checker
+
+# Funções utilitárias
+def create_access_token(data: Dict[str, Any]) -> str:
+    """Função utilitária para criar token de acesso"""
+    return jwt_manager.create_access_token(data)
+
+def create_refresh_token(user_id: str, db: Session) -> str:
+    """Função utilitária para criar refresh token"""
+    return jwt_manager.create_refresh_token(user_id, db)
+
+def verify_token(token: str) -> Dict[str, Any]:
+    """Função utilitária para verificar token"""
+    return jwt_manager.verify_token(token)
+

@@ -1,8 +1,6 @@
-"""Inicialização do pacote de armazenamento.
-
-Este módulo exporta as funcionalidades de gerenciamento de armazenamento.
 """
+Módulo de gerenciamento de armazenamento do SynapScale
+"""
+from .storage_manager import StorageManager
 
-from .storage_manager import StorageManager, get_storage_usage
-
-__all__ = ["StorageManager", "get_storage_usage"]
+__all__ = ["StorageManager"]

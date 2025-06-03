@@ -1,0 +1,240 @@
+"""
+Aplicação principal FastAPI com todas as integrações
+"""
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, HTTPException
+#from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+import uvicorn
+import time
+
+from src.synapse.config import settings
+from src.synapse.database import engine, Base
+from src.synapse.api.v1.router import api_router
+from src.synapse.core.websockets.manager import websocket_endpoint, heartbeat_task
+from src.synapse.middlewaress.rate_limiting import rate_limit
+#from src.synapse.middlewares.security import SecurityMiddleware
+from src.synapse.middlewares.logging import LoggingMiddleware
+
+# Configurar logging
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Gerencia ciclo de vida da aplicação"""
+    # Startup
+    logger.info("Iniciando SynapScale Backend...")
+    
+    # Criar tabelas do banco de dados
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Tabelas do banco de dados criadas/verificadas")
+    except Exception as e:
+        logger.error(f"Erro ao criar tabelas: {str(e)}")
+        raise
+    
+    # Iniciar task de heartbeat WebSocket
+    heartbeat_task_handle = asyncio.create_task(heartbeat_task())
+    
+    # Validar configurações críticas
+    try:
+        from src.synapse.config import validate_settings
+        validate_settings()
+        logger.info("Configurações validadas com sucesso")
+    except Exception as e:
+        logger.warning(f"Aviso de configuração: {str(e)}")
+    
+    logger.info("SynapScale Backend iniciado com sucesso!")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Finalizando SynapScale Backend...")
+    heartbeat_task_handle.cancel()
+    try:
+        await heartbeat_task_handle
+    except asyncio.CancelledError:
+        pass
+    logger.info("SynapScale Backend finalizado")
+
+# Criar aplicação FastAPI
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="Backend completo para automação e IA com workflows, agentes e marketplace",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json" if settings.SHOW_DOCS else None,
+
+# Configuração básica de middlewares
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    """Adiciona tempo de processamento no header"""
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+
+# Handlers de exceção globais
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handler para exceções HTTP"""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": True,
+            "message": exc.detail,
+            "status_code": exc.status_code,
+            "timestamp": time.time()
+        }
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handler para exceções gerais"""
+    logger.error(f"Erro não tratado: {str(exc)}", exc_info=True)
+    
+    if settings.DEBUG:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": True,
+                "message": str(exc),
+                "type": type(exc).__name__,
+                "status_code": 500,
+                "timestamp": time.time()
+            }
+        )
+    else:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": True,
+                "message": "Erro interno do servidor",
+                "status_code": 500,
+                "timestamp": time.time()
+            }
+        )
+
+# Rotas principais
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# WebSocket
+app.websocket("/ws")(websocket_endpoint)
+
+# Servir arquivos estáticos
+if settings.STORAGE_TYPE == "local":
+    app.mount("/static", StaticFiles(directory=settings.STORAGE_BASE_PATH), name="static")
+
+# Rotas de saúde e informações
+@app.get("/")
+async def root():
+    """Rota raiz com informações básicas"""
+    return {
+        "name": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "status": "online",
+        "environment": settings.ENVIRONMENT,
+        "docs_url": "/docs" if settings.SHOW_DOCS else None,
+        "api_url": settings.API_V1_STR
+    }
+
+@app.get("/health")
+async def health_check():
+    """Verificação de saúde da aplicação"""
+    try:
+        # Verificar conexão com banco de dados
+        from src.synapse.database import get_db
+        db = next(get_db())
+        db.execute("SELECT 1")
+        db_status = "healthy"
+    except Exception as e:
+        logger.error(f"Erro na verificação do banco: {str(e)}")
+        db_status = "unhealthy"
+    
+    # Verificar provedores LLM configurados
+    llm_providers = list(settings.get_llm_providers().keys())
+    
+    return {
+        "status": "healthy" if db_status == "healthy" else "degraded",
+        "timestamp": time.time(),
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+        "services": {
+            "database": db_status,
+            "llm_providers": llm_providers,
+            "websocket": "healthy",
+            "storage": settings.STORAGE_TYPE
+        }
+    }
+
+@app.get("/metrics")
+async def metrics():
+    """Métricas básicas da aplicação"""
+    if not settings.ENABLE_METRICS:
+        raise HTTPException(status_code=404, detail="Métricas desabilitadas")
+    
+    from src.synapse.core.websockets.manager import manager
+    
+    return {
+        "websocket_connections": manager.get_connection_count(),
+        "online_users": len(manager.get_online_users()),
+        "timestamp": time.time()
+    }
+
+@app.get("/info")
+async def app_info():
+    """Informações detalhadas da aplicação"""
+    return {
+        "name": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
+        "debug": settings.DEBUG,
+        "features": {
+            "websockets": True,
+            "file_upload": True,
+            "llm_integration": True,
+            "marketplace": settings.MARKETPLACE_ENABLED,
+            "notifications": settings.NOTIFICATIONS_ENABLED,
+            "analytics": settings.ANALYTICS_ENABLED
+        },
+        "limits": {
+            "max_upload_size": settings.MAX_UPLOAD_SIZE,
+            "max_ws_connections_per_user": settings.WS_MAX_CONNECTIONS_PER_USER,
+            "workflow_execution_timeout": settings.WORKFLOW_EXECUTION_TIMEOUT
+        },
+        "providers": {
+            "llm": list(settings.get_llm_providers().keys()),
+            "storage": settings.STORAGE_TYPE,
+            "email": "smtp" if settings.EMAIL_NOTIFICATIONS_ENABLED else "disabled"
+        }
+    }
+
+# Configuração para desenvolvimento
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.RELOAD_ON_CHANGE,
+        log_level=settings.LOG_LEVEL.lower(),
+        access_log=True
+    )
+

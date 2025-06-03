@@ -1,215 +1,258 @@
-# SynapScale Backend
+# SynapScale Backend 🚀
 
-## Visão Geral
+Backend completo para plataforma de automação e IA com agentes inteligentes, workflows visuais e marketplace integrado.
 
-SynapScale é uma plataforma robusta para integração com múltiplos provedores de LLM (Large Language Models), projetada para oferecer uma infraestrutura escalável e segura para aplicações baseadas em IA. Esta implementação segue uma arquitetura de microserviços, com foco inicial no serviço de uploads.
+## 🌟 Funcionalidades
 
-## Arquitetura
+### 🔐 Autenticação & Autorização
+- Sistema JWT completo com refresh tokens
+- Registro e verificação de email
+- Redefinição de senha
+- Controle de permissões por roles
 
-O backend SynapScale foi desenvolvido seguindo princípios de design modernos:
+### 🤖 Agentes de IA
+- Múltiplos provedores LLM (OpenAI, Claude, Gemini, Grok, DeepSeek, Llama)
+- Agentes personalizáveis com instruções específicas
+- Sistema de ferramentas (tools) extensível
+- Configurações avançadas (temperatura, max_tokens, etc.)
 
-- **Arquitetura Modular**: Componentes desacoplados e reutilizáveis
-- **API RESTful**: Endpoints bem definidos com documentação OpenAPI
-- **Segurança**: Autenticação JWT, validação de arquivos, rate limiting
-- **Escalabilidade**: Preparado para crescimento com banco de dados assíncrono
-- **Observabilidade**: Logging estruturado e monitoramento
+### 🔄 Workflows
+- Editor visual de workflows
+- Execução em tempo real
+- Versionamento automático
+- Compartilhamento público/privado
+- Sistema de categorias e tags
 
-## Tecnologias
+### 🧩 Marketplace de Nodes
+- Biblioteca de componentes reutilizáveis
+- Sistema de avaliações e downloads
+- Categorização por tipo e funcionalidade
+- Documentação integrada
 
-- **FastAPI**: Framework web de alta performance
-- **SQLAlchemy**: ORM para interação com banco de dados
-- **Pydantic**: Validação de dados e serialização
-- **PostgreSQL**: Banco de dados relacional
-- **Redis**: Cache e rate limiting
-- **JWT**: Autenticação e autorização
+### 💬 Conversações
+- Chat em tempo real com agentes
+- Histórico persistente
+- Suporte a anexos
+- Metadados de execução (tokens, tempo, etc.)
 
-## Estrutura do Projeto
+### 📁 Gerenciamento de Arquivos
+- Upload seguro de múltiplos formatos
+- Processamento automático
+- Armazenamento flexível
+- Validação de tipos e tamanhos
 
-```
-synapse-backend/
-├── README.md                     # Documentação principal
-├── .env.example                  # Exemplo de variáveis de ambiente
-├── pyproject.toml                # Configuração do projeto
-├── alembic.ini                   # Configuração de migrações
-├── docker-compose.yml            # Configuração Docker
-├── Dockerfile                    # Instruções para build
-├── scripts/                      # Scripts utilitários
-├── docs/                         # Documentação detalhada
-├── tests/                        # Testes automatizados
-└── src/                          # Código-fonte
-    └── synapse/                  # Pacote principal
-        ├── config.py             # Configurações centralizadas
-        ├── constants.py          # Constantes compartilhadas
-        ├── exceptions.py         # Exceções personalizadas
-        ├── logging.py            # Configuração de logging
-        ├── main.py               # Ponto de entrada
-        ├── middlewares/          # Middlewares
-        ├── core/                 # Componentes centrais
-        │   ├── auth/             # Autenticação
-        │   ├── security/         # Segurança
-        │   └── storage/          # Armazenamento
-        ├── db/                   # Banco de dados
-        ├── models/               # Modelos SQLAlchemy
-        ├── schemas/              # Schemas Pydantic
-        ├── api/                  # Rotas da API
-        │   └── v1/               # API versão 1
-        ├── services/             # Serviços de negócio
-        └── utils/                # Utilitários
-```
+### 🌐 WebSockets
+- Comunicação em tempo real
+- Notificações push
+- Status de execução ao vivo
+- Sincronização automática
 
-## Instalação
+## 🛠️ Tecnologias
 
-### Pré-requisitos
+- **FastAPI** - Framework web moderno e rápido
+- **SQLAlchemy** - ORM para banco de dados
+- **Pydantic** - Validação de dados
+- **JWT** - Autenticação segura
+- **WebSockets** - Comunicação em tempo real
+- **Python 3.8+** - Linguagem principal
 
-- Python 3.9+
-- PostgreSQL
-- Redis (opcional, para rate limiting)
+## 🚀 Instalação Rápida
 
-### Configuração
-
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/synapscale/synapse-backend.git
-   cd synapse-backend
-   ```
-
-2. Crie e ative um ambiente virtual:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   # ou
-   venv\Scripts\activate  # Windows
-   ```
-
-3. Instale as dependências:
-   ```bash
-   pip install -e .
-   ```
-
-4. Configure as variáveis de ambiente:
-   ```bash
-   cp .env.example .env
-   # Edite o arquivo .env com suas configurações
-   ```
-
-5. Execute as migrações do banco de dados:
-   ```bash
-   alembic upgrade head
-   ```
-
-### Execução
-
-Para iniciar o servidor em modo de desenvolvimento:
-
+### 1. Clonar e Instalar
 ```bash
-uvicorn src.synapse.main:app --reload
+# Extrair o repositório
+unzip synapse-backend.zip
+cd synapse-backend
+
+# Instalar dependências
+pip install -r requirements.txt
 ```
 
-Para produção, recomendamos usar Gunicorn com workers Uvicorn:
-
+### 2. Configurar Ambiente
 ```bash
-gunicorn -k uvicorn.workers.UvicornWorker -w 4 src.synapse.main:app
+# Copiar arquivo de configuração
+cp .env.example .env
+
+# Editar configurações necessárias
+nano .env
 ```
 
-## Uso da API
+### 3. Executar
+```bash
+# Iniciar servidor
+./start.sh
 
-### Autenticação
-
-Todas as requisições (exceto health check) requerem autenticação via token JWT no header:
-
+# Ou manualmente
+uvicorn src.synapse.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-Authorization: Bearer <token>
+
+### 4. Acessar
+- **API**: http://localhost:8000
+- **Documentação**: http://localhost:8000/docs
+- **WebSocket**: ws://localhost:8000/ws
+
+## ⚙️ Configuração
+
+### Variáveis de Ambiente Essenciais
+
+```env
+# Segurança
+SECRET_KEY=your-super-secret-key-here
+JWT_SECRET_KEY=your-jwt-secret-key-here
+
+# Banco de Dados
+DATABASE_URL=sqlite:///./synapse.db
+
+# Provedores LLM
+OPENAI_API_KEY=your-openai-api-key
+ANTHROPIC_API_KEY=your-claude-api-key
+GOOGLE_API_KEY=your-gemini-api-key
+
+# CORS
+FRONTEND_URL=http://localhost:3000
+BACKEND_CORS_ORIGINS=http://localhost:3000
+
+# Email (opcional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
 ```
+
+## 📚 Documentação da API
 
 ### Endpoints Principais
 
-#### Upload de Arquivo
+#### Autenticação
+- `POST /api/v1/auth/register` - Registrar usuário
+- `POST /api/v1/auth/login` - Login
+- `POST /api/v1/auth/refresh` - Renovar token
+- `POST /api/v1/auth/logout` - Logout
 
-```http
-POST /api/v1/files/upload
-Content-Type: multipart/form-data
+#### Workflows
+- `GET /api/v1/workflows` - Listar workflows
+- `POST /api/v1/workflows` - Criar workflow
+- `GET /api/v1/workflows/{id}` - Obter workflow
+- `PUT /api/v1/workflows/{id}` - Atualizar workflow
+- `POST /api/v1/workflows/{id}/execute` - Executar workflow
 
-file: <arquivo>
-category: document
-tags: relatório,financeiro
-description: Relatório financeiro anual
-is_public: false
+#### Agentes
+- `GET /api/v1/agents` - Listar agentes
+- `POST /api/v1/agents` - Criar agente
+- `GET /api/v1/agents/{id}` - Obter agente
+- `PUT /api/v1/agents/{id}` - Atualizar agente
+- `POST /api/v1/agents/{id}/activate` - Ativar agente
+
+#### Conversações
+- `GET /api/v1/conversations` - Listar conversações
+- `POST /api/v1/conversations` - Criar conversação
+- `GET /api/v1/conversations/{id}/messages` - Listar mensagens
+- `POST /api/v1/conversations/{id}/messages` - Enviar mensagem
+
+#### Nodes
+- `GET /api/v1/nodes` - Listar nodes
+- `POST /api/v1/nodes` - Criar node
+- `GET /api/v1/nodes/{id}` - Obter node
+- `POST /api/v1/nodes/{id}/download` - Baixar node
+
+#### Arquivos
+- `POST /api/v1/files/upload` - Upload de arquivo
+- `GET /api/v1/files` - Listar arquivos
+- `GET /api/v1/files/{id}` - Obter arquivo
+- `DELETE /api/v1/files/{id}` - Deletar arquivo
+
+### Documentação Interativa
+Acesse http://localhost:8000/docs para documentação completa com Swagger UI.
+
+## 🏗️ Arquitetura
+
+```
+src/synapse/
+├── api/                    # Endpoints da API
+│   ├── v1/
+│   │   ├── endpoints/      # Endpoints organizados por funcionalidade
+│   │   └── router.py       # Roteador principal
+│   └── deps.py            # Dependências (autenticação, etc.)
+├── core/                  # Funcionalidades centrais
+│   ├── auth/              # Sistema de autenticação
+│   ├── email/             # Serviço de email
+│   └── websockets/        # WebSocket manager
+├── models/                # Modelos SQLAlchemy
+├── schemas/               # Schemas Pydantic
+├── config.py             # Configurações
+├── database.py           # Configuração do banco
+└── main.py              # Aplicação principal
 ```
 
-#### Listar Arquivos
-
-```http
-GET /api/v1/files?page=1&size=10&category=document
-```
-
-#### Obter Informações do Arquivo
-
-```http
-GET /api/v1/files/{file_id}
-```
-
-#### Gerar URL de Download
-
-```http
-GET /api/v1/files/{file_id}/download
-```
-
-#### Atualizar Informações do Arquivo
-
-```http
-PATCH /api/v1/files/{file_id}
-Content-Type: application/json
-
-{
-  "tags": ["relatório", "financeiro", "2023"],
-  "description": "Relatório financeiro anual atualizado",
-  "is_public": true
-}
-```
-
-#### Remover Arquivo
-
-```http
-DELETE /api/v1/files/{file_id}
-```
-
-## Documentação da API
-
-A documentação completa da API está disponível em:
-
-- Swagger UI: `/docs`
-- ReDoc: `/redoc`
-
-## Desenvolvimento
-
-### Testes
-
-Para executar os testes:
+## 🧪 Testes
 
 ```bash
+# Executar todos os testes
 pytest
+
+# Testes com coverage
+pytest --cov=src/synapse
+
+# Testes específicos
+pytest tests/unit/
+pytest tests/integration/
 ```
 
-Para verificar a cobertura:
+## 🔒 Segurança
 
+- **JWT** com refresh tokens seguros
+- **Rate limiting** configurável
+- **Validação rigorosa** de entrada
+- **CORS** configurado
+- **Sanitização** de dados
+- **Criptografia** de senhas com bcrypt
+
+## 📈 Performance
+
+- **Async/await** para operações não-bloqueantes
+- **Pool de conexões** do banco de dados
+- **Cache** opcional com Redis
+- **Compressão gzip** automática
+- **Paginação** em todas as listagens
+
+## 🚀 Deploy
+
+### Docker (Recomendado)
 ```bash
-pytest --cov=src
+# Build da imagem
+docker build -t synapse-backend .
+
+# Executar container
+docker run -p 8000:8000 synapse-backend
 ```
 
-### Migrações
-
-Para criar uma nova migração:
-
+### Produção
 ```bash
-alembic revision --autogenerate -m "descrição da migração"
+# Instalar servidor ASGI
+pip install gunicorn uvicorn[standard]
+
+# Executar em produção
+gunicorn src.synapse.main:app -w 4 -k uvicorn.workers.UvicornWorker
 ```
 
-Para aplicar migrações:
+## 🤝 Contribuição
 
-```bash
-alembic upgrade head
-```
+1. Fork o projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
 
-## Licença
+## 📄 Licença
 
-Este projeto está licenciado sob os termos da licença MIT.
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para detalhes.
+
+## 🆘 Suporte
+
+- **Documentação**: http://localhost:8000/docs
+- **Issues**: Reporte bugs e solicite features
+- **Email**: suporte@synapscale.com
+
+---
+
+**Desenvolvido com ❤️ pela equipe SynapScale**

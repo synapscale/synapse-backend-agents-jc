@@ -1,16 +1,6 @@
-"""Inicialização do pacote de segurança.
-
-Este módulo exporta as funcionalidades de segurança e validação.
 """
+Módulo de segurança do SynapScale
+"""
+from .file_validation import SecurityValidator, sanitize_filename
 
-from .file_validation import (
-    SecurityValidator,
-    extract_safe_metadata,
-    sanitize_filename,
-)
-
-__all__ = [
-    "SecurityValidator",
-    "extract_safe_metadata",
-    "sanitize_filename",
-]
+__all__ = ["SecurityValidator", "sanitize_filename"]
