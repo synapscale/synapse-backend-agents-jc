@@ -44,6 +44,7 @@ class Workflow(Base):
     workflow_nodes = relationship("WorkflowNode", back_populates="workflow", cascade="all, delete-orphan")
     connections = relationship("WorkflowConnection", back_populates="workflow", cascade="all, delete-orphan")
     executions = relationship("Execution", back_populates="workflow", cascade="all, delete-orphan")
+    workflow_executions = relationship("WorkflowExecution", back_populates="workflow", cascade="all, delete-orphan")
 
     def to_dict(self, include_definition: bool = True) -> dict:
         """Converte workflow para dicionário"""
@@ -174,61 +175,4 @@ class WorkflowConnection(Base):
             "target_port": self.target_port,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
-
-class Workspace(Base):
-    __tablename__ = "workspaces"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(200), nullable=False)
-    description = Column(Text)
-    owner_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
-    is_public = Column(Boolean, default=False)
-    settings = Column(JSON, default=dict)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-    # Relacionamentos
-    owner = relationship("User", foreign_keys=[owner_id])
-    members = relationship("WorkspaceMember", back_populates="workspace", cascade="all, delete-orphan")
-    workflows = relationship("Workflow", back_populates="workspace")
-    nodes = relationship("Node", back_populates="workspace")
-    agents = relationship("Agent", back_populates="workspace")
-
-    def to_dict(self) -> dict:
-        """Converte workspace para dicionário"""
-        return {
-            "id": str(self.id),
-            "name": self.name,
-            "description": self.description,
-            "owner_id": str(self.owner_id),
-            "is_public": self.is_public,
-            "settings": self.settings,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None
-        }
-
-class WorkspaceMember(Base):
-    __tablename__ = "workspace_members"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
-    role = Column(String(50), default="member")  # owner, admin, member, viewer
-    permissions = Column(JSON, default=dict)
-    joined_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relacionamentos
-    workspace = relationship("Workspace", back_populates="members")
-    user = relationship("User")
-
-    def to_dict(self) -> dict:
-        """Converte membro para dicionário"""
-        return {
-            "id": str(self.id),
-            "workspace_id": str(self.workspace_id),
-            "user_id": str(self.user_id),
-            "role": self.role,
-            "permissions": self.permissions,
-            "joined_at": self.joined_at.isoformat() if self.joined_at else None
-        }
-
+    
