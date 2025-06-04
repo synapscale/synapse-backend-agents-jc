@@ -4,7 +4,7 @@ Criado por José - O melhor Full Stack do mundo
 Adiciona suporte completo para marketplace de templates
 """
 
-import sqlite3
+import psycopg2
 import logging
 from datetime import datetime
 
@@ -17,7 +17,7 @@ def run_migration(db_path: str = "synapse.db"):
     Executa a migração para criar tabelas de templates
     """
     try:
-        conn = sqlite3.connect(db_path)
+        conn = psycopg2.connect(db_path)
         cursor = conn.cursor()
         
         logger.info("🚀 Iniciando migração 003: Tabelas de templates")
@@ -283,7 +283,7 @@ def rollback_migration(db_path: str = "synapse.db"):
     CUIDADO: Isso irá apagar todos os dados de templates!
     """
     try:
-        conn = sqlite3.connect(db_path)
+        conn = psycopg2.connect(db_path)
         cursor = conn.cursor()
         
         logger.warning("⚠️  ATENÇÃO: Revertendo migração 003 - DADOS SERÃO PERDIDOS!")

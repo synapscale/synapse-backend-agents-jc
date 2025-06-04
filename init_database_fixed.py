@@ -1,5 +1,5 @@
 """Script para inicializar o banco de dados corretamente."""
-import sqlite3
+import psycopg2
 from src.synapse.database import Base, engine, create_tables
 from src.synapse.models.file import File  # IMPORTANTE: Importar o modelo
 
@@ -17,7 +17,7 @@ def create_database():
     
     # Verificar tabelas criadas
     print("\n=== VERIFICANDO TABELAS CRIADAS ===")
-    conn = sqlite3.connect("synapse.db")
+    conn = psycopg2.connect("synapse.db")
     cursor = conn.cursor()
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     tables = cursor.fetchall()

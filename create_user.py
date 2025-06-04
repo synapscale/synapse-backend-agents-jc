@@ -5,7 +5,7 @@ Script para criar um usuário no banco de dados SynapScale
 import os
 import sys
 import uuid
-import sqlite3
+import psycopg2
 from datetime import datetime, timezone
 
 # Importar apenas as funções de hash necessárias
@@ -17,20 +17,23 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Configuração do banco de dados
-DATABASE_URL = "sqlite:///synapse.db"
+DATABASE_URL = "postgresql+asyncpg://user:password@localhost:5432/synapse"
+
 
 def get_password_hash(password: str) -> str:
     """Gera hash da senha para armazenamento seguro."""
     return pwd_context.hash(password)
 
 
-def create_user(email: str, password: str, first_name: str = None, last_name: str = None):
-    """Cria um novo usuário no banco de dados SQLite diretamente via SQL."""
-    conn = sqlite3.connect("synapse.db")
+def create_user(
+    email: str, password: str, first_name: str = None, last_name: str = None
+):
+    """Cria um novo usuário no banco de dados PostgreSQL diretamente via SQL."""
+    conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
     try:
         # Verificar se o usuário já existe
-        cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
         if cursor.fetchone():
             print(f"❌ Erro: Usuário com email '{email}' já existe!")
             return False
@@ -43,8 +46,9 @@ def create_user(email: str, password: str, first_name: str = None, last_name: st
         cursor.execute(
             """
             INSERT INTO users (
-                id, email, password_hash, first_name, last_name, is_active, is_verified, role, subscription_plan, preferences, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                id, email, password_hash, first_name, last_name, is_active, is_verified,
+                role, subscription_plan, preferences, created_at, updated_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 user_id,
@@ -78,22 +82,23 @@ def create_user(email: str, password: str, first_name: str = None, last_name: st
     finally:
         conn.close()
 
+
 def main():
     """Função principal"""
     print("🚀 Criando usuário no SynapScale Backend")
     print("=" * 50)
-    
+
     # Dados do usuário
     email = "joaovictor@liderimobiliaria.com.br"
     password = "@Jvcm1811"
     first_name = "João Victor"
     last_name = "Lider Imobiliária"
-    
+
     print(f"📧 Email: {email}")
     print(f"👤 Nome: {first_name} {last_name}")
     print(f"🔐 Senha: {'*' * len(password)}")
     print()
-    
+
     # Criar usuário
     success = create_user(
         email=email,
@@ -101,7 +106,7 @@ def main():
         first_name=first_name,
         last_name=last_name
     )
-    
+
     if success:
         print()
         print("🎉 Usuário criado e pronto para usar!")
@@ -109,6 +114,7 @@ def main():
     else:
         print()
         print("❌ Falha ao criar usuário. Verifique os logs acima.")
+
 
 if __name__ == "__main__":
     main()

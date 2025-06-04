@@ -101,7 +101,7 @@ SECRET_KEY=your-super-secret-key-here
 JWT_SECRET_KEY=your-jwt-secret-key-here
 
 # Banco de Dados
-DATABASE_URL=sqlite:///./synapse.db
+DATABASE_URL=postgresql://user:password@localhost:5432/synapse
 
 # Provedores LLM
 OPENAI_API_KEY=your-openai-api-key

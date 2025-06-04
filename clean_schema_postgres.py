@@ -16,7 +16,7 @@ def clean_schema_for_postgres():
     print("🧹 Limpando schema para PostgreSQL...")
     
     # 1. Trocar provider para postgresql (já feito)
-    content = re.sub(r'provider = "sqlite"', 'provider = "postgresql"', content)
+    content = re.sub(r'provider = "postgresql"', 'provider = "postgresql"', content)
     
     # 2. Remover todas as linhas com @@unique([sqlite_autoindex_...])
     content = re.sub(r'\s*@@unique\(\[sqlite_autoindex_[^\]]+\]\)\n', '', content)

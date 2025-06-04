@@ -81,7 +81,7 @@ router.include_router(llm_router, prefix="/llm")
 cd /workspaces/synapse-backend-agents-jc
 
 # Instalar dependências principais
-pip install fastapi uvicorn sqlalchemy alembic pydantic python-multipart aiofiles aiosqlite pydantic-settings requests tiktoken pyjwt redis
+pip install fastapi uvicorn sqlalchemy alembic pydantic python-multipart aiofiles asyncpg pydantic-settings requests tiktoken pyjwt redis
 ```
 
 #### 2. **Configuração de Variáveis de Ambiente**
@@ -106,7 +106,7 @@ OPENAI_API_KEY="sua-chave-openai"
 LLAMA_API_KEY="sua-chave-llama"
 
 # Configurações de Database
-SQLALCHEMY_DATABASE_URI="sqlite+aiosqlite:///./synapse.db"
+SQLALCHEMY_DATABASE_URI="sqlite+aiopostgresql://user:password@localhost:5432/synapse"
 
 # Configurações de CORS
 BACKEND_CORS_ORIGINS="http://localhost:3000,http://localhost:8080"

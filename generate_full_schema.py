@@ -3,7 +3,7 @@
 Script para criar um schema Prisma completo baseado na estrutura real do banco SQLite
 """
 
-import sqlite3
+import psycopg2
 import re
 
 def get_table_info(cursor, table_name):
@@ -44,7 +44,7 @@ def generate_prisma_schema():
     """Gera o schema Prisma completo"""
     
     # Conectar ao banco
-    conn = sqlite3.connect('/workspaces/synapse-backend-agents-jc/synapse.db')
+    conn = psycopg2.connect('/workspaces/synapse-backend-agents-jc/synapse.db')
     cursor = conn.cursor()
     
     # Obter lista de tabelas
@@ -63,7 +63,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

@@ -3,7 +3,7 @@
 Script para migrar o schema SQLite para PostgreSQL
 """
 
-import sqlite3
+import psycopg2
 import os
 
 def create_postgres_schema():
@@ -30,7 +30,7 @@ def create_postgres_schema():
     print(f"Preparando schema para {len(tables)} tabelas...")
     
     # Conectar ao SQLite para obter estrutura
-    conn = sqlite3.connect('/workspaces/synapse-backend-agents-jc/synapse.db')
+    conn = psycopg2.connect('/workspaces/synapse-backend-agents-jc/synapse.db')
     cursor = conn.cursor()
     
     # Schema base para PostgreSQL

@@ -107,7 +107,7 @@ pydantic = "^2.11.5"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-multipart = "^0.0.6"
-aiosqlite = "^0.19.0"
+asyncpg = "^0.19.0"
 slowapi = "^0.1.9"
 ```
 
@@ -159,7 +159,7 @@ synapse-backend-agents-jc/
 # Criar arquivo .env
 cat > .env << 'ENV'
 # Configurações do Banco de Dados
-DATABASE_URL=sqlite+aiosqlite:///synapse.db
+DATABASE_URL=sqlite+aiopostgresql://user:password@localhost:5432/synapse
 
 # Configurações de Segurança
 SECRET_KEY=your-super-secret-key-change-in-production
@@ -784,7 +784,7 @@ pytest-watch tests/
 ```bash
 # Criar arquivo de produção
 cat > .env.production << 'EOF'
-DATABASE_URL=sqlite+aiosqlite:///data/synapse_prod.db
+DATABASE_URL=sqlite+asyncpg:///data/synapse_prod.db
 SECRET_KEY=CHANGE-THIS-IN-PRODUCTION-SUPER-SECRET-KEY
 DEBUG=false
 HOST=0.0.0.0
@@ -1058,7 +1058,7 @@ cat > docs/SUMARIO_EXECUTIVO.md << 'EOF'
 - Validação rigorosa de dados
 
 ### 📊 **Performance**
-- Arquitetura assíncrona (FastAPI + aiosqlite)
+- Arquitetura assíncrona (FastAPI + asyncpg)
 - Conexões de banco otimizadas
 - Índices de performance
 - Cache de sessões

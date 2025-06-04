@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     VERSION: str = "2.0.0"
     
     # Banco de dados
-    DATABASE_URL: str = "sqlite:///./synapse.db"
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL", "postgresql://user:password@localhost:5432/synapse"
+    )
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 30
     DATABASE_ECHO: bool = False

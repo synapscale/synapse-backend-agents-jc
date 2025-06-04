@@ -201,7 +201,7 @@ O arquivo `.env` contém todas as configurações do sistema. Abaixo está uma e
 
 | Parâmetro | Descrição | Exemplo | Obrigatório |
 |-----------|-----------|---------|-------------|
-| `DATABASE_URL` | URL de conexão com o banco | `sqlite+aiosqlite:///./synapse.db` | Sim |
+| `DATABASE_URL` | URL de conexão com o banco | `sqlite+aiopostgresql://user:password@localhost:5432/synapse` | Sim |
 
 ### Redis (para Rate Limiting)
 

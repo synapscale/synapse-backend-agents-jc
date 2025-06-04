@@ -4,14 +4,14 @@ Criado por José - O melhor Full Stack do mundo
 Marketplace, Workspaces e Analytics
 """
 
-import sqlite3
+import psycopg2
 import logging
 from datetime import datetime
 
 def apply_migration(db_path: str):
     """Aplica a migração 005 - Tabelas da Fase 4"""
     try:
-        conn = sqlite3.connect(db_path)
+        conn = psycopg2.connect(db_path)
         cursor = conn.cursor()
         
         print("🚀 Aplicando migração 005: Tabelas da Fase 4...")

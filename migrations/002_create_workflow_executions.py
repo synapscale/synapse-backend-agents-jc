@@ -4,7 +4,7 @@ Criado por José - O melhor Full Stack do mundo
 Adiciona suporte completo para execução de workflows em tempo real
 """
 
-import sqlite3
+import psycopg2
 import logging
 from datetime import datetime
 
@@ -17,7 +17,7 @@ def run_migration(db_path: str = "synapse.db"):
     Executa a migração para criar tabelas de execução de workflows
     """
     try:
-        conn = sqlite3.connect(db_path)
+        conn = psycopg2.connect(db_path)
         cursor = conn.cursor()
         
         logger.info("🚀 Iniciando migração 002: Tabelas de execução de workflows")
@@ -255,7 +255,7 @@ def rollback_migration(db_path: str = "synapse.db"):
     CUIDADO: Isso irá apagar todos os dados de execução!
     """
     try:
-        conn = sqlite3.connect(db_path)
+        conn = psycopg2.connect(db_path)
         cursor = conn.cursor()
         
         logger.warning("⚠️  ATENÇÃO: Revertendo migração 002 - DADOS SERÃO PERDIDOS!")

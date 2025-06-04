@@ -1,6 +1,6 @@
 """Script definitivo para criar o banco com as tabelas corretas."""
 import asyncio
-import sqlite3
+import psycopg2
 import sys
 import os
 
@@ -34,7 +34,7 @@ async def create_database_correctly():
     # PASSO 5: Verificar resultado
     print("\n=== VERIFICAÇÃO FINAL ===")
     if os.path.exists('synapse.db'):
-        conn = sqlite3.connect("synapse.db")
+        conn = psycopg2.connect("synapse.db")
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()

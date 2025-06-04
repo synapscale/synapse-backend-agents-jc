@@ -5,13 +5,13 @@ Implementação completa de testes automatizados
 
 import pytest
 import asyncio
-import os
 from typing import AsyncGenerator, Generator
 from unittest.mock import Mock, AsyncMock
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
+import logging
 
 # Importações do projeto
 from src.synapse.main import app
@@ -21,8 +21,14 @@ from src.synapse.models.user import User
 from src.synapse.core.cache import get_cache_manager, CacheManager, CacheConfig
 
 
+# Configurando o logging no topo do arquivo
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+logging.getLogger("asyncio").setLevel(logging.WARNING)
+
+
 # Configuração do banco de dados de teste
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+TEST_DATABASE_URL = "postgresql+asyncpg://user:password@localhost:5432/test"
 
 # Engine de teste
 test_engine = create_async_engine(
@@ -114,8 +120,10 @@ def client(override_get_db, override_get_current_user) -> TestClient:
 
 
 @pytest.fixture
-async def async_client(override_get_db, override_get_current_user) -> AsyncGenerator[AsyncClient, None]:
-    """Cliente de teste assíncrono"""
+async def async_client(
+    override_get_db, override_get_current_user
+) -> AsyncGenerator[AsyncClient, None]:
+    """Cliente assíncrono para testes."""
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
 
@@ -291,7 +299,9 @@ class TestUtils:
     """Utilitários para testes"""
     
     @staticmethod
-    async def create_test_workflow(db_session: AsyncSession, user: User, data: dict = None):
+    async def create_test_workflow(
+        db_session: AsyncSession, user: User, data: dict = None
+    ):
         """Cria workflow de teste"""
         from src.synapse.models.workflow import Workflow
         
@@ -312,9 +322,13 @@ class TestUtils:
         return workflow
     
     @staticmethod
-    async def create_test_execution(db_session: AsyncSession, workflow, data: dict = None):
+    async def create_test_execution(
+        db_session: AsyncSession, workflow, data: dict = None
+    ):
         """Cria execução de teste"""
-        from src.synapse.models.workflow_execution import WorkflowExecution, ExecutionStatus
+        from src.synapse.models.workflow_execution import (
+            WorkflowExecution, ExecutionStatus
+        )
         
         execution_data = data or {
             "status": ExecutionStatus.PENDING,
@@ -334,9 +348,13 @@ class TestUtils:
         return execution
     
     @staticmethod
-    async def create_test_template(db_session: AsyncSession, user: User, data: dict = None):
+    async def create_test_template(
+        db_session: AsyncSession, user: User, data: dict = None
+    ):
         """Cria template de teste"""
-        from src.synapse.models.template import WorkflowTemplate, TemplateStatus, TemplateLicense
+        from src.synapse.models.template import (
+            WorkflowTemplate, TemplateStatus, TemplateLicense
+        )
         
         template_data = data or {
             "name": "Test Template",
@@ -396,17 +414,4 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "cache: marca testes de cache"
     )
-
-
-# Configuração de logging para testes
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-
-# Desabilitar logs verbosos durante testes
-logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
-logging.getLogger("asyncio").setLevel(logging.WARNING)
 

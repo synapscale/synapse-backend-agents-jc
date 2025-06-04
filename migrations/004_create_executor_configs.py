@@ -4,7 +4,7 @@ Criado por José - O melhor Full Stack do mundo
 Adiciona tabelas de configuração para os novos executores
 """
 
-import sqlite3
+import psycopg2
 import logging
 from datetime import datetime
 
@@ -15,7 +15,7 @@ def upgrade(db_path: str):
     Aplica a migração 004: Configurações para Executores Avançados
     """
     try:
-        conn = sqlite3.connect(db_path)
+        conn = psycopg2.connect(db_path)
         cursor = conn.cursor()
         
         logger.info("🚀 Iniciando migração 004: Configurações para Executores Avançados")
@@ -174,7 +174,7 @@ def downgrade(db_path: str):
     Reverte a migração 004
     """
     try:
-        conn = sqlite3.connect(db_path)
+        conn = psycopg2.connect(db_path)
         cursor = conn.cursor()
         
         logger.info("🔄 Revertendo migração 004")
