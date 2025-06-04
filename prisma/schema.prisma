@@ -1,0 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-py"
+  interface = "asyncio"
+  recursive_type_depth = -1
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  full_name String?
+  hashed_password String
+  is_active Boolean  @default(true)
+  is_superuser Boolean @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  conversations Conversation[]
+  files        File[]
+  workflows    Workflow[]
+  agents       Agent[]
+  user_variables UserVariable[]
+
+  @@map("users")
+}
+
+model Agent {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  provider    String   // openai, anthropic, google, etc.
+  model       String   // gpt-4, claude-3, gemini-pro, etc.
+  system_prompt String?
+  temperature Float?   @default(0.7)
+  max_tokens  Int?     @default(1000)
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relacionamentos
+  user_id      String
+  user         User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@map("agents")
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  title      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  user_id    String
+  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  agent_id   String?
+  agent      Agent? @relation(fields: [agent_id], references: [id], onDelete: SetNull)
+  messages   Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  role       String   // user, assistant, system
+  created_at DateTime @default(now())
+
+  // Relacionamentos
+  conversation_id String
+  conversation    Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model File {
+  id           String   @id @default(cuid())
+  filename     String
+  original_name String
+  file_path    String
+  file_size    Int
+  mime_type    String
+  category     String   // image, video, audio, document, archive
+  is_public    Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  // Relacionamentos
+  user_id      String
+  user         User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("files")
+}
+
+model Workflow {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  definition  Json     // JSON com a definição do workflow
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relacionamentos
+  user_id     String
+  user        User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  executions  WorkflowExecution[]
+
+  @@map("workflows")
+}
+
+model WorkflowExecution {
+  id          String   @id @default(cuid())
+  status      String   // pending, running, completed, failed
+  input_data  Json?
+  output_data Json?
+  error_message String?
+  started_at  DateTime @default(now())
+  completed_at DateTime?
+
+  // Relacionamentos
+  workflow_id String
+  workflow    Workflow @relation(fields: [workflow_id], references: [id], onDelete: Cascade)
+
+  @@map("workflow_executions")
+}
+
+model Node {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // ai, data, logic, io, etc.
+  description String?
+  version     String   @default("1.0.0")
+  definition  Json     // JSON com a definição do node
+  is_public   Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("nodes")
+}
+
+model UserVariable {
+  id         String   @id @default(cuid())
+  key        String
+  value      String
+  is_secret  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  user_id    String
+  user       User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, key])
+  @@map("user_variables")
+}
