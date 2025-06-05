@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-import { withOptimize } from "@prisma/extension-optimize";
+import { PrismaClient } from '@prisma/client/edge'
+import { withAccelerate } from '@prisma/extension-accelerate'
 
-const prisma = new PrismaClient().$extends(
-  withOptimize({ apiKey: process.env.OPTIMIZE_API_KEY })
-)
+const prisma = new PrismaClient().$extends(withAccelerate())

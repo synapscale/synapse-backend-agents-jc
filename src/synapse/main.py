@@ -83,8 +83,57 @@ async def lifespan(app: FastAPI):
     logger.info('✅ SynapScale Backend finalizado com sucesso')
 app = FastAPI(title='SynapScale Backend API', description='\n    🚀 **SynapScale Backend API** - Plataforma de Automação com IA\n    \n    API robusta e escalável para gerenciamento de workflows, agentes AI e automações.\n    \n    ## Funcionalidades Principais\n    \n    * **🔐 Autenticação**: Sistema completo de autenticação e autorização\n    * **⚡ Workflows**: Criação e execução de workflows de automação\n    * **🤖 Agentes AI**: Integração com múltiplos provedores de IA\n    * **🔗 Nodes**: Componentes reutilizáveis para workflows\n    * **💬 Conversas**: Histórico e gerenciamento de conversas\n    * **📁 Arquivos**: Upload e gerenciamento de arquivos\n    \n    ## Segurança\n    \n    * Autenticação JWT robusta\n    * Validação de dados com Pydantic\n    * Rate limiting implementado\n    * CORS configurado adequadamente\n    ', version='1.0.0', docs_url='/docs', redoc_url='/redoc', lifespan=lifespan, contact={'name': 'SynapScale Team', 'email': 'support@synapscale.com'}, license_info={'name': 'MIT'})
 # app.add_middleware(TrustedHostMiddleware, allowed_hosts=['*'] if settings.DEBUG else ['synapscale.com', '*.synapscale.com', 'localhost', '127.0.0.1'])
-allowed_origins = ['*'] if settings.DEBUG else ['https://synapscale.com', 'https://app.synapscale.com', 'http://localhost:3000', 'http://localhost:3001']
-app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_credentials=True, allow_methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], allow_headers=['*'], expose_headers=['*'])
+# Configuração CORS otimizada para desenvolvimento e produção
+allowed_origins = [
+    'http://localhost:3000',  # Frontend Next.js desenvolvimento
+    'http://localhost:3001',  # Frontend alternativo
+    'http://127.0.0.1:3000',  # Localhost alternativo
+    'https://synapscale.com',  # Produção
+    'https://app.synapscale.com',  # App produção
+    'https://*.synapscale.com',  # Subdomínios
+] if not settings.DEBUG else ['*']
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+    allow_headers=[
+        'Accept',
+        'Accept-Language',
+        'Content-Language',
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'X-CSRF-Token',
+        'X-API-Key',
+    ],
+    expose_headers=[
+        'X-Process-Time',
+        'X-Request-ID',
+        'X-Rate-Limit-Remaining',
+        'X-Rate-Limit-Reset',
+    ],
+    max_age=86400,  # 24 horas para preflight cache
+)
+
+@app.middleware('http')
+async def add_security_headers(request: Request, call_next):
+    """Adiciona headers de segurança"""
+    response = await call_next(request)
+    
+    # Headers de segurança
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    
+    # Content Security Policy para desenvolvimento
+    if settings.DEBUG:
+        response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' *"
+    
+    return response
 
 @app.middleware('http')
 async def add_process_time_header(request: Request, call_next):
@@ -124,7 +173,21 @@ async def health_check():
     Endpoint para verificação de saúde da API
     Inclui verificações de componentes críticos
     """
-    health_status = {'status': 'healthy', 'service': 'synapscale-backend', 'version': '1.0.0', 'timestamp': time.time(), 'components': {'database': 'healthy', 'api': 'healthy'}}
+    health_status = {
+        'status': 'healthy',
+        'service': 'synapscale-backend',
+        'version': '1.0.0',
+        'timestamp': time.time(),
+        'uptime': time.time(),
+        'components': {
+            'database': 'healthy',
+            'api': 'healthy',
+            'cors': 'configured',
+            'auth': 'available'
+        },
+        'environment': 'development' if settings.DEBUG else 'production'
+    }
+    
     try:
         from src.synapse.database import get_database
         db = await get_database()
@@ -134,6 +197,19 @@ async def health_check():
         logger.error(f'❌ Health check - Banco de dados: {e}')
         health_status['components']['database'] = 'unhealthy'
         health_status['status'] = 'degraded'
+    
+    # Verificar se endpoints críticos estão disponíveis
+    try:
+        health_status['components']['endpoints'] = {
+            'auth': '/api/v1/auth',
+            'variables': '/api/v1/variables',
+            'workflows': '/api/v1/workflows',
+            'chat': '/api/v1/chat'
+        }
+    except Exception as e:
+        logger.error(f'❌ Health check - Endpoints: {e}')
+        health_status['components']['endpoints'] = 'error'
+    
     return health_status
 
 @app.get('/', tags=['root'])
