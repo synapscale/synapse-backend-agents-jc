@@ -25,10 +25,10 @@ def get_database_url() -> str:
 async def connect_database():
     """Conecta ao banco de dados PostgreSQL via SQLAlchemy"""
     global engine, SessionLocal
-
+    
     try:
         database_url = get_database_url()
-
+        
         # Criar engine com configurações otimizadas
         engine = create_engine(
             database_url,
@@ -38,20 +38,20 @@ async def connect_database():
             pool_pre_ping=True,
             pool_recycle=300
         )
-
+        
         # Criar SessionLocal
         SessionLocal = sessionmaker(
             autocommit=False, autoflush=False, bind=engine
         )
-
+        
         # Testar conexão
         with engine.connect() as connection:
             result = connection.execute(text("SELECT 1 as test"))
             test_value = result.scalar()
-
+            
         logger.info("✅ Conectado ao banco PostgreSQL via SQLAlchemy")
         logger.info(f"✅ Teste de conexão bem-sucedido: {test_value}")
-
+        
         return engine
     except Exception as e:
         logger.error(f"❌ Erro ao conectar ao banco de dados: {e}")
@@ -62,7 +62,7 @@ async def connect_database():
 async def disconnect_database():
     """Desconecta do banco de dados"""
     global engine
-
+    
     if engine:
         try:
             engine.dispose()
@@ -74,11 +74,11 @@ async def disconnect_database():
 def get_db_session() -> Session:
     """Retorna uma sessão do banco de dados SQLAlchemy"""
     global SessionLocal
-
+    
     if not SessionLocal:
         error = "Database not connected. Call connect_database() first."
         raise Exception(error)
-
+    
     return SessionLocal()
 
 
@@ -106,11 +106,11 @@ async def health_check() -> bool:
 def create_tables():
     """Criar todas as tabelas no banco de dados usando SQLAlchemy"""
     global engine
-
+    
     if not engine:
         error = "Database not connected. Call connect_database() first."
         raise Exception(error)
-
+    
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("✅ Tabelas criadas com sucesso")
@@ -122,14 +122,18 @@ def create_tables():
 def drop_tables():
     """Remover todas as tabelas do banco de dados usando SQLAlchemy"""
     global engine
-
+    
     if not engine:
         error = "Database not connected. Call connect_database() first."
         raise Exception(error)
-
+    
     try:
         Base.metadata.drop_all(bind=engine)
         logger.info("✅ Tabelas removidas com sucesso")
     except Exception as e:
         logger.error(f"❌ Erro ao remover tabelas: {e}")
         raise
+class Base:
+    """Classe base para compatibilidade com SQLAlchemy"""
+    metadata = None
+

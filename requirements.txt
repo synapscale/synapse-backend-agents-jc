@@ -5,7 +5,8 @@ pydantic>=2.5.0,<3.0.0
 pydantic-settings>=2.1.0,<3.0.0
 
 # ===== BANCO DE DADOS =====
-prisma==0.11.0
+sqlalchemy>=2.0.0,<3.0.0
+psycopg2-binary>=2.9.0,<3.0.0
 asyncpg>=0.29.0,<0.30.0
 
 # ===== AUTENTICAÇÃO E SEGURANÇA =====

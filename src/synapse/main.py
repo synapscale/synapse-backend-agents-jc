@@ -2,10 +2,8 @@
 Aplicação principal do SynapScale Backend
 Otimizada por José - O melhor Full Stack do mundo
 Implementa as melhores práticas de segurança, performance e configuração
-Migrado para PostgreSQL com Prisma
+Migrado para PostgreSQL com SQLAlchemy
 """
-from prisma import Prisma
-from prisma import Prisma
 import asyncio
 import logging
 import time
@@ -18,7 +16,10 @@ import uvicorn
 from src.synapse.config import settings
 from src.synapse.database import connect_database, disconnect_database
 from src.synapse.api.v1.router import api_router
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 def check_configuration():
@@ -45,15 +46,17 @@ async def lifespan(app: FastAPI):
     check_configuration()
     try:
         await connect_database()
-        logger.info('✅ Conectado ao banco de dados PostgreSQL via Prisma')
+        logger.info('✅ Conectado ao banco de dados PostgreSQL via SQLAlchemy')
     except Exception as e:
         logger.error(f'❌ Erro ao conectar ao banco de dados: {e}')
         raise
     try:
-        from src.synapse.database import get_database
-        db = await get_database()
-        await db.user.count()
-        logger.info('✅ Conectividade com banco de dados verificada')
+        from src.synapse.database import health_check
+        is_healthy = await health_check()
+        if is_healthy:
+            logger.info('✅ Conectividade com banco de dados verificada')
+        else:
+            raise Exception("Health check falhou")
     except Exception as e:
         logger.error(f'❌ Erro de conectividade com banco: {e}')
         raise
@@ -189,10 +192,9 @@ async def health_check():
     }
     
     try:
-        from src.synapse.database import get_database
-        db = await get_database()
-        await db.user.count()
-        health_status['components']['database'] = 'healthy'
+        from src.synapse.database import health_check as db_health_check
+        is_healthy = await db_health_check()
+        health_status['components']['database'] = 'healthy' if is_healthy else 'unhealthy'
     except Exception as e:
         logger.error(f'❌ Health check - Banco de dados: {e}')
         health_status['components']['database'] = 'unhealthy'
@@ -224,6 +226,6 @@ async def api_info():
     """
     Informações detalhadas sobre a API
     """
-    return {'name': 'SynapScale Backend API', 'version': '1.0.0', 'description': 'Plataforma de Automação com IA', 'author': 'José - O melhor Full Stack do mundo', 'endpoints_count': len([route for route in app.routes]), 'features': {'authentication': 'JWT com refresh tokens', 'workflows': 'Execução de workflows complexos', 'ai_integration': 'Múltiplos provedores de IA', 'file_management': 'Upload e processamento de arquivos', 'real_time': 'WebSockets para atualizações em tempo real'}, 'security': {'cors': 'Configurado', 'trusted_hosts': 'Implementado', 'rate_limiting': 'Planejado', 'input_validation': 'Pydantic schemas'}, 'database': 'PostgreSQL com Prisma'}
+    return {'name': 'SynapScale Backend API', 'version': '1.0.0', 'description': 'Plataforma de Automação com IA', 'author': 'José - O melhor Full Stack do mundo', 'endpoints_count': len([route for route in app.routes]), 'features': {'authentication': 'JWT com refresh tokens', 'workflows': 'Execução de workflows complexos', 'ai_integration': 'Múltiplos provedores de IA', 'file_management': 'Upload e processamento de arquivos', 'real_time': 'WebSockets para atualizações em tempo real'}, 'security': {'cors': 'Configurado', 'trusted_hosts': 'Implementado', 'rate_limiting': 'Planejado', 'input_validation': 'Pydantic schemas'}, 'database': 'PostgreSQL com SQLAlchemy'}
 if __name__ == '__main__':
     uvicorn.run('src.synapse.main:app', host='0.0.0.0', port=8000, reload=True, reload_dirs=['src'], log_level='info', access_log=True)

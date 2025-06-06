@@ -3,8 +3,6 @@
 Este módulo contém exceções personalizadas utilizadas em todo o sistema,
 permitindo tratamento específico para diferentes tipos de erros.
 """
-from prisma import Prisma
-from prisma import Prisma
 from fastapi import HTTPException, status
 
 class SynapseBaseException(Exception):
