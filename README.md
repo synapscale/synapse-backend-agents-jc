@@ -66,7 +66,7 @@ cp .env.example .env
 # Edite o .env com suas configurações
 
 # Exemplo de configuração do banco de dados:
-# DATABASE_URL=postgresql://YOUR_DB_USER:YOUR_AIVEN_PASSWORD@db-banco-dados-automacoes-do-user-13851907-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require
+# DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require
 # DATABASE_SCHEMA=synapscale_db
 ```
 

@@ -150,7 +150,7 @@ cp .env.example .env
 
 # Editar arquivo .env com suas configurações
 # Exemplo de configuração:
-DATABASE_URL=postgresql://YOUR_DB_USER:YOUR_AIVEN_PASSWORD@db-banco-dados-automacoes-do-user-13851907-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require
+DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require
 DATABASE_SCHEMA=synapscale_db
 SECRET_KEY=your-super-secret-key-change-in-production
 JWT_SECRET_KEY=your-jwt-secret-key-change-in-production

@@ -15,8 +15,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Carregar variáveis de ambiente
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://YOUR_DB_USER:YOUR_AIVEN_PASSWORD@YOUR_DB_HOST:25060/defaultdb?sslmode=require")
+DATABASE_URL = os.getenv("DATABASE_URL")
 DATABASE_SCHEMA = os.getenv("DATABASE_SCHEMA", "synapscale_db")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
 
 # Criar engine do SQLAlchemy com o schema especificado
 engine = create_engine(DATABASE_URL, pool_size=20, max_overflow=30, echo=settings.DATABASE_ECHO)
