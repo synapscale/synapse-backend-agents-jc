@@ -9,6 +9,7 @@ from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
 import logging
 
+
 class Settings(BaseSettings):
     """
     Configurações da aplicação com validação
@@ -26,11 +27,11 @@ class Settings(BaseSettings):
     
     # Configurações de segurança
     SECRET_KEY: str = Field(
-        default="",  # DEVE ser definida via variável de ambiente
+        default="fallback-secret-key-change-in-production",
         description="Chave secreta para JWT"
     )
     JWT_SECRET_KEY: str = Field(
-        default="",  # DEVE ser definida via variável de ambiente
+        default="fallback-jwt-secret-change-in-production",
         description="Chave secreta para assinatura JWT"
     )
     JWT_ALGORITHM: str = Field(
@@ -56,29 +57,26 @@ class Settings(BaseSettings):
         description="Porta do servidor"
     )
     DEBUG: bool = Field(
-        default=True,
-        description="Modo debug"
+        default=False,
+        description="Modo de debug"
     )
     ENVIRONMENT: str = Field(
-        default="development",
+        default="production",
         description="Ambiente de execução"
     )
     
     # Configurações de CORS
     CORS_ORIGINS: List[str] = Field(
-        default=["http://localhost:3000", "http://127.0.0.1:3000"],
+        default=["http://localhost:3000", "https://localhost:3000"],
         description="Origens permitidas para CORS"
     )
     
-    # Configurações de logging
-    LOG_LEVEL: str = Field(
-        default="INFO",
-        description="Nível de logging"
-    )
-    LOG_FILE: str = Field(
-        default="logs/app.log",
-        description="Arquivo de log"
-    )
+    @field_validator('CORS_ORIGINS', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        return v
     
     # Configurações de upload
     MAX_FILE_SIZE: int = Field(
@@ -110,6 +108,26 @@ class Settings(BaseSettings):
         default=None,
         description="Chave da API Google"
     )
+    GROQ_API_KEY: Optional[str] = Field(
+        default=None,
+        description="Chave da API Groq"
+    )
+    
+    # Configurações de logging
+    LOG_LEVEL: str = Field(
+        default="INFO",
+        description="Nível de logging"
+    )
+    LOG_FILE: str = Field(
+        default="logs/synapse.log",
+        description="Arquivo de log"
+    )
+    
+    # Configurações de cache/Redis
+    REDIS_URL: Optional[str] = Field(
+        default=None,
+        description="URL do Redis"
+    )
     
     # Configurações de email
     SMTP_HOST: Optional[str] = Field(
@@ -128,25 +146,11 @@ class Settings(BaseSettings):
         default=None,
         description="Senha SMTP"
     )
-    EMAIL_FROM: Optional[str] = Field(
-        default=None,
-        description="Email remetente"
-    )
-    
-    # Configurações de Redis
-    REDIS_URL: str = Field(
-        default="redis://localhost:6379/0",
-        description="URL do Redis"
-    )
     
     # Configurações de WebSocket
-    WEBSOCKET_ENABLED: bool = Field(
-        default=True,
-        description="WebSocket habilitado"
-    )
-    WEBSOCKET_PATH: str = Field(
+    WS_ENDPOINT: str = Field(
         default="/ws",
-        description="Caminho do WebSocket"
+        description="Endpoint WebSocket"
     )
     
     class Config:
@@ -154,55 +158,44 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         case_sensitive = True
     
-    def get_llm_providers(self) -> Dict[str, Any]:
+    def get_llm_providers(self) -> Dict[str, bool]:
         """
-        Retorna provedores LLM configurados
+        Retorna os provedores de LLM disponíveis
         """
         providers = {}
         
         if self.OPENAI_API_KEY:
-            providers["openai"] = {
-                "api_key": self.OPENAI_API_KEY,
-                "models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
-            }
-        
+            providers["openai"] = True
         if self.ANTHROPIC_API_KEY:
-            providers["anthropic"] = {
-                "api_key": self.ANTHROPIC_API_KEY,
-                "models": ["claude-3-sonnet", "claude-3-opus"]
-            }
-        
+            providers["anthropic"] = True
         if self.GOOGLE_API_KEY:
-            providers["google"] = {
-                "api_key": self.GOOGLE_API_KEY,
-                "models": ["gemini-pro", "gemini-pro-vision"]
-            }
+            providers["google"] = True
+        if self.GROQ_API_KEY:
+            providers["groq"] = True
         
         # Adicionar provedor mock para desenvolvimento
-        if not providers:
-            providers["mock"] = {
-                "api_key": "mock-key",
-                "models": ["mock-model"]
-            }
+        if self.ENVIRONMENT == "development":
+            providers["mock"] = True
         
         return providers
     
     def get_database_config(self) -> Dict[str, Any]:
         """
-        Retorna configuração do banco de dados
+        Retorna configurações específicas do banco de dados
         """
         return {
             "url": self.DATABASE_URL,
             "schema": self.DATABASE_SCHEMA,
-            "echo": self.DEBUG,
-            "pool_size": 10,
-            "max_overflow": 20,
-            "pool_timeout": 30,
+            "pool_size": 5,
+            "max_overflow": 10,
+            "pool_pre_ping": True,
             "pool_recycle": 3600
         }
 
+
 # Instância global das configurações
 settings = Settings()
+
 
 # Configurar logging baseado nas configurações
 def setup_logging():
@@ -222,6 +215,7 @@ def setup_logging():
         ]
     )
 
+
 # Configurar logging na importação
 setup_logging()
 
@@ -231,8 +225,5 @@ logger = logging.getLogger(__name__)
 if settings.ENVIRONMENT == "development":
     logger.info("🔧 Configurações de desenvolvimento carregadas")
     logger.info(f"   - Database: {settings.DATABASE_SCHEMA}")
-    logger.info(f"   - CORS: {settings.CORS_ORIGINS}")
-    logger.info(f"   - LLM Providers: {len(settings.get_llm_providers())}")
-
-logger.info(f"✅ Configurações carregadas para ambiente: {settings.ENVIRONMENT}")
-
+    logger.info(f"   - Host: {settings.HOST}:{settings.PORT}")
+    logger.info(f"   - Debug: {settings.DEBUG}")
