@@ -7,6 +7,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import logging
 import os
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente
+load_dotenv()
 
 from src.synapse.config import settings
 

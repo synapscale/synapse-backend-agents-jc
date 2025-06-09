@@ -1,322 +1,428 @@
-# 🚀 SynapScale Backend - Sistema Completo de Automação com IA
+# 🚀 SynapScale Backend API
 
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://postgresql.org)
-[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-orange.svg)](https://www.sqlalchemy.org/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
-[![Tests](https://img.shields.io/badge/Tests-Passing-green.svg)](#testes)
+**Plataforma de Automação com IA - Backend Completo**
 
-## 📋 Visão Geral
+API robusta e escalável para gerenciamento de workflows, agentes AI e automações empresariais.
 
-O SynapScale Backend é uma plataforma completa de automação com IA que oferece:
+## 📋 Índice
 
-- 🤖 **Agentes de IA Múltiplos** - OpenAI, Anthropic, Google, Groq, Grok, DeepSeek
-- 🔄 **Workflows Visuais** - Sistema de nodes para automação
-- 🔐 **Autenticação Robusta** - JWT com refresh tokens e 2FA
-- 💾 **Banco PostgreSQL** - Com SQLAlchemy ORM
-- 📁 **Gerenciamento de Arquivos** - Upload/download seguro
-- 💬 **WebSockets** - Comunicação em tempo real
-- 📊 **Analytics** - Métricas e monitoramento
-- 🛒 **Marketplace** - Templates e componentes
-- 👥 **Workspaces** - Colaboração em equipe
-- 🐳 **Docker Ready** - Containerização completa
+- [Características](#características)
+- [Tecnologias](#tecnologias)
+- [Instalação](#instalação)
+- [Configuração](#configuração)
+- [Execução](#execução)
+- [Documentação da API](#documentação-da-api)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Deploy](#deploy)
+- [Contribuição](#contribuição)
 
-## 🏗️ Arquitetura
+## ✨ Características
 
-```
-src/synapse/
-├── 🔌 api/                    # Endpoints da API
-│   ├── v1/endpoints/          # 14 Endpoints implementados
-│   │   ├── agents.py          # Gerenciamento de agentes IA
-│   │   ├── analytics.py       # Sistema completo de analytics
-│   │   ├── auth.py           # Autenticação robusta
-│   │   ├── conversations.py   # Sistema de conversas
-│   │   ├── executions.py     # Execução de workflows
-│   │   ├── files.py          # Gerenciamento de arquivos
-│   │   ├── llm/              # Integração com múltiplos LLMs
-│   │   ├── marketplace.py    # Marketplace completo
-│   │   ├── nodes.py          # Sistema de nodes
-│   │   ├── templates.py      # Templates de workflows
-│   │   ├── user_variables.py # Variáveis de usuário
-│   │   ├── websockets.py     # WebSocket em tempo real
-│   │   ├── workflows.py      # Sistema de workflows
-│   │   └── workspaces.py     # Workspaces colaborativos
-│   └── deps.py               # Dependências da API
-├── ⚙️ core/                   # Funcionalidades centrais
-│   ├── auth/                 # Autenticação e autorização
-│   ├── config/               # Configurações
-│   ├── database/             # Conexão com banco
-│   └── security.py           # Segurança avançada
-├── 🤖 models/                 # 46 Modelos SQLAlchemy
-├── 🔧 services/               # Lógica de negócio
-├── 📊 schemas/                # Schemas de validação
-└── 🛠️ utils/                  # Utilitários
-```
+### 🔐 **Sistema de Autenticação Completo**
+- Registro e login de usuários
+- Autenticação JWT robusta
+- Refresh tokens automáticos
+- Verificação de email
+- Reset de senha
+- Controle de sessões
 
-## 🚀 Início Rápido
+### ⚡ **Engine de Workflows**
+- Criação e execução de workflows
+- Nodes reutilizáveis e customizáveis
+- Execução em tempo real
+- Monitoramento de performance
+- Sistema de filas inteligente
+
+### 🤖 **Integração com IA**
+- Múltiplos provedores de IA
+- Agentes inteligentes
+- Processamento de linguagem natural
+- Análise de dados automatizada
+
+### 💬 **Sistema de Conversas**
+- Chat em tempo real via WebSocket
+- Histórico de conversas
+- Suporte a múltiplos usuários
+- Notificações push
+
+### 📁 **Gerenciamento de Arquivos**
+- Upload seguro de arquivos
+- Processamento automático
+- Controle de versões
+- Integração com workflows
+
+### 🏪 **Marketplace**
+- Templates de workflows
+- Componentes reutilizáveis
+- Sistema de avaliações
+- Coleções organizadas
+
+### 📊 **Analytics e Monitoramento**
+- Métricas em tempo real
+- Dashboard administrativo
+- Logs estruturados
+- Alertas automáticos
+
+## 🛠 Tecnologias
+
+- **Framework**: FastAPI 0.104.1
+- **Banco de Dados**: PostgreSQL com SQLAlchemy
+- **Cache**: Redis
+- **Autenticação**: JWT + Passlib
+- **WebSocket**: FastAPI WebSocket
+- **Validação**: Pydantic V2
+- **Documentação**: Swagger UI + ReDoc
+- **Testes**: Pytest
+- **Deploy**: Docker + Docker Compose
+
+## 🚀 Instalação
 
 ### Pré-requisitos
+
 - Python 3.11+
-- PostgreSQL 15+
+- PostgreSQL 13+
+- Redis 6+
+- Git
 
-### 1. Configuração do Ambiente
+### 1. Clone o Repositório
+
 ```bash
-# Clone o repositório
-git clone <repository-url>
-cd synapse-backend-final
+git clone https://github.com/synapscale/synapse-backend-agents-jc.git
+cd synapse-backend-agents-jc
+```
 
-# Crie um ambiente virtual
-python -m venv venv
+### 2. Crie o Ambiente Virtual
+
+```bash
+python3 -m venv venv
 source venv/bin/activate  # Linux/Mac
 # ou
-venv\Scripts\activate     # Windows
+venv\Scripts\activate  # Windows
+```
 
-# Instale as dependências
+### 3. Instale as Dependências
+
+```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 2. Configuração do Banco
+## ⚙️ Configuração
+
+### 1. Variáveis de Ambiente
+
+Copie o arquivo de exemplo e configure:
+
 ```bash
-# Configure as variáveis de ambiente
 cp .env.example .env
-# Edite o .env com suas configurações
-
-# Exemplo de configuração do banco de dados:
-# DATABASE_URL=postgresql://user:password@host:port/database?sslmode=require
-# DATABASE_SCHEMA=synapscale_db
-
-# Execute as migrações
-alembic upgrade head
 ```
 
-### 3. Iniciar o Servidor
+### 2. Configure o `.env`
+
+```env
+# ============================
+# CONFIGURAÇÕES DO BANCO DE DADOS
+# ============================
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/synapscale_db
+DATABASE_SCHEMA=synapscale_db
+
+# ============================
+# CONFIGURAÇÕES DE SEGURANÇA
+# ============================
+SECRET_KEY=sua_chave_secreta_super_forte_32_chars
+JWT_SECRET_KEY=sua_chave_jwt_super_forte_32_chars
+ENCRYPTION_KEY=sua_chave_criptografia_base64_32_bytes
+
+# ============================
+# CONFIGURAÇÕES DA API
+# ============================
+API_V1_STR=/api/v1
+PROJECT_NAME=SynapScale Backend API
+VERSION=1.0.0
+DESCRIPTION=Plataforma de Automação com IA
+DEBUG=false
+
+# ============================
+# CONFIGURAÇÕES DE CORS
+# ============================
+BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:3001","https://app.synapscale.com"]
+
+# ============================
+# CONFIGURAÇÕES DE EMAIL
+# ============================
+SMTP_TLS=true
+SMTP_PORT=587
+SMTP_HOST=smtp.gmail.com
+SMTP_USER=seu_email@gmail.com
+SMTP_PASSWORD=sua_senha_app
+
+# ============================
+# CONFIGURAÇÕES DE UPLOAD
+# ============================
+UPLOAD_DIR=./uploads
+MAX_FILE_SIZE=10485760
+ALLOWED_EXTENSIONS=.pdf,.doc,.docx,.txt,.csv,.xlsx,.png,.jpg,.jpeg
+
+# ============================
+# CONFIGURAÇÕES DE CACHE
+# ============================
+REDIS_URL=redis://localhost:6379/0
+CACHE_TTL=3600
+
+# ============================
+# CONFIGURAÇÕES DE IA
+# ============================
+OPENAI_API_KEY=sua_chave_openai
+ANTHROPIC_API_KEY=sua_chave_anthropic
+GOOGLE_API_KEY=sua_chave_google
+```
+
+### 3. Configure o Banco de Dados
+
 ```bash
-# Desenvolvimento
-./start_dev.sh
+# Crie o banco de dados
+createdb synapscale_db
 
-# Ou manualmente
-python -m uvicorn src.synapse.main:app --host 0.0.0.0 --port 8000 --reload
-
-# Produção
-./start.sh
+# Execute as migrações (se houver)
+python -c "from src.synapse.database import Base, engine; Base.metadata.create_all(bind=engine)"
 ```
 
-## 🐳 Docker
+## 🏃‍♂️ Execução
 
 ### Desenvolvimento
+
 ```bash
-docker-compose up -d
+# Ative o ambiente virtual
+source venv/bin/activate
+
+# Execute o servidor de desenvolvimento
+python -m uvicorn src.synapse.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### Produção
+
 ```bash
-docker build -t synapscale-backend .
-docker run -p 8000:8000 synapscale-backend
+# Execute com Gunicorn
+gunicorn src.synapse.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
-## 📚 Documentação
+### Docker
 
-- **API Docs**: http://localhost:8000/docs (Swagger UI)
-- **ReDoc**: http://localhost:8000/redoc (Documentação alternativa)
-- **OpenAPI**: http://localhost:8000/openapi.json (Especificação)
+```bash
+# Build da imagem
+docker build -t synapscale-backend .
 
-### Documentação Técnica
-- 📖 [Guia de Desenvolvimento](docs/development_guide.md)
-- 🏗️ [Arquitetura](docs/architecture.md)
-- 🔐 [Segurança](docs/security_production.md)
-- 🚀 [Guia de Implantação](docs/GUIA_COMPLETO_SYNAPSCALE.md)
-- 🗄️ [Banco de Dados - 46 Tabelas](docs/database/🚀%20GUIA%20DEFINITIVO%20-%20Banco%20de%20Dados%20PostgreSQL%20para%20SynapScale%20(46%20Tabelas).md)
+# Execute o container
+docker run -p 8000:8000 --env-file .env synapscale-backend
+```
+
+### Docker Compose
+
+```bash
+# Execute todo o stack
+docker-compose up -d
+```
+
+## 📚 Documentação da API
+
+Após iniciar o servidor, acesse:
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **OpenAPI JSON**: http://localhost:8000/openapi.json
+
+### Principais Endpoints
+
+#### Autenticação
+- `POST /api/v1/auth/auth/register` - Registrar usuário
+- `POST /api/v1/auth/auth/login` - Login
+- `POST /api/v1/auth/auth/refresh` - Refresh token
+- `GET /api/v1/auth/auth/me` - Dados do usuário atual
+
+#### Workflows
+- `GET /api/v1/workflows/` - Listar workflows
+- `POST /api/v1/workflows/` - Criar workflow
+- `GET /api/v1/workflows/{id}` - Detalhes do workflow
+- `POST /api/v1/workflows/{id}/execute` - Executar workflow
+
+#### WebSocket
+- `WS /api/v1/ws/execution/{execution_id}` - Execução em tempo real
+- `WS /api/v1/ws/global` - Eventos globais
+- `WS /api/v1/ws/user` - Eventos do usuário
+
+## 📁 Estrutura do Projeto
+
+```
+synapse-backend-agents-jc/
+├── src/
+│   └── synapse/
+│       ├── api/
+│       │   └── v1/
+│       │       ├── endpoints/
+│       │       │   ├── auth.py
+│       │       │   ├── workflows.py
+│       │       │   ├── agents.py
+│       │       │   ├── files.py
+│       │       │   └── websockets.py
+│       │       └── router.py
+│       ├── core/
+│       │   ├── config.py
+│       │   ├── security.py
+│       │   └── exceptions.py
+│       ├── models/
+│       │   ├── user.py
+│       │   ├── workflow.py
+│       │   ├── agent.py
+│       │   └── __init__.py
+│       ├── schemas/
+│       │   ├── user.py
+│       │   ├── workflow.py
+│       │   └── __init__.py
+│       ├── services/
+│       │   ├── auth_service.py
+│       │   ├── workflow_service.py
+│       │   ├── execution_service.py
+│       │   └── websocket_service.py
+│       ├── utils/
+│       │   ├── email.py
+│       │   ├── file_handler.py
+│       │   └── validators.py
+│       ├── database.py
+│       ├── config.py
+│       └── main.py
+├── tests/
+├── docs/
+├── scripts/
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── requirements.txt
+└── README.md
+```
+
+## 🚀 Deploy
+
+### Variáveis de Produção
+
+```env
+DEBUG=false
+DATABASE_URL=postgresql://user:pass@prod-db:5432/synapscale
+REDIS_URL=redis://prod-redis:6379/0
+BACKEND_CORS_ORIGINS=["https://app.synapscale.com"]
+```
+
+### Docker Compose Produção
+
+```yaml
+version: '3.8'
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/synapscale
+    depends_on:
+      - db
+      - redis
+  
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: synapscale
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  redis:
+    image: redis:7-alpine
+    
+volumes:
+  postgres_data:
+```
+
+### Nginx (Opcional)
+
+```nginx
+server {
+    listen 80;
+    server_name api.synapscale.com;
+    
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    location /ws/ {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+    }
+}
+```
 
 ## 🧪 Testes
 
 ```bash
-# Executar todos os testes
+# Execute todos os testes
 pytest
 
-# Testes com cobertura
+# Execute com cobertura
 pytest --cov=src
 
-# Testes específicos
-pytest tests/unit/
-pytest tests/integration/
-pytest tests/performance/
-
-# Script de validação completa
-./test_setup.sh
+# Execute testes específicos
+pytest tests/test_auth.py
 ```
 
-## 🔧 Scripts Disponíveis
+## 📈 Monitoramento
 
-- `setup.sh` - Configuração inicial completa
-- `start.sh` - Iniciar em modo produção
-- `start_dev.sh` - Iniciar em modo desenvolvimento
-- `test_setup.sh` - Executar testes
-- `apply_migrations.sh` - Aplicar migrações do banco
+### Health Check
 
-## 🌟 Funcionalidades Principais
-
-### 🤖 Agentes de IA
-- **Múltiplos Provedores**: OpenAI, Anthropic, Google, Groq, Grok, DeepSeek
-- **Sistema de Templates**: Prompts reutilizáveis
-- **Execução Paralela**: Processamento assíncrono
-- **Marketplace**: Compartilhamento de agentes
-
-### 🔄 Workflows
-- **Editor Visual**: Sistema de nodes drag-and-drop
-- **Triggers Automáticos**: Execução baseada em eventos
-- **Variáveis Personalizadas**: Configuração flexível
-- **Scheduling Avançado**: Execução programada
-- **Versionamento**: Controle de versões automático
-
-### 🔐 Autenticação
-- **JWT com Refresh Tokens**: Segurança robusta
-- **Autenticação de Dois Fatores**: 2FA opcional
-- **Sistema de Permissões**: Controle granular
-- **Rate Limiting**: Proteção contra abuso
-
-### 📁 Arquivos
-- **Upload/Download Seguro**: Múltiplos formatos
-- **Processamento Automático**: Análise de conteúdo
-- **Versionamento**: Histórico de mudanças
-- **Integração Cloud**: Storage distribuído
-
-### 💬 Comunicação
-- **WebSockets**: Tempo real
-- **Sistema de Conversas**: Chat estruturado
-- **Notificações Push**: Alertas instantâneos
-- **Chat com IA**: Integração com agentes
-
-### 📊 Analytics
-- **Métricas de Performance**: Monitoramento completo
-- **Logs Estruturados**: Rastreabilidade total
-- **Dashboard**: Visualização em tempo real
-- **Alertas Automáticos**: Notificações inteligentes
-
-### 🛒 Marketplace
-- **Templates de Workflows**: Biblioteca compartilhada
-- **Componentes Reutilizáveis**: Nodes personalizados
-- **Sistema de Avaliação**: Reviews e ratings
-- **Monetização**: Marketplace comercial
-
-### 👥 Workspaces
-- **Colaboração em Equipe**: Múltiplos usuários
-- **Permissões Granulares**: Controle de acesso
-- **Compartilhamento**: Workflows e recursos
-- **Auditoria**: Histórico de atividades
-
-## 🔧 Configuração
-
-### Variáveis de Ambiente Principais
-```env
-# Banco de Dados
-DATABASE_URL=postgresql://user:pass@localhost:5432/defaultdb?sslmode=require
-DATABASE_SCHEMA=synapscale_db
-DATABASE_ECHO=false
-
-# Segurança
-SECRET_KEY=your_secret_key_here
-JWT_SECRET_KEY=your_jwt_secret_here
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# APIs de IA
-OPENAI_API_KEY=your_openai_key
-ANTHROPIC_API_KEY=your_anthropic_key
-GOOGLE_API_KEY=your_google_key
-GROQ_API_KEY=your_groq_key
-
-# CORS
-CORS_ORIGINS=["http://localhost:3000", "http://localhost:8080"]
-
-# Upload de Arquivos
-MAX_FILE_SIZE=10485760  # 10MB
-UPLOAD_PATH=./storage/uploads
-
-# Redis (Cache)
-REDIS_URL=redis://localhost:6379/0
-
-# WebSocket
-WS_HEARTBEAT_INTERVAL=30
-WS_MAX_CONNECTIONS=1000
+```bash
+curl http://localhost:8000/health
 ```
 
-## 📈 Performance
+### Métricas
 
-- **Async/Await** - Operações não-bloqueantes
-- **Connection Pooling** - Otimização de banco
-- **Caching Redis** - Cache distribuído
-- **Rate Limiting** - Proteção contra abuso
-- **Monitoring** - Métricas em tempo real
-- **Load Balancing** - Distribuição de carga
-
-## 🛡️ Segurança
-
-- **HTTPS** - Comunicação criptografada
-- **CORS** - Configuração adequada
-- **SQL Injection** - Proteção via ORM
-- **XSS** - Sanitização de dados
-- **Rate Limiting** - Proteção contra DDoS
-- **JWT Security** - Tokens seguros
-- **Input Validation** - Validação rigorosa
-
-## 🗄️ Banco de Dados
-
-### 46 Tabelas Implementadas
-- **Usuários e Autenticação**: users, user_sessions, user_tokens
-- **Workflows**: workflows, nodes, connections, executions
-- **Agentes**: agents, agent_configs, conversations, messages
-- **Arquivos**: files, file_versions, file_permissions
-- **Marketplace**: marketplace_items, reviews, downloads
-- **Analytics**: events, metrics, reports
-- **Workspaces**: workspaces, members, permissions
-- **E muito mais...**
+- Acesse `/metrics` para métricas Prometheus
+- Logs estruturados em JSON
+- Monitoramento de performance automático
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
-
-Veja [CONTRIBUTING.md](CONTRIBUTING.md) para mais detalhes.
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a [MIT License](LICENSE).
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## 🆘 Suporte
 
-- 📧 Email: suporte@synapscale.com
-- 💬 Discord: [SynapScale Community](https://discord.gg/synapscale)
-- 📖 Docs: [docs.synapscale.com](https://docs.synapscale.com)
+- **Email**: suporte@synapscale.com
+- **Discord**: [SynapScale Community](https://discord.gg/synapscale)
+- **Documentação**: [docs.synapscale.com](https://docs.synapscale.com)
 
 ## 🎯 Roadmap
 
-- [x] Sistema completo de agentes IA
-- [x] Workflows visuais avançados
-- [x] Marketplace integrado
-- [x] Analytics em tempo real
-- [x] Workspaces colaborativos
 - [ ] Sistema de plugins
+- [ ] Integração com mais provedores de IA
+- [ ] Dashboard analytics avançado
 - [ ] API GraphQL
-- [ ] Clustering e alta disponibilidade
-
-## 📊 Status do Projeto
-
-- ✅ **Backend**: 100% Completo
-- ✅ **API**: 14 Endpoints implementados
-- ✅ **Banco**: 46 Tabelas configuradas
-- ✅ **Testes**: Suite completa
-- ✅ **Documentação**: Completa
-- ✅ **Docker**: Pronto para produção
+- [ ] Suporte a múltiplos idiomas
+- [ ] Sistema de billing
 
 ---
 
 **Desenvolvido com ❤️ pela equipe SynapScale**
-
-**Versão**: 2.0 Final  
-**Data**: Junho 2025  
-**Status**: Produção Ready 🚀
 
