@@ -3,6 +3,7 @@ fastapi>=0.104.1,<0.116.0
 uvicorn[standard]>=0.24.0,<0.35.0
 pydantic>=2.5.0,<3.0.0
 pydantic-settings>=2.1.0,<3.0.0
+gunicorn>=21.2.0,<22.0.0
 
 # ===== BANCO DE DADOS =====
 sqlalchemy>=2.0.0,<3.0.0
@@ -10,12 +11,17 @@ psycopg2-binary>=2.9.9,<3.0.0
 asyncpg>=0.29.0,<0.30.0
 alembic>=1.12.0,<2.0.0
 
+# ===== CACHE E REDIS =====
+redis>=5.0.0,<6.0.0
+aioredis>=2.0.0,<3.0.0
+
 # ===== AUTENTICAÇÃO E SEGURANÇA =====
 pyjwt>=2.8.0,<3.0.0
 python-jose[cryptography]==3.5.0
 passlib[bcrypt]>=1.7.4,<2.0.0
 python-multipart>=0.0.6,<0.1.0
 cryptography>=41.0.0,<42.0.0
+bcrypt>=4.1.0,<5.0.0
 
 # ===== HTTP E REQUESTS =====
 httpx>=0.25.0,<0.26.0
@@ -30,14 +36,18 @@ python-dateutil>=2.8.2,<3.0.0
 # ===== VALIDAÇÃO E SERIALIZAÇÃO =====
 email-validator>=2.1.0,<3.0.0
 python-slugify>=8.0.0,<9.0.0
+pydantic-extra-types>=2.1.0,<3.0.0
 
 # ===== LOGGING E MONITORAMENTO =====
 loguru>=0.7.0,<0.8.0
+sentry-sdk[fastapi]>=1.38.0,<2.0.0
+prometheus-client>=0.19.0,<0.20.0
 
 # ===== UTILITÁRIOS =====
 python-dotenv>=1.0.0,<2.0.0
 click>=8.1.0,<9.0.0
 rich>=13.7.0,<14.0.0
+typer>=0.9.0,<0.10.0
 
 # ===== RATE LIMITING =====
 slowapi>=0.1.9,<0.2.0
@@ -48,6 +58,7 @@ websockets>=12.0,<13.0
 # ===== UPLOAD E ARQUIVOS =====
 python-magic>=0.4.27,<0.5.0
 pillow>=10.1.0,<11.0.0
+aiofiles>=23.2.1,<24.0.0
 
 # ===== TEMPLATES E EMAIL =====
 jinja2>=3.1.2,<4.0.0
@@ -56,18 +67,36 @@ aiosmtplib>=3.0.0,<4.0.0
 # ===== TIMEZONE =====
 pytz>=2023.3
 
+# ===== TESTING (DESENVOLVIMENTO) =====
+pytest>=7.4.0,<8.0.0
+pytest-asyncio>=0.21.0,<0.22.0
+pytest-cov>=4.1.0,<5.0.0
+httpx>=0.25.0,<0.26.0
+
 # ===== PROVEDORES DE IA (OPCIONAIS) =====
 # Descomente apenas os que você vai usar
 
 # OpenAI
-# openai>=1.3.0,<2.0.0
+openai>=1.3.0,<2.0.0
 
 # Anthropic Claude
-# anthropic>=0.7.0,<1.0.0
+anthropic>=0.7.0,<1.0.0
 
 # Google Gemini
-# google-generativeai>=0.3.0,<1.0.0
+google-generativeai>=0.3.0,<1.0.0
 
 # Groq
-# groq>=0.4.0,<1.0.0
+groq>=0.4.0,<1.0.0
+
+# Cohere
+cohere>=4.37.0,<5.0.0
+
+# HuggingFace
+transformers>=4.35.0,<5.0.0
+torch>=2.1.0,<3.0.0
+
+# ===== PRODUÇÃO =====
+# Descomente para produção
+# newrelic>=9.2.0,<10.0.0
+# datadog>=0.47.0,<1.0.0
 

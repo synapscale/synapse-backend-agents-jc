@@ -33,7 +33,7 @@ class User(Base):
     nodes = relationship("Node", back_populates="user", cascade="all, delete-orphan")
     agents = relationship("Agent", back_populates="user", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
-    executions = relationship("Execution", back_populates="user", cascade="all, delete-orphan")
+    # executions = relationship("Execution", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     variables = relationship("UserVariable", back_populates="user", cascade="all, delete-orphan")
     workflow_executions = relationship("WorkflowExecution", back_populates="user", cascade="all, delete-orphan")

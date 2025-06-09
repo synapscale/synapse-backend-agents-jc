@@ -1,162 +1,154 @@
-# 🛡️ GUIA DE SEGURANÇA - SYNAPSCALE BACKEND
+# Security Policy
 
-## 🚨 PROBLEMAS CRÍTICOS CORRIGIDOS
+## 🔒 Reportando Vulnerabilidades de Segurança
 
-### ✅ **Chaves Hardcoded Removidas**
-- `SECRET_KEY`: Agora lida via variável de ambiente
-- `JWT_SECRET_KEY`: Agora lida via variável de ambiente  
-- `ENCRYPTION_KEY`: Agora lida via variável de ambiente
-- `OPENAI_API_KEY`: Valor demo removido
+A segurança do SynapScale é nossa prioridade máxima. Se você descobrir uma vulnerabilidade de segurança, por favor, siga este processo:
 
-### ✅ **Credenciais de Banco Protegidas**
-- Docker Compose: Senhas agora vêm de variáveis de ambiente
-- URLs de conexão: Sem credenciais hardcoded
+### 📧 Contato Seguro
+- **Email**: security@synapscale.com
+- **Não** abra issues públicas para vulnerabilidades
+- **Não** divulgue publicamente até que seja corrigida
 
-### ✅ **Arquivos Sensíveis Protegidos**
-- `.gitignore` atualizado para proteger `.env`, chaves SSH, etc.
-- `.env.example` criado como template seguro
+### 📝 Informações Necessárias
+Inclua as seguintes informações em seu relatório:
 
-## 🔧 FERRAMENTAS DE SEGURANÇA
+1. **Descrição da Vulnerabilidade**
+   - Tipo de vulnerabilidade
+   - Componente afetado
+   - Impacto potencial
 
-### 📊 **Script de Verificação**
-```bash
-./security_scan.sh
-```
-**Detecta:**
-- Chaves de API expostas
-- Senhas hardcoded
-- Tokens JWT no código
-- Chaves secretas padrão
-- URLs com credenciais
-- Arquivos sensíveis não protegidos
+2. **Passos para Reproduzir**
+   - Instruções detalhadas
+   - Código de exemplo (se aplicável)
+   - Screenshots/logs
 
-### 🔑 **Gerador de Chaves**
-```bash
-python3 generate_secure_keys.py
-```
-**Gera:**
-- SECRET_KEY (64 caracteres)
-- JWT_SECRET_KEY (64 caracteres) 
-- ENCRYPTION_KEY (32 bytes base64)
-- Senhas para PostgreSQL e Redis
-- Arquivo `.env` configurado
+3. **Ambiente**
+   - Versão do sistema
+   - Configuração
+   - Dependências
 
-## 📋 CHECKLIST DE SEGURANÇA
+### ⏱️ Tempo de Resposta
+- **Confirmação**: 24 horas
+- **Avaliação inicial**: 72 horas
+- **Correção**: Depende da severidade
 
-### ✅ **Desenvolvimento**
-- [ ] Executar `./security_scan.sh` antes de cada commit
-- [ ] Usar `.env.example` como base para configuração
-- [ ] Nunca commitar arquivo `.env`
-- [ ] Gerar chaves únicas para cada desenvolvedor
+### 🎯 Severidade
 
-### ✅ **Produção**
-- [ ] Usar chaves diferentes de desenvolvimento
-- [ ] Armazenar chaves em cofre seguro (AWS Secrets Manager, etc.)
-- [ ] Habilitar HTTPS e cookies seguros
-- [ ] Configurar logs de auditoria
-- [ ] Implementar rate limiting
-- [ ] Monitorar tentativas de acesso suspeitas
+#### 🔴 Crítica (24-48h)
+- Execução remota de código
+- Bypass de autenticação
+- Acesso não autorizado a dados
 
-## 🔐 CONFIGURAÇÃO SEGURA
+#### 🟠 Alta (1 semana)
+- Escalação de privilégios
+- Injeção SQL/XSS
+- Exposição de dados sensíveis
 
-### **1. Gerar Chaves Únicas**
-```bash
-# Gerar todas as chaves necessárias
-python3 generate_secure_keys.py
-```
+#### 🟡 Média (2 semanas)
+- DoS/DDoS
+- Bypass de validação
+- Information disclosure
 
-### **2. Configurar Variáveis de Ambiente**
-```bash
-# Copiar template
-cp .env.example .env
+#### 🟢 Baixa (1 mês)
+- Problemas de configuração
+- Vulnerabilidades menores
+- Melhorias de segurança
 
-# Editar com suas configurações
-nano .env
-```
+## 🛡️ Medidas de Segurança Implementadas
 
-### **3. Configurar Produção**
-```bash
-# Definir ambiente
-export ENVIRONMENT=production
+### Backend
+- **Autenticação JWT** com refresh tokens
+- **Rate limiting** para APIs
+- **Validação de entrada** com Pydantic
+- **CORS** configurado adequadamente
+- **Hashing seguro** de senhas
+- **Sanitização** de dados
 
-# Usar PostgreSQL
-export DATABASE_URL="postgresql://user:pass@host:5432/db"
+### Frontend
+- **CSP** (Content Security Policy)
+- **Sanitização** de inputs
+- **Validação** client-side e server-side
+- **Tokens** armazenados com segurança
+- **HTTPS** obrigatório em produção
 
-# Habilitar HTTPS
-export ENABLE_HTTPS_REDIRECT=true
-export SECURE_COOKIES=true
-```
+### Infraestrutura
+- **Containers** isolados
+- **Secrets** gerenciados adequadamente
+- **Logs** de auditoria
+- **Backup** criptografado
+- **Monitoramento** de segurança
 
-## 🚫 O QUE NUNCA FAZER
+## 🔄 Processo de Correção
 
-### ❌ **NUNCA Commitar**
-- Arquivo `.env` com credenciais reais
-- Chaves de API ou tokens
-- Senhas ou certificados
-- Logs com informações sensíveis
+1. **Recebimento** do relatório
+2. **Triagem** e classificação
+3. **Desenvolvimento** da correção
+4. **Testes** de segurança
+5. **Deploy** da correção
+6. **Notificação** ao reporter
+7. **Divulgação** pública (se apropriado)
 
-### ❌ **NUNCA Hardcodar**
-- Chaves de API no código
-- Senhas em configurações
-- URLs com credenciais
-- Tokens JWT ou refresh tokens
+## 🏆 Reconhecimento
 
-### ❌ **NUNCA Usar em Produção**
-- Chaves de desenvolvimento
-- Senhas padrão
-- Debug mode habilitado
-- HTTP sem HTTPS
+Agradecemos pesquisadores de segurança responsáveis:
 
-## 📚 RECURSOS ADICIONAIS
+- **Hall of Fame** público (com permissão)
+- **Créditos** nas release notes
+- **Certificado** de reconhecimento
 
-### **Ferramentas Recomendadas**
-- **git-secrets**: Previne commits de credenciais
-- **bandit**: Análise de segurança para Python
-- **safety**: Verifica vulnerabilidades em dependências
-- **pre-commit**: Hooks para verificação automática
+## 📋 Versões Suportadas
 
-### **Serviços de Segurança**
-- **AWS Secrets Manager**: Gerenciamento de credenciais
-- **HashiCorp Vault**: Cofre de segredos
-- **Sentry**: Monitoramento de erros
-- **Datadog**: Monitoramento de logs
+| Versão | Suporte de Segurança |
+|--------|---------------------|
+| 1.0.x  | ✅ Suporte completo |
+| 0.9.x  | ⚠️ Apenas críticas  |
+| < 0.9  | ❌ Não suportado    |
 
-### **Comandos Úteis**
-```bash
-# Verificar vulnerabilidades em dependências
-pip-audit
+## 🔧 Configurações Recomendadas
 
-# Análise de segurança do código
-bandit -r src/
+### Produção
+```env
+# Segurança
+DEBUG=false
+SECRET_KEY=<chave-forte-32-chars>
+JWT_SECRET_KEY=<chave-forte-32-chars>
 
-# Verificar vazamentos de credenciais
-git-secrets --scan
+# CORS restritivo
+BACKEND_CORS_ORIGINS=["https://app.synapscale.com"]
 
-# Verificar configuração SSL
-openssl s_client -connect your-domain.com:443
+# HTTPS obrigatório
+FORCE_HTTPS=true
 ```
 
-## 🆘 EM CASO DE VAZAMENTO
+### Banco de Dados
+- Use conexões SSL
+- Configure firewall adequadamente
+- Backups criptografados
+- Acesso com least privilege
 
-### **Ação Imediata**
-1. **Revogar** todas as chaves expostas
-2. **Alterar** senhas comprometidas  
-3. **Regenerar** tokens JWT
-4. **Verificar** logs de acesso
-5. **Notificar** equipe de segurança
+### Monitoramento
+- Logs de acesso
+- Alertas de segurança
+- Monitoramento de anomalias
+- Auditoria regular
 
-### **Investigação**
-1. Verificar histórico do git
-2. Analisar logs de acesso
-3. Identificar potencial uso malicioso
-4. Documentar incidente
+## 📚 Recursos de Segurança
 
-### **Prevenção**
-1. Implementar verificações automáticas
-2. Treinar equipe sobre boas práticas
-3. Revisar processos de desenvolvimento
-4. Atualizar políticas de segurança
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
+- [CWE/SANS Top 25](https://cwe.mitre.org/top25/)
+
+## 📞 Contato
+
+Para questões de segurança:
+- **Email**: security@synapscale.com
+- **PGP Key**: [Disponível no site]
+
+Para outras questões:
+- **Issues**: GitHub Issues
+- **Discussions**: GitHub Discussions
 
 ---
 
-**🔒 Lembre-se: Segurança é responsabilidade de todos!**
+**Obrigado por ajudar a manter o SynapScale seguro!** 🔒
+
