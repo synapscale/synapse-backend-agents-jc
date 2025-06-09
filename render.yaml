@@ -1,29 +1,17 @@
-# Render Configuration
-# Configuração para deploy no Render.com
-
-# Build Command
-build: pip install -r requirements.txt
-
-# Start Command  
-start: python -m uvicorn src.synapse.main:app --host 0.0.0.0 --port $PORT
-
-# Environment
-env: python
-
-# Python Version
-pythonVersion: 3.11.0
-
-# Health Check
-healthCheckPath: /health
-
-# Auto Deploy
-autoDeploy: true
-
-# Environment Variables (configure no dashboard do Render)
-# DATABASE_URL: postgresql://...
-# SECRET_KEY: your-secret-key
-# JWT_SECRET_KEY: your-jwt-secret
-# ENVIRONMENT: production
-# DEBUG: false
-# BACKEND_CORS_ORIGINS: ["https://your-frontend-url.vercel.app"]
-
+services:
+  - type: web
+    name: synapse-backend-agents
+    runtime: python
+    buildCommand: ./build.sh
+    startCommand: ./start_production.sh
+    healthCheckPath: /health
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
