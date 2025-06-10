@@ -71,7 +71,6 @@ class Agent(Base):
     user = relationship("User", back_populates="agents")
     workspace = relationship("Workspace", back_populates="agents")
     conversations = relationship("Conversation", back_populates="agent", cascade="all, delete-orphan")
-    executions = relationship("Execution", back_populates="agent")
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Converte agente para dicionário"""
