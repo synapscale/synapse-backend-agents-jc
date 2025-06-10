@@ -1,17 +1,20 @@
 name: AI Review
 
+# ─── Gatilhos ──────────────────────────────────────────────────────────────
 on:
-  pull_request_target:
+  pull_request_target:            # push / sync de qualquer PR ou fork
     types: [opened, synchronize, reopened, ready_for_review]
-  issue_comment:
+  issue_comment:                  # comentário `/ai-review`
     types: [created]
 
+# ─── Permissões do GITHUB_TOKEN ────────────────────────────────────────────
 permissions:
-  contents: read
-  pull-requests: write       # necessário para o bot comentar
+  contents: read                  # clonar repositório
+  pull-requests: write            # criar / atualizar comentário
 
 jobs:
   ai-review:
+    # Executa se for push de PR OU comentário "/ai-review"
     if: |
       github.event_name == 'pull_request_target' ||
       (
@@ -20,14 +23,7 @@ jobs:
         github.event.issue.pull_request
       )
 
-    uses: synapscale/ai-review-automation@main   # ou @v2.1 quando taggear
-
-    # 👉 PASSAGEM DE SEGREDOS — escolha **uma** das opções abaixo
-
-    # Opção A — herdar TODOS os segredos (mais simples)
-    secrets: inherit
-
-    # Opção B — somente o necessário (mais restrito)
-    # secrets:
-    #   openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-    #   GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}   # opcional; já vem por padrão
+    # Nada de runs-on / steps: apenas usamos a composite-action
+    uses: synapscale/ai-review-automation@main   # troque @main por @v2.1 quando taggear
+    with:
+      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
