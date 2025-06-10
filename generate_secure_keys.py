@@ -33,13 +33,17 @@ def main():
     print("🔐 GERADOR DE CHAVES SEGURAS - SYNAPSCALE BACKEND")
     print("=" * 60)
     
+    # Geração de chaves
     keys = {
         'SECRET_KEY': generate_secret_key(64),
         'JWT_SECRET_KEY': generate_url_safe_token(64),
         'ENCRYPTION_KEY': generate_encryption_key(),
-        'POSTGRES_PASSWORD': generate_database_password(20),
         'REDIS_PASSWORD': generate_database_password(16),
     }
+
+    # Gera POSTGRES_PASSWORD apenas se não houver DATABASE_URL
+    if not os.environ.get("DATABASE_URL"):
+        keys['POSTGRES_PASSWORD'] = generate_database_password(20)
 
     print("\n🔑 CHAVES GERADAS:")
     print("-" * 40)
@@ -53,7 +57,7 @@ def main():
     print("3. Use chaves diferentes para cada ambiente (dev/prod)")
     print("4. Armazene chaves de produção em um gerenciador seguro")
 
-    # Novo: controle automático via variável de ambiente
+    # Verifica se deve salvar automaticamente
     auto_save = os.environ.get("AUTO_SAVE_ENV", "").lower() == "true"
     
     if auto_save:
@@ -72,18 +76,36 @@ def main():
             f.write("# Chaves de segurança\n")
             for key_name, key_value in keys.items():
                 f.write(f"{key_name}={key_value}\n")
+
             f.write("\n# Banco de dados\n")
-            f.write(f"DATABASE_URL=postgresql://postgres:{keys['POSTGRES_PASSWORD']}@localhost:5432/synapse\n")
-            f.write(f"POSTGRES_USER=postgres\nPOSTGRES_DB=synapse\n\n")
-            f.write("# Redis\nREDIS_URL=redis://localhost:6379/0\n\n")
-            f.write("# APIs de IA\nOPENAI_API_KEY=\nANTHROPIC_API_KEY=\nGEMINI_API_KEY=\nMISTRAL_API_KEY=\n\n")
-            f.write("# Email\nSMTP_HOST=\nSMTP_PORT=587\nSMTP_USERNAME=\nSMTP_PASSWORD=\nSMTP_USE_TLS=true\n")
+            if "DATABASE_URL" in os.environ:
+                f.write(f"DATABASE_URL={os.environ['DATABASE_URL']}\n")
+            else:
+                f.write(f"DATABASE_URL=postgresql://postgres:{keys['POSTGRES_PASSWORD']}@localhost:5432/synapse\n")
+                f.write("POSTGRES_USER=postgres\n")
+                f.write("POSTGRES_DB=synapse\n")
+            
+            f.write("\n# Redis\n")
+            f.write("REDIS_URL=redis://localhost:6379/0\n\n")
+
+            f.write("# APIs de IA\n")
+            f.write("OPENAI_API_KEY=\n")
+            f.write("ANTHROPIC_API_KEY=\n")
+            f.write("GEMINI_API_KEY=\n")
+            f.write("MISTRAL_API_KEY=\n\n")
+
+            f.write("# Email\n")
+            f.write("SMTP_HOST=\n")
+            f.write("SMTP_PORT=587\n")
+            f.write("SMTP_USERNAME=\n")
+            f.write("SMTP_PASSWORD=\n")
+            f.write("SMTP_USE_TLS=true\n")
         
         print("✅ Arquivo .env criado automaticamente com base nas chaves geradas!")
     else:
         print("\nℹ️ Salvamento automático não ativado.")
         print("👉 Para salvar automaticamente, defina AUTO_SAVE_ENV=true")
-    
+
     print("\n🛡️  LEMBRETE DE SEGURANÇA:")
     print("- Use diferentes chaves para desenvolvimento e produção")
     print("- Armazene chaves de produção em cofres seguros (AWS Secrets, etc)")
