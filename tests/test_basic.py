@@ -160,4 +160,7 @@ def test_api_version_header(client: TestClient):
     response = client.get("/health")
     # Verificar se há algum header de versão
     assert response.status_code == 200
+    # O middleware deve adicionar o header de tempo de processamento
+    assert "X-Process-Time" in response.headers
+    assert response.headers["X-Process-Time"]
 
