@@ -67,7 +67,8 @@ class Node(Base):
     user = relationship("User", back_populates="nodes")
     workspace = relationship("Workspace", back_populates="nodes")
     workflow_instances = relationship("WorkflowNode", back_populates="node")
-    marketplace_listings = relationship("MarketplaceListing", back_populates="node")
+    # Relacionamento com listagens de marketplace ainda não implementado
+    # marketplace_listings = relationship("MarketplaceListing", back_populates="node")
 
     def to_dict(self, include_code: bool = True) -> dict:
         """Converte node para dicionário"""
