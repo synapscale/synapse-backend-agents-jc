@@ -5,8 +5,14 @@ Implementação completa de testes automatizados
 
 import asyncio
 import os
+import sys
 from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, Mock
+
+# Ensure the project sources under ``src/`` are importable when running tests
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 import pytest
 from fastapi.testclient import TestClient
