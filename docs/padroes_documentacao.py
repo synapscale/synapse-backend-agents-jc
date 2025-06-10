@@ -100,7 +100,7 @@ class ExampleClass:
 
 # Padrões para Documentação de API
 
-"""
+'''
 Exemplo de documentação para endpoint:
 
 ```python
@@ -147,9 +147,7 @@ async def upload_file(
             "message": "Arquivo enviado com sucesso"
         }
         ```
-    """
-```
-"""
+    '''
 
 # Padrões para README
 
