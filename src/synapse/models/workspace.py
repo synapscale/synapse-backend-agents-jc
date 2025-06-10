@@ -85,6 +85,7 @@ class Workspace(Base):
     projects = relationship("WorkspaceProject", back_populates="workspace", cascade="all, delete-orphan")
     invitations = relationship("WorkspaceInvitation", back_populates="workspace", cascade="all, delete-orphan")
     activities = relationship("WorkspaceActivity", back_populates="workspace", cascade="all, delete-orphan")
+    workflows = relationship("Workflow", back_populates="workspace", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Workspace(id={self.id}, name='{self.name}', owner_id={self.owner_id})>"
