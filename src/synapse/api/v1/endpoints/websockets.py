@@ -33,8 +33,8 @@ async def authenticate_websocket(
     Autentica um WebSocket usando JWT token
     """
     try:
-        # Decodifica o token JWT
-        payload = jwt_manager.decode_token(token)
+        # Verifica e decodifica o token JWT
+        payload = jwt_manager.verify_token(token)
         user_id = payload.get("sub")
         
         if not user_id:

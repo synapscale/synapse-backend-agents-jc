@@ -208,3 +208,18 @@ def verify_token(token: str) -> Dict[str, Any]:
     """Função utilitária para verificar token"""
     return jwt_manager.verify_token(token)
 
+def decode_token(token: str) -> Dict[str, Any]:
+    """Decodifica um token JWT e retorna o payload"""
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM]
+        )
+        return payload
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido"
+        )
+
