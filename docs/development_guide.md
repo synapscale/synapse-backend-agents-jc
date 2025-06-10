@@ -8,7 +8,7 @@ Este guia fornece instruções detalhadas para desenvolvedores que desejam contr
 
 ### Pré-requisitos
 
-- Python 3.9 ou superior
+- Python 3.11 ou superior
 - Poetry (gerenciador de dependências)
 - SQLite (para desenvolvimento local)
 

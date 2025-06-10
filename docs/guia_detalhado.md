@@ -22,7 +22,7 @@ Antes de iniciar a instalação, certifique-se de que seu sistema atende aos seg
 
 ### Para Instalação Local
 
-- **Python**: Versão 3.9 ou superior
+- **Python**: Versão 3.11 ou superior
   - Verifique sua versão com: `python --version`
   - Caso não tenha, instale em: [python.org](https://www.python.org/downloads/)
 
