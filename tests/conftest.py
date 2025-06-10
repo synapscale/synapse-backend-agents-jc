@@ -3,39 +3,34 @@ Configuração de testes para SynapScale
 Implementação completa de testes automatizados
 """
 
-import pytest
 import asyncio
 import os
 from typing import AsyncGenerator, Generator
-from unittest.mock import Mock, AsyncMock
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from unittest.mock import AsyncMock, Mock
+
+import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from src.synapse.core.auth import get_current_user
+from src.synapse.core.cache import CacheConfig, CacheManager, get_cache_manager
+from src.synapse.database import Base, get_db
 
 # Importações do projeto
 from src.synapse.main import app
-from src.synapse.database import get_db, Base
-from src.synapse.core.auth import get_current_user
 from src.synapse.models.user import User
-from src.synapse.core.cache import get_cache_manager, CacheManager, CacheConfig
-
 
 # Configuração do banco de dados de teste
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
 # Engine de teste
-test_engine = create_async_engine(
-    TEST_DATABASE_URL,
-    echo=False,
-    future=True
-)
+test_engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
 
 # Session maker de teste
 TestSessionLocal = sessionmaker(
-    test_engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    test_engine, class_=AsyncSession, expire_on_commit=False
 )
 
 
@@ -53,9 +48,9 @@ async def setup_database() -> AsyncGenerator:
     # Criar todas as tabelas
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield
-    
+
     # Limpar banco após testes
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -72,9 +67,10 @@ async def db_session(setup_database) -> AsyncGenerator[AsyncSession, None]:
 @pytest.fixture
 def override_get_db(db_session: AsyncSession):
     """Override da dependência de banco de dados"""
+
     async def _override_get_db():
         yield db_session
-    
+
     app.dependency_overrides[get_db] = _override_get_db
     yield
     app.dependency_overrides.clear()
@@ -88,7 +84,7 @@ async def test_user(db_session: AsyncSession) -> User:
         username="testuser",
         hashed_password="hashed_password_here",
         is_active=True,
-        is_verified=True
+        is_verified=True,
     )
     db_session.add(user)
     await db_session.commit()
@@ -99,9 +95,10 @@ async def test_user(db_session: AsyncSession) -> User:
 @pytest.fixture
 def override_get_current_user(test_user: User):
     """Override da dependência de usuário atual"""
+
     async def _override_get_current_user():
         return test_user
-    
+
     app.dependency_overrides[get_current_user] = _override_get_current_user
     yield
     app.dependency_overrides.clear()
@@ -114,7 +111,9 @@ def client(override_get_db, override_get_current_user) -> TestClient:
 
 
 @pytest.fixture
-async def async_client(override_get_db, override_get_current_user) -> AsyncGenerator[AsyncClient, None]:
+async def async_client(
+    override_get_db, override_get_current_user
+) -> AsyncGenerator[AsyncClient, None]:
     """Cliente de teste assíncrono"""
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
@@ -126,17 +125,17 @@ async def cache_manager() -> AsyncGenerator[CacheManager, None]:
     config = CacheConfig(
         redis_url="redis://localhost:6379/1",  # DB diferente para testes
         default_ttl=300,
-        max_memory_cache_size=100
+        max_memory_cache_size=100,
     )
-    
+
     cache = CacheManager(config)
     await cache.initialize()
-    
+
     # Override da dependência
     app.dependency_overrides[get_cache_manager] = lambda: cache
-    
+
     yield cache
-    
+
     # Limpar cache após teste
     await cache.clear()
     app.dependency_overrides.clear()
@@ -162,18 +161,11 @@ def mock_llm_client():
     mock.chat.completions.create.return_value = Mock(
         choices=[
             Mock(
-                message=Mock(
-                    content="Test response from LLM",
-                    role="assistant"
-                ),
-                finish_reason="stop"
+                message=Mock(content="Test response from LLM", role="assistant"),
+                finish_reason="stop",
             )
         ],
-        usage=Mock(
-            prompt_tokens=10,
-            completion_tokens=5,
-            total_tokens=15
-        )
+        usage=Mock(prompt_tokens=10, completion_tokens=5, total_tokens=15),
     )
     return mock
 
@@ -193,6 +185,7 @@ def mock_websocket():
 
 # Fixtures para dados de teste
 
+
 @pytest.fixture
 def sample_workflow_data():
     """Dados de exemplo para workflow"""
@@ -205,18 +198,15 @@ def sample_workflow_data():
                 "name": "Start Node",
                 "type": "start",
                 "position": {"x": 0, "y": 0},
-                "config": {}
+                "config": {},
             },
             {
                 "name": "LLM Node",
                 "type": "llm",
                 "position": {"x": 200, "y": 0},
-                "config": {
-                    "model": "gpt-3.5-turbo",
-                    "prompt": "Hello, world!"
-                }
-            }
-        ]
+                "config": {"model": "gpt-3.5-turbo", "prompt": "Hello, world!"},
+            },
+        ],
     }
 
 
@@ -230,10 +220,7 @@ def sample_template_data():
         "tags": ["test", "automation"],
         "is_public": True,
         "license": "free",
-        "workflow_data": {
-            "nodes": [],
-            "edges": []
-        }
+        "workflow_data": {"nodes": [], "edges": []},
     }
 
 
@@ -248,10 +235,7 @@ def sample_marketplace_component():
         "price": 0.0,
         "is_free": True,
         "tags": ["test", "component"],
-        "component_data": {
-            "nodes": [],
-            "config": {}
-        }
+        "component_data": {"nodes": [], "config": {}},
     }
 
 
@@ -262,10 +246,7 @@ def sample_workspace_data():
         "name": "Test Workspace",
         "description": "A test workspace for collaboration",
         "is_public": False,
-        "settings": {
-            "allow_public_projects": False,
-            "require_approval": True
-        }
+        "settings": {"allow_public_projects": False, "require_approval": True},
     }
 
 
@@ -275,69 +256,74 @@ def sample_analytics_event():
     return {
         "event_type": "user_action",
         "event_name": "workflow_executed",
-        "properties": {
-            "workflow_id": 1,
-            "execution_time": 1.5,
-            "success": True
-        },
+        "properties": {"workflow_id": 1, "execution_time": 1.5, "success": True},
         "user_agent": "test-client",
-        "ip_address": "127.0.0.1"
+        "ip_address": "127.0.0.1",
     }
 
 
 # Utilitários para testes
 
+
 class TestUtils:
     """Utilitários para testes"""
-    
+
     @staticmethod
-    async def create_test_workflow(db_session: AsyncSession, user: User, data: dict = None):
+    async def create_test_workflow(
+        db_session: AsyncSession, user: User, data: dict = None
+    ):
         """Cria workflow de teste"""
         from src.synapse.models.workflow import Workflow
-        
+
         workflow_data = data or {
             "name": "Test Workflow",
             "description": "Test workflow",
-            "is_active": True
+            "is_active": True,
         }
-        
-        workflow = Workflow(
-            user_id=user.id,
-            **workflow_data
-        )
-        
+
+        workflow = Workflow(user_id=user.id, **workflow_data)
+
         db_session.add(workflow)
         await db_session.commit()
         await db_session.refresh(workflow)
         return workflow
-    
+
     @staticmethod
-    async def create_test_execution(db_session: AsyncSession, workflow, data: dict = None):
+    async def create_test_execution(
+        db_session: AsyncSession, workflow, data: dict = None
+    ):
         """Cria execução de teste"""
-        from src.synapse.models.workflow_execution import WorkflowExecution, ExecutionStatus
-        
+        from src.synapse.models.workflow_execution import (
+            ExecutionStatus,
+            WorkflowExecution,
+        )
+
         execution_data = data or {
             "status": ExecutionStatus.PENDING,
             "config": {},
-            "metadata": {}
+            "metadata": {},
         }
-        
+
         execution = WorkflowExecution(
-            workflow_id=workflow.id,
-            user_id=workflow.user_id,
-            **execution_data
+            workflow_id=workflow.id, user_id=workflow.user_id, **execution_data
         )
-        
+
         db_session.add(execution)
         await db_session.commit()
         await db_session.refresh(execution)
         return execution
-    
+
     @staticmethod
-    async def create_test_template(db_session: AsyncSession, user: User, data: dict = None):
+    async def create_test_template(
+        db_session: AsyncSession, user: User, data: dict = None
+    ):
         """Cria template de teste"""
-        from src.synapse.models.template import WorkflowTemplate, TemplateStatus, TemplateLicense
-        
+        from src.synapse.models.template import (
+            TemplateLicense,
+            TemplateStatus,
+            WorkflowTemplate,
+        )
+
         template_data = data or {
             "name": "Test Template",
             "description": "Test template",
@@ -345,18 +331,57 @@ class TestUtils:
             "status": TemplateStatus.PUBLISHED,
             "license": TemplateLicense.FREE,
             "is_public": True,
-            "workflow_data": {}
+            "workflow_data": {},
         }
-        
-        template = WorkflowTemplate(
-            author_id=user.id,
-            **template_data
-        )
-        
+
+        template = WorkflowTemplate(author_id=user.id, **template_data)
+
         db_session.add(template)
         await db_session.commit()
         await db_session.refresh(template)
         return template
+
+    @staticmethod
+    async def create_test_agent(
+        db_session: AsyncSession, user: User, data: dict = None
+    ):
+        """Cria agente de teste"""
+        from src.synapse.models.agent import Agent, AgentType
+
+        agent_data = data or {
+            "name": "Test Agent",
+            "description": "Agent for tests",
+            "agent_type": AgentType.ASSISTANT,
+            "model_provider": "openai",
+            "model_name": "gpt-3.5-turbo",
+        }
+
+        agent = Agent(user_id=user.id, **agent_data)
+        db_session.add(agent)
+        await db_session.commit()
+        await db_session.refresh(agent)
+        return agent
+
+    @staticmethod
+    async def create_test_node(db_session: AsyncSession, user: User, data: dict = None):
+        """Cria node de teste"""
+        from src.synapse.models.node import Node, NodeType
+
+        node_data = data or {
+            "name": "Test Node",
+            "description": "Node for tests",
+            "type": NodeType.LLM,
+            "category": "test",
+            "code_template": "print('hello')",
+            "input_schema": {"type": "object", "properties": {}},
+            "output_schema": {"type": "object", "properties": {}},
+        }
+
+        node = Node(user_id=user.id, **node_data)
+        db_session.add(node)
+        await db_session.commit()
+        await db_session.refresh(node)
+        return node
 
 
 @pytest.fixture
@@ -367,46 +392,27 @@ def test_utils():
 
 # Markers personalizados para organização dos testes
 
+
 def pytest_configure(config):
     """Configuração personalizada do pytest"""
-    config.addinivalue_line(
-        "markers", "unit: marca testes unitários"
-    )
-    config.addinivalue_line(
-        "markers", "integration: marca testes de integração"
-    )
-    config.addinivalue_line(
-        "markers", "performance: marca testes de performance"
-    )
-    config.addinivalue_line(
-        "markers", "slow: marca testes lentos"
-    )
-    config.addinivalue_line(
-        "markers", "auth: marca testes de autenticação"
-    )
-    config.addinivalue_line(
-        "markers", "database: marca testes de banco de dados"
-    )
-    config.addinivalue_line(
-        "markers", "api: marca testes de API"
-    )
-    config.addinivalue_line(
-        "markers", "websocket: marca testes de WebSocket"
-    )
-    config.addinivalue_line(
-        "markers", "cache: marca testes de cache"
-    )
+    config.addinivalue_line("markers", "unit: marca testes unitários")
+    config.addinivalue_line("markers", "integration: marca testes de integração")
+    config.addinivalue_line("markers", "performance: marca testes de performance")
+    config.addinivalue_line("markers", "slow: marca testes lentos")
+    config.addinivalue_line("markers", "auth: marca testes de autenticação")
+    config.addinivalue_line("markers", "database: marca testes de banco de dados")
+    config.addinivalue_line("markers", "api: marca testes de API")
+    config.addinivalue_line("markers", "websocket: marca testes de WebSocket")
+    config.addinivalue_line("markers", "cache: marca testes de cache")
 
 
 # Configuração de logging para testes
 import logging
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 # Desabilitar logs verbosos durante testes
 logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 logging.getLogger("asyncio").setLevel(logging.WARNING)
-
