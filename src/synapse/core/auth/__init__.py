@@ -6,6 +6,7 @@ from .jwt import (
     create_access_token,
     create_refresh_token,
     verify_token,
+    decode_token,
     get_current_user,
     get_current_active_user,
     get_current_verified_user,
@@ -19,10 +20,11 @@ from .password import (
 __all__ = [
     # JWT functions
     "require_permission",
-    "require_role", 
+    "require_role",
     "create_access_token",
     "create_refresh_token",
     "verify_token",
+    "decode_token",
     "get_current_user",
     "get_current_active_user",
     "get_current_verified_user",

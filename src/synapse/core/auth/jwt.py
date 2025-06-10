@@ -37,7 +37,7 @@ class JWTManager:
         """Cria um token de refresh e salva no banco"""
         token = secrets.token_urlsafe(32)
         expire = datetime.now(timezone.utc) + timedelta(days=self.refresh_token_expire_days)
-        
+
         # Criar registro no banco
         refresh_token = RefreshToken(
             token=token,
@@ -46,7 +46,7 @@ class JWTManager:
         )
         db.add(refresh_token)
         db.commit()
-        
+
         return token
 
     def verify_token(self, token: str) -> Dict[str, Any]:
@@ -63,6 +63,16 @@ class JWTManager:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token inválido"
+            )
+
+    def decode_token(self, token: str) -> Dict[str, Any]:
+        """Decodifica um token JWT sem verificações extras"""
+        try:
+            return jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+        except jwt.PyJWTError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token inválido",
             )
 
     def refresh_access_token(self, refresh_token: str, db: Session) -> Optional[str]:
@@ -96,7 +106,7 @@ class JWTManager:
         token_record = db.query(RefreshToken).filter(
             RefreshToken.token == refresh_token
         ).first()
-        
+
         if token_record:
             token_record.is_revoked = True
             db.commit()
@@ -117,12 +127,12 @@ async def get_current_user(
 ) -> User:
     """Dependency para obter o usuário atual autenticado"""
     token = credentials.credentials
-    
+
     try:
         payload = jwt_manager.verify_token(token)
         email: str = payload.get("sub")
         user_id: str = payload.get("user_id")
-        
+
         if email is None or user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -142,7 +152,7 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuário não encontrado"
         )
-    
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -207,4 +217,8 @@ def create_refresh_token(user_id: str, db: Session) -> str:
 def verify_token(token: str) -> Dict[str, Any]:
     """Função utilitária para verificar token"""
     return jwt_manager.verify_token(token)
+
+def decode_token(token: str) -> Dict[str, Any]:
+    """Função utilitária para decodificar token"""
+    return jwt_manager.decode_token(token)
 
