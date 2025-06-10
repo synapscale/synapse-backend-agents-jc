@@ -33,7 +33,6 @@ def main():
     print("🔐 GERADOR DE CHAVES SEGURAS - SYNAPSCALE BACKEND")
     print("=" * 60)
     
-    # Gerar todas as chaves necessárias
     keys = {
         'SECRET_KEY': generate_secret_key(64),
         'JWT_SECRET_KEY': generate_url_safe_token(64),
@@ -41,72 +40,49 @@ def main():
         'POSTGRES_PASSWORD': generate_database_password(20),
         'REDIS_PASSWORD': generate_database_password(16),
     }
-    
+
     print("\n🔑 CHAVES GERADAS:")
     print("-" * 40)
-    
-    # Exibir chaves geradas
     for key_name, key_value in keys.items():
         print(f"{key_name}={key_value}")
-    
+
     print("\n" + "=" * 60)
     print("📋 INSTRUÇÕES:")
     print("1. Copie as chaves acima para seu arquivo .env")
     print("2. NUNCA commite essas chaves no git")
     print("3. Use chaves diferentes para cada ambiente (dev/prod)")
     print("4. Armazene chaves de produção em um gerenciador seguro")
+
+    # Novo: controle automático via variável de ambiente
+    auto_save = os.environ.get("AUTO_SAVE_ENV", "").lower() == "true"
     
-    # Opção de salvar em arquivo .env
-    save_to_file = input("\n💾 Salvar chaves em arquivo .env? (s/N): ").lower().strip()
-    
-    if save_to_file == 's':
+    if auto_save:
         env_file = Path('.env')
-        
         if env_file.exists():
-            backup = input("⚠️  Arquivo .env já existe. Fazer backup? (S/n): ").lower().strip()
-            if backup != 'n':
-                backup_name = f".env.backup.{secrets.token_hex(4)}"
-                env_file.rename(backup_name)
-                print(f"✅ Backup salvo como: {backup_name}")
+            backup_name = f".env.backup.{secrets.token_hex(4)}"
+            env_file.rename(backup_name)
+            print(f"✅ Backup do .env criado como: {backup_name}")
         
-        # Criar novo arquivo .env
         with open('.env', 'w') as f:
             f.write("# ==============================================================================\n")
             f.write("# SYNAPSCALE BACKEND - VARIÁVEIS DE AMBIENTE\n")
             f.write("# GERADO AUTOMATICAMENTE - NÃO COMMITAR NO GIT\n")
             f.write("# ==============================================================================\n\n")
-            
-            f.write("# Configurações básicas\n")
-            f.write("ENVIRONMENT=development\n")
-            f.write("DEBUG=true\n\n")
-            
+            f.write("ENVIRONMENT=development\nDEBUG=true\n\n")
             f.write("# Chaves de segurança\n")
             for key_name, key_value in keys.items():
                 f.write(f"{key_name}={key_value}\n")
-            
             f.write("\n# Banco de dados\n")
             f.write(f"DATABASE_URL=postgresql://postgres:{keys['POSTGRES_PASSWORD']}@localhost:5432/synapse\n")
-            f.write(f"POSTGRES_USER=postgres\n")
-            f.write(f"POSTGRES_DB=synapse\n\n")
-            
-            f.write("# Redis\n")
-            f.write("REDIS_URL=redis://localhost:6379/0\n\n")
-            
-            f.write("# APIs de IA (configure conforme necessário)\n")
-            f.write("OPENAI_API_KEY=\n")
-            f.write("ANTHROPIC_API_KEY=\n")
-            f.write("GEMINI_API_KEY=\n")
-            f.write("MISTRAL_API_KEY=\n\n")
-            
-            f.write("# Email (configure conforme necessário)\n")
-            f.write("SMTP_HOST=\n")
-            f.write("SMTP_PORT=587\n")
-            f.write("SMTP_USERNAME=\n")
-            f.write("SMTP_PASSWORD=\n")
-            f.write("SMTP_USE_TLS=true\n")
+            f.write(f"POSTGRES_USER=postgres\nPOSTGRES_DB=synapse\n\n")
+            f.write("# Redis\nREDIS_URL=redis://localhost:6379/0\n\n")
+            f.write("# APIs de IA\nOPENAI_API_KEY=\nANTHROPIC_API_KEY=\nGEMINI_API_KEY=\nMISTRAL_API_KEY=\n\n")
+            f.write("# Email\nSMTP_HOST=\nSMTP_PORT=587\nSMTP_USERNAME=\nSMTP_PASSWORD=\nSMTP_USE_TLS=true\n")
         
-        print(f"✅ Arquivo .env criado com chaves seguras!")
-        print("📝 Configure as APIs e SMTP conforme necessário")
+        print("✅ Arquivo .env criado automaticamente com base nas chaves geradas!")
+    else:
+        print("\nℹ️ Salvamento automático não ativado.")
+        print("👉 Para salvar automaticamente, defina AUTO_SAVE_ENV=true")
     
     print("\n🛡️  LEMBRETE DE SEGURANÇA:")
     print("- Use diferentes chaves para desenvolvimento e produção")
