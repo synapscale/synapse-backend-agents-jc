@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 import jwt
 from fastapi import Depends, HTTPException, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from src.synapse.config import settings
 from src.synapse.core.auth.jwt import jwt_manager
@@ -283,8 +284,70 @@ class WebSocketHandler:
             {"type": "message_sent", "message": user_message.to_dict()}, self.websocket
         )
 
-        # TODO: Processar com agente e gerar resposta
-        # Por enquanto, apenas confirma recebimento
+        # Processar com agente, se configurado
+        if conversation.agent_id:
+            agent = self.db.query(Agent).filter(Agent.id == conversation.agent_id).first()
+            if agent and agent.is_available():
+                past_messages = (
+                    self.db.query(Message)
+                    .filter(Message.conversation_id == conversation.id)
+                    .order_by(Message.created_at.asc())
+                    .all()
+                )
+
+                chat_history = [
+                    {"role": msg.role, "content": msg.content} for msg in past_messages
+                ]
+                chat_history.append({"role": "user", "content": content})
+
+                llm_cfg = agent.get_llm_config()
+
+                try:
+                    llm_response = await unified_service.chat_completion(
+                        chat_history,
+                        provider=llm_cfg["provider"],
+                        model=llm_cfg["model"],
+                        temperature=llm_cfg["temperature"],
+                        max_tokens=llm_cfg["max_tokens"],
+                    )
+
+                    agent_message = Message(
+                        conversation_id=conversation.id,
+                        role="assistant",
+                        content=llm_response.content,
+                        model_used=llm_cfg["model"],
+                        model_provider=llm_cfg["provider"],
+                        tokens_used=llm_response.usage.get("tokens", 0),
+                        processing_time_ms=0,
+                    )
+                    self.db.add(agent_message)
+
+                    # Atualizar contadores somente se a resposta for criada
+                    conversation.message_count += 2
+                    conversation.total_tokens_used += agent_message.tokens_used
+                    conversation.last_message_at = func.now()
+
+                    self.db.commit()
+                    self.db.refresh(agent_message)
+
+                    await manager.send_personal_message(
+                        {"type": "agent_message", "message": agent_message.to_dict()},
+                        self.websocket,
+                    )
+                except Exception as e:
+                    logger.error(f"Erro ao gerar resposta do agente: {str(e)}")
+                    conversation.message_count += 1
+                    conversation.last_message_at = func.now()
+                    await self._send_error("Erro ao processar mensagem com agente")
+                    self.db.commit()
+            else:
+                conversation.message_count += 1
+                conversation.last_message_at = func.now()
+                self.db.commit()
+        else:
+            conversation.message_count += 1
+            conversation.last_message_at = func.now()
+            self.db.commit()
 
     async def _handle_typing_start(self, data: Dict[str, Any]):
         """Processa início de digitação"""
