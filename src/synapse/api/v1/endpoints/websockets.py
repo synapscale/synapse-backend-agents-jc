@@ -9,7 +9,6 @@ import logging
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-import jwt
 
 from src.synapse.database import get_db
 from src.synapse.api.deps import get_current_user
@@ -35,7 +34,7 @@ async def authenticate_websocket(
     try:
         # Decodifica o token JWT
         payload = jwt_manager.decode_token(token)
-        user_id = payload.get("sub")
+        user_id = payload.get("user_id")
         
         if not user_id:
             return None
