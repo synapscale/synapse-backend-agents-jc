@@ -1,27 +1,39 @@
 name: AI Review
 
 on:
-  # ↳ TRIGGER 1 ─ quando alguém faz push em uma PR
-  pull_request:
+  # Pushes/syncs de PR → usa sempre o workflow da branch 'main'
+  pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
 
-  # ↳ TRIGGER 2 ─ quando um comentário é criado
+  # Comentários novos
   issue_comment:
     types: [created]
 
+permissions:
+  contents: read          # ler código
+  pull-requests: write    # comentar no PR
+
 jobs:
-  call-review:
-    # Executa SOMENTE se:
-    #  • for evento de PR  OU
-    #  • for comentário "/ai-review" dentro de uma PR
+  ai-review:
     if: |
-      github.event_name == 'pull_request' ||
+      github.event_name == 'pull_request_target' ||
       (
         github.event_name == 'issue_comment' &&
-        github.event.comment.body == '/ai-review' &&
+        contains(github.event.comment.body, '/ai-review') &&
         github.event.issue.pull_request
       )
 
-    uses: <org>/ai-review-bot/.github/workflows/callable.yml@v2.1
-    with:
-      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣  Checar somente o código da branch do autor
+      - name: Checkout PR HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}  # SHA seguro :contentReference[oaicite:2]{index=2}
+
+      # 2️⃣  Delegar para o workflow reutilizável do bot
+      - name: Run AI Review Bot
+        uses: synapscale/ai-review-bot/.github/workflows/callable.yml@v2.1
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
