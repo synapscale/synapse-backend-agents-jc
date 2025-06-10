@@ -1,17 +1,14 @@
 name: AI Review
 
 on:
-  # Pushes/syncs de PR → usa sempre o workflow da branch 'main'
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
-
-  # Comentários novos
   issue_comment:
     types: [created]
 
 permissions:
-  contents: read          # ler código
-  pull-requests: write    # comentar no PR
+  contents: read
+  pull-requests: write      # <- NECESSÁRIO p/ comentar
 
 jobs:
   ai-review:
@@ -22,18 +19,14 @@ jobs:
         contains(github.event.comment.body, '/ai-review') &&
         github.event.issue.pull_request
       )
-
-    runs-on: ubuntu-latest
-
-    steps:
-      # 1️⃣  Checar somente o código da branch do autor
-      - name: Checkout PR HEAD
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}  # SHA seguro :contentReference[oaicite:2]{index=2}
-
-      # 2️⃣  Delegar para o workflow reutilizável do bot
-      - name: Run AI Review Bot
-        uses: synapscale/ai-review-bot/.github/workflows/callable.yml@v2.1
-        with:
-          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+    uses: synapscale/ai-review-bot/.github/workflows/callable.yml@v2.1
+    with:
+      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+    secrets: inherit          # garante GITHUB_TOKEN no filho
+    # checkout já acontece dentro do callable.yml;
+    # nele deve constar:
+    # - uses: actions/checkout@v4
+    #   with:
+    #     repository: ${{ github.event.pull_request.head.repo.full_name }}
+    #     ref:        ${{ github.event.pull_request.head.ref }}
+    #     fetch-depth: 0
