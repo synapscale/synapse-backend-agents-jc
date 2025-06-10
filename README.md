@@ -373,6 +373,21 @@ server {
 
 ## 🧪 Testes
 
+Antes de rodar os testes, instale as dependências de desenvolvimento:
+
+```bash
+# Usando pip
+pip install -r requirements.txt
+
+# Ou com Poetry
+poetry install
+
+# Ou execute o script auxiliar
+./scripts/prepare_tests.sh
+```
+
+Com o ambiente preparado, execute os testes normalmente:
+
 ```bash
 # Execute todos os testes
 pytest
