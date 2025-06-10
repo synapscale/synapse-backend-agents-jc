@@ -1,0 +1,27 @@
+name: AI Review
+
+on:
+  # ↳ TRIGGER 1 ─ quando alguém faz push em uma PR
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+  # ↳ TRIGGER 2 ─ quando um comentário é criado
+  issue_comment:
+    types: [created]
+
+jobs:
+  call-review:
+    # Executa SOMENTE se:
+    #  • for evento de PR  OU
+    #  • for comentário "/ai-review" dentro de uma PR
+    if: |
+      github.event_name == 'pull_request' ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.comment.body == '/ai-review' &&
+        github.event.issue.pull_request
+      )
+
+    uses: <org>/ai-review-bot/.github/workflows/callable.yml@v2.1
+    with:
+      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
