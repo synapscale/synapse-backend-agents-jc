@@ -35,7 +35,7 @@ Ao participar deste projeto, você concorda em seguir nosso código de conduta. 
 ```bash
 # Clone o repositório
 git clone <repository-url>
-cd synapse-backend-agents-jc-main
+cd synapse-backend-agents-jc
 
 # Configure o ambiente
 python -m venv venv
