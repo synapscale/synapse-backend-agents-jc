@@ -1,7 +1,7 @@
 """
 Modelo de usuário completo com autenticação e autorização
 """
-from sqlalchemy import Column, String, Boolean, DateTime, Text, JSON
+from sqlalchemy import Column, String, Boolean, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -112,7 +112,12 @@ class RefreshToken(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     token = Column(String(500), unique=True, nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     expires_at = Column(DateTime(timezone=True), nullable=False)
     is_revoked = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
