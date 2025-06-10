@@ -79,7 +79,7 @@ API robusta e escalável para gerenciamento de workflows, agentes AI e automaç�
 
 ### Pré-requisitos
 
-- Python 3.11+
+- Python 3.11 or later
 - PostgreSQL 13+
 - Redis 6+
 - Git
