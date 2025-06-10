@@ -263,3 +263,6 @@ bandit-report.json
 
 # Performance profiling
 *.prof
+
+# Ignore arquivo de configuração MCP
+mcp.json
