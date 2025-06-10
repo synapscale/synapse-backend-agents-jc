@@ -1,6 +1,6 @@
 """
 LLM Executor para execução de nós de Large Language Models
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Executor especializado para integração com modelos de linguagem
 """
 

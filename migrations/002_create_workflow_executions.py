@@ -1,6 +1,6 @@
 """
 Migração 002: Criação das tabelas de execução de workflows
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Adiciona suporte completo para execução de workflows em tempo real
 """
 

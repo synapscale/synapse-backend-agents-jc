@@ -1,6 +1,6 @@
 """
 Schemas Pydantic para Templates de Workflows
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema completo de validação para marketplace de templates
 """
 

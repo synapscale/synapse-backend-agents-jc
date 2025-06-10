@@ -1,6 +1,6 @@
 """
 Migração 004: Configurações para Executores Avançados
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Adiciona tabelas de configuração para os novos executores
 """
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script para aplicar migrações do banco de dados
-# Criado por José - O melhor Full Stack do mundo
+# Criado por José - um desenvolvedor Full Stack
 
 echo "🔄 Aplicando migrações do banco de dados..."
 

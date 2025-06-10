@@ -1,6 +1,6 @@
 """
 Schemas Pydantic para Marketplace
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Validação e serialização para marketplace
 """
 

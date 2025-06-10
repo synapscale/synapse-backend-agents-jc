@@ -1,6 +1,6 @@
 """
 Migração 003: Criação das tabelas de templates
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Adiciona suporte completo para marketplace de templates
 """
 

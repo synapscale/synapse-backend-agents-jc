@@ -1,6 +1,6 @@
 """
 Transform Executor para execução de nós de transformação de dados
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Executor especializado para transformação, filtragem e manipulação de dados
 """
 

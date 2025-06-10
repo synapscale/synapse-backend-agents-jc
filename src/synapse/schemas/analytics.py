@@ -1,6 +1,6 @@
 """
 Schemas Pydantic para Analytics
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Validação e serialização para analytics e insights
 """
 

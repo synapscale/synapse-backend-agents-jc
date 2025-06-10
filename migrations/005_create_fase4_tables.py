@@ -1,6 +1,6 @@
 """
 Migração 005: Criação das tabelas da Fase 4
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Marketplace, Workspaces e Analytics
 """
 

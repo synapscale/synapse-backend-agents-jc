@@ -1,6 +1,6 @@
 """
 Configuração de segurança do backend
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Implementa todas as melhores práticas de segurança
 """
 import jwt

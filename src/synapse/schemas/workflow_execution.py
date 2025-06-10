@@ -1,6 +1,6 @@
 """
 Schemas Pydantic para WorkflowExecution
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema completo de execução de workflows
 """
 

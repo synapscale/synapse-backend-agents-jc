@@ -2,7 +2,7 @@
 
 # ===================================================================
 # SCRIPT DE INICIALIZAÇÃO DO SYNAPSCALE
-# Criado por José - O melhor Full Stack do mundo
+# Criado por José - um desenvolvedor Full Stack
 # Configura e valida todo o ambiente de desenvolvimento
 # ===================================================================
 
@@ -147,7 +147,7 @@ cat > .setup_status << EOF
 # Status da configuração do ambiente
 SETUP_DATE=$(date)
 SETUP_VERSION=1.0.0
-SETUP_BY=José - O melhor Full Stack do mundo
+SETUP_BY=José - um desenvolvedor Full Stack
 PYTHON_VERSION=$PYTHON_VERSION
 ENVIRONMENT=development
 STATUS=configured
@@ -252,6 +252,6 @@ echo "   - Banco: SQLite (synapse.db)"
 echo "   - Logs: ./logs/"
 echo "   - Storage: ./storage/"
 echo ""
-echo "⚡ Desenvolvido por José - O melhor Full Stack do mundo!"
+echo "⚡ Desenvolvido por José - um desenvolvedor Full Stack!"
 echo "=================================================="
 

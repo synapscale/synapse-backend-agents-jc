@@ -282,4 +282,4 @@ Para mais ajuda:
 
 ---
 
-**Desenvolvido por José - O melhor Full Stack do mundo! 🚀**
+**Desenvolvido por José - um desenvolvedor Full Stack**

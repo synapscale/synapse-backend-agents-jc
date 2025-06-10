@@ -1,6 +1,6 @@
 """
 Endpoints da API para Templates de Workflows
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema completo de marketplace de templates
 """
 

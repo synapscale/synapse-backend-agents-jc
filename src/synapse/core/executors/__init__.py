@@ -1,6 +1,6 @@
 """
 Módulo de Executores de Nós
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema completo de executores especializados para diferentes tipos de nós
 """
 

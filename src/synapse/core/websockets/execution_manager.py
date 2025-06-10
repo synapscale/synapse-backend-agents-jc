@@ -1,6 +1,6 @@
 """
 Sistema WebSocket avançado para monitoramento de execuções em tempo real
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema completo de comunicação real-time para workflows
 """
 

@@ -1,6 +1,6 @@
 """
 Serviço de Execução de Workflows
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Engine completa de execução em tempo real com todas as funcionalidades
 """
 

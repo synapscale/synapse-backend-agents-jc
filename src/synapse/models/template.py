@@ -1,6 +1,6 @@
 """
 Modelo WorkflowTemplate para marketplace de templates
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema completo de templates compartilháveis
 """
 
