@@ -59,7 +59,7 @@ class JWTManager:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token expirado"
             )
-        except jwt.JWTError:
+        except jwt.PyJWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token inválido"
