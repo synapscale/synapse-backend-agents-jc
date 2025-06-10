@@ -20,7 +20,7 @@ jobs:
         github.event.issue.pull_request
       )
 
-    uses: synapscale/ai-review-automation/.github/workflows/callable.yml@main
+    uses: synapscale/ai-review-automation@main   # ou @v2.1 quando taggear
 
     # 👉 PASSAGEM DE SEGREDOS — escolha **uma** das opções abaixo
 
