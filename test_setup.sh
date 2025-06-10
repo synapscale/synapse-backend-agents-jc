@@ -1,6 +1,8 @@
 #!/bin/bash
 echo "🧪 Testando configuração..."
 source venv/bin/activate
+# Ensure httpx is installed for tests
+pip install --quiet httpx
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 python3 -c "
 import requests
