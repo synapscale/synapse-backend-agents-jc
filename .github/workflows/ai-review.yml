@@ -1,24 +1,17 @@
 name: AI Review
 
-# ───────────────────── TRIGGERS ─────────────────────
 on:
-  pull_request_target:         # push/sync em qualquer PR ou fork
+  pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
-
-  issue_comment:               # comentário “/ai-review”
+  issue_comment:
     types: [created]
 
-# ────────── PERMISSÕES DO GITHUB_TOKEN ──────────────
 permissions:
   contents: read
-  pull-requests: write         # necessário para postar/atualizar comentário
+  pull-requests: write
 
-# ───────────────────── JOB WRAPPER ──────────────────
 jobs:
   ai-review:
-    # Executa se:
-    #   • evento é pull_request_target   OU
-    #   • comentário == '/ai-review' dentro de uma PR
     if: >-
       github.event_name == 'pull_request_target' ||
       (
@@ -27,8 +20,7 @@ jobs:
         github.event.issue.pull_request
       )
 
-    # 🔑 Chama o workflow reutilizável do bot
-    uses: synapscale/ai-review-automation/.github/workflows/callable.yml@main
-
-    # Repassa TODOS os segredos (OPENAI_API_KEY + GITHUB_TOKEN)
-    secrets: inherit
+    # chama a ACTION raiz (action.yml)
+    uses: synapscale/ai-review-automation@main     # troque p/ @v2.1 quando taggear
+    with:
+      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
