@@ -1,6 +1,6 @@
 """
 Aplicação principal otimizada do SynapScale Backend
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Implementa todas as melhores práticas de FastAPI, segurança e performance
 """
 import os

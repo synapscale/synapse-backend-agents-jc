@@ -1,6 +1,6 @@
 """
 Migração para criar tabela user_variables
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 """
 from alembic import op
 import sqlalchemy as sa

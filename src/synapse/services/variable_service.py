@@ -1,6 +1,6 @@
 """
 Serviço para gerenciamento de variáveis do usuário
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Implementa operações CRUD e utilitários para variáveis personalizadas
 """
 from typing import List, Dict, Optional, Tuple, Any

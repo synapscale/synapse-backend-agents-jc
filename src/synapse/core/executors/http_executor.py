@@ -1,6 +1,6 @@
 """
 HTTP Executor para execução de nós de requisições HTTP/API
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Executor especializado para integração com APIs externas
 """
 

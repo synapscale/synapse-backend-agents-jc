@@ -1,6 +1,6 @@
 """
 Endpoints para Execução de Workflows
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 API completa para gerenciamento de execuções em tempo real
 """
 

@@ -1,6 +1,6 @@
 """
 Endpoints WebSocket para monitoramento de execuções em tempo real
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 API WebSocket completa para comunicação real-time
 """
 

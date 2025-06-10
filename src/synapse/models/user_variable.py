@@ -1,6 +1,6 @@
 """
 Modelo UserVariable para sistema de variáveis personalizado
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Permite que usuários configurem suas próprias variáveis como .env personalizado
 """
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey

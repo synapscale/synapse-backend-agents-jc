@@ -1,6 +1,6 @@
 """
 Modelos Analytics para Insights e Métricas
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema avançado de analytics e business intelligence
 """
 

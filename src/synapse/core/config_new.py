@@ -1,6 +1,6 @@
 """
 Configuração otimizada do sistema
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Integra com DigitalOcean PostgreSQL e todas as funcionalidades
 """
 import os

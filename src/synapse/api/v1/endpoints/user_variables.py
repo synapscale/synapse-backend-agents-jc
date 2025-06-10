@@ -1,6 +1,6 @@
 """
 Endpoints para gerenciamento de variáveis do usuário
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 API REST completa para sistema de variáveis personalizado
 """
 from typing import List, Dict, Any, Optional

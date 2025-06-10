@@ -1,6 +1,6 @@
 """
 Aplicação principal do SynapScale Backend
-Otimizada por José - O melhor Full Stack do mundo
+Otimizada por José - um desenvolvedor Full Stack
 Implementa as melhores práticas de segurança, performance e configuração
 Conexão direta com PostgreSQL via SQLAlchemy
 """
@@ -257,7 +257,7 @@ async def api_info():
         'name': 'SynapScale Backend API', 
         'version': '1.0.0', 
         'description': 'Plataforma de Automação com IA', 
-        'author': 'José - O melhor Full Stack do mundo', 
+        'author': 'José - um desenvolvedor Full Stack', 
         'endpoints_count': len([route for route in app.routes]), 
         'features': {
             'authentication': 'JWT com refresh tokens', 

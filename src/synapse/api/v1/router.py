@@ -1,6 +1,6 @@
 """
 Router principal da API v1
-Configurado por José - O melhor Full Stack do mundo
+Configurado por José - um desenvolvedor Full Stack
 Inclui todos os endpoints disponíveis com organização perfeita
 """
 from fastapi import APIRouter

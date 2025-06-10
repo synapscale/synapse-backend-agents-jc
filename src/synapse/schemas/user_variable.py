@@ -1,6 +1,6 @@
 """
 Schemas Pydantic para UserVariable
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Validação e serialização para sistema de variáveis personalizado
 """
 from pydantic import BaseModel, Field, validator

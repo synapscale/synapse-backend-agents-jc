@@ -1,6 +1,6 @@
 """
 Modelo Component para Marketplace
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema avançado de componentes reutilizáveis
 """
 

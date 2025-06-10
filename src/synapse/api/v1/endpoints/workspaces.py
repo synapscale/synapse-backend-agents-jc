@@ -1,6 +1,6 @@
 """
 Endpoints da API para Workspaces
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Endpoints para gerenciar workspaces colaborativos
 """
 

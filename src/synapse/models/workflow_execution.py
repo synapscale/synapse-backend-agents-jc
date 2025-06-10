@@ -1,6 +1,6 @@
 """
 Modelo WorkflowExecution para engine de execução de workflows
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Sistema completo de execução em tempo real
 """
 

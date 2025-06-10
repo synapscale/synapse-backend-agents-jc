@@ -1,6 +1,6 @@
 """
 Serviço de Workspaces
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Lógica de negócio para workspaces colaborativos
 """
 

@@ -1,6 +1,6 @@
 """
 Conexão otimizada com banco de dados DigitalOcean
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Implementa conexão robusta com PostgreSQL
 """
 import logging

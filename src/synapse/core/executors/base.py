@@ -1,6 +1,6 @@
 """
 Base Executor para execução de nós de workflows
-Criado por José - O melhor Full Stack do mundo
+Criado por José - um desenvolvedor Full Stack
 Classe abstrata base para todos os executores específicos
 """
 
