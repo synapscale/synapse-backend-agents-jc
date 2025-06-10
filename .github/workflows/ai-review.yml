@@ -1,21 +1,18 @@
 name: AI Review
 
-# ─── Gatilhos ──────────────────────────────────────────────────────────────
 on:
-  pull_request_target:            # push / sync de qualquer PR ou fork
+  pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review]
-  issue_comment:                  # comentário `/ai-review`
+  issue_comment:
     types: [created]
 
-# ─── Permissões do GITHUB_TOKEN ────────────────────────────────────────────
-permissions:
-  contents: read                  # clonar repositório
-  pull-requests: write            # criar / atualizar comentário
+permissions:               # ← garante permissão de comentar
+  contents: read
+  pull-requests: write
 
 jobs:
   ai-review:
-    # Executa se for push de PR OU comentário "/ai-review"
-    if: |
+    if: >-
       github.event_name == 'pull_request_target' ||
       (
         github.event_name == 'issue_comment' &&
@@ -23,7 +20,5 @@ jobs:
         github.event.issue.pull_request
       )
 
-    # Nada de runs-on / steps: apenas usamos a composite-action
-    uses: synapscale/ai-review-automation@main   # troque @main por @v2.1 quando taggear
-    with:
-      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+    uses: synapscale/ai-review-automation@main
+    secrets: inherit
