@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     
     # Configurações do banco de dados
     DATABASE_URL: str = Field(
-        default="postgresql://doadmin:AVNS_DDsc3wHcfGgbX_USTUt@db-banco-dados-automacoes-do-user-13851907-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require",
+        default_factory=lambda: os.getenv("DATABASE_URL", ""),
         description="URL de conexão com o banco de dados"
     )
     DATABASE_SCHEMA: str = Field(

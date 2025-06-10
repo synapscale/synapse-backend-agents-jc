@@ -123,6 +123,7 @@ cp .env.example .env
 # ============================
 # CONFIGURAÇÕES DO BANCO DE DADOS
 # ============================
+# Defina a variável de ambiente com a URL do banco
 DATABASE_URL=postgresql://usuario:senha@localhost:5432/synapscale_db
 DATABASE_SCHEMA=synapscale_db
 
@@ -307,6 +308,7 @@ synapse-backend-agents-jc/
 
 ```env
 DEBUG=false
+# Defina `DATABASE_URL` com sua string de conexão
 DATABASE_URL=postgresql://user:pass@prod-db:5432/synapscale
 REDIS_URL=redis://prod-redis:6379/0
 BACKEND_CORS_ORIGINS=["https://app.synapscale.com"]
@@ -322,6 +324,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      # Defina a variável com sua URL do banco
       - DATABASE_URL=postgresql://user:pass@db:5432/synapscale
     depends_on:
       - db

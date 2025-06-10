@@ -31,8 +31,8 @@ Este repositório contém o backend **Synapse Backend Agents JC** completamente 
 - `.env` - Variáveis de ambiente configuradas
 - `start_backend.sh` - Script de inicialização
 
-### 🗄️ **Banco de Dados:**
-- Conexão: `postgresql://doadmin:AVNS_DDsc3wHcfGgbX_USTUt@db-banco-dados-automacoes-do-user-13851907-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require`
+-### 🗄️ **Banco de Dados:**
+- Conexão definida pela variável de ambiente `DATABASE_URL`
 - Schema: `synapscale_db`
 - Tabelas: 53 tabelas funcionando perfeitamente
 
