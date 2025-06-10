@@ -43,8 +43,9 @@ class Workflow(Base):
     workspace = relationship("Workspace", back_populates="workflows")
     workflow_nodes = relationship("WorkflowNode", back_populates="workflow", cascade="all, delete-orphan")
     connections = relationship("WorkflowConnection", back_populates="workflow", cascade="all, delete-orphan")
-    executions = relationship("Execution", back_populates="workflow", cascade="all, delete-orphan")
-    workflow_executions = relationship("WorkflowExecution", back_populates="workflow", cascade="all, delete-orphan")
+    executions = relationship(
+        "WorkflowExecution", back_populates="workflow", cascade="all, delete-orphan"
+    )
 
     def to_dict(self, include_definition: bool = True) -> dict:
         """Converte workflow para dicionário"""
