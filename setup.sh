@@ -10,6 +10,16 @@ echo "🚀 Iniciando configuração do SynapScale Backend..."
 python_version=$(python3 --version 2>&1 | awk '{print $2}')
 echo "📋 Versão do Python detectada: $python_version"
 
+# Validar se a versão do Python é 3.11 ou superior
+python - "$python_version" <<'EOF'
+import sys
+version = sys.argv[1]
+major, minor = (int(x) for x in version.split('.')[:2])
+if (major, minor) < (3, 11):
+    print(f"❌ Python 3.11 ou superior é necessário. Versão detectada: {version}")
+    sys.exit(1)
+EOF
+
 # Criar ambiente virtual
 echo "🔧 Criando ambiente virtual..."
 python3 -m venv venv
