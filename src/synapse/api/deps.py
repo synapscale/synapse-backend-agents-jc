@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from src.synapse.config import settings
 from src.synapse.database import get_db
 from src.synapse.models.user import User
-from src.synapse.core.auth.jwt import verify_token, verify_token
+from src.synapse.core.auth.jwt import verify_token
 
 # Esquema de autenticação OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
@@ -42,10 +42,7 @@ async def get_current_user(
     )
     
     try:
-        # Verificar e decodificar token
-        if not verify_token(token):
-            raise credentials_exception
-            
+        # Decodificar token JWT
         payload = verify_token(token)
         user_id: str = payload.get("sub")
         

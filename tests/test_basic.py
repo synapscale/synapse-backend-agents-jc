@@ -79,8 +79,7 @@ def test_login_user(client: TestClient):
 def test_get_current_user(client: TestClient):
     """Teste para obter usuário atual"""
     response = client.get("/api/v1/auth/auth/me")
-    # Pode retornar 200 (se autenticado) ou 401 (se não autenticado)
-    assert response.status_code in [200, 401]
+    assert response.status_code == 200
 
 
 @pytest.mark.api
