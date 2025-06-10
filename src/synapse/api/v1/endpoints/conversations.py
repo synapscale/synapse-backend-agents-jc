@@ -185,6 +185,7 @@ async def send_message(
     
     # TODO: Processar mensagem com agente e gerar resposta
     # Por enquanto, criar resposta simples
+    agent_response_created = False
     if conversation.agent_id:
         agent_response = Message(
             conversation_id=conversation_id,
@@ -195,9 +196,10 @@ async def send_message(
             processing_time_ms=1000
         )
         db.add(agent_response)
-    
+        agent_response_created = True
+
     # Atualizar estatísticas da conversação
-    conversation.message_count += 1 if not conversation.agent_id else 2
+    conversation.message_count += 2 if agent_response_created else 1
     conversation.last_message_at = func.now()
     
     db.commit()
