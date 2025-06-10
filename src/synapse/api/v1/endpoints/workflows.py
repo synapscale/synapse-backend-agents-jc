@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from src.synapse.api.deps import get_current_user
 from src.synapse.database import get_db
