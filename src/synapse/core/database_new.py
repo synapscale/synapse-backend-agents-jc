@@ -13,6 +13,9 @@ from contextlib import contextmanager
 
 from .config_new import settings
 
+# Importar todos os modelos para garantir que estejam registrados
+from ..models import *  # noqa: F401,F403
+
 logger = logging.getLogger(__name__)
 
 # Base para modelos SQLAlchemy
@@ -183,9 +186,6 @@ def init_database():
     """
     try:
         engine = create_database_engine()
-        
-        # Importar todos os modelos para garantir que estejam registrados
-        from ..models import *
         
         # Criar tabelas
         Base.metadata.create_all(bind=engine)
