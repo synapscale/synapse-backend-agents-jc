@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write      # <- NECESSÁRIO p/ comentar
+  pull-requests: write       # necessário para o bot comentar
 
 jobs:
   ai-review:
@@ -19,14 +19,15 @@ jobs:
         contains(github.event.comment.body, '/ai-review') &&
         github.event.issue.pull_request
       )
+
     uses: synapscale/ai-review-automation/.github/workflows/callable.yml@main
-    with:
-      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-    secrets: inherit          # garante GITHUB_TOKEN no filho
-    # checkout já acontece dentro do callable.yml;
-    # nele deve constar:
-    # - uses: actions/checkout@v4
-    #   with:
-    #     repository: ${{ github.event.pull_request.head.repo.full_name }}
-    #     ref:        ${{ github.event.pull_request.head.ref }}
-    #     fetch-depth: 0
+
+    # 👉 PASSAGEM DE SEGREDOS — escolha **uma** das opções abaixo
+
+    # Opção A — herdar TODOS os segredos (mais simples)
+    secrets: inherit
+
+    # Opção B — somente o necessário (mais restrito)
+    # secrets:
+    #   openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+    #   GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}   # opcional; já vem por padrão
