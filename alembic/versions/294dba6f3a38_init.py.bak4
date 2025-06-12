@@ -52,7 +52,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_business_metrics_date'), 'business_metrics', ['date'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_business_metrics_date', schema='synapscale_db'), 'business_metrics', ['date'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_business_metrics_id'), 'business_metrics', ['id'], unique=False, schema='synapscale_db')
     op.create_table('system_performance_metrics', sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('metric_name', sa.String(length=100), nullable=False),
@@ -66,7 +66,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_system_performance_metrics_id'), 'system_performance_metrics', ['id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_system_performance_metrics_id', schema='synapscale_db'), 'system_performance_metrics', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_system_performance_metrics_metric_name'), 'system_performance_metrics', ['metric_name'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_system_performance_metrics_service'), 'system_performance_metrics', ['service'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_system_performance_metrics_timestamp'), 'system_performance_metrics', ['timestamp'], unique=False, schema='synapscale_db')
@@ -79,7 +79,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_email_verification_tokens_token'), 'email_verification_tokens', ['token'], unique=True, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_email_verification_tokens_token', schema='synapscale_db'), 'email_verification_tokens', ['token'], unique=True, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_email_verification_tokens_user_id'), 'email_verification_tokens', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('password_reset_tokens', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('token', sa.String(length=500), nullable=False),
@@ -90,7 +90,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_password_reset_tokens_token'), 'password_reset_tokens', ['token'], unique=True, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_password_reset_tokens_token', schema='synapscale_db'), 'password_reset_tokens', ['token'], unique=True, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_password_reset_tokens_user_id'), 'password_reset_tokens', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('users', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
@@ -107,7 +107,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_users_email'), 'users', ['email'], unique=True, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_users_email', schema='synapscale_db'), 'users', ['email'], unique=True, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_users_username'), 'users', ['username'], unique=True, schema='synapscale_db')
     op.create_table('files', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('filename', sa.String(length=255), nullable=False),
@@ -180,7 +180,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_marketplace_components_subcategory'), 'marketplace_components', ['subcategory'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_marketplace_components_subcategory', schema='synapscale_db'), 'marketplace_components', ['subcategory'], unique=False, schema='synapscale_db')
     op.create_table('template_collections', sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('collection_id', sa.String(length=36), nullable=True),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -199,7 +199,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_template_collections_collection_id'), 'template_collections', ['collection_id'], unique=True, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_template_collections_collection_id', schema='synapscale_db'), 'template_collections', ['collection_id'], unique=True, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_collections_creator_id'), 'template_collections', ['creator_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_collections_id'), 'template_collections', ['id'], unique=False, schema='synapscale_db')
     op.create_table('user_behavior_metrics', sa.Column('id', sa.UUID(), nullable=False),
@@ -230,7 +230,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_user_behavior_metrics_date'), 'user_behavior_metrics', ['date'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_user_behavior_metrics_date', schema='synapscale_db'), 'user_behavior_metrics', ['date'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_user_behavior_metrics_user_id'), 'user_behavior_metrics', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('user_insights', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
@@ -258,7 +258,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_user_insights_category'), 'user_insights', ['category'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_user_insights_category', schema='synapscale_db'), 'user_insights', ['category'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_user_insights_insight_type'), 'user_insights', ['insight_type'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_user_insights_user_id'), 'user_insights', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('workspaces', sa.Column('id', sa.UUID(), nullable=False),
@@ -292,7 +292,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workspaces_slug'), 'workspaces', ['slug'], unique=True, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workspaces_slug', schema='synapscale_db'), 'workspaces', ['slug'], unique=True, schema='synapscale_db')
     op.create_table('refresh_tokens', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('token', sa.String(length=500), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
@@ -303,7 +303,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_refresh_tokens_token'), 'refresh_tokens', ['token'], unique=True, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_refresh_tokens_token', schema='synapscale_db'), 'refresh_tokens', ['token'], unique=True, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_refresh_tokens_user_id'), 'refresh_tokens', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('agents', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -343,7 +343,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_agents_workspace_id'), 'agents', ['workspace_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_agents_workspace_id', schema='synapscale_db'), 'agents', ['workspace_id'], unique=False, schema='synapscale_db')
     op.create_table('analytics_dashboards', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
@@ -368,7 +368,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_analytics_dashboards_user_id'), 'analytics_dashboards', ['user_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_analytics_dashboards_user_id', schema='synapscale_db'), 'analytics_dashboards', ['user_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_analytics_dashboards_workspace_id'), 'analytics_dashboards', ['workspace_id'], unique=False, schema='synapscale_db')
     op.create_table('component_downloads', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('component_id', sa.UUID(), nullable=False),
@@ -387,7 +387,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_component_downloads_component_id'), 'component_downloads', ['component_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_component_downloads_component_id', schema='synapscale_db'), 'component_downloads', ['component_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_component_downloads_user_id'), 'component_downloads', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('component_purchases', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('component_id', sa.UUID(), nullable=False),
@@ -411,7 +411,7 @@ def upgrade() -> None:
     sa.UniqueConstraint('transaction_id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_component_purchases_component_id'), 'component_purchases', ['component_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_component_purchases_component_id', schema='synapscale_db'), 'component_purchases', ['component_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_component_purchases_user_id'), 'component_purchases', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('component_ratings', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('component_id', sa.UUID(), nullable=False),
@@ -439,7 +439,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_component_ratings_component_id'), 'component_ratings', ['component_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_component_ratings_component_id', schema='synapscale_db'), 'component_ratings', ['component_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_component_ratings_user_id'), 'component_ratings', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('component_versions', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('component_id', sa.UUID(), nullable=False),
@@ -462,7 +462,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_component_versions_component_id'), 'component_versions', ['component_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_component_versions_component_id', schema='synapscale_db'), 'component_versions', ['component_id'], unique=False, schema='synapscale_db')
     op.create_table('custom_reports', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('workspace_id', sa.UUID(), nullable=True),
@@ -488,7 +488,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_custom_reports_category'), 'custom_reports', ['category'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_custom_reports_category', schema='synapscale_db'), 'custom_reports', ['category'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_custom_reports_user_id'), 'custom_reports', ['user_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_custom_reports_workspace_id'), 'custom_reports', ['workspace_id'], unique=False, schema='synapscale_db')
     op.create_table('nodes', sa.Column('id', sa.UUID(), nullable=False),
@@ -519,7 +519,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_nodes_user_id'), 'nodes', ['user_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_nodes_user_id', schema='synapscale_db'), 'nodes', ['user_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_nodes_workspace_id'), 'nodes', ['workspace_id'], unique=False, schema='synapscale_db')
     op.create_table('workflows', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -546,7 +546,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workflows_workspace_id'), 'workflows', ['workspace_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflows_workspace_id', schema='synapscale_db'), 'workflows', ['workspace_id'], unique=False, schema='synapscale_db')
     op.create_table('workspace_activities', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('workspace_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
@@ -563,7 +563,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workspace_activities_action'), 'workspace_activities', ['action'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workspace_activities_action', schema='synapscale_db'), 'workspace_activities', ['action'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workspace_activities_user_id'), 'workspace_activities', ['user_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workspace_activities_workspace_id'), 'workspace_activities', ['workspace_id'], unique=False, schema='synapscale_db')
     op.create_table('workspace_invitations', sa.Column('id', sa.UUID(), nullable=False),
@@ -584,7 +584,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workspace_invitations_email'), 'workspace_invitations', ['email'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workspace_invitations_email', schema='synapscale_db'), 'workspace_invitations', ['email'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workspace_invitations_invited_user_id'), 'workspace_invitations', ['invited_user_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workspace_invitations_inviter_id'), 'workspace_invitations', ['inviter_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workspace_invitations_token'), 'workspace_invitations', ['token'], unique=True, schema='synapscale_db')
@@ -605,7 +605,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workspace_members_id'), 'workspace_members', ['id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workspace_members_id', schema='synapscale_db'), 'workspace_members', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workspace_members_user_id'), 'workspace_members', ['user_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workspace_members_workspace_id'), 'workspace_members', ['workspace_id'], unique=False, schema='synapscale_db')
     op.create_table('report_executions', sa.Column('id', sa.UUID(), nullable=False),
@@ -626,7 +626,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_report_executions_report_id'), 'report_executions', ['report_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_report_executions_report_id', schema='synapscale_db'), 'report_executions', ['report_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_report_executions_user_id'), 'report_executions', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('workflow_executions', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('execution_id', sa.String(length=36), nullable=True),
@@ -665,7 +665,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workflow_executions_execution_id'), 'workflow_executions', ['execution_id'], unique=True, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_executions_execution_id', schema='synapscale_db'), 'workflow_executions', ['execution_id'], unique=True, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workflow_executions_priority'), 'workflow_executions', ['priority'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workflow_executions_user_id'), 'workflow_executions', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('workflow_nodes', sa.Column('id', sa.UUID(), nullable=False),
@@ -681,7 +681,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workflow_nodes_node_id'), 'workflow_nodes', ['node_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_nodes_node_id', schema='synapscale_db'), 'workflow_nodes', ['node_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workflow_nodes_workflow_id'), 'workflow_nodes', ['workflow_id'], unique=False, schema='synapscale_db')
     op.create_table('workflow_templates', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
@@ -739,7 +739,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workflow_templates_download_count'), 'workflow_templates', ['download_count'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_templates_download_count', schema='synapscale_db'), 'workflow_templates', ['download_count'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workflow_templates_is_verified'), 'workflow_templates', ['is_verified'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workflow_templates_license_type'), 'workflow_templates', ['license_type'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workflow_templates_original_workflow_id'), 'workflow_templates', ['original_workflow_id'], unique=False, schema='synapscale_db')
@@ -768,7 +768,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workspace_projects_workflow_id'), 'workspace_projects', ['workflow_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workspace_projects_workflow_id', schema='synapscale_db'), 'workspace_projects', ['workflow_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_workspace_projects_workspace_id'), 'workspace_projects', ['workspace_id'], unique=False, schema='synapscale_db')
     op.create_table('analytics_events', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('event_id', sa.String(length=36), nullable=False),
@@ -804,7 +804,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_analytics_events_action'), 'analytics_events', ['action'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_analytics_events_action', schema='synapscale_db'), 'analytics_events', ['action'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_analytics_events_anonymous_id'), 'analytics_events', ['anonymous_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_analytics_events_category'), 'analytics_events', ['category'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_analytics_events_event_id'), 'analytics_events', ['event_id'], unique=True, schema='synapscale_db')
@@ -833,7 +833,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_execution_queue_id'), 'execution_queue', ['id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_execution_queue_id', schema='synapscale_db'), 'execution_queue', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_execution_queue_priority'), 'execution_queue', ['priority'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_execution_queue_queue_id'), 'execution_queue', ['queue_id'], unique=True, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_execution_queue_scheduled_at'), 'execution_queue', ['scheduled_at'], unique=False, schema='synapscale_db')
@@ -874,7 +874,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_node_executions_execution_id'), 'node_executions', ['execution_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_node_executions_execution_id', schema='synapscale_db'), 'node_executions', ['execution_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_node_executions_execution_order'), 'node_executions', ['execution_order'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_node_executions_id'), 'node_executions', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_node_executions_node_id'), 'node_executions', ['node_id'], unique=False, schema='synapscale_db')
@@ -899,7 +899,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_project_collaborators_project_id'), 'project_collaborators', ['project_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_project_collaborators_project_id', schema='synapscale_db'), 'project_collaborators', ['project_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_project_collaborators_user_id'), 'project_collaborators', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('project_comments', sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('project_id', sa.UUID(), nullable=False),
@@ -921,7 +921,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_project_comments_parent_id'), 'project_comments', ['parent_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_project_comments_parent_id', schema='synapscale_db'), 'project_comments', ['parent_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_project_comments_project_id'), 'project_comments', ['project_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_project_comments_user_id'), 'project_comments', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('project_versions', sa.Column('id', sa.UUID(), nullable=False),
@@ -942,7 +942,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_project_versions_project_id'), 'project_versions', ['project_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_project_versions_project_id', schema='synapscale_db'), 'project_versions', ['project_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_project_versions_user_id'), 'project_versions', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('template_downloads', sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('template_id', sa.UUID(), nullable=False),
@@ -957,7 +957,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_template_downloads_downloaded_at'), 'template_downloads', ['downloaded_at'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_template_downloads_downloaded_at', schema='synapscale_db'), 'template_downloads', ['downloaded_at'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_downloads_id'), 'template_downloads', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_downloads_template_id'), 'template_downloads', ['template_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_downloads_user_id'), 'template_downloads', ['user_id'], unique=False, schema='synapscale_db')
@@ -972,7 +972,7 @@ def upgrade() -> None:
     schema='synapscale_db',
     sqlite_autoincrement=True
     )
-    op.create_index(op.f('ix_synapscale_db_template_favorites_id'), 'template_favorites', ['id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_template_favorites_id', schema='synapscale_db'), 'template_favorites', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_favorites_template_id'), 'template_favorites', ['template_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_favorites_user_id'), 'template_favorites', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('template_reviews', sa.Column('id', sa.Integer(), nullable=False),
@@ -996,7 +996,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_template_reviews_id'), 'template_reviews', ['id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_template_reviews_id', schema='synapscale_db'), 'template_reviews', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_reviews_template_id'), 'template_reviews', ['template_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_reviews_user_id'), 'template_reviews', ['user_id'], unique=False, schema='synapscale_db')
     op.create_table('template_usage', sa.Column('id', sa.Integer(), nullable=False),
@@ -1017,7 +1017,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_template_usage_id'), 'template_usage', ['id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_template_usage_id', schema='synapscale_db'), 'template_usage', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_usage_template_id'), 'template_usage', ['template_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_usage_used_at'), 'template_usage', ['used_at'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_template_usage_user_id'), 'template_usage', ['user_id'], unique=False, schema='synapscale_db')
@@ -1035,7 +1035,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_workflow_connections_workflow_id'), 'workflow_connections', ['workflow_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_connections_workflow_id', schema='synapscale_db'), 'workflow_connections', ['workflow_id'], unique=False, schema='synapscale_db')
     op.create_table('execution_metrics', sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('workflow_execution_id', sa.UUID(), nullable=False),
     sa.Column('node_execution_id', sa.Integer(), nullable=True),
@@ -1054,7 +1054,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_execution_metrics_context'), 'execution_metrics', ['context'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_execution_metrics_context', schema='synapscale_db'), 'execution_metrics', ['context'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_execution_metrics_id'), 'execution_metrics', ['id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_execution_metrics_measured_at'), 'execution_metrics', ['measured_at'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_execution_metrics_metric_name'), 'execution_metrics', ['metric_name'], unique=False, schema='synapscale_db')
