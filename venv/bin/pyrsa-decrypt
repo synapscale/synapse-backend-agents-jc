@@ -1,4 +1,4 @@
-#!/Users/joaovictormiranda/Downloads/synapse-backend-agents-jc-main/venv311/bin/python3
+#!/workspaces/synapse-backend-agents-jc/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
