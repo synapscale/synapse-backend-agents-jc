@@ -168,6 +168,46 @@ API robusta, escalável e pronta para produção para gerenciamento de workflows
 - Redis 6+
 - Git
 
+## 🔧 Configuração de Variáveis de Ambiente (.env Único)
+
+Todo o backend agora lê **exclusivamente** as variáveis do arquivo `.env` localizado na raiz do projeto.  
+Isso inclui **Alembic**, **FastAPI**, scripts utilitários, testes, etc.  
+Não há mais strings de conexão nem chaves embutidas em nenhum outro arquivo.
+
+1. **Crie seu arquivo `.env`**
+   ```bash
+   cp .env.example .env
+   # edite o .env com os valores reais (DATABASE_URL, SECRET_KEY, SMTP_*, etc.)
+   ```
+
+2. **(Opcional) Gere chaves fortes automaticamente**
+   ```bash
+   python generate_secure_keys.py   # sobrescreve valores de SECRET_KEY/JWT_*
+   ```
+
+3. **Exporte as variáveis ao iniciar** (Linux/macOS):
+   ```bash
+   set -a       # faz o shell exportar tudo do .env
+   source .env  # carrega variáveis
+   set +a
+   ```
+   No Windows (PowerShell):
+   ```powershell
+   Get-Content .env | ForEach-Object {
+     $name, $value = $_ -split "=", 2; Set-Item -Path env:$name -Value $value
+   }
+   ```
+
+> **Dica:** scripts `start_dev.sh`, `start_backend.sh` e o `alembic/env.py` já carregam o `.env` automaticamente usando `python-dotenv`; o `export` manual é útil apenas se você rodar comandos Python diretamente.
+
+4. **Confirme que a URL do banco está correta**
+   ```env
+   # Exemplo PostgreSQL local
+   DATABASE_URL=postgresql://user:senha@localhost:5432/synapscale_db
+   ```
+
+Pronto! Qualquer serviço iniciado (app, Alembic, scripts) usará esses valores.
+
 ### **1. Clone e Configure**
 ```bash
 # Clone o repositório

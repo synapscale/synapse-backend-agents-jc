@@ -1,44 +1,108 @@
+"""Alembic env.py ajustado para carregar variáveis do .env e usar Config centralizada.
+
+• Carrega automaticamente o arquivo .env com python-dotenv (caso exista).
+• Obtém a DATABASE_URL (e demais configs) diretamente do objeto Settings
+  (`synapse.core.config.settings`), garantindo que **todas** as variáveis
+  sensíveis venham apenas do .env.
+• Remove qualquer dependência de string de conexão fixa dentro do alembic.ini.
+"""
+
 from logging.config import fileConfig
 from sqlalchemy import pool
 from alembic import context
-import sys
+
 import os
+import sys
 
-# Adicionar o diretório src ao path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# ---------------------------------------------------------------------------
+# 1. Garante que o diretório "src" esteja no sys.path para importar o projeto
+# ---------------------------------------------------------------------------
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SRC_DIR = os.path.join(BASE_DIR, "src")
+sys.path.insert(0, SRC_DIR)
 
-# Importar os modelos
-from synapse.database import Base
-from synapse.models import *
+# ---------------------------------------------------------------------------
+# 2. Carrega variáveis do .env antes de qualquer import que dependa delas
+# ---------------------------------------------------------------------------
+try:
+    from dotenv import load_dotenv  # type: ignore
 
+    load_dotenv(os.path.join(BASE_DIR, ".env"))
+except ModuleNotFoundError:
+    # python-dotenv não instalado – opcional, segue sem carregar .env
+    pass
+
+# ---------------------------------------------------------------------------
+# 3. Importa Settings centralizado para obter configurações
+# ---------------------------------------------------------------------------
+from synapse.core.config import settings  # noqa: E402
+
+# 4. Importa modelos **após** settings para garantir dependências resolvidas
+from synapse.database import Base  # noqa: E402
+from synapse.models import *  # noqa: F401,F403,E402
+
+# ---------------------------------------------------------------------------
+# Configuração Alembic
+# ---------------------------------------------------------------------------
 config = context.config
 
+# Usa o logger definido no alembic.ini, se existir
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Metadata das tabelas
 target_metadata = Base.metadata
 
+
+# ---------------------------------------------------------------------------
+# Helpers para migração (online/offline)
+# ---------------------------------------------------------------------------
+
+def get_url() -> str:
+    """Retorna a DATABASE_URL a partir das Settings (.env)."""
+
+    if not settings.DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL não definida. Configure no seu .env para rodar Alembic."
+        )
+
+    return settings.DATABASE_URL
+
+
 def run_migrations_offline() -> None:
-    url = config.get_main_option('sqlalchemy.url')
+    """Modo offline: gera SQL sem conectar no banco."""
+
     context.configure(
-        url=url,
+        url=get_url(),
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={'paramstyle': 'named'},
+        dialect_opts={"paramstyle": "named"},
     )
+
     with context.begin_transaction():
         context.run_migrations()
 
+
 def run_migrations_online() -> None:
-    from sqlalchemy import create_engine
+    """Modo online: conecta no banco e aplica migrações."""
+
+    from sqlalchemy import create_engine  # noqa: E402
+
     connectable = create_engine(
-        config.get_main_option('sqlalchemy.url'),
-        poolclass=pool.NullPool
+        get_url(),
+        poolclass=pool.NullPool,
     )
+
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
+
         with context.begin_transaction():
             context.run_migrations()
+
+
+# ---------------------------------------------------------------------------
+# Execução
+# ---------------------------------------------------------------------------
 
 if context.is_offline_mode():
     run_migrations_offline()
