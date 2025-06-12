@@ -1,85 +1,128 @@
 #!/bin/bash
-# Script de configuração do SynapScale Backend
-# Este script configura o ambiente para o SynapScale Backend
+# Script de setup unificado para SynapScale Backend
+# Data: 12/06/2025
 
-set -e  # Sai em caso de erro
+# Cores
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+NC='\033[0m'
 
-echo "🚀 Iniciando configuração do SynapScale Backend..."
+echo -e "${BLUE}===============================================${NC}"
+echo -e "${GREEN}${BOLD}🚀 SYNAPSCALE BACKEND - SETUP${BOLD}${NC}"
+echo -e "${BLUE}===============================================${NC}"
 
-# Verificar se Python 3.11+ está instalado
-python_version=$(python3 --version 2>&1 | awk '{print $2}')
-echo "📋 Versão do Python detectada: $python_version"
+# Modo de setup
+MODO="basic"  # basic ou complete
 
-# Validar se a versão do Python é 3.11 ou superior
-python - "$python_version" <<'EOF'
-import sys
-version = sys.argv[1]
-major, minor = (int(x) for x in version.split('.')[:2])
-if (major, minor) < (3, 11):
-    print(f"❌ Python 3.11 ou superior é necessário. Versão detectada: {version}")
-    sys.exit(1)
-EOF
-
-# Criar ambiente virtual
-echo "🔧 Criando ambiente virtual..."
-python3 -m venv venv
-source venv/bin/activate
-
-# Atualizar pip
-echo "🔄 Atualizando pip..."
-pip install --upgrade pip
-
-# Instalar dependências
-echo "📦 Instalando dependências..."
-pip install -r requirements.txt
-
-# Verificar se o arquivo .env existe
-if [ ! -f .env ]; then
-    echo "📝 Criando arquivo .env a partir do exemplo..."
-    cp .env.example .env
-    echo "⚠️ Por favor, edite o arquivo .env com suas configurações!"
+# Verificar argumentos
+if [ "$1" == "--complete" ] || [ "$1" == "-c" ]; then
+    MODO="complete"
+    echo -e "${YELLOW}Executando setup completo e automatizado...${NC}"
 else
-    echo "✅ Arquivo .env já existe."
+    echo -e "${YELLOW}Executando setup básico...${NC}"
+    echo -e "Para setup completo use: ${BLUE}./setup.sh --complete${NC}"
 fi
 
-# Verificar conexão com o banco de dados
-echo "🔍 Verificando conexão com o banco de dados..."
-python -c "
-import os
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
+# Setup básico
+if [ "$MODO" == "basic" ]; then
+    # Verificar ambiente virtual
+    if [ ! -d "venv" ]; then
+        echo -e "${YELLOW}📦 Criando ambiente virtual Python...${NC}"
+        python3 -m venv venv
+        echo -e "${GREEN}✅ Ambiente virtual criado${NC}"
+    fi
 
-load_dotenv()
+    # Ativar ambiente virtual
+    source venv/bin/activate
+    echo -e "${GREEN}✅ Ambiente virtual ativado${NC}"
 
-database_url = os.getenv('DATABASE_URL')
-schema = os.getenv('DATABASE_SCHEMA', 'synapscale_db')
+    # Instalar dependências
+    if [ -f "requirements.txt" ]; then
+        echo -e "${YELLOW}📥 Instalando dependências...${NC}"
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        echo -e "${GREEN}✅ Dependências instaladas${NC}"
+    else
+        echo -e "${RED}❌ Arquivo requirements.txt não encontrado!${NC}"
+        exit 1
+    fi
 
-if not database_url:
-    print('❌ DATABASE_URL não configurada no arquivo .env')
-    exit(1)
+    # Configurar .env se não existir
+    if [ ! -f ".env" ]; then
+        if [ -f ".env.example" ]; then
+            echo -e "${YELLOW}📝 Criando arquivo .env a partir do exemplo...${NC}"
+            cp .env.example .env
+            echo -e "${GREEN}✅ Arquivo .env criado${NC}"
+            echo -e "${YELLOW}⚠️ Importante: Edite o arquivo .env e configure suas credenciais!${NC}"
+        else
+            echo -e "${RED}❌ Arquivo .env.example não encontrado!${NC}"
+            exit 1
+        fi
+    fi
 
-try:
-    engine = create_engine(database_url)
-    with engine.connect() as conn:
-        result = conn.execute(text(f'SELECT 1'))
-        print('✅ Conexão com o banco de dados estabelecida com sucesso!')
-except Exception as e:
-    print(f'❌ Erro ao conectar ao banco de dados: {e}')
-    exit(1)
-"
+    echo -e "${GREEN}${BOLD}🎉 Setup básico concluído!${NC}"
+    echo -e ""
+    echo -e "Para continuar:"
+    echo -e "1. ${BLUE}Configure o DATABASE_URL e outras variáveis no arquivo .env${NC}"
+    echo -e "2. ${BLUE}Execute ./dev.sh para iniciar o servidor em modo desenvolvimento${NC}"
+    echo -e ""
 
-# Verificar se a configuração foi bem-sucedida
-if [ $? -eq 0 ]; then
-    echo "✅ Configuração concluída com sucesso!"
-    echo ""
-    echo "🚀 Para iniciar o servidor em modo de desenvolvimento:"
-    echo "source venv/bin/activate  # Se ainda não estiver ativado"
-    echo "python -m uvicorn src.synapse.main:app --host 0.0.0.0 --port 8000 --reload"
-    echo ""
-    echo "📚 Documentação da API disponível em:"
-    echo "- Swagger UI: http://localhost:8000/docs"
-    echo "- ReDoc: http://localhost:8000/redoc"
+# Setup completo e automatizado
 else
-    echo "❌ Configuração falhou. Por favor, verifique os erros acima."
-fi
+    if [ -f "setup_complete.py" ]; then
+        echo -e "${YELLOW}🔄 Executando setup completo automatizado...${NC}"
+        # Ativar ambiente virtual temporário se necessário
+        if [ ! -d "venv" ]; then
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install python-dotenv pydantic
+        else
+            source venv/bin/activate
+        fi
+        
+        # Executar setup completo
+        python setup_complete.py
+    else
+        echo -e "${RED}❌ Script setup_complete.py não encontrado!${NC}"
+        echo -e "${YELLOW}Executando setup básico ao invés...${NC}"
+        
+        # Usar o mesmo código do setup básico
+        # Verificar ambiente virtual
+        if [ ! -d "venv" ]; then
+            echo -e "${YELLOW}📦 Criando ambiente virtual Python...${NC}"
+            python3 -m venv venv
+            echo -e "${GREEN}✅ Ambiente virtual criado${NC}"
+        fi
 
+        # Ativar ambiente virtual
+        source venv/bin/activate
+        echo -e "${GREEN}✅ Ambiente virtual ativado${NC}"
+
+        # Instalar dependências
+        if [ -f "requirements.txt" ]; then
+            echo -e "${YELLOW}📥 Instalando dependências...${NC}"
+            pip install --upgrade pip
+            pip install -r requirements.txt
+            echo -e "${GREEN}✅ Dependências instaladas${NC}"
+        else
+            echo -e "${RED}❌ Arquivo requirements.txt não encontrado!${NC}"
+            exit 1
+        fi
+
+        # Configurar .env se não existir
+        if [ ! -f ".env" ]; then
+            if [ -f ".env.example" ]; then
+                echo -e "${YELLOW}📝 Criando arquivo .env a partir do exemplo...${NC}"
+                cp .env.example .env
+                echo -e "${GREEN}✅ Arquivo .env criado${NC}"
+                echo -e "${YELLOW}⚠️ Importante: Edite o arquivo .env e configure suas credenciais!${NC}"
+            else
+                echo -e "${RED}❌ Arquivo .env.example não encontrado!${NC}"
+                exit 1
+            fi
+        fi
+    fi
+fi
