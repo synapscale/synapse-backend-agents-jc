@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = '294dba6f3a38'
-down_revision: Union[str, None] = None
+down_revision: Union[str, None] = 'b25def6b9d26'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -736,7 +736,7 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('agent_id', sa.UUID(), nullable=True),
-    sa.Column('workspace_id', sa.String(), nullable=True),
+    sa.Column('workspace_id', sa.UUID(), nullable=True),
     sa.Column('title', sa.String(length=255), nullable=True),
     sa.Column('status', sa.String(length=50), nullable=True),
     sa.Column('message_count', sa.Integer(), nullable=True),
@@ -936,7 +936,7 @@ def upgrade() -> None:
     sa.Column('value', sa.Float(), nullable=True),
     sa.Column('workspace_id', sa.UUID(), nullable=True),
     sa.Column('project_id', sa.UUID(), nullable=False),
-    sa.Column('workflow_id', sa.Integer(), nullable=True),
+    sa.Column('workflow_id', sa.UUID(), nullable=True),
     sa.Column('country', sa.String(length=2), nullable=True),
     sa.Column('region', sa.String(length=100), nullable=True),
     sa.Column('city', sa.String(length=100), nullable=True),
@@ -964,7 +964,7 @@ def upgrade() -> None:
     op.create_table('execution_queue',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('queue_id', sa.String(length=36), nullable=True),
-    sa.Column('workflow_execution_id', sa.Integer(), nullable=False),
+    sa.Column('workflow_execution_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('priority', sa.Integer(), nullable=True),
     sa.Column('scheduled_at', sa.DateTime(timezone=True), nullable=True),
@@ -993,7 +993,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_public_execution_queue_workflow_execution_id'), 'execution_queue', ['workflow_execution_id'], unique=False, schema='public')
     op.create_table('messages',
     sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('conversation_id', sa.String(length=30), nullable=False),
+    sa.Column('conversation_id', sa.UUID(), nullable=False),
     sa.Column('role', sa.String(length=20), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
     sa.Column('attachments', sa.JSON(), nullable=True),
@@ -1016,8 +1016,8 @@ def upgrade() -> None:
     op.create_table('node_executions',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('execution_id', sa.String(length=36), nullable=True),
-    sa.Column('workflow_execution_id', sa.Integer(), nullable=False),
-    sa.Column('node_id', sa.Integer(), nullable=False),
+    sa.Column('workflow_execution_id', sa.UUID(), nullable=False),
+    sa.Column('node_id', sa.UUID(), nullable=False),
     sa.Column('node_key', sa.String(length=255), nullable=False),
     sa.Column('node_type', sa.String(length=100), nullable=False),
     sa.Column('node_name', sa.String(length=255), nullable=True),
@@ -1102,7 +1102,7 @@ def upgrade() -> None:
     op.create_table('project_versions',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('project_id', sa.UUID(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('version_number', sa.Integer(), nullable=False),
     sa.Column('version_name', sa.String(length=100), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
@@ -1122,7 +1122,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_public_project_versions_user_id'), 'project_versions', ['user_id'], unique=False, schema='public')
     op.create_table('template_downloads',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('template_id', sa.Integer(), nullable=False),
+    sa.Column('template_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('download_type', sa.String(length=20), nullable=True),
     sa.Column('ip_address', sa.String(length=45), nullable=True),
@@ -1140,7 +1140,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_public_template_downloads_user_id'), 'template_downloads', ['user_id'], unique=False, schema='public')
     op.create_table('template_favorites',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('template_id', sa.Integer(), nullable=False),
+    sa.Column('template_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('notes', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
@@ -1155,7 +1155,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_public_template_favorites_user_id'), 'template_favorites', ['user_id'], unique=False, schema='public')
     op.create_table('template_reviews',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('template_id', sa.Integer(), nullable=False),
+    sa.Column('template_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('rating', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=True),
@@ -1180,9 +1180,9 @@ def upgrade() -> None:
     op.create_index(op.f('ix_public_template_reviews_user_id'), 'template_reviews', ['user_id'], unique=False, schema='public')
     op.create_table('template_usage',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('template_id', sa.Integer(), nullable=False),
+    sa.Column('template_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
-    sa.Column('workflow_id', sa.Integer(), nullable=True),
+    sa.Column('workflow_id', sa.UUID(), nullable=True),
     sa.Column('usage_type', sa.String(length=20), nullable=False),
     sa.Column('success', sa.Boolean(), nullable=True),
     sa.Column('template_version', sa.String(length=20), nullable=True),
@@ -1219,7 +1219,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_public_workflow_connections_workflow_id'), 'workflow_connections', ['workflow_id'], unique=False, schema='public')
     op.create_table('execution_metrics',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('workflow_execution_id', sa.Integer(), nullable=False),
+    sa.Column('workflow_execution_id', sa.UUID(), nullable=False),
     sa.Column('node_execution_id', sa.Integer(), nullable=True),
     sa.Column('metric_type', sa.String(length=100), nullable=False),
     sa.Column('metric_name', sa.String(length=255), nullable=False),
