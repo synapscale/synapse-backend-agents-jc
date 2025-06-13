@@ -1,0 +1,4 @@
+[console_scripts]
+synapse-dev = synapse.cli:dev_server
+synapse-migrate = synapse.cli:migrate_db
+synapse-prod = synapse.cli:prod_server
