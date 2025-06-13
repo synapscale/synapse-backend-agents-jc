@@ -16,7 +16,7 @@ import uvicorn
 from sqlalchemy.orm import Session
 
 # Importar do sistema centralizado
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 from synapse.database import init_db, get_db, health_check
 from synapse.api.v1.router import api_router
 from synapse.middlewares.rate_limiting import rate_limit

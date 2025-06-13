@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 
 
 class JSONFormatter(logging.Formatter):
