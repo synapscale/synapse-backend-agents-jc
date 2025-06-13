@@ -146,6 +146,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "allow"  # Permite campos extras do .env
     
     def get_llm_providers(self) -> Dict[str, Any]:
         """
