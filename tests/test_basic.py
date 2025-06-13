@@ -44,7 +44,7 @@ def test_register_user(client: TestClient):
         "password": "StrongPassword123!"
     }
     
-    response = client.post("/api/v1/auth/auth/register", json=user_data)
+    response = client.post("/api/v1/auth/register", json=user_data)
     assert response.status_code in [200, 201]
     
     data = response.json()
@@ -63,7 +63,7 @@ def test_login_user(client: TestClient):
         "password": "StrongPassword123!"
     }
     
-    register_response = client.post("/api/v1/auth/auth/register", json=user_data)
+    register_response = client.post("/api/v1/auth/register", json=user_data)
     
     # Tentar fazer login
     login_data = {
