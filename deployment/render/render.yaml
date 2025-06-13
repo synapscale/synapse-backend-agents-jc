@@ -2,7 +2,11 @@ services:
   - type: web
     name: synapse-backend-agents
     runtime: python
-    buildCommand: ./build.sh
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      chmod +x deployment/render/setup_render.sh
+      ./deployment/render/setup_render.sh
     startCommand: ./start_production.sh
     healthCheckPath: /health
     plan: free
@@ -14,4 +18,22 @@ services:
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
-        value: false
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: API_V1_STR
+        value: /api/v1
+      - key: PROJECT_NAME
+        value: SynapScale Backend API
+      - key: VERSION
+        value: 2.0.0
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: HOST
+        value: 0.0.0.0
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: JWT_REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
