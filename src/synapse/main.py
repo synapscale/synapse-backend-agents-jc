@@ -154,8 +154,8 @@ app = FastAPI(
     todas as duplicações e melhora a manutenibilidade.
     ''',
     version=settings.VERSION,
-    docs_url=None,
-    redoc_url=None,
+    docs_url="/docs",
+    redoc_url="/redoc",
     lifespan=lifespan,
     contact={'name': 'SynapScale Team', 'email': 'support@synapscale.com'},
     license_info={'name': 'MIT'}
@@ -349,8 +349,8 @@ async def root():
         "description": "API de Automação e IA - Versão Otimizada com Configuração Centralizada",
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
-        "docs": None,
-        "redoc": None,
+        "docs": "/docs",
+        "redoc": "/redoc",
         "health": "/health",
         "api_prefix": settings.API_V1_STR,
         "features": {
