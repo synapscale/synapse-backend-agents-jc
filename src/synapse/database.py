@@ -1,50 +1,48 @@
 """
 Configuração do banco de dados com SQLAlchemy
-Conexão direta com PostgreSQL - MIGRADO PARA SISTEMA CENTRALIZADO
+Conexão direta com PostgreSQL - SISTEMA COMPLETAMENTE CENTRALIZADO
 """
 from sqlalchemy import create_engine, MetaData, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import logging
+from typing import Generator
 
 # Importar do sistema centralizado
 from synapse.core.config_new import settings
 
-# Configuração de logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Usar logging centralizado
 logger = logging.getLogger(__name__)
 
-# Obter configuração completa do banco do sistema centralizado diretamente de settings
-# (substitui get_database_config)
-db_config = {
-    "url": settings.DATABASE_URL,
-    "schema": getattr(settings, "DATABASE_SCHEMA", None),
-    "pool_size": getattr(settings, "DATABASE_POOL_SIZE", 20),
-    "max_overflow": getattr(settings, "DATABASE_MAX_OVERFLOW", 30),
-    "echo": getattr(settings, "DATABASE_ECHO", False),
-}
+# Obter configuração COMPLETA do banco do sistema centralizado
+db_config = settings.get_database_config()
 
-# Usar configurações centralizadas
 DATABASE_URL = db_config["url"]
-DATABASE_SCHEMA = db_config.get("schema", settings.DATABASE_SCHEMA)
+DATABASE_SCHEMA = db_config["schema"]
 
+# Validação usando settings centralizados
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is required")
+    raise ValueError("DATABASE_URL não encontrada nas configurações centralizadas")
 
-# Criar engine do SQLAlchemy com configurações centralizadas
+if not DATABASE_SCHEMA:
+    raise ValueError("DATABASE_SCHEMA não encontrada nas configurações centralizadas")
+
+# Engine usando configuração centralizada
 engine = create_engine(
-    DATABASE_URL, 
+    DATABASE_URL,
     pool_size=db_config["pool_size"],
-    max_overflow=db_config.get("max_overflow", 30),
+    max_overflow=db_config["max_overflow"],
+    pool_timeout=db_config["pool_timeout"],
+    pool_recycle=db_config["pool_recycle"],
     echo=db_config["echo"]
 )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Criar base com o schema especificado
 metadata = MetaData(schema=DATABASE_SCHEMA)
 Base = declarative_base(metadata=metadata)
 
-def get_db():
+def get_db() -> Generator:
     """
     Dependency para obter uma sessão do banco de dados
     """
@@ -54,38 +52,41 @@ def get_db():
     finally:
         db.close()
 
-def init_db():
+def init_db() -> None:
     """
-    Inicializa a conexão com o banco de dados
+    Inicializa a conexão com o banco de dados usando configurações centralizadas
     """
     try:
-        # Para SQLite, vamos apenas criar as tabelas se não existirem
         Base.metadata.create_all(bind=engine)
-        
-        # Teste de conexão simples
+
         with engine.connect() as conn:
-            # Para SQLite, não usamos schemas como PostgreSQL
-            if "sqlite" in settings.DATABASE_URL:
-                result = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
-                tables = result.fetchall()
-                logger.info(f"✅ Conectado ao banco SQLite - {len(tables)} tabelas encontradas")
-            else:
-                # Para PostgreSQL
-                conn.execute(text(f"SET search_path TO {DATABASE_SCHEMA}"))
-                result = conn.execute(text(f"SELECT COUNT(*) FROM {DATABASE_SCHEMA}.users"))
-                count = result.scalar()
-                logger.info(f"✅ Conectado ao schema {DATABASE_SCHEMA} - {count} usuários encontrados")
-        
-        logger.info(f"✅ Conexão com o banco de dados estabelecida com sucesso")
+            conn.execute(text(f"SET search_path TO {DATABASE_SCHEMA}"))
+            result = conn.execute(
+                text(f"SELECT COUNT(*) FROM {DATABASE_SCHEMA}.users")
+            )
+            count = result.scalar()
+            logger.info(
+                f"✅ Conectado ao schema {DATABASE_SCHEMA} - {count} usuários encontrados"
+            )
+
+        logger.info("✅ Conexão com o banco de dados estabelecida com sucesso")
+    except ValueError as ve:
+        logger.error(f"❌ Erro de valor ao conectar ao banco de dados: {ve}")
+        raise
     except Exception as e:
         logger.error(f"❌ Erro ao conectar ao banco de dados: {e}")
-        # Para desenvolvimento local, não vamos falhar se o banco não estiver configurado
-        if "development" in getattr(settings, 'ENVIRONMENT', ''):
-            logger.warning("⚠️ Continuando em modo desenvolvimento sem banco de dados")
+        
+        # Verificar se está em desenvolvimento usando settings centralizados
+        if settings.ENVIRONMENT == "development":
+            logger.warning(
+                "⚠️ Continuando em modo desenvolvimento sem banco de dados"
+            )
+        else:
+            raise
 
 def health_check() -> bool:
     """
-    Verifica a saúde da conexão com o banco
+    Verifica a saúde da conexão com o banco usando configurações centralizadas
     """
     try:
         with engine.connect() as conn:
@@ -95,20 +96,70 @@ def health_check() -> bool:
         logger.error(f"❌ Health check falhou: {e}")
         return False
 
-def create_tables():
+def create_tables() -> None:
     """
     Criar todas as tabelas no banco de dados
-    Nota: As tabelas já existem no schema, então esta função não faz nada
+    Controlado por configuração centralizada
     """
-    logger.warning(
-        "⚠️  As tabelas já existem no schema, não é necessário criá-las"
-    )
+    # Verificar se deve criar tabelas baseado na configuração
+    if hasattr(settings, 'AUTO_CREATE_TABLES') and settings.AUTO_CREATE_TABLES:
+        try:
+            Base.metadata.create_all(bind=engine)
+            logger.info("✅ Tabelas criadas com sucesso")
+        except Exception as e:
+            logger.error(f"❌ Erro ao criar tabelas: {e}")
+            raise
+    else:
+        logger.info("⚠️ Criação automática de tabelas desabilitada nas configurações")
 
-def drop_tables():
+def drop_tables() -> None:
     """
     Remover todas as tabelas do banco de dados
-    Nota: Esta função é perigosa e não deve ser usada em produção
+    Controlado por configuração centralizada de segurança
     """
-    logger.warning(
-        "⚠️  Função de remoção de tabelas desativada para evitar perda de dados"
-    )
+    # Verificar se está em desenvolvimento E se drop está habilitado
+    if (settings.ENVIRONMENT == "development" and 
+        hasattr(settings, 'ALLOW_DROP_TABLES') and 
+        settings.ALLOW_DROP_TABLES):
+        try:
+            Base.metadata.drop_all(bind=engine)
+            logger.warning("⚠️ Tabelas removidas com sucesso (DESENVOLVIMENTO)")
+        except Exception as e:
+            logger.error(f"❌ Erro ao remover tabelas: {e}")
+            raise
+    else:
+        logger.error(
+            "❌ Remoção de tabelas bloqueada pelas configurações de segurança"
+        )
+        raise ValueError(
+            "Drop tables não permitido em produção ou configuração não habilitada"
+        )
+
+def get_connection_info() -> dict:
+    """
+    Retorna informações da conexão usando configurações centralizadas
+    """
+    return {
+        "database_url": DATABASE_URL,
+        "database_schema": DATABASE_SCHEMA,
+        "environment": settings.ENVIRONMENT,
+        "pool_size": db_config["pool_size"],
+        "max_overflow": db_config["max_overflow"],
+        "pool_timeout": db_config["pool_timeout"],
+        "pool_recycle": db_config["pool_recycle"],
+        "echo": db_config["echo"]
+    }
+
+def test_connection() -> bool:
+    """
+    Testa a conexão com o banco usando configurações centralizadas
+    """
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1"))
+            result.scalar()
+        logger.info("✅ Teste de conexão bem-sucedido")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Teste de conexão falhou: {e}")
+        return False
