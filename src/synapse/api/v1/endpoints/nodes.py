@@ -23,7 +23,7 @@ from synapse.schemas.node import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/nodes", tags=["Nodes"])
+router = APIRouter(tags=["Nodes"])
 
 
 @router.get("/", response_model=NodeListResponse, summary="Listar nodes", tags=["Nodes"])

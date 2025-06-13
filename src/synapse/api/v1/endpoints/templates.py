@@ -8,6 +8,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
+import uuid
 
 from synapse.database import get_db
 from synapse.models.user import User
@@ -35,7 +36,7 @@ from synapse.api.deps import get_current_user
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/templates", tags=["Templates"])
+router = APIRouter(tags=["Templates"])
 template_service = TemplateService()
 
 
@@ -327,11 +328,12 @@ async def get_template(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        template_uuid = uuid.UUID(template_id)
         logger.info(f"Obtendo detalhes do template {template_id}")
         
         template = await template_service.get_template(
             db=db,
-            template_id=template_id,
+            template_id=template_uuid,
             user_id=current_user.id if current_user else None,
         )
 
@@ -341,8 +343,9 @@ async def get_template(
 
         logger.info(f"Template {template_id} obtido com sucesso")
         return template
-    except HTTPException:
-        raise
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
     except Exception as e:
         logger.error(f"Erro ao obter template {template_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -377,11 +380,12 @@ async def update_template(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        template_uuid = uuid.UUID(template_id)
         logger.info(f"Atualizando template {template_id} por usuário {current_user.id}")
         
         template = await template_service.update_template(
             db=db,
-            template_id=template_id,
+            template_id=template_uuid,
             template_data=template_data,
             user_id=current_user.id,
         )
@@ -392,8 +396,9 @@ async def update_template(
             
         logger.info(f"Template {template_id} atualizado com sucesso por usuário {current_user.id}")
         return template
-    except HTTPException:
-        raise
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
     except ValueError as e:
         logger.warning(f"Dados inválidos para atualização de template {template_id} por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -429,11 +434,12 @@ async def publish_template(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        template_uuid = uuid.UUID(template_id)
         logger.info(f"Publicando template {template_id} por usuário {current_user.id}")
         
         success = await template_service.publish_template(
             db=db,
-            template_id=template_id,
+            template_id=template_uuid,
             user_id=current_user.id,
         )
         
@@ -450,8 +456,9 @@ async def publish_template(
             "message": "Template enviado para revisão e publicação",
             "template_id": template_id
         }
-    except HTTPException:
-        raise
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
     except Exception as e:
         logger.error(f"Erro ao publicar template {template_id} por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -486,11 +493,12 @@ async def download_template(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        template_uuid = uuid.UUID(template_id)
         logger.info(f"Processando download do template {template_id} (tipo: {download_type}) por usuário {current_user.id}")
         
         download_info = await template_service.download_template(
             db=db,
-            template_id=template_id,
+            template_id=template_uuid,
             user_id=current_user.id,
             download_type=download_type,
         )
@@ -501,8 +509,9 @@ async def download_template(
             
         logger.info(f"Download do template {template_id} processado com sucesso para usuário {current_user.id}")
         return download_info
-    except HTTPException:
-        raise
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
     except Exception as e:
         logger.error(f"Erro no download do template {template_id} por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -534,6 +543,7 @@ async def install_template(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        template_uuid = uuid.UUID(install_data.template_id)
         logger.info(f"Instalando template {install_data.template_id} para usuário {current_user.id}")
         
         installation = await template_service.install_template(
@@ -548,8 +558,9 @@ async def install_template(
             
         logger.info(f"Template {install_data.template_id} instalado com sucesso como workflow {installation.workflow_id} para usuário {current_user.id}")
         return installation
-    except HTTPException:
-        raise
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {install_data.template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
     except ValueError as e:
         logger.warning(f"Dados inválidos para instalação de template por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -584,6 +595,7 @@ async def add_to_favorites(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        template_uuid = uuid.UUID(favorite_data.template_id)
         logger.info(f"Adicionando template {favorite_data.template_id} aos favoritos do usuário {current_user.id}")
         
         favorite = await template_service.add_to_favorites(
@@ -598,8 +610,9 @@ async def add_to_favorites(
             
         logger.info(f"Template {favorite_data.template_id} adicionado aos favoritos do usuário {current_user.id}")
         return favorite
-    except HTTPException:
-        raise
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {favorite_data.template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
     except Exception as e:
         logger.error(f"Erro ao adicionar favorito para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -676,11 +689,12 @@ async def create_review(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        template_uuid = uuid.UUID(template_id)
         logger.info(f"Criando review para template {template_id} por usuário {current_user.id} - nota: {review_data.rating}")
         
         review = await template_service.create_review(
             db=db,
-            template_id=template_id,
+            template_id=template_uuid,
             review_data=review_data,
             user_id=current_user.id,
         )
@@ -696,8 +710,9 @@ async def create_review(
             "review_id": review.id,
             "template_id": template_id
         }
-    except HTTPException:
-        raise
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
     except ValueError as e:
         logger.warning(f"Dados inválidos para review do template {template_id} por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -733,11 +748,12 @@ async def get_template_reviews(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        template_uuid = uuid.UUID(template_id)
         logger.info(f"Obtendo reviews do template {template_id} - página {page}")
         
         reviews = await template_service.get_template_reviews(
             db=db,
-            template_id=template_id,
+            template_id=template_uuid,
             page=page,
             per_page=per_page,
         )
@@ -748,8 +764,9 @@ async def get_template_reviews(
             
         logger.info(f"Retornadas {len(reviews)} reviews para template {template_id}")
         return reviews
-    except HTTPException:
-        raise
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
     except Exception as e:
         logger.error(f"Erro ao obter reviews do template {template_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -846,3 +863,19 @@ async def get_collections(
     except Exception as e:
         logger.error(f"Erro ao obter coleções públicas: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.delete("/{template_id}", summary="Deletar template", tags=["Templates"])
+def delete_template(template_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    try:
+        template_uuid = uuid.UUID(template_id)
+    except (ValueError, TypeError):
+        logger.warning(f"template_id inválido: {template_id}")
+        raise HTTPException(status_code=404, detail="Template não encontrado")
+    # Buscar e deletar template
+    template = db.query(WorkflowTemplate).filter(WorkflowTemplate.id == template_uuid, WorkflowTemplate.author_id == current_user.id).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template não encontrado")
+    db.delete(template)
+    db.commit()
+    return {"message": "Template deletado com sucesso"}

@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Any
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 import logging
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 
 logger = logging.getLogger(__name__)
 

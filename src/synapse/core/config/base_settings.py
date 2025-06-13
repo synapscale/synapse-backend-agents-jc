@@ -1,6 +1,9 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from typing import List, Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
     DATABASE_URL: str = Field(default="postgresql://localhost/defaultdb")

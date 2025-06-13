@@ -8,7 +8,7 @@ import jwt
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 from synapse.database import get_db
 from synapse.models.user import User, RefreshToken
 import secrets

@@ -8,10 +8,7 @@ from sqlalchemy.orm import sessionmaker
 import logging
 
 # Importar do sistema centralizado
-from synapse.config import Settings
-
-# Instanciar configurações
-settings = Settings()
+from synapse.core.config_new import settings
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

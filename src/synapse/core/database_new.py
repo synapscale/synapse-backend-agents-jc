@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from contextlib import contextmanager
 
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 from synapse.models.agent import Agent
 from synapse.models.analytics import Analytics
 from synapse.models.conversation import Conversation
