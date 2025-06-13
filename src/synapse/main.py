@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
             raise Exception(f"Configurações inválidas: {config_errors}")
         
         # Criar diretórios necessários usando configurações centralizadas
-        upload_dir = settings.UPLOAD_FOLDER
+        upload_dir = settings.UPLOAD_DIR
         os.makedirs(upload_dir, exist_ok=True)
         logger.info(f'📁 Diretório de uploads criado: {upload_dir}')
         

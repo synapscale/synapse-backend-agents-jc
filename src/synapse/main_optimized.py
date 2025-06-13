@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
         raise Exception("Failed to initialize database")
 
     # Create upload directory
-    os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 
     # Create logs directory
     if settings.LOG_FILE:
