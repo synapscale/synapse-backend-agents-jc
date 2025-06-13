@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     DATABASE_ECHO: bool = Field(default=False)
     ENVIRONMENT: str = Field(default="production")
     DEBUG: bool = Field(default=False)
-    # Segurança/JWT
-    SECRET_KEY: str = Field(default="changeme-secret-key")
-    JWT_SECRET_KEY: str = Field(default="changeme-jwt-secret-key")
+    # Segurança/JWT - DEVE ser definido no .env
+    SECRET_KEY: str = Field(default="")
+    JWT_SECRET_KEY: str = Field(default="")
     JWT_ALGORITHM: str = Field(default="HS256")
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30)
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7)

@@ -98,3 +98,6 @@ build/
 
 # Keepfiles para manter estrutura de diretórios vazios
 !.gitkeep
+
+usuario_joaovictor_credenciais.txt
+
