@@ -29,7 +29,7 @@ from synapse.core.websockets.manager import ConnectionManager
 logger = logging.getLogger(__name__)
 
 # Router para execuções
-router = APIRouter(prefix="/executions", tags=["Workflow Executions"])
+router = APIRouter(tags=["Executions"])
 
 # Instância global do serviço (será inicializada no startup)
 execution_service: Optional[ExecutionService] = None

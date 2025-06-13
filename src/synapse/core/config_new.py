@@ -8,6 +8,9 @@ from typing import Dict, List, Any, Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field
 import logging
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
     """
@@ -70,6 +73,11 @@ class Settings(BaseSettings):
         description="Origens permitidas para CORS"
     )
     
+    BACKEND_CORS_ORIGINS: list[str] = Field(
+        default=["http://localhost:3000", "http://127.0.0.1:3000"],
+        description="Origens permitidas para CORS (compatibilidade)"
+    )
+    
     # Configurações de logging
     LOG_LEVEL: str = Field(
         default="INFO",
@@ -78,6 +86,10 @@ class Settings(BaseSettings):
     LOG_FILE: str = Field(
         default="logs/app.log",
         description="Arquivo de log"
+    )
+    LOG_FORMAT: str = Field(
+        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        description="Formato do log (compatibilidade)"
     )
     
     # Configurações de upload
@@ -125,6 +137,22 @@ class Settings(BaseSettings):
         default=None,
         description="Email remetente"
     )
+    SMTP_USERNAME: Optional[str] = Field(
+        default=None,
+        description="Usuário SMTP (compatibilidade)"
+    )
+    SMTP_PASSWORD: Optional[str] = Field(
+        default=None,
+        description="Senha SMTP (compatibilidade)"
+    )
+    SMTP_FROM_EMAIL: Optional[str] = Field(
+        default=None,
+        description="Email remetente (compatibilidade)"
+    )
+    SMTP_FROM_NAME: Optional[str] = Field(
+        default=None,
+        description="Nome remetente (compatibilidade)"
+    )
     
     # Configurações de Redis
     REDIS_URL: str = Field(
@@ -140,6 +168,27 @@ class Settings(BaseSettings):
     WEBSOCKET_PATH: str = Field(
         default="/ws",
         description="Caminho do WebSocket"
+    )
+    
+    # Configurações de API
+    API_V1_STR: str = Field(
+        default="/api/v1",
+        description="Prefixo da API v1"
+    )
+    
+    PROJECT_NAME: str = Field(
+        default="SynapScale Backend",
+        description="Nome do projeto (compatibilidade)"
+    )
+    
+    VERSION: str = Field(
+        default="1.0.0",
+        description="Versão do projeto (compatibilidade)"
+    )
+    
+    UPLOAD_FOLDER: str = Field(
+        default="uploads",
+        description="Diretório de uploads (compatibilidade)"
     )
     
     class Config:

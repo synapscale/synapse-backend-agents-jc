@@ -25,7 +25,7 @@ from synapse.api.v1.endpoints.llm.schemas import (
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/llm", tags=["LLM"])
+router = APIRouter(tags=["LLM"])
 
 
 class ProviderEnum(str, Enum):
@@ -333,11 +333,8 @@ async def list_providers() -> ListProvidersResponse:
     """
     try:
         logger.info("Listagem de provedores solicitada")
-        
-        result = await unified_service.list_providers()
-
-        logger.info(f"Provedores listados: {len(getattr(result, 'providers', []))} provedores")
-        return result
+        result = unified_service.get_available_providers()
+        return ListProvidersResponse(**result)
     except Exception as e:
         logger.error(f"Erro ao listar provedores: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")

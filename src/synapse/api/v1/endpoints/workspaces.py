@@ -46,7 +46,7 @@ from synapse.api.deps import get_current_user
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/workspaces", tags=["Workspaces"])
+router = APIRouter(tags=["Workspaces"])
 
 # ==================== WORKSPACES ====================
 

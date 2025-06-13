@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 import pytest
 from fastapi.testclient import TestClient
 
@@ -29,9 +32,8 @@ def auth_headers(client):
     # Dados do usuário de teste
     user_data = {
         "email": "testuser@example.com",
-        "password": "testpassword123",
-        "first_name": "Test",
-        "last_name": "User",
+        "password": "TestPassword123!",
+        "full_name": "Test User",
         "username": "testuser"
     }
     # Tenta registrar (ignora se já existe)

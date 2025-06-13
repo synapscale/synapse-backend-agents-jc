@@ -98,7 +98,7 @@ class TemplateService:
             db.commit()
             db.refresh(template)
             
-            self.logger.info(f"✅ Template {template.template_id} criado com sucesso")
+            self.logger.info(f"✅ Template {template.id} criado com sucesso")
             return TemplateResponse.from_orm(template)
             
         except Exception as e:
@@ -118,7 +118,7 @@ class TemplateService:
         """
         try:
             template = db.query(WorkflowTemplate).filter(
-                WorkflowTemplate.template_id == template_id,
+                WorkflowTemplate.id == template_id,
                 WorkflowTemplate.author_id == user_id
             ).first()
             
@@ -156,7 +156,7 @@ class TemplateService:
         """
         try:
             template = db.query(WorkflowTemplate).filter(
-                WorkflowTemplate.template_id == template_id,
+                WorkflowTemplate.id == template_id,
                 WorkflowTemplate.author_id == user_id
             ).first()
             
@@ -196,7 +196,7 @@ class TemplateService:
                 joinedload(WorkflowTemplate.author),
                 joinedload(WorkflowTemplate.reviews),
                 joinedload(WorkflowTemplate.favorites)
-            ).filter(WorkflowTemplate.template_id == template_id)
+            ).filter(WorkflowTemplate.id == template_id)
 
             # Filtro de visibilidade
             if not include_private:
@@ -439,7 +439,7 @@ class TemplateService:
             template = (
                 db.query(WorkflowTemplate)
                 .filter(
-                    WorkflowTemplate.template_id == template_id,
+                    WorkflowTemplate.id == template_id,
                     WorkflowTemplate.is_public == True,
                 )
                 .first()
@@ -567,7 +567,7 @@ class TemplateService:
             db.commit()
 
             self.logger.info(
-                f"✅ Template {template.template_id} instalado como workflow {new_workflow.id}"
+                f"✅ Template {template.id} instalado como workflow {new_workflow.id}"
             )
 
             return TemplateInstallResponse(

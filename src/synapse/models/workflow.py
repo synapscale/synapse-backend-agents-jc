@@ -71,10 +71,10 @@ class Workflow(Base):
     def to_dict(self, include_definition: bool = True) -> dict:
         """Converte workflow para dicionário"""
         data = {
-            "id": self.id,
+            "id": str(self.id),
             "name": self.name,
             "description": self.description,
-            "user_id": self.user_id,
+            "user_id": str(self.user_id) if self.user_id else None,
             "workspace_id": str(self.workspace_id) if self.workspace_id else None,
             "is_public": self.is_public,
             "category": self.category,

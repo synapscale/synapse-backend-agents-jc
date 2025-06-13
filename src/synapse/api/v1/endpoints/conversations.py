@@ -30,7 +30,7 @@ from synapse.schemas.conversation import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/conversations", tags=["Conversations"])
+router = APIRouter(tags=["Conversations"])
 
 
 @router.get("/", response_model=ConversationListResponse, summary="Listar conversações", tags=["Conversations"])

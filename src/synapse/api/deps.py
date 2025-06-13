@@ -8,6 +8,7 @@ como autenticação, validação e injeção de dependências.
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+import uuid
 
 from synapse.core.config_new import settings
 from synapse.database import get_db
@@ -44,16 +45,23 @@ async def get_current_user(
     try:
         # Decodificar token JWT
         payload = verify_token(token)
-        user_id: str = payload.get("sub")
+        user_id_or_email: str = payload.get("user_id") or payload.get("sub")
 
-        if user_id is None:
+        if user_id_or_email is None:
             raise credentials_exception
 
     except Exception:
         raise credentials_exception
 
     # Buscar usuário no banco de dados
-    user = db.query(User).filter(User.id == user_id).first()
+    user = None
+    try:
+        # Tenta converter para UUID
+        user_uuid = uuid.UUID(user_id_or_email)
+        user = db.query(User).filter(User.id == user_uuid).first()
+    except (ValueError, TypeError):
+        # Não é UUID, buscar por email
+        user = db.query(User).filter(User.email == user_id_or_email).first()
 
     if user is None:
         raise credentials_exception

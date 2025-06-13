@@ -27,7 +27,7 @@ from synapse.schemas.user_variable import (
 )
 from synapse.services.variable_service import VariableService
 
-router = APIRouter(prefix="/variables", tags=["User Variables"])
+router = APIRouter(tags=["User Variables"])
 
 
 @router.get(
