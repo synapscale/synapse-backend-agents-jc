@@ -5,32 +5,43 @@ set -e
 
 echo "🚀 Iniciando SynapScale Backend no Render..."
 
-# Configurar PYTHONPATH para o Render
-export PYTHONPATH="/opt/render/project/src:$PYTHONPATH"
-
-# Mudar para o diretório src
-cd /opt/render/project/src
-
-# Verificações de debug
+# Mostrar onde estamos e o que temos
 echo "✅ Diretório atual: $(pwd)"
 echo "✅ PYTHONPATH: $PYTHONPATH"
 
 # Verificar se os arquivos essenciais existem
-if [ ! -f "synapse/main.py" ]; then
-    echo "❌ ERRO: synapse/main.py não encontrado!"
+# No Render, o projeto é copiado e estamos no diretório raiz
+if [ ! -f "src/synapse/main.py" ]; then
+    echo "❌ ERRO: src/synapse/main.py não encontrado!"
     echo "📁 Conteúdo do diretório atual:"
     ls -la
     exit 1
 fi
 
+echo "✅ Arquivo src/synapse/main.py encontrado!"
+
+# Navegar para o diretório src onde está o código
+cd src
+
+# Configurar PYTHONPATH para incluir o diretório src
+export PYTHONPATH="$(pwd):$PYTHONPATH"
+echo "✅ PYTHONPATH configurado: $PYTHONPATH"
+echo "✅ Diretório de trabalho atual: $(pwd)"
+
 # Verificar se o módulo pode ser importado
 echo "🔍 Testando importação do módulo..."
 python -c "
+import sys
+print('Python path:', sys.path)
 try:
     import synapse
     print('✅ Módulo synapse importado com sucesso')
+    from synapse.main import app
+    print('✅ Aplicação FastAPI importada com sucesso')
 except ImportError as e:
     print(f'❌ Erro na importação: {e}')
+    import traceback
+    traceback.print_exc()
     exit(1)
 "
 

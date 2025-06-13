@@ -17,7 +17,27 @@ python --version
 pip --version
 
 echo "✅ Configuração inicial concluída"
-chmod +x deployment/render/test_imports.py
-python deployment/render/test_imports.py
+
+# Testar importações com o PYTHONPATH correto
+echo "🧪 Testando importações..."
+export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
+cd src
+python -c "
+import sys
+print('PYTHONPATH durante teste:', sys.path)
+try:
+    import synapse
+    from synapse.main import app
+    from synapse.core.config_new import settings
+    from synapse.database import init_db, get_db
+    from synapse.api.v1.router import api_router
+    print('✅ Todas as importações funcionaram!')
+except ImportError as e:
+    print(f'❌ Erro de importação: {e}')
+    import traceback
+    traceback.print_exc()
+    exit(1)
+"
+cd ..
 
 echo "✅ Configuração inicial concluída"
