@@ -28,6 +28,7 @@ class UserVariable(Base):
     key = Column(String(255), nullable=False)
     value = Column(Text, nullable=False)
     is_secret = Column(Boolean, nullable=False, server_default=text("false"))
+    category = Column(String(100), nullable=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

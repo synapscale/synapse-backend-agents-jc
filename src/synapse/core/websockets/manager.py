@@ -12,7 +12,7 @@ from fastapi import Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 from synapse.core.auth.jwt import jwt_manager
 from synapse.core.llm import unified_service
 from synapse.database import get_db

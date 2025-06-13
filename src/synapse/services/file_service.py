@@ -183,6 +183,23 @@ class FileService:
         )
         return files, total
 
+    def list_files(
+        self,
+        db,
+        user_id: str,
+        skip: int = 0,
+        limit: int = 10,
+        category: Optional[str] = None,
+    ) -> Tuple[list, int]:
+        """Lista arquivos de um usuário (versão síncrona para Session)."""
+        query = db.query(File).filter(File.user_id == user_id)
+        if category:
+            query = query.filter(File.category == category)
+        total = query.count()
+        files = query.order_by(File.created_at.desc()).offset(skip).limit(limit).all()
+        logger.info(f"Listados {len(files)} arquivos para usuário {user_id} (total: {total}, skip: {skip}, limit: {limit})")
+        return files, total
+
     async def update_file(
         self,
         db: AsyncSession,

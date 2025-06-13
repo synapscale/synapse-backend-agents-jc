@@ -98,22 +98,27 @@ class Agent(Base):
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Converte agente para dicionário"""
         data = {
-            "id": self.id,
+            "id": str(self.id),
             "name": self.name,
             "description": self.description,
             "provider": self.provider,
             "model": self.model,
+            "model_name": self.model,  # Alias para compatibilidade
+            "model_provider": self.model_provider,
             "system_prompt": self.system_prompt,
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
             "status": self.status.value,
             "avatar_url": self.avatar_url,
-            "conversation_count": self.conversation_count,
-            "message_count": self.message_count,
-            "rating_average": self.rating_average,
-            "rating_count": self.rating_count,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "conversation_count": self.conversation_count or 0,
+            "message_count": self.message_count or 0,
+            "rating_average": self.rating_average or 0.0,
+            "rating_count": self.rating_count or 0,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "user_id": str(self.user_id) if self.user_id else None,
+            "workspace_id": str(self.workspace_id) if self.workspace_id else None,
+            "tools": self.tools if self.tools is not None else [],
         }
 
         if include_sensitive:
