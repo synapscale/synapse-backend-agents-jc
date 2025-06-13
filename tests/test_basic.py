@@ -106,7 +106,7 @@ def test_list_templates(client: TestClient, auth_headers):
 @pytest.mark.api
 def test_get_analytics_overview(client: TestClient, auth_headers):
     """Teste para obter overview de analytics"""
-    response = client.get("/api/v1/analytics/overview", headers=auth_headers)
+    response = client.get("/api/v1/analytics/metrics/user-behavior", headers=auth_headers)
     assert response.status_code in [200, 401]
 
 

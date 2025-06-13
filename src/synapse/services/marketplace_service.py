@@ -69,7 +69,10 @@ class MarketplaceService:
                 'total': total,
                 'page': page,
                 'limit': limit,
-                'total_pages': (total + limit - 1) // limit
+                'total_pages': (total + limit - 1) // limit,
+                'pages': (total + limit - 1) // limit,
+                'has_next': page < ((total + limit - 1) // limit),
+                'has_prev': page > 1
             }
             
         except Exception as e:
@@ -79,7 +82,10 @@ class MarketplaceService:
                 'total': 0,
                 'page': page,
                 'limit': limit,
-                'total_pages': 0
+                'total_pages': 0,
+                'pages': 0,
+                'has_next': False,
+                'has_prev': False
             }
     
     def get_component_by_id(self, component_id: str) -> Optional[MarketplaceComponent]:

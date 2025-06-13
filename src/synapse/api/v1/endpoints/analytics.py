@@ -44,7 +44,7 @@ from synapse.schemas.analytics import (
 from synapse.api.deps import get_current_user, get_admin_user
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(tags=["Analytics"])
 
 # ==================== EVENTOS ====================
 

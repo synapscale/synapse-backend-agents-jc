@@ -13,7 +13,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 from .core.database_new import (
     test_database_connection,
     get_database_info,

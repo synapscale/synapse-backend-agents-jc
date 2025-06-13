@@ -6,6 +6,7 @@ API completa para CRUD e controle de agentes inteligentes
 
 import logging
 from typing import Optional, Dict, Any
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
@@ -23,7 +24,7 @@ from synapse.schemas.agent import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/agents", tags=["Agents"])
+router = APIRouter(tags=["Agents"])
 
 
 @router.get("/", response_model=AgentListResponse, summary="Listar agentes", tags=["Agents"])
@@ -81,7 +82,7 @@ async def list_agents(
         logger.info(f"Retornados {len(agents)} agentes de {total} total para usuário {current_user.id}")
         
         return AgentListResponse(
-            items=agents,
+            items=[a.to_dict() for a in agents],
             total=total,
             page=page,
             size=size,
@@ -126,6 +127,7 @@ async def create_agent(
             personality=agent_data.personality,
             instructions=agent_data.instructions,
             model_provider=agent_data.model_provider,
+            provider=agent_data.model_provider,
             model=agent_data.model_name,
             temperature=agent_data.temperature,
             max_tokens=agent_data.max_tokens,
@@ -140,7 +142,7 @@ async def create_agent(
         db.refresh(agent)
 
         logger.info(f"Agente '{agent.name}' criado com sucesso (ID: {agent.id}) para usuário {current_user.id}")
-        return agent
+        return agent.to_dict()
     except Exception as e:
         logger.error(f"Erro ao criar agente para usuário {current_user.id}: {str(e)}")
         db.rollback()
@@ -173,6 +175,7 @@ async def get_agent(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        agent_uuid = uuid.UUID(agent_id)
         logger.info(f"Obtendo agente {agent_id} para usuário {current_user.id}")
         
         agent = (
@@ -192,9 +195,10 @@ async def get_agent(
             )
 
         logger.info(f"Agente {agent_id} obtido com sucesso para usuário {current_user.id}")
-        return agent
-    except HTTPException:
-        raise
+        return agent.to_dict()
+    except ValueError:
+        logger.warning(f"agent_id inválido: {agent_id}")
+        raise HTTPException(status_code=404, detail="Agente não encontrado")
     except Exception as e:
         logger.error(f"Erro ao obter agente {agent_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -228,6 +232,7 @@ async def update_agent(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        agent_uuid = uuid.UUID(agent_id)
         logger.info(f"Atualizando agente {agent_id} para usuário {current_user.id}")
         
         agent = (
@@ -264,9 +269,10 @@ async def update_agent(
         else:
             logger.info(f"Nenhuma alteração necessária no agente {agent_id}")
 
-        return agent
-    except HTTPException:
-        raise
+        return agent.to_dict()
+    except ValueError:
+        logger.warning(f"agent_id inválido: {agent_id}")
+        raise HTTPException(status_code=404, detail="Agente não encontrado")
     except Exception as e:
         logger.error(f"Erro ao atualizar agente {agent_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
@@ -299,6 +305,7 @@ async def delete_agent(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        agent_uuid = uuid.UUID(agent_id)
         logger.info(f"Deletando agente {agent_id} para usuário {current_user.id}")
         
         agent = (
@@ -323,8 +330,9 @@ async def delete_agent(
 
         logger.info(f"Agente '{agent_name}' (ID: {agent_id}) deletado com sucesso para usuário {current_user.id}")
         return {"message": "Agente deletado com sucesso"}
-    except HTTPException:
-        raise
+    except ValueError:
+        logger.warning(f"agent_id inválido: {agent_id}")
+        raise HTTPException(status_code=404, detail="Agente não encontrado")
     except Exception as e:
         logger.error(f"Erro ao deletar agente {agent_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
@@ -358,6 +366,7 @@ async def activate_agent(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        agent_uuid = uuid.UUID(agent_id)
         logger.info(f"Ativando agente {agent_id} para usuário {current_user.id}")
         
         agent = (
@@ -388,8 +397,9 @@ async def activate_agent(
 
         logger.info(f"Agente '{agent.name}' (ID: {agent_id}) ativado com sucesso")
         return {"message": "Agente ativado com sucesso"}
-    except HTTPException:
-        raise
+    except ValueError:
+        logger.warning(f"agent_id inválido: {agent_id}")
+        raise HTTPException(status_code=404, detail="Agente não encontrado")
     except Exception as e:
         logger.error(f"Erro ao ativar agente {agent_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
@@ -423,6 +433,7 @@ async def deactivate_agent(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        agent_uuid = uuid.UUID(agent_id)
         logger.info(f"Desativando agente {agent_id} para usuário {current_user.id}")
         
         agent = (
@@ -453,8 +464,9 @@ async def deactivate_agent(
 
         logger.info(f"Agente '{agent.name}' (ID: {agent_id}) desativado com sucesso")
         return {"message": "Agente desativado com sucesso"}
-    except HTTPException:
-        raise
+    except ValueError:
+        logger.warning(f"agent_id inválido: {agent_id}")
+        raise HTTPException(status_code=404, detail="Agente não encontrado")
     except Exception as e:
         logger.error(f"Erro ao desativar agente {agent_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
@@ -487,6 +499,7 @@ async def get_agent_stats(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        agent_uuid = uuid.UUID(agent_id)
         logger.info(f"Obtendo estatísticas do agente {agent_id} para usuário {current_user.id}")
         
         agent = (
@@ -520,8 +533,9 @@ async def get_agent_stats(
 
         logger.info(f"Estatísticas obtidas para agente {agent_id} - {stats['conversation_count']} conversas, {stats['message_count']} mensagens")
         return stats
-    except HTTPException:
-        raise
+    except ValueError:
+        logger.warning(f"agent_id inválido: {agent_id}")
+        raise HTTPException(status_code=404, detail="Agente não encontrado")
     except Exception as e:
         logger.error(f"Erro ao obter estatísticas do agente {agent_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -553,6 +567,7 @@ async def duplicate_agent(
         HTTPException: 500 se erro interno do servidor
     """
     try:
+        agent_uuid = uuid.UUID(agent_id)
         logger.info(f"Duplicando agente {agent_id} para usuário {current_user.id}")
         
         original = (
@@ -595,9 +610,10 @@ async def duplicate_agent(
         db.refresh(duplicate)
 
         logger.info(f"Agente '{original.name}' duplicado com sucesso (ID: {duplicate.id}) - nome: '{duplicate_name}'")
-        return duplicate
-    except HTTPException:
-        raise
+        return duplicate.to_dict()
+    except ValueError:
+        logger.warning(f"agent_id inválido: {agent_id}")
+        raise HTTPException(status_code=404, detail="Agente não encontrado")
     except Exception as e:
         logger.error(f"Erro ao duplicar agente {agent_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()

@@ -6,6 +6,7 @@ API completa para CRUD e execução de workflows
 
 import logging
 from typing import Optional, Dict, Any, List
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -30,7 +31,7 @@ from synapse.schemas.workflow_execution import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/workflows", tags=["Workflows"])
+router = APIRouter(tags=["Workflows"])
 
 
 @router.get("/", response_model=WorkflowListResponse, summary="Listar workflows", tags=["Workflows"])
@@ -97,7 +98,7 @@ async def list_workflows(
         logger.info(f"Retornados {len(workflows)} workflows de {total} total para usuário {current_user.id}")
         
         return WorkflowListResponse(
-            items=workflows,
+            items=[w.to_dict() for w in workflows],
             total=total,
             page=page,
             size=size,
@@ -142,7 +143,7 @@ async def create_workflow(
         db.refresh(workflow)
 
         logger.info(f"Workflow '{workflow.name}' criado com sucesso (ID: {workflow.id}) para usuário {current_user.id}")
-        return workflow
+        return workflow.to_dict()
     except Exception as e:
         logger.error(f"Erro ao criar workflow para usuário {current_user.id}: {str(e)}")
         db.rollback()
@@ -177,7 +178,12 @@ async def get_workflow(
     try:
         logger.info(f"Obtendo workflow {workflow_id} para usuário {current_user.id}")
         
-        workflow = db.query(Workflow).filter(Workflow.id == workflow_id).first()
+        try:
+            workflow_uuid = uuid.UUID(workflow_id)
+        except (ValueError, TypeError):
+            logger.warning(f"workflow_id inválido: {workflow_id}")
+            raise HTTPException(status_code=404, detail="Workflow não encontrado")
+        workflow = db.query(Workflow).filter(Workflow.id == workflow_uuid).first()
 
         if not workflow:
             logger.warning(f"Workflow {workflow_id} não encontrado")
@@ -195,7 +201,7 @@ async def get_workflow(
             )
 
         logger.info(f"Workflow {workflow_id} obtido com sucesso para usuário {current_user.id}")
-        return workflow
+        return workflow.to_dict()
     except HTTPException:
         raise
     except Exception as e:
@@ -233,9 +239,14 @@ async def update_workflow(
     try:
         logger.info(f"Atualizando workflow {workflow_id} para usuário {current_user.id}")
         
+        try:
+            workflow_uuid = uuid.UUID(workflow_id)
+        except (ValueError, TypeError):
+            logger.warning(f"workflow_id inválido: {workflow_id}")
+            raise HTTPException(status_code=404, detail="Workflow não encontrado")
         workflow = (
             db.query(Workflow)
-            .filter(Workflow.id == workflow_id, Workflow.user_id == current_user.id)
+            .filter(Workflow.id == workflow_uuid, Workflow.user_id == current_user.id)
             .first()
         )
 
@@ -260,7 +271,7 @@ async def update_workflow(
         else:
             logger.info(f"Nenhuma alteração necessária no workflow {workflow_id}")
 
-        return workflow
+        return workflow.to_dict()
     except HTTPException:
         raise
     except Exception as e:
@@ -297,9 +308,14 @@ async def delete_workflow(
     try:
         logger.info(f"Deletando workflow {workflow_id} para usuário {current_user.id}")
         
+        try:
+            workflow_uuid = uuid.UUID(workflow_id)
+        except (ValueError, TypeError):
+            logger.warning(f"workflow_id inválido: {workflow_id}")
+            raise HTTPException(status_code=404, detail="Workflow não encontrado")
         workflow = (
             db.query(Workflow)
-            .filter(Workflow.id == workflow_id, Workflow.user_id == current_user.id)
+            .filter(Workflow.id == workflow_uuid, Workflow.user_id == current_user.id)
             .first()
         )
 
@@ -354,7 +370,12 @@ async def execute_workflow(
     try:
         logger.info(f"Executando workflow {workflow_id} para usuário {current_user.id}")
         
-        workflow = db.query(Workflow).filter(Workflow.id == workflow_id).first()
+        try:
+            workflow_uuid = uuid.UUID(workflow_id)
+        except (ValueError, TypeError):
+            logger.warning(f"workflow_id inválido: {workflow_id}")
+            raise HTTPException(status_code=404, detail="Workflow não encontrado")
+        workflow = db.query(Workflow).filter(Workflow.id == workflow_uuid).first()
 
         if not workflow:
             logger.warning(f"Workflow {workflow_id} não encontrado")
@@ -438,7 +459,12 @@ async def list_workflow_executions(
         logger.info(f"Listando execuções do workflow {workflow_id} para usuário {current_user.id}")
         
         # Verificar se o workflow existe e se o usuário tem permissão
-        workflow = db.query(Workflow).filter(Workflow.id == workflow_id).first()
+        try:
+            workflow_uuid = uuid.UUID(workflow_id)
+        except (ValueError, TypeError):
+            logger.warning(f"workflow_id inválido: {workflow_id}")
+            raise HTTPException(status_code=404, detail="Workflow não encontrado")
+        workflow = db.query(Workflow).filter(Workflow.id == workflow_uuid).first()
         
         if not workflow:
             logger.warning(f"Workflow {workflow_id} não encontrado")
@@ -456,7 +482,7 @@ async def list_workflow_executions(
 
         # Buscar execuções
         query = db.query(WorkflowExecution).filter(
-            WorkflowExecution.workflow_id == workflow_id
+            WorkflowExecution.workflow_id == workflow_uuid
         ).order_by(WorkflowExecution.created_at.desc())
 
         total = query.count()
@@ -507,7 +533,12 @@ async def duplicate_workflow(
         logger.info(f"Duplicando workflow {workflow_id} para usuário {current_user.id}")
         
         # Buscar workflow original
-        original_workflow = db.query(Workflow).filter(Workflow.id == workflow_id).first()
+        try:
+            workflow_uuid = uuid.UUID(workflow_id)
+        except (ValueError, TypeError):
+            logger.warning(f"workflow_id inválido: {workflow_id}")
+            raise HTTPException(status_code=404, detail="Workflow não encontrado")
+        original_workflow = db.query(Workflow).filter(Workflow.id == workflow_uuid).first()
         
         if not original_workflow:
             logger.warning(f"Workflow {workflow_id} não encontrado para duplicação")
@@ -541,7 +572,7 @@ async def duplicate_workflow(
         db.refresh(duplicate_workflow)
 
         logger.info(f"Workflow '{original_workflow.name}' duplicado com sucesso (novo ID: {duplicate_workflow.id}) para usuário {current_user.id}")
-        return duplicate_workflow
+        return duplicate_workflow.to_dict()
     except HTTPException:
         raise
     except Exception as e:

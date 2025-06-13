@@ -20,7 +20,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from synapse.core.config.constants import FILE_CATEGORIES
 from synapse.api.deps import get_current_user
@@ -36,14 +36,14 @@ from synapse.services.file_service import FileService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/files", tags=["Files"])
+router = APIRouter(tags=["Files"])
 
 
 @router.post("/upload", response_model=FileUploadResponse, summary="Upload de arquivo", tags=["Files"])
 async def upload_file(
     category: str = Form(..., description="Categoria do arquivo"),
     file: UploadFile = File(..., description="Arquivo a ser enviado"),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     _rate_limit=Depends(rate_limit),
 ) -> FileUploadResponse:
@@ -135,7 +135,7 @@ async def upload_file(
                     detail="Arquivo muito grande. Máximo permitido: 100MB",
                 )
 
-        file_service = FileService(db)
+        file_service = FileService()
         result = await file_service.upload_file(file, category, current_user.id)
         
         logger.info(f"Upload concluído com sucesso - arquivo ID: {result.id}, usuário: {current_user.id}")
@@ -152,7 +152,7 @@ async def list_files(
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(10, ge=1, le=100, description="Itens por página"),
     category: Optional[str] = Query(None, description="Filtrar por categoria"),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> FileListResponse:
     """
@@ -221,11 +221,12 @@ async def list_files(
                 detail=f"Categoria inválida. Categorias válidas: {', '.join(FILE_CATEGORIES)}",
             )
 
-        file_service = FileService(db)
-        result = await file_service.list_user_files(current_user.id, page, size, category)
+        file_service = FileService()
+        files, total = file_service.list_files(db, current_user.id, skip=(page-1)*size, limit=size, category=category)
+        pages = (total + size - 1) // size if size else 1
         
-        logger.info(f"Retornados {len(result.items)} arquivos de {result.total} total para usuário {current_user.id}")
-        return result
+        logger.info(f"Retornados {len(files)} arquivos de {total} total para usuário {current_user.id}")
+        return FileListResponse(items=files, total=total, page=page, size=size, pages=pages)
     except HTTPException:
         raise
     except Exception as e:
@@ -236,7 +237,7 @@ async def list_files(
 @router.get("/{file_id}", response_model=FileResponse, summary="Obter arquivo", tags=["Files"])
 async def get_file(
     file_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> FileResponse:
     """
@@ -297,7 +298,7 @@ async def get_file(
     try:
         logger.info(f"Obtendo arquivo {file_id} para usuário {current_user.id}")
         
-        file_service = FileService(db)
+        file_service = FileService()
         result = await file_service.get_file(file_id, current_user.id)
         
         logger.info(f"Arquivo {file_id} obtido com sucesso para usuário {current_user.id}")
@@ -312,7 +313,7 @@ async def get_file(
 @router.get("/{file_id}/download", response_model=FileDownloadResponse, summary="Download de arquivo", tags=["Files", "Download"])
 async def download_file(
     file_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> FileDownloadResponse:
     """
@@ -373,7 +374,7 @@ async def download_file(
     try:
         logger.info(f"Gerando link de download para arquivo {file_id} - usuário {current_user.id}")
         
-        file_service = FileService(db)
+        file_service = FileService()
         result = await file_service.download_file(file_id, current_user.id)
         
         logger.info(f"Link de download gerado para arquivo {file_id} - usuário {current_user.id}")
@@ -388,7 +389,7 @@ async def download_file(
 @router.delete("/{file_id}", summary="Deletar arquivo", tags=["Files"])
 async def delete_file(
     file_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ) -> Dict[str, str]:
     """
@@ -442,7 +443,7 @@ async def delete_file(
     try:
         logger.info(f"Deletando arquivo {file_id} para usuário {current_user.id}")
         
-        file_service = FileService(db)
+        file_service = FileService()
         await file_service.delete_file(file_id, current_user.id)
         
         logger.info(f"Arquivo {file_id} deletado com sucesso para usuário {current_user.id}")

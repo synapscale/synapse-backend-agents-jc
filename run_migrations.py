@@ -11,7 +11,7 @@ from pathlib import Path
 # Adicionar src ao PYTHONPATH
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 
 def execute_sql_from_migration(migration_file):
     """Extrai e executa SQL de um arquivo de migração."""

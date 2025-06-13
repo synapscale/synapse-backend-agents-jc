@@ -35,7 +35,7 @@ from synapse.api.deps import get_current_user, get_admin_user
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
+router = APIRouter(tags=["Marketplace"])
 
 # ==================== COMPONENTES ====================
 
@@ -89,8 +89,8 @@ async def search_components(
         )
 
         service = MarketplaceService(db)
-        result = service.search_components(search_params)
-        logger.info(f"Busca concluída - {len(result.items)} componentes encontrados")
+        result = service.search_components(search_params.dict())
+        logger.info(f"Busca concluída - {len(result['components'])} componentes encontrados")
         return result
     except Exception as e:
         logger.error(f"Erro na busca de componentes: {str(e)}")

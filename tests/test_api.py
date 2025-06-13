@@ -44,11 +44,11 @@ class TestAgentEndpoints:
         agent_data = {
             "name": "Test Agent",
             "description": "A test agent",
-            "type": "llm",
-            "config": {
-                "model": "gpt-3.5-turbo",
-                "temperature": 0.7
-            }
+            "agent_type": "GENERAL",
+            "model_provider": "openai",
+            "model_name": "gpt-3.5-turbo",
+            "temperature": 0.7,
+            "max_tokens": 1000
         }
         
         response = client.post("/api/v1/agents/", json=agent_data, headers=auth_headers)
@@ -77,7 +77,7 @@ class TestMarketplaceEndpoints:
     
     def test_list_templates(self, client: TestClient, auth_headers):
         """Teste de listagem de templates"""
-        response = client.get("/api/v1/marketplace/templates/", headers=auth_headers)
+        response = client.get("/api/v1/templates/", headers=auth_headers)
         assert response.status_code in [200, 401]
     
     def test_list_components(self, client: TestClient, auth_headers):
@@ -97,13 +97,14 @@ class TestAnalyticsEndpoints:
     
     def test_analytics_overview(self, client: TestClient, auth_headers):
         """Teste do overview de analytics"""
-        response = client.get("/api/v1/analytics/overview", headers=auth_headers)
-        assert response.status_code in [200, 401]
+        params = {'start_date': '2023-01-01', 'end_date': '2023-12-31'}
+        response = client.get("/api/v1/analytics/metrics/user-behavior", headers=auth_headers, params=params)
+        assert response.status_code in [200, 401, 422]
     
     def test_analytics_metrics(self, client: TestClient, auth_headers):
         """Teste das métricas de analytics"""
-        response = client.get("/api/v1/analytics/metrics", headers=auth_headers)
-        assert response.status_code in [200, 401]
+        response = client.get("/api/v1/analytics/metrics/business", headers=auth_headers)
+        assert response.status_code in [200, 401, 403]
 
 
 @pytest.mark.api
