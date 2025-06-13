@@ -4,8 +4,13 @@ Script para verificar os relacionamentos entre tabelas no schema synapscale_db
 """
 
 import psycopg2
+import os
+from dotenv import load_dotenv
 
-DATABASE_URL = "postgresql://doadmin:AVNS_DDsc3wHcfGgbX_USTUt@db-banco-dados-automacoes-do-user-13851907-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require"
+# Carrega variáveis do .env
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 try:
     conn = psycopg2.connect(DATABASE_URL)

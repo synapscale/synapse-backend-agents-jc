@@ -6,10 +6,11 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
       chmod +x deployment/render/setup_render.sh
+      chmod +x deployment/render/start_render.sh
       ./deployment/render/setup_render.sh
-    startCommand: ./start_production.sh
+    startCommand: ./deployment/render/start_render.sh
     healthCheckPath: /health
-    plan: free
+    plan: starter
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -37,3 +38,7 @@ services:
         value: "30"
       - key: JWT_REFRESH_TOKEN_EXPIRE_DAYS
         value: "7"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
