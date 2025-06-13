@@ -9,7 +9,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 from synapse.database import get_db
 from synapse.models.user import User
 from synapse.core.auth.jwt import verify_token

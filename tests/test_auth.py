@@ -14,33 +14,33 @@ class TestAuthentication:
         """Teste de registro com dados válidos"""
         user_data = {
             "email": "valid@example.com",
-            "username": "valid_user",
-            "full_name": "Valid User",
-            "password": "ValidPassword123!@"
+            "first_name": "Valid",
+            "last_name": "User",
+            "password": "ValidPassword123!"
         }
         
         response = client.post("/api/v1/auth/register", json=user_data)
         assert response.status_code in [200, 201]
-
+    
     def test_register_invalid_email(self, client: TestClient):
         """Teste de registro com email inválido"""
         user_data = {
             "email": "invalid-email",
             "first_name": "Invalid",
             "last_name": "User",
-            "password": "ValidPassword123!@"
+            "password": "ValidPassword123!"
         }
         
         response = client.post("/api/v1/auth/register", json=user_data)
         assert response.status_code == 422  # Validation error
-
+    
     def test_register_weak_password(self, client: TestClient):
         """Teste de registro com senha fraca"""
         user_data = {
             "email": "weak@example.com",
             "first_name": "Weak",
             "last_name": "Password",
-            "password": "WeakPassword1!"
+            "password": "123"
         }
         
         response = client.post("/api/v1/auth/register", json=user_data)

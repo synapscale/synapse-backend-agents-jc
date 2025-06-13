@@ -6,7 +6,6 @@ from pydantic import BaseModel, EmailStr, validator, Field
 from typing import Optional, List
 from datetime import datetime
 import re
-from uuid import UUID
 
 
 class UserBase(BaseModel):
@@ -82,12 +81,6 @@ class UserResponse(BaseModel):
     role: str
     created_at: datetime | None
     updated_at: datetime | None
-
-    @validator("id", pre=True)
-    def convert_uuid_to_str(cls, value):
-        if isinstance(value, UUID):
-            return str(value)
-        return value
 
     model_config = {"from_attributes": True}
 

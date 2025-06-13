@@ -16,7 +16,7 @@ from pydantic import BaseModel
 import logging
 
 # Importar configurações centralizadas
-from synapse.core.config import settings
+from synapse.core.config_new import settings
 
 logger = logging.getLogger(__name__)
 
