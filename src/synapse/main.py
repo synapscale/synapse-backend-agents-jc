@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
             raise Exception(f"Configurações inválidas: {config_errors}")
         
         # Criar diretórios necessários usando configurações centralizadas
-        upload_dir = settings.UPLOAD_DIR
+        upload_dir = settings.UPLOAD_FOLDER
         os.makedirs(upload_dir, exist_ok=True)
         logger.info(f'📁 Diretório de uploads criado: {upload_dir}')
         
@@ -154,8 +154,8 @@ app = FastAPI(
     todas as duplicações e melhora a manutenibilidade.
     ''',
     version=settings.VERSION,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None,
+    redoc_url=None,
     lifespan=lifespan,
     contact={'name': 'SynapScale Team', 'email': 'support@synapscale.com'},
     license_info={'name': 'MIT'}
@@ -349,8 +349,8 @@ async def root():
         "description": "API de Automação e IA - Versão Otimizada com Configuração Centralizada",
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
-        "docs": "/docs",
-        "redoc": "/redoc",
+        "docs": None,
+        "redoc": None,
         "health": "/health",
         "api_prefix": settings.API_V1_STR,
         "features": {
