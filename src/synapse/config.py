@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     
     # Banco de dados PostgreSQL
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://username:password@localhost:5432/synapscale_db")
+    DATABASE_SCHEMA: str = os.getenv("DATABASE_SCHEMA", "synapscale_db")
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 30
     DATABASE_ECHO: bool = False

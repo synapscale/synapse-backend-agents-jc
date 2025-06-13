@@ -3,7 +3,7 @@ from pydantic import Field
 from typing import List, Optional
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    DATABASE_URL: str = Field(default="postgresql://localhost/defaultdb")
     DATABASE_SCHEMA: str = Field(default="public")
     DATABASE_POOL_SIZE: int = Field(default=20)
     DATABASE_MAX_OVERFLOW: int = Field(default=30)
@@ -27,12 +27,26 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = Field(default="Synapse")
     # Logging
     LOG_LEVEL: str = Field(default="INFO")
-    LOG_FORMAT: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    LOG_FORMAT: str = Field(
+        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     # Projeto
     PROJECT_NAME: str = Field(default="Synapse Backend")
     VERSION: str = Field(default="1.0.0")
     # CORS
-    BACKEND_CORS_ORIGINS: list = Field(default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"])
+    BACKEND_CORS_ORIGINS: str = Field(
+        default="http://localhost:3000,http://127.0.0.1:3000"
+    )
+    
+    @property
+    def cors_origins(self) -> List[str]:
+        """Converte BACKEND_CORS_ORIGINS em lista."""
+        if isinstance(self.BACKEND_CORS_ORIGINS, str):
+            return [
+                origin.strip()
+                for origin in self.BACKEND_CORS_ORIGINS.split(",")
+            ]
+        return []
     # Uploads
     UPLOAD_FOLDER: str = Field(default="uploads/")
     # Adicione outros campos conforme necessário para o projeto
@@ -46,4 +60,5 @@ class Settings(BaseSettings):
         case_sensitive = True
         extra = "ignore"  # Ignorar campos extras do .env
 
-settings = Settings() 
+
+settings = Settings()
