@@ -12,9 +12,9 @@ from collections.abc import Callable
 from datetime import datetime
 from jsonpath_ng import parse as jsonpath_parse
 
-from synapse.core.executors.base import BaseExecutor, ExecutorType, ExecutionContext
-from synapse.models.workflow_execution import NodeExecution
-from synapse.models.node import Node
+from src.synapse.core.executors.base import BaseExecutor, ExecutorType, ExecutionContext
+from src.synapse.models.workflow_execution import NodeExecution
+from src.synapse.models.node import Node
 
 
 class TransformType:
