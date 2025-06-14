@@ -15,7 +15,7 @@ from enum import Enum
 
 from synapse.api.deps import get_current_user
 from synapse.core.llm import unified_service
-from synapse.logging import get_logger
+from synapse.logger_config import get_logger
 from synapse.api.v1.endpoints.llm.schemas import (
     GenerateTextResponse,
     CountTokensResponse,

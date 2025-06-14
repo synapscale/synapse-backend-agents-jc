@@ -28,13 +28,13 @@ export PYTHONPATH="$(pwd):$PYTHONPATH"
 echo "✅ PYTHONPATH configurado: $PYTHONPATH"
 echo "✅ Diretório de trabalho atual: $(pwd)"
 
-# Definir valor padrão para BACKEND_CORS_ORIGINS
-export BACKEND_CORS_ORIGINS='["http://localhost:3000", "http://127.0.0.1:3000"]'
-echo "✅ BACKEND_CORS_ORIGINS configurado: $BACKEND_CORS_ORIGINS"
+# Definir valor padrão para BACKEND_CORS_ORIGINS apenas se não estiver definido
+export BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS:-'["http://localhost:3000", "http://127.0.0.1:3000"]'}
+echo "✅ BACKEND_CORS_ORIGINS configurado para: $BACKEND_CORS_ORIGINS"
 
-# Definir valor padrão para ALLOWED_EXTENSIONS
-export ALLOWED_EXTENSIONS='[".txt", ".pdf", ".doc", ".docx", ".csv", ".json", ".xml"]'
-echo "✅ ALLOWED_EXTENSIONS configurado: $ALLOWED_EXTENSIONS"
+# Definir valor padrão para ALLOWED_EXTENSIONS apenas se não estiver definido
+export ALLOWED_EXTENSIONS=${ALLOWED_EXTENSIONS:-'["http://localhost:3000", "http://127.0.0.1:3000"]'}
+echo "✅ ALLOWED_EXTENSIONS configurado para: $ALLOWED_EXTENSIONS"
 
 # Verificar se o módulo pode ser importado
 echo "🔍 Testando importação do módulo..."
