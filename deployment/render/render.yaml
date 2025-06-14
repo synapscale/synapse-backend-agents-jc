@@ -3,9 +3,11 @@ services:
     name: synapse-backend-agents
     runtime: python
     buildCommand: |
-      chmod +x deployment/render/build.sh
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      chmod +x deployment/render/setup_render.sh
       chmod +x deployment/render/start_render.sh
-      ./deployment/render/build.sh
+      ./deployment/render/setup_render.sh
     startCommand: ./deployment/render/start_render.sh
     healthCheckPath: /health
     plan: starter
@@ -40,5 +42,3 @@ services:
         generateValue: true
       - key: JWT_SECRET_KEY
         generateValue: true
-      - key: PYTHONPATH
-        value: /opt/render/project/src/src

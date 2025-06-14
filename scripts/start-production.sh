@@ -60,9 +60,7 @@ else:
 # Testar conexão com banco
 echo "🗄️ Testando conexão com banco..."
 python3 -c "
-import sys
-sys.path.append('/opt/render/project/src/src')
-from synapse.database import health_check
+from src.synapse.database import health_check
 import asyncio
 
 async def test_db():
