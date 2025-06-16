@@ -127,9 +127,9 @@ class ComponentUpdate(BaseModel):
 
 
 class ComponentResponse(ComponentBase):
-    id: int
+    id: str
     slug: str
-    author_id: int
+    author_id: str
     author_name: str
     status: ComponentStatus
     download_count: int = 0
@@ -197,9 +197,9 @@ class RatingCreate(RatingBase):
 
 
 class RatingResponse(RatingBase):
-    id: int
-    component_id: int
-    user_id: int
+    id: str
+    component_id: str
+    user_id: str
     user_name: str
     is_verified_purchase: bool = False
     helpful_count: int = 0
@@ -244,9 +244,9 @@ class PurchaseCreate(BaseModel):
 
 
 class PurchaseResponse(BaseModel):
-    id: int
-    component_id: int
-    user_id: int
+    id: str
+    component_id: str
+    user_id: str
     amount: float
     currency: str
     payment_method: str

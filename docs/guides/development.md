@@ -8,9 +8,9 @@ Este guia fornece instruções detalhadas para desenvolvedores que desejam contr
 
 ### Pré-requisitos
 
-- Python 3.11 ou superior
-- Poetry (gerenciador de dependências)
-- SQLite (para desenvolvimento local)
+- Python 3.11 (exclusivamente)
+- PostgreSQL 13+
+- Redis 6+ (opcional)
 
 ### Instalação
 
@@ -20,27 +20,31 @@ git clone https://github.com/synapscale/synapse-backend-agents-jc.git
 cd synapse-backend-agents-jc
 ```
 
-2. Instale as dependências com Poetry:
+2. Instale as dependências:
 ```bash
-poetry install
+rm -rf venv .venv env ENV
+python3.11 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install torch
+pip install -r requirements.txt
 ```
 
 3. Configure as variáveis de ambiente:
 ```bash
 cp .env.example .env
+# Edite o .env conforme necessário
 ```
 
-4. Edite o arquivo `.env` conforme necessário para seu ambiente local.
-
-5. Execute as migrações do banco de dados:
+4. (Opcional) Rode migrações manualmente:
 ```bash
-poetry run alembic upgrade head
+alembic upgrade head
 ```
 
 ### Executando o Servidor de Desenvolvimento
 
 ```bash
-poetry run uvicorn src.synapse.main:app --reload
+./dev.sh
 ```
 
 O servidor estará disponível em `http://localhost:8000`.
@@ -71,7 +75,7 @@ synapse-backend/
 ├── utils/                    # Scripts utilitários
 ├── .env.example              # Exemplo de variáveis de ambiente
 ├── pyproject.toml            # Configuração do Poetry
-└── README.md                 # Documentação principal
+└── README.md (principal)     # Documentação principal do projeto
 ```
 
 ## Padrões de Desenvolvimento

@@ -411,3 +411,51 @@ python generate_test_token.py
 ### 🏁 **PROJETO CONCLUÍDO COM EXCELÊNCIA!**
 
 O backend SynapScale foi totalmente corrigido, documentado e está pronto para uso em desenvolvimento. Todas as funcionalidades principais estão operacionais e o código está limpo e bem organizado.
+
+## ⚠️ Requisitos Obrigatórios
+
+- **Python 3.11** (exclusivamente)
+- PostgreSQL 13+
+- Redis 6+ (opcional)
+
+## Instalação e Execução
+
+```bash
+# 1. Remova ambientes virtuais antigos, se existirem
+rm -rf venv .venv env ENV
+
+# 2. Crie o ambiente virtual com Python 3.11
+python3.11 -m venv venv
+source venv/bin/activate
+
+# 3. Atualize o pip
+pip install --upgrade pip
+
+# 4. Instale o torch antes das demais dependências
+pip install torch
+
+# 5. Instale as dependências do projeto
+pip install -r requirements.txt
+
+# 6. Configure o arquivo .env (obrigatório)
+cp .env.example .env
+# Edite o .env conforme necessário
+
+# 7. Inicie o servidor no modo desejado
+./dev.sh    # Desenvolvimento (com reload automático)
+# ou
+./prod.sh   # Produção (otimizado)
+```
+
+> **Atenção:** Sempre ative o ambiente virtual com `source venv/bin/activate` antes de rodar scripts ou comandos Python.
+
+---
+
+## Migrações de Banco de Dados
+
+- As migrações **não são mais executadas automaticamente** ao iniciar o backend.
+- Se precisar rodar migrações, use manualmente:
+  ```bash
+  alembic upgrade head
+  ```
+- Consulte `docs/database/alembic_guide.md` para detalhes.

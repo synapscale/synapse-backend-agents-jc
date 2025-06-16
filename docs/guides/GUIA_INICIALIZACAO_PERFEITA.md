@@ -1,48 +1,43 @@
-# 🚀 GUIA DE INICIALIZAÇÃO AUTOMÁTICA DO SYNAPSCALE BACKEND
+# 🚀 GUIA DE INICIALIZAÇÃO DO SYNAPSCALE BACKEND
 
-## ✨ FLUXO PERFEITO EM 2 PASSOS
+# 🚨 NOTA IMPORTANTE
+> Scripts antigos como `auto_setup.sh`, `start_dev_auto.sh`, etc. não são mais utilizados. Use apenas `dev.sh`, `prod.sh` e `setup.sh` (se existir).
 
-### 📋 PASSO 1: CONFIGURAÇÃO INICIAL (APENAS UMA VEZ)
+## FLUXO PADRÃO EM 2 PASSOS
 
-1. **Execute o setup automático:**
-   ```bash
-   ./auto_setup.sh
-   ```
-   
-   Este script faz TUDO automaticamente:
-   - ✅ Cria ambiente virtual
-   - ✅ Instala todas as dependências
-   - ✅ Cria arquivo `.env` com template
-   - ✅ Gera chaves de segurança automaticamente
-   - ✅ Configura banco de dados
-   - ✅ Cria diretórios necessários
-   - ✅ Propaga variáveis para todos os arquivos
-   - ✅ Cria scripts de inicialização otimizados
-
-2. **Configure apenas as variáveis obrigatórias no `.env`:**
-   ```bash
-   # Edite apenas estas linhas no .env:
-   DATABASE_URL=postgresql://user:password@host:port/database
-   
-   # Opcionais (para funcionalidades específicas):
-   SMTP_USER=seu-email@gmail.com
-   SMTP_PASSWORD=sua-senha-app
-   OPENAI_API_KEY=sua-chave-openai
-   ```
-
-### 🚀 PASSO 2: INICIALIZAÇÃO (SEMPRE)
-
-Após configurar o `.env`, escolha o modo:
-
-**Desenvolvimento:**
+### 1️⃣ Setup Inicial
 ```bash
-./start_dev_auto.sh
+rm -rf venv .venv env ENV
+python3.11 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install torch
+pip install -r requirements.txt
+cp .env.example .env
+# Edite o .env conforme necessário
 ```
 
-**Produção:**
-```bash
-./start_prod_auto.sh
-```
+### 2️⃣ Inicialização
+- **Desenvolvimento:**
+  ```bash
+  ./dev.sh
+  ```
+- **Produção:**
+  ```bash
+  ./prod.sh
+  ```
+
+### 3️⃣ Migrações de Banco de Dados
+- Migrações **não são mais automáticas**. Rode manualmente se necessário:
+  ```bash
+  alembic upgrade head
+  ```
+
+---
+
+- Use **apenas Python 3.11**.
+- Não utilize scripts antigos como `auto_setup.sh`, `start_dev_auto.sh`, etc.
+- O único arquivo de configuração é o `.env`.
 
 ## 🎯 O QUE ACONTECE AUTOMATICAMENTE
 

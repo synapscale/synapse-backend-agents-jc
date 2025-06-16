@@ -39,12 +39,13 @@ git clone https://github.com/synapscale/synapse-backend-agents-jc.git
 cd synapse-backend-agents-jc
 
 # Crie ambiente virtual
-python3 -m venv venv
+python3.11 -m venv venv
 source venv/bin/activate  # Linux/Mac
 # ou venv\Scripts\activate  # Windows
 
 # Atualize pip e instale dependências
 pip install --upgrade pip
+pip install torch
 pip install -r requirements.txt
 ```
 
@@ -74,7 +75,7 @@ psql -c "CREATE DATABASE synapscale_db;"
 
 ```bash
 # Inicie o servidor
-python -m uvicorn src.synapse.main:app --reload --host 0.0.0.0 --port 8000
+./dev.sh
 
 # Ou use o script helper
 ./start_dev.sh
@@ -245,7 +246,7 @@ git clone https://github.com/synapscale/synapse-backend-agents-jc.git
 cd synapse-backend-agents-jc
 
 # Crie ambiente virtual
-python3 -m venv venv
+python3.11 -m venv venv
 
 # Ative o ambiente
 source venv/bin/activate  # Linux/Mac
@@ -364,7 +365,7 @@ psql postgresql://synapscale:sua_senha@localhost:5432/synapscale_db
 
 ```bash
 # Servidor com reload automático
-python -m uvicorn src.synapse.main:app --reload --host 0.0.0.0 --port 8000
+./dev.sh
 
 # Ou use o script helper
 chmod +x start_dev.sh
@@ -481,7 +482,7 @@ git clone --recursive https://github.com/synapscale/synapse-backend-agents-jc.gi
 cd synapse-backend-agents-jc
 
 # Configure ambiente de desenvolvimento
-python3 -m venv venv
+python3.11 -m venv venv
 source venv/bin/activate
 
 # Instale dependências de desenvolvimento
@@ -665,7 +666,8 @@ python view_env_clear.py
 
 Após a instalação bem-sucedida:
 
-1. 📖 **Leia a documentação**: [docs/](./README.md)
+1. 📖 **Leia a documentação principal**: [README.md](../README.md)
+- 📚 [Documentação completa](../README.md)
 2. ⚙️ **Configure integrações**: [CONFIGURATION.md](./CONFIGURATION.md)
 3. 🔒 **Configure segurança**: [SECURITY.md](./SECURITY.md)
 4. 🚀 **Deploy produção**: [DEPLOYMENT.md](./DEPLOYMENT.md)
@@ -678,4 +680,22 @@ Após a instalação bem-sucedida:
 Para suporte, consulte:
 - 📚 [Documentação completa](./README.md)
 - 🐛 [Issues no GitHub](https://github.com/synapscale/synapse-backend-agents-jc/issues)
-- 💬 [Discussões](https://github.com/synapscale/synapse-backend-agents-jc/discussions) 
+- 💬 [Discussões](https://github.com/synapscale/synapse-backend-agents-jc/discussions)
+
+## ❌ Não use outras versões de Python
+- O projeto não funcionará corretamente com Python 3.12, 3.13 ou superior.
+- Não utilize múltiplos ambientes virtuais. Use sempre o `venv` criado com Python 3.11.
+
+## 📚 Documentação da API
+
+- A documentação Swagger (OpenAPI) está disponível em `/docs` **apenas quando `DEBUG=true` no arquivo `.env`**.
+- Para produção, defina `DEBUG=false` e a documentação ficará oculta por segurança.
+
+## 🗄️ Migrações de Banco de Dados
+
+- As migrações **não são mais executadas automaticamente** ao iniciar o backend.
+- Se precisar rodar migrações, use manualmente:
+  ```bash
+  alembic upgrade head
+  ```
+- Consulte `docs/database/alembic_guide.md` para detalhes. 

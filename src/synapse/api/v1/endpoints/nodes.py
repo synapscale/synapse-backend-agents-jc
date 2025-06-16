@@ -23,10 +23,15 @@ from synapse.schemas.node import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Nodes"])
+router = APIRouter()
 
 
-@router.get("/", response_model=NodeListResponse, summary="Listar nodes", tags=["Nodes"])
+@router.get(
+    "/",
+    response_model=NodeListResponse,
+    summary="Listar nodes",
+    tags=["nodes"],
+)
 async def list_nodes(
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(20, ge=1, le=100, description="Itens por página"),
@@ -108,7 +113,7 @@ async def list_nodes(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/", response_model=NodeResponse, summary="Criar node", tags=["Nodes"])
+@router.post("/", response_model=NodeResponse, summary="Criar node", tags=["nodes"])
 async def create_node(
     node_data: NodeCreate,
     db: Session = Depends(get_db),
@@ -149,7 +154,7 @@ async def create_node(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{node_id}", response_model=NodeResponse, summary="Obter node", tags=["Nodes"])
+@router.get("/{node_id}", response_model=NodeResponse, summary="Obter node", tags=["nodes"])
 async def get_node(
     node_id: str,
     db: Session = Depends(get_db),
@@ -203,7 +208,7 @@ async def get_node(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/{node_id}", response_model=NodeResponse, summary="Atualizar node", tags=["Nodes"])
+@router.put("/{node_id}", response_model=NodeResponse, summary="Atualizar node", tags=["nodes"])
 async def update_node(
     node_id: str,
     node_data: NodeUpdate,
@@ -269,7 +274,7 @@ async def update_node(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{node_id}", summary="Deletar node", tags=["Nodes"])
+@router.delete("/{node_id}", summary="Deletar node", tags=["nodes"])
 async def delete_node(
     node_id: str,
     db: Session = Depends(get_db),
@@ -324,7 +329,7 @@ async def delete_node(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{node_id}/download", summary="Download/instalar node", tags=["Nodes", "Download"])
+@router.post("/{node_id}/download", summary="Download/instalar node", tags=["nodes", "Download"])
 async def download_node(
     node_id: str,
     db: Session = Depends(get_db),
@@ -380,7 +385,7 @@ async def download_node(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{node_id}/rate", summary="Avaliar node", tags=["Nodes", "Rating"])
+@router.post("/{node_id}/rate", summary="Avaliar node", tags=["nodes", "Rating"])
 async def rate_node(
     node_id: str,
     rating: int = Query(..., ge=1, le=5, description="Avaliação de 1 a 5"),
@@ -452,7 +457,7 @@ async def rate_node(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/categories/", response_model=List[str], summary="Listar categorias", tags=["Nodes", "Categories"])
+@router.get("/categories/", response_model=List[str], summary="Listar categorias", tags=["nodes", "Categories"])
 async def list_node_categories(
     db: Session = Depends(get_db)
 ) -> List[str]:
@@ -490,7 +495,7 @@ async def list_node_categories(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/types/", response_model=List[str], summary="Listar tipos", tags=["Nodes", "Types"])
+@router.get("/types/", response_model=List[str], summary="Listar tipos", tags=["nodes", "Types"])
 async def list_node_types(
     db: Session = Depends(get_db)
 ) -> List[str]:

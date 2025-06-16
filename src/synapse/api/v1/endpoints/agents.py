@@ -24,10 +24,15 @@ from synapse.schemas.agent import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Agents"])
+router = APIRouter()
 
 
-@router.get("/", response_model=AgentListResponse, summary="Listar agentes", tags=["Agents"])
+@router.get(
+    "/",
+    response_model=AgentListResponse,
+    summary="Listar agentes",
+    tags=["agents"],
+)
 async def list_agents(
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(20, ge=1, le=100, description="Itens por página"),
@@ -93,7 +98,7 @@ async def list_agents(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/", response_model=AgentResponse, summary="Criar agente", tags=["Agents"])
+@router.post("/", response_model=AgentResponse, summary="Criar agente", tags=["agents"])
 async def create_agent(
     agent_data: AgentCreate,
     db: Session = Depends(get_db),
@@ -128,7 +133,7 @@ async def create_agent(
             instructions=agent_data.instructions,
             model_provider=agent_data.model_provider,
             provider=agent_data.model_provider,
-            model=agent_data.model_name,
+            model=agent_data.model,
             temperature=agent_data.temperature,
             max_tokens=agent_data.max_tokens,
             tools=agent_data.tools,
@@ -149,7 +154,7 @@ async def create_agent(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{agent_id}", response_model=AgentResponse, summary="Obter agente", tags=["Agents"])
+@router.get("/{agent_id}", response_model=AgentResponse, summary="Obter agente", tags=["agents"])
 async def get_agent(
     agent_id: str,
     db: Session = Depends(get_db),
@@ -204,7 +209,7 @@ async def get_agent(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/{agent_id}", response_model=AgentResponse, summary="Atualizar agente", tags=["Agents"])
+@router.put("/{agent_id}", response_model=AgentResponse, summary="Atualizar agente", tags=["agents"])
 async def update_agent(
     agent_id: str,
     agent_data: AgentUpdate,
@@ -254,7 +259,7 @@ async def update_agent(
         # Atualizar campos
         update_count = 0
         for field, value in agent_data.dict(exclude_unset=True).items():
-            if field == "model_name":
+            if field == "model":
                 setattr(agent, "model", value)
             elif field == "model_provider":
                 setattr(agent, "model_provider", value)
@@ -279,7 +284,7 @@ async def update_agent(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{agent_id}", summary="Deletar agente", tags=["Agents"])
+@router.delete("/{agent_id}", summary="Deletar agente", tags=["agents"])
 async def delete_agent(
     agent_id: str,
     db: Session = Depends(get_db),
@@ -339,7 +344,7 @@ async def delete_agent(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{agent_id}/activate", summary="Ativar agente", tags=["Agents"])
+@router.post("/{agent_id}/activate", summary="Ativar agente", tags=["agents"])
 async def activate_agent(
     agent_id: str,
     db: Session = Depends(get_db),
@@ -406,7 +411,7 @@ async def activate_agent(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{agent_id}/deactivate", summary="Desativar agente", tags=["Agents"])
+@router.post("/{agent_id}/deactivate", summary="Desativar agente", tags=["agents"])
 async def deactivate_agent(
     agent_id: str,
     db: Session = Depends(get_db),
@@ -473,7 +478,7 @@ async def deactivate_agent(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{agent_id}/stats", summary="Estatísticas do agente", tags=["Agents", "Statistics"])
+@router.get("/{agent_id}/stats", summary="Estatísticas do agente", tags=["agents", "Statistics"])
 async def get_agent_stats(
     agent_id: str,
     db: Session = Depends(get_db),
@@ -541,7 +546,7 @@ async def get_agent_stats(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{agent_id}/duplicate", response_model=AgentResponse, summary="Duplicar agente", tags=["Agents"])
+@router.post("/{agent_id}/duplicate", response_model=AgentResponse, summary="Duplicar agente", tags=["agents"])
 async def duplicate_agent(
     agent_id: str,
     db: Session = Depends(get_db),

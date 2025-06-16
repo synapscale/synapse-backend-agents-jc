@@ -64,25 +64,26 @@ def create_user_defaults(db: Session, user_id: str, user_email: str, user_name: 
         })
         # 4. Criar Variáveis de usuário padrão
         default_variables = [
-            {"key": "theme", "value": "light", "is_secret": False},
-            {"key": "language", "value": "pt-BR", "is_secret": False},
-            {"key": "timezone", "value": "America/Sao_Paulo", "is_secret": False},
-            {"key": "notifications_email", "value": "true", "is_secret": False},
-            {"key": "notifications_browser", "value": "true", "is_secret": False},
-            {"key": "default_workspace", "value": workspace_id, "is_secret": False},
+            {"key": "theme", "value": "light", "is_secret": False, "category": "config"},
+            {"key": "language", "value": "pt-BR", "is_secret": False, "category": "config"},
+            {"key": "timezone", "value": "America/Sao_Paulo", "is_secret": False, "category": "config"},
+            {"key": "notifications_email", "value": "true", "is_secret": False, "category": "notification"},
+            {"key": "notifications_browser", "value": "true", "is_secret": False, "category": "notification"},
+            {"key": "default_workspace", "value": workspace_id, "is_secret": False, "category": "workspace"},
         ]
         for var in default_variables:
             var_id = str(uuid.uuid4())
             db.execute(text("""
                 INSERT INTO synapscale_db.user_variables
-                (id, key, value, is_secret, user_id, created_at, updated_at)
-                VALUES (:id, :key, :value, :is_secret, :user_id, :created_at, :updated_at)
+                (id, key, value, is_secret, user_id, category, created_at, updated_at)
+                VALUES (:id, :key, :value, :is_secret, :user_id, :category, :created_at, :updated_at)
             """), {
                 "id": var_id,
                 "key": var["key"],
                 "value": var["value"],
                 "is_secret": var["is_secret"],
                 "user_id": user_id,
+                "category": var["category"],
                 "created_at": datetime.now(timezone.utc),
                 "updated_at": datetime.now(timezone.utc)
             })

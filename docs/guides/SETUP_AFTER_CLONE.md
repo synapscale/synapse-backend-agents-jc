@@ -1,19 +1,19 @@
+# 🚨 NOTA IMPORTANTE
+> Scripts antigos como `auto_setup.sh`, `setup.sh --complete`, etc. não são mais utilizados. Use apenas `dev.sh`, `prod.sh` e `setup.sh` (se existir).
+
 # Configuração Inicial após Clonar o Repositório
 
 Após clonar o repositório SynapScale Backend, siga estes passos para configurar seu ambiente de desenvolvimento:
 
 ## 1. Configuração do Ambiente
 
-Execute o script de setup:
-
 ```bash
-# Setup básico (para desenvolvimento rápido)
-./setup.sh
-
-# OU
-
-# Setup completo (automático e detalhado)
-./setup.sh --complete
+rm -rf venv .venv env ENV
+python3.11 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install torch
+pip install -r requirements.txt
 ```
 
 ## 2. Configuração das Variáveis de Ambiente
@@ -47,13 +47,19 @@ Para iniciar em modo de produção:
 ./prod.sh
 ```
 
-## 5. Problemas Comuns
+## 5. Migrações de Banco de Dados
+
+- Migrações **não são mais automáticas**. Rode manualmente se necessário:
+  ```bash
+  alembic upgrade head
+  ```
+
+## 6. Problemas Comuns
 
 Se enfrentar problemas com a configuração:
 
 1. Verifique se todas as variáveis de ambiente estão configuradas corretamente
-2. Execute `python tools/utils/validate_setup.py` para diagnóstico
-3. Consulte a documentação em `docs/` para mais informações
+2. Consulte a documentação em `docs/` para mais informações
 
 ---
 

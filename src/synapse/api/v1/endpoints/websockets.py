@@ -32,7 +32,7 @@ from synapse.core.auth.jwt import jwt_manager
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/ws", tags=["WebSocket"])
+router = APIRouter(prefix="/ws")
 
 
 async def authenticate_websocket(
@@ -669,7 +669,11 @@ async def _get_user_executions(user_id: str, db: Session) -> Dict[str, Any]:
         return {"executions": []}
 
 
-@router.get("/stats/global", summary="Estatísticas globais WebSocket", tags=["WebSocket", "Statistics"])
+@router.get(
+    "/status",
+    summary="Status do WebSocket",
+    tags=["websockets"],
+)
 async def get_websocket_global_stats(
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -710,7 +714,7 @@ async def get_websocket_global_stats(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/stats/execution/{execution_id}", summary="Estatísticas WebSocket de execução", tags=["WebSocket", "Statistics"])
+@router.get("/stats/execution/{execution_id}", summary="Estatísticas WebSocket de execução", tags=["websockets", "Statistics"])
 async def get_websocket_execution_stats(
     execution_id: str,
     current_user: User = Depends(get_current_user),

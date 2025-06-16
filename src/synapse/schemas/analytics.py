@@ -91,8 +91,8 @@ class EventCreate(EventBase):
 
 
 class EventResponse(EventBase):
-    id: int
-    user_id: int | None = None
+    id: str
+    user_id: str | None = None
     created_at: datetime
 
     class Config:
@@ -231,8 +231,8 @@ class DashboardUpdate(BaseModel):
 
 
 class DashboardResponse(DashboardBase):
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     user_name: str
     view_count: int = 0
     last_viewed_at: datetime | None = None
@@ -314,8 +314,8 @@ class ReportUpdate(BaseModel):
 
 
 class ReportResponse(ReportBase):
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     user_name: str
     execution_count: int = 0
     last_executed_at: datetime | None = None
@@ -373,8 +373,8 @@ class InsightRequest(BaseModel):
 
 
 class InsightResponse(BaseModel):
-    id: int
-    user_id: int
+    id: str
+    user_id: str
     insight_type: InsightType
     title: str
     summary: str
@@ -540,3 +540,13 @@ class AlertResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AnalyticsOverview(BaseModel):
+    period: dict[str, datetime]
+    user_metrics: dict[str, Any]
+    performance_metrics: dict[str, Any]
+    business_metrics: dict[str, Any]
+    trends: list[dict[str, Any]]
+    anomalies: list[dict[str, Any]]
+    generated_at: datetime

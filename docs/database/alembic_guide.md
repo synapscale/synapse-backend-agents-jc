@@ -1,3 +1,6 @@
+# ⚠️ AVISO IMPORTANTE
+As migrações não são mais executadas automaticamente ao iniciar o backend. Use este guia apenas para manutenção manual do banco.
+
 # Guia de Gerenciamento de Migrações com Alembic
 
 Este guia explica como gerenciar as migrações do banco de dados usando o Alembic.

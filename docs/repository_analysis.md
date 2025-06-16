@@ -10,7 +10,7 @@ Utilize-o como referência para decisões de reorganização e limpeza.
 ```
 .
 ├── LICENSE
-├── README.md
+├── README.md (principal)
 ├── alembic
 │   ├── README
 │   ├── env.py
@@ -159,7 +159,7 @@ Lista dos arquivos Python mais importantes do repositório, organizados por func
 
 ### Documentos a Manter
 
-- `README.md`: Documentação principal
+- `README.md`: Documentação principal do projeto
 - `docs/architecture/overview.md`: Visão geral da arquitetura
 - `docs/api/quick_guide.md`: Guia rápido da API
 - `docs/guides/development.md`: Guia de desenvolvimento

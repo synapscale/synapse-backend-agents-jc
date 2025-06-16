@@ -1,9 +1,13 @@
 # 🚀 Deploy no Render.com
 
+# 🚨 NOTA IMPORTANTE
+> Scripts antigos como `start_render.sh`, `auto_setup.sh`, etc. não são mais utilizados. Use apenas `prod.sh` para start no Render.
+
 ## 📋 Pré-requisitos
 - Conta no [Render.com](https://render.com)
 - Repositório Git (GitHub, GitLab, etc.)
 - Banco PostgreSQL configurado
+- **Python 3.11** (exclusivamente)
 
 ## 🔧 Configuração Passo a Passo
 
@@ -21,9 +25,9 @@ git push origin main
 3. Conecte seu repositório Git
 4. Configure:
    - **Name**: `synapscale-backend`
-   - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `./start_render.sh`
+   - **Environment**: `Python 3.11`
+   - **Build Command**: `pip install torch && pip install -r requirements.txt`
+   - **Start Command**: `./prod.sh`
 
 ### 3. **Configurar Variáveis de Ambiente**
 No dashboard do Render, adicione:

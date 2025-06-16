@@ -33,7 +33,7 @@ from synapse.schemas.auth import (
 from synapse.services.user_defaults import create_user_defaults
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["authentication"])
+router = APIRouter()
 
 
 @router.post(

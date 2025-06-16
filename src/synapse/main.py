@@ -154,8 +154,8 @@ app = FastAPI(
     todas as duplicações e melhora a manutenibilidade.
     ''',
     version=settings.VERSION,
-    docs_url=None,
-    redoc_url=None,
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
     lifespan=lifespan,
     contact={'name': 'SynapScale Team', 'email': 'support@synapscale.com'},
     license_info={'name': 'MIT'}

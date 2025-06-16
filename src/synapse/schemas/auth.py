@@ -82,6 +82,10 @@ class UserResponse(BaseModel):
     created_at: datetime | None
     updated_at: datetime | None
 
+    @validator("id", pre=True)
+    def str_id(cls, v):
+        return str(v) if v is not None else v
+
     model_config = {"from_attributes": True}
 
 

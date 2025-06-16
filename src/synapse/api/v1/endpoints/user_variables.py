@@ -27,7 +27,7 @@ from synapse.schemas.user_variable import (
 )
 from synapse.services.variable_service import VariableService
 
-router = APIRouter(tags=["User Variables"])
+router = APIRouter()
 
 
 @router.get(
@@ -35,14 +35,14 @@ router = APIRouter(tags=["User Variables"])
     response_model=UserVariableList,
     summary="Listar variáveis do usuário",
     response_description="Lista de variáveis do usuário retornada com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def get_user_variables(
     skip: int = Query(0, ge=0, description="Número de registros para pular (paginação)"),
     limit: int = Query(100, ge=1, le=500, description="Número máximo de registros por página (paginação)"),
     search: str | None = Query(None, description="Buscar por chave ou descrição da variável"),
-    category: str | None = Query(None, description="Filtrar por categoria da variável"),
     is_active: bool | None = Query(None, description="Filtrar por status ativo/inativo"),
+    category: str | None = Query(None, description="Filtrar por categoria da variável"),
     sort_by: str = Query("key", description="Campo para ordenação (ex: key, created_at, updated_at)"),
     sort_order: str = Query(
         "asc", pattern="^(asc|desc)$", description="Ordem de classificação: ascendente ou descendente"
@@ -57,8 +57,8 @@ async def get_user_variables(
     - **skip**: Quantos registros pular (para paginação)
     - **limit**: Quantos registros retornar (máximo 500)
     - **search**: Termo para buscar por chave ou descrição
-    - **category**: Filtrar por categoria
     - **is_active**: Filtrar por status ativo/inativo
+    - **category**: Filtrar por categoria da variável
     - **sort_by**: Campo para ordenação
     - **sort_order**: Ordem de classificação (asc/desc)
     - **include_values**: Se deve incluir os valores das variáveis na resposta
@@ -71,7 +71,6 @@ async def get_user_variables(
           "id": 1,
           "key": "API_KEY",
           "description": "Chave da API",
-          "category": "CONFIG",
           "is_active": true,
           "is_sensitive": true,
           ...
@@ -88,8 +87,8 @@ async def get_user_variables(
         skip=skip,
         limit=limit,
         search=search,
-        category=category,
         is_active=is_active,
+        category=category,
         sort_by=sort_by,
         sort_order=sort_order,
     )
@@ -110,13 +109,13 @@ async def get_user_variables(
             )
             for var in variables
         ]
-    # Obter categorias disponíveis
-    categories = VariableService.get_available_categories(db, current_user.id)
+    # Obter categorias distintas
+    categories = list({v.category for v in variables if v.category})
     # Logging de auditoria
-    if search or category or is_active is not None:
+    if search or is_active is not None:
         import logging
         logger = logging.getLogger(__name__)
-        logger.info(f"Usuário {current_user.id} buscou variáveis com filtros: search={search}, category={category}, is_active={is_active}")
+        logger.info(f"Usuário {current_user.id} buscou variáveis com filtros: search={search}, is_active={is_active}")
     return UserVariableList(
         variables=variable_responses,
         total=total,
@@ -146,7 +145,7 @@ async def get_variable(
     response_model=UserVariableWithValue,
     summary="Obter variável do usuário por chave",
     response_description="Variável retornada com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def get_variable_by_key(
     key: str = Path(..., description="Chave da variável a ser consultada"),
@@ -164,7 +163,6 @@ async def get_variable_by_key(
       "id": 1,
       "key": "API_KEY",
       "description": "Chave da API",
-      "category": "CONFIG",
       "is_active": true,
       "is_sensitive": true,
       ...
@@ -192,7 +190,7 @@ async def get_variable_by_key(
     status_code=status.HTTP_201_CREATED,
     summary="Criar nova variável do usuário",
     response_description="Variável criada com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def create_variable(
     variable_data: UserVariableCreate,
@@ -208,7 +206,6 @@ async def create_variable(
       "key": "API_KEY",
       "value": "123456",
       "description": "Chave da API",
-      "category": "CONFIG",
       "is_active": true
     }
     ```
@@ -219,7 +216,6 @@ async def create_variable(
       "id": 1,
       "key": "API_KEY",
       "description": "Chave da API",
-      "category": "CONFIG",
       "is_active": true,
       "is_sensitive": true,
       ...
@@ -241,7 +237,7 @@ async def create_variable(
     response_model=UserVariableResponse,
     summary="Atualizar variável do usuário",
     response_description="Variável atualizada com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def update_variable(
     variable_id: int = Path(..., description="ID da variável a ser atualizada"),
@@ -259,7 +255,6 @@ async def update_variable(
     {
       "value": "novo_valor",
       "description": "Nova descrição",
-      "category": "SECRET",
       "is_active": false
     }
     ```
@@ -270,7 +265,6 @@ async def update_variable(
       "id": 1,
       "key": "API_KEY",
       "description": "Nova descrição",
-      "category": "SECRET",
       "is_active": false,
       "is_sensitive": true,
       ...
@@ -299,7 +293,7 @@ async def update_variable(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remover variável do usuário",
     response_description="Variável removida com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def delete_variable(
     variable_id: int = Path(..., description="ID da variável a ser removida"),
@@ -323,7 +317,7 @@ async def delete_variable(
     status_code=status.HTTP_201_CREATED,
     summary="Criar múltiplas variáveis em lote",
     response_description="Variáveis criadas em lote com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def bulk_create_variables(
     variables_data: UserVariableBulkCreate,
@@ -355,7 +349,7 @@ async def bulk_create_variables(
     response_model=dict[int, UserVariableResponse],
     summary="Atualizar múltiplas variáveis em lote",
     response_description="Variáveis atualizadas em lote com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def bulk_update_variables(
     updates_data: UserVariableBulkUpdate,
@@ -385,7 +379,7 @@ async def bulk_update_variables(
     response_model=dict[str, int],
     summary="Remover múltiplas variáveis em lote",
     response_description="Variáveis removidas em lote com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def bulk_delete_variables(
     variable_ids: list[int],
@@ -407,7 +401,7 @@ async def bulk_delete_variables(
     response_model=Dict[str, Any],
     summary="Importar variáveis via JSON",
     response_description="Variáveis importadas com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def import_variables(
     import_data: UserVariableImport,
@@ -429,14 +423,13 @@ async def import_variables(
     response_model=Dict[str, Any],
     summary="Importar variáveis via arquivo .env",
     response_description="Variáveis importadas de arquivo com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def import_variables_from_file(
     file: UploadFile = File(..., description="Arquivo .env para importar"),
     overwrite_existing: bool = Query(
         False, description="Sobrescrever variáveis existentes"
     ),
-    default_category: str | None = Query("CONFIG", description="Categoria padrão"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
@@ -444,7 +437,7 @@ async def import_variables_from_file(
     Importa variáveis do usuário autenticado a partir de um arquivo .env.
     """
     result = VariableService.import_variables_from_file(
-        db, current_user.id, file, overwrite_existing, default_category
+        db, current_user.id, file, overwrite_existing
     )
     import logging
     logger = logging.getLogger(__name__)
@@ -457,7 +450,7 @@ async def import_variables_from_file(
     response_model=Dict[str, Any],
     summary="Exportar variáveis do usuário",
     response_description="Variáveis exportadas com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def export_variables(
     export_data: UserVariableExport,
@@ -479,7 +472,7 @@ async def export_variables(
     response_model=UserVariableStats,
     summary="Obter estatísticas das variáveis do usuário",
     response_description="Estatísticas retornadas com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def get_variables_stats(
     db: Session = Depends(get_db),
@@ -497,7 +490,7 @@ async def get_variables_stats(
     response_model=UserVariableValidation,
     summary="Validar chave de variável",
     response_description="Validação de chave realizada com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def validate_variable_key(
     key: str = Query(..., description="Chave da variável para validar"),
@@ -515,7 +508,7 @@ async def validate_variable_key(
     response_model=UserVariableBulkValidation,
     summary="Validar múltiplas chaves de variáveis",
     response_description="Validação em lote realizada com sucesso",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def validate_variable_keys_bulk(
     keys: list[str],
@@ -529,28 +522,11 @@ async def validate_variable_keys_bulk(
 
 
 @router.get(
-    "/categories/list",
-    response_model=list[str],
-    summary="Listar categorias de variáveis disponíveis",
-    response_description="Categorias listadas com sucesso",
-    tags=["User Variables"],
-)
-async def get_available_categories(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> list[str]:
-    """
-    Lista todas as categorias de variáveis disponíveis para o usuário autenticado.
-    """
-    return VariableService.get_available_categories(db, current_user.id)
-
-
-@router.get(
     "/env/dict",
     response_model=dict[str, str],
     summary="Obter variáveis do usuário como dicionário",
     response_description="Variáveis retornadas como dicionário",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def get_env_dict(
     db: Session = Depends(get_db),
@@ -567,7 +543,7 @@ async def get_env_dict(
     response_model=dict[str, str],
     summary="Obter variáveis do usuário como string .env",
     response_description="Variáveis retornadas como string .env",
-    tags=["User Variables"],
+    tags=["user-variables"],
 )
 async def get_env_string(
     db: Session = Depends(get_db),
@@ -594,24 +570,3 @@ async def get_user_env_dict_internal(
     Usado pelo sistema de execução de workflows
     """
     return VariableService.get_user_env_dict(db, user_id)
-
-
-@router.get("/internal/categories", response_model=list[str], include_in_schema=False)
-async def get_all_categories_internal(
-    db: Session = Depends(get_db),
-):
-    """
-    Endpoint interno para obter todas as categorias do sistema
-    """
-    from ..models.user_variable import UserVariable
-
-    categories = (
-        db.query(UserVariable.category)
-        .filter(
-            UserVariable.category.isnot(None),
-        )
-        .distinct()
-        .all()
-    )
-
-    return [c[0] for c in categories if c[0]]

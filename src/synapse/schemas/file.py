@@ -88,7 +88,7 @@ class FileInDB(FileBase):
 class FileResponse(BaseModel):
     """Esquema para resposta de arquivo."""
 
-    id: int
+    id: str
     filename: str
     original_filename: str
     content_type: str

@@ -80,7 +80,9 @@ class Node(Base):
 
     # Campos adicionais do Node
     type: Column[str] = Column(
-        Enum(NodeType), nullable=False, default=NodeType.OPERATION
+        Enum(NodeType, values_callable=lambda x: [e.value for e in x], name="nodetype"),
+        nullable=False,
+        server_default="operation"
     )
     status: Column[str] = Column(
         Enum(NodeStatus), nullable=False, default=NodeStatus.DRAFT
@@ -94,6 +96,7 @@ class Node(Base):
     color = Column(String(7), default="#6366f1")
     documentation = Column(Text)
     examples = Column(JSON, default=list)
+    definition = Column(JSON, nullable=False, default=dict)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
@@ -105,6 +108,12 @@ class Node(Base):
 
     # Relacionamento com User
     user = relationship("User", back_populates="nodes")
+
+    # Relacionamento com WorkflowNode
+    workflow_instances = relationship("WorkflowNode", back_populates="node")
+
+    # Relacionamento com Workspace
+    workspace = relationship("Workspace", back_populates="nodes")
 
     def to_dict(self, include_code: bool | None = False) -> dict:
         """Converte node para dicionário"""
@@ -182,7 +191,10 @@ class NodeTemplate(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False)
     description = Column(Text)
-    type: Column[str] = Column(Enum(NodeType), nullable=False)
+    type: Column[str] = Column(
+        Enum(NodeType, values_callable=lambda x: [e.value for e in x], name="nodetype"),
+        nullable=False
+    )
     category = Column(String(100))
 
     # Template de código

@@ -69,7 +69,7 @@ Concluímos com sucesso todas as otimizações solicitadas no backend SynapScale
 
 2. **Documentação**:
    - `/docs/api/files_endpoints.md`: Documentação detalhada dos endpoints de arquivos
-   - `/docs/api/README.md`: Índice da documentação da API
+   - `/docs/api/API_TOOLS_README.md`: Índice da documentação da API
    - `/docs/development_guide.md`: Guia completo para desenvolvedores
    - `/docs/security_production.md`: Recomendações de segurança para produção
 

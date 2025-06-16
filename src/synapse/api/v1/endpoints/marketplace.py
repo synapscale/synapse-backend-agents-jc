@@ -35,11 +35,11 @@ from synapse.api.deps import get_current_user, get_admin_user
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Marketplace"])
+router = APIRouter()
 
 # ==================== COMPONENTES ====================
 
-@router.post("/components", response_model=ComponentResponse, summary="Criar componente", tags=["Marketplace", "Components"])
+@router.post("/components", response_model=ComponentResponse, summary="Criar componente", tags=["marketplace", "components"])
 async def create_component(
     component_data: ComponentCreate,
     current_user: User = Depends(get_current_user),
@@ -57,7 +57,7 @@ async def create_component(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/components", response_model=ComponentSearchResponse, summary="Buscar componentes", tags=["Marketplace", "Components"])
+@router.get("/components", response_model=ComponentSearchResponse, summary="Buscar componentes", tags=["marketplace", "components"])
 async def search_components(
     query: Optional[str] = Query(None, description="Termo de busca"),
     category: Optional[str] = Query(None, description="Categoria do componente"),
@@ -97,7 +97,7 @@ async def search_components(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/components/{component_id}", response_model=ComponentResponse, summary="Obter componente", tags=["Marketplace", "Components"])
+@router.get("/components/{component_id}", response_model=ComponentResponse, summary="Obter componente", tags=["marketplace", "components"])
 async def get_component(
     component_id: int,
     db: Session = Depends(get_db),
@@ -119,7 +119,7 @@ async def get_component(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/components/{component_id}", response_model=ComponentResponse, summary="Atualizar componente", tags=["Marketplace", "Components"])
+@router.put("/components/{component_id}", response_model=ComponentResponse, summary="Atualizar componente", tags=["marketplace", "components"])
 async def update_component(
     component_id: int,
     component_data: ComponentUpdate,
@@ -143,7 +143,7 @@ async def update_component(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/components/{component_id}", summary="Deletar componente", tags=["Marketplace", "Components"])
+@router.delete("/components/{component_id}", summary="Deletar componente", tags=["marketplace", "components"])
 async def delete_component(
     component_id: int,
     current_user: User = Depends(get_current_user),
@@ -166,7 +166,7 @@ async def delete_component(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/components/{component_id}/download", summary="Download componente", tags=["Marketplace", "Components"])
+@router.post("/components/{component_id}/download", summary="Download componente", tags=["marketplace", "components"])
 async def download_component(
     component_id: int,
     version: Optional[str] = Query(None, description="Versão específica"),
@@ -190,7 +190,7 @@ async def download_component(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/components/{component_id}/install", summary="Instalar componente", tags=["Marketplace", "Components"])
+@router.post("/components/{component_id}/install", summary="Instalar componente", tags=["marketplace", "components"])
 async def install_component(
     component_id: int,
     workspace_id: Optional[int] = Query(None, description="ID do workspace"),
@@ -216,7 +216,7 @@ async def install_component(
 
 # ==================== AVALIAÇÕES ====================
 
-@router.post("/components/{component_id}/ratings", response_model=RatingResponse, summary="Criar avaliação", tags=["Marketplace", "Ratings"])
+@router.post("/components/{component_id}/ratings", response_model=RatingResponse, summary="Criar avaliação", tags=["marketplace", "ratings"])
 async def create_rating(
     component_id: int,
     rating_data: RatingCreate,
@@ -236,7 +236,7 @@ async def create_rating(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/components/{component_id}/ratings", response_model=List[RatingResponse], summary="Listar avaliações", tags=["Marketplace", "Ratings"])
+@router.get("/components/{component_id}/ratings", response_model=List[RatingResponse], summary="Listar avaliações", tags=["marketplace", "ratings"])
 async def get_component_ratings(
     component_id: int,
     limit: int = Query(20, ge=1, le=100),
@@ -418,7 +418,7 @@ async def unfavorite_component(
     return {"message": "Componente removido dos favoritos"}
 
 
-@router.get("/favorites", response_model=List[ComponentResponse], summary="Listar favoritos", tags=["Marketplace", "Favorites"])
+@router.get("/favorites", response_model=List[ComponentResponse], summary="Listar favoritos", tags=["marketplace", "favorites"])
 async def get_user_favorites(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -440,7 +440,7 @@ async def get_user_favorites(
 # ==================== ESTATÍSTICAS ====================
 
 
-@router.get("/stats", response_model=MarketplaceStats, summary="Estatísticas marketplace", tags=["Marketplace", "Statistics"])
+@router.get("/stats", response_model=MarketplaceStats, summary="Estatísticas marketplace", tags=["marketplace", "statistics"])
 async def get_marketplace_stats(
     db: Session = Depends(get_db),
 ) -> MarketplaceStats:
@@ -483,7 +483,7 @@ async def get_author_stats(
 # ==================== CATEGORIAS E TAGS ====================
 
 
-@router.get("/categories")
+@router.get("/categories", summary="Obter categorias", tags=["marketplace"])
 async def get_categories(
     db: Session = Depends(get_db),
 ):
@@ -505,7 +505,7 @@ async def get_popular_tags(
 # ==================== RECOMENDAÇÕES ====================
 
 
-@router.get("/recommendations", response_model=List[ComponentResponse], summary="Recomendações", tags=["Marketplace", "Recommendations"])
+@router.get("/recommendations", response_model=List[ComponentResponse], summary="Recomendações", tags=["marketplace", "recommendations"])
 async def get_recommendations(
     limit: int = Query(10, ge=1, le=50),
     current_user: User = Depends(get_current_user),
@@ -538,7 +538,7 @@ async def get_similar_components(
 
 # ==================== ADMIN ====================
 
-@router.get("/admin/moderation", response_model=List[ComponentModerationResponse], summary="Moderação pendente", tags=["Marketplace", "Admin"])
+@router.get("/admin/moderation", response_model=List[ComponentModerationResponse], summary="Moderação pendente", tags=["marketplace", "admin"])
 async def get_pending_moderation(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -557,7 +557,7 @@ async def get_pending_moderation(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/admin/components/{component_id}/moderate", summary="Moderar componente", tags=["Marketplace", "Admin"])
+@router.post("/admin/components/{component_id}/moderate", summary="Moderar componente", tags=["marketplace", "admin"])
 async def moderate_component(
     component_id: int,
     action: ModerationAction,

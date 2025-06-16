@@ -1,63 +1,35 @@
+# 🚨 NOTA IMPORTANTE
+> Scripts antigos como `auto_setup.sh`, `setup_complete.py`, etc. não são mais utilizados. Use apenas `dev.sh`, `prod.sh` e `setup.sh` (se existir).
+
 # 🛠️ Scripts de Setup do SynapScale Backend
 
-Este documento explica os scripts de configuração disponíveis no projeto.
+O setup do projeto agora é padronizado e simplificado:
 
-## 📋 Resumo
-
-O SynapScale Backend possui dois modos de setup:
-
-1. **Setup Básico** - Configuração manual simples
-2. **Setup Completo** - Configuração automatizada e detalhada
-
-## 🔧 Modo Básico
-
-Para iniciar uma configuração básica, execute:
+## Setup Único e Recomendado
 
 ```bash
-./setup.sh
+rm -rf venv .venv env ENV
+python3.11 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install torch
+pip install -r requirements.txt
+cp .env.example .env
+# Edite o .env conforme necessário
 ```
 
-Este modo:
-- Cria um ambiente virtual Python
-- Instala dependências do arquivo requirements.txt
-- Cria um arquivo .env a partir do .env.example (se não existir)
-- Exige configuração manual das variáveis no .env
+## Inicialização
+- **Desenvolvimento:**
+  ```bash
+  ./dev.sh
+  ```
+- **Produção:**
+  ```bash
+  ./prod.sh
+  ```
 
-## ⚙️ Modo Completo
-
-Para uma configuração completa e automatizada, execute:
-
-```bash
-./setup.sh --complete
-# ou
-./setup.sh -c
-```
-
-Este modo utiliza o script `setup_complete.py` que:
-- Automatiza todo o processo de configuração
-- Gera chaves seguras automaticamente
-- Cria estrutura de diretórios
-- Configura banco de dados
-- Oferece um assistente interativo para personalização
-
-## 🤔 Qual escolher?
-
-- **Setup Básico**: Ideal para desenvolvedores que querem controle manual ou para configurações simples.
-- **Setup Completo**: Melhor para novos usuários ou para garantir uma configuração correta e completa.
-
-## 📄 Arquivo setup_complete.py
-
-O arquivo `setup_complete.py` é um script Python avançado que automatiza todo o processo de configuração. Ele oferece:
-
-- Validação de ambiente
-- Geração segura de chaves
-- Configuração de banco de dados
-- Verificação de dependências
-- Criação de estrutura de diretórios
-- Configuração dos arquivos de ambiente
-
-Para executá-lo diretamente:
-
-```bash
-python setup_complete.py
-```
+## Migrações de Banco de Dados
+- Migrações **não são mais automáticas**. Rode manualmente se necessário:
+  ```bash
+  alembic upgrade head
+  ```

@@ -31,10 +31,15 @@ from synapse.schemas.workflow_execution import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Workflows"])
+router = APIRouter()
 
 
-@router.get("/", response_model=WorkflowListResponse, summary="Listar workflows", tags=["Workflows"])
+@router.get(
+    "/",
+    response_model=WorkflowListResponse,
+    summary="Listar workflows",
+    tags=["workflows"],
+)
 async def list_workflows(
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(20, ge=1, le=100, description="Itens por página"),
@@ -109,7 +114,7 @@ async def list_workflows(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/", response_model=WorkflowResponse, summary="Criar workflow", tags=["Workflows"])
+@router.post("/", response_model=WorkflowResponse, summary="Criar workflow", tags=["workflows"])
 async def create_workflow(
     workflow_data: WorkflowCreate,
     db: Session = Depends(get_db),
@@ -150,7 +155,7 @@ async def create_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{workflow_id}", response_model=WorkflowResponse, summary="Obter workflow", tags=["Workflows"])
+@router.get("/{workflow_id}", response_model=WorkflowResponse, summary="Obter workflow", tags=["workflows"])
 async def get_workflow(
     workflow_id: str,
     db: Session = Depends(get_db),
@@ -209,7 +214,7 @@ async def get_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/{workflow_id}", response_model=WorkflowResponse, summary="Atualizar workflow", tags=["Workflows"])
+@router.put("/{workflow_id}", response_model=WorkflowResponse, summary="Atualizar workflow", tags=["workflows"])
 async def update_workflow(
     workflow_id: str,
     workflow_data: WorkflowUpdate,
@@ -280,7 +285,7 @@ async def update_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{workflow_id}", summary="Deletar workflow", tags=["Workflows"])
+@router.delete("/{workflow_id}", summary="Deletar workflow", tags=["workflows"])
 async def delete_workflow(
     workflow_id: str,
     db: Session = Depends(get_db),
@@ -340,7 +345,7 @@ async def delete_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{workflow_id}/execute", response_model=WorkflowExecutionResponse, summary="Executar workflow", tags=["Workflows", "Execution"])
+@router.post("/{workflow_id}/execute", response_model=WorkflowExecutionResponse, summary="Executar workflow", tags=["workflows", "Execution"])
 async def execute_workflow(
     workflow_id: str,
     execution_data: WorkflowExecutionRequest,
@@ -411,12 +416,11 @@ async def execute_workflow(
         # execution_service.start_execution(execution.id)
         
         return WorkflowExecutionResponse(
-            id=execution.id,
-            workflow_id=workflow.id,
-            status=execution.status,
-            created_at=execution.created_at,
-            input_data=execution.input_data,
-            context_data=execution.context_data,
+            execution_id=str(execution.id),
+            status=execution.status.value if hasattr(execution.status, 'value') else str(execution.status),
+            message="Execução criada com sucesso",
+            outputs=None,
+            error=None,
         )
     except HTTPException:
         raise
@@ -426,7 +430,7 @@ async def execute_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{workflow_id}/executions", response_model=ExecutionListResponse, summary="Listar execuções", tags=["Workflows", "Execution"])
+@router.get("/{workflow_id}/executions", response_model=ExecutionListResponse, summary="Listar execuções", tags=["workflows", "Execution"])
 async def list_workflow_executions(
     workflow_id: str,
     page: int = Query(1, ge=1, description="Número da página"),
@@ -490,8 +494,23 @@ async def list_workflow_executions(
 
         logger.info(f"Retornadas {len(executions)} execuções de {total} total para workflow {workflow_id}")
 
+        # Serializar execuções para o schema correto
+        items = [
+            ExecutionResponse(
+                execution_id=str(exec.id),
+                workflow_id=str(exec.workflow_id),
+                user_id=str(exec.user_id),
+                status=exec.status.value if hasattr(exec.status, 'value') else str(exec.status),
+                outputs=getattr(exec, 'outputs', None),
+                error=getattr(exec, 'error', None),
+                created_at=exec.created_at,
+                updated_at=exec.updated_at,
+            )
+            for exec in executions
+        ]
+
         return ExecutionListResponse(
-            items=executions,
+            items=items,
             total=total,
             page=page,
             size=size,
@@ -504,7 +523,7 @@ async def list_workflow_executions(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{workflow_id}/duplicate", response_model=WorkflowResponse, summary="Duplicar workflow", tags=["Workflows"])
+@router.post("/{workflow_id}/duplicate", response_model=WorkflowResponse, summary="Duplicar workflow", tags=["workflows"])
 async def duplicate_workflow(
     workflow_id: str,
     db: Session = Depends(get_db),

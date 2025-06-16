@@ -27,17 +27,19 @@ class UserVariable(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     key = Column(String(255), nullable=False)
     value = Column(Text, nullable=False)
-    is_secret = Column(Boolean, nullable=False, server_default=text("false"))
-    category = Column(String(100), nullable=True)
+    description = Column(Text, nullable=True)
+    is_encrypted = Column(Boolean, nullable=False, server_default=text("false"))
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    category = Column(String(100), nullable=True)
+    is_active = Column(Boolean, nullable=False, server_default=text("true"))
 
     # Relacionamento com usuário
     user = relationship("User", back_populates="variables")
 
     def __repr__(self):
-        return f"<UserVariable(user_id={self.user_id}, key='{self.key}', category='{self.category}')>"
+        return f"<UserVariable(user_id={self.user_id}, key='{self.key}')>"
 
     @staticmethod
     def get_encryption_key():
@@ -129,11 +131,12 @@ class UserVariable(Base):
         Converte a variável para dicionário
         """
         data = {
-            "id": self.id,
+            "id": str(self.id) if self.id else None,
             "key": self.key,
             "description": self.description,
             "category": self.category,
             "is_active": self.is_active,
+            "is_encrypted": self.is_encrypted,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

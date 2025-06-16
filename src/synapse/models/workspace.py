@@ -150,6 +150,37 @@ class Workspace(Base):
         member = next((m for m in self.members if m.user_id == user_id), None)
         return WorkspaceRole(member.role) if member else None
 
+    def to_dict(self) -> dict:
+        return {
+            "id": str(self.id) if self.id else None,
+            "name": self.name,
+            "slug": self.slug,
+            "description": self.description,
+            "avatar_url": self.avatar_url,
+            "color": self.color,
+            "owner_id": str(self.owner_id) if self.owner_id else None,
+            "owner_name": self.owner.full_name if self.owner and hasattr(self.owner, 'full_name') else None,
+            "is_public": self.is_public,
+            "allow_guest_access": self.allow_guest_access,
+            "require_approval": self.require_approval,
+            "max_members": self.max_members,
+            "max_projects": self.max_projects,
+            "max_storage_mb": self.max_storage_mb,
+            "enable_real_time_editing": self.enable_real_time_editing,
+            "enable_comments": self.enable_comments,
+            "enable_chat": self.enable_chat,
+            "enable_video_calls": self.enable_video_calls,
+            "notification_settings": self.notification_settings,
+            "member_count": self.member_count,
+            "project_count": self.project_count,
+            "activity_count": self.activity_count,
+            "storage_used_mb": self.storage_used_mb,
+            "status": self.status,
+            "last_activity_at": self.last_activity_at,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+
 
 class WorkspaceMember(Base):
     """

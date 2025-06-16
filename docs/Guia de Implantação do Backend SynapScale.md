@@ -14,7 +14,9 @@ Este guia apresenta o passo a passo para implantar o backend SynapScale e integr
 
 ## Requisitos do Sistema
 
-- Servidor Linux (Ubuntu 20.04 LTS ou superior recomendado)
+- **Python 3.11** (exclusivamente)
+- PostgreSQL 13+
+- Redis 6+ (opcional)
 - Docker (versão 20.10 ou superior)
 - Docker Compose (versão 2.0 ou superior)
 - 4GB RAM mínimo (8GB recomendado)
@@ -481,3 +483,45 @@ sudo netstat -tulpn | grep 8000
 ## Conclusão
 
 Parabéns! Você agora tem o backend SynapScale implantado e integrado com seu frontend na Vercel. Para suporte adicional ou dúvidas, consulte a documentação ou entre em contato com a equipe de desenvolvimento.
+
+## Instalação e Execução
+
+```bash
+# 1. Remova ambientes virtuais antigos, se existirem
+rm -rf venv .venv env ENV
+
+# 2. Crie o ambiente virtual com Python 3.11
+python3.11 -m venv venv
+source venv/bin/activate
+
+# 3. Atualize o pip
+pip install --upgrade pip
+
+# 4. Instale o torch antes das demais dependências
+pip install torch
+
+# 5. Instale as dependências do projeto
+pip install -r requirements.txt
+
+# 6. Configure o arquivo .env (obrigatório)
+cp .env.example .env
+# Edite o .env conforme necessário
+
+# 7. Inicie o servidor no modo desejado
+./dev.sh    # Desenvolvimento (com reload automático)
+# ou
+./prod.sh   # Produção (otimizado)
+```
+
+> **Atenção:** Sempre ative o ambiente virtual com `source venv/bin/activate` antes de rodar scripts ou comandos Python.
+
+---
+
+## Migrações de Banco de Dados
+
+- As migrações **não são mais executadas automaticamente** ao iniciar o backend.
+- Se precisar rodar migrações, use manualmente:
+  ```bash
+  alembic upgrade head
+  ```
+- Consulte `docs/database/alembic_guide.md` para detalhes.

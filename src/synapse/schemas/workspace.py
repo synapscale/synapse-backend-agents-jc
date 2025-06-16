@@ -82,9 +82,9 @@ class WorkspaceUpdate(BaseModel):
 
 
 class WorkspaceResponse(WorkspaceBase):
-    id: int
+    id: str
     slug: str
-    owner_id: int
+    owner_id: str
     owner_name: str
     member_count: int = 0
     project_count: int = 0
@@ -176,9 +176,9 @@ class ProjectUpdate(BaseModel):
 
 
 class ProjectResponse(ProjectBase):
-    id: int
-    workspace_id: int
-    workflow_id: int
+    id: str
+    workspace_id: str
+    workflow_id: str
     collaborator_count: int = 0
     comment_count: int = 0
     version_count: int = 0
@@ -244,9 +244,9 @@ class CommentUpdate(BaseModel):
 
 
 class CommentResponse(CommentBase):
-    id: int
-    project_id: int
-    user_id: int
+    id: str
+    project_id: str
+    user_id: str
     user_name: str
     user_avatar: str | None = None
     parent_id: int | None = None
@@ -263,9 +263,9 @@ class CommentResponse(CommentBase):
 
 
 class ActivityResponse(BaseModel):
-    id: int
-    workspace_id: int
-    user_id: int
+    id: str
+    workspace_id: str
+    user_id: str
     user_name: str
     user_avatar: str | None = None
     action: str
@@ -429,8 +429,8 @@ class WorkspaceIntegration(BaseModel):
 
 
 class IntegrationResponse(BaseModel):
-    id: int
-    workspace_id: int
+    id: str
+    workspace_id: str
     integration_type: str
     config: dict[str, Any]
     is_enabled: bool

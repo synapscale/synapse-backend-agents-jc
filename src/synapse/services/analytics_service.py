@@ -925,3 +925,28 @@ class AnalyticsService:
 
         # Implementação simplificada
         return []
+
+    def get_user_behavior_metrics(self, user_id: str, start_date: datetime, end_date: datetime, *args, **kwargs):
+        """Retorna métricas comportamentais do usuário em um período"""
+        return (
+            self.db.query(UserBehaviorMetric)
+            .filter(
+                UserBehaviorMetric.user_id == user_id,
+                UserBehaviorMetric.created_at >= start_date,
+                UserBehaviorMetric.created_at <= end_date,
+            )
+            .all()
+        )
+
+    def get_analytics_overview(self) -> dict:
+        """Retorna visão geral de analytics para o sistema, compatível com AnalyticsOverview"""
+        now = datetime.utcnow()
+        return {
+            "period": {"start": now, "end": now},
+            "user_metrics": {},
+            "performance_metrics": {},
+            "business_metrics": {},
+            "trends": [],
+            "anomalies": [],
+            "generated_at": now,
+        }

@@ -36,11 +36,11 @@ from synapse.api.deps import get_current_user
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Templates"])
+router = APIRouter()
 template_service = TemplateService()
 
 
-@router.post("/", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED, summary="Criar template", tags=["Templates"])
+@router.post("/", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED, summary="Criar template", tags=["templates"])
 async def create_template(
     template_data: TemplateCreate,
     workflow_id: Optional[int] = Query(None, description="ID do workflow base"),
@@ -87,7 +87,7 @@ async def create_template(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/", response_model=TemplateListResponse, summary="Buscar templates", tags=["Templates", "Search"])
+@router.get("/", response_model=TemplateListResponse, summary="Buscar templates", tags=["templates"])
 async def search_templates(
     search: Optional[str] = Query(None, description="Termo de busca"),
     category: Optional[List[str]] = Query(None, description="Categorias"),
@@ -195,7 +195,7 @@ async def search_templates(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/stats", response_model=TemplateStats, summary="Estatísticas de templates", tags=["Templates", "Statistics"])
+@router.get("/stats", response_model=TemplateStats, summary="Estatísticas de templates", tags=["templates"])
 async def get_template_stats(
     db: Session = Depends(get_db),
 ) -> TemplateStats:
@@ -224,7 +224,7 @@ async def get_template_stats(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/marketplace", response_model=MarketplaceStats, summary="Estatísticas do marketplace", tags=["Templates", "Marketplace"])
+@router.get("/marketplace", response_model=MarketplaceStats, summary="Estatísticas do marketplace", tags=["templates"])
 async def get_marketplace_stats(
     db: Session = Depends(get_db),
 ) -> MarketplaceStats:
@@ -269,7 +269,7 @@ async def get_marketplace_stats(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/my-stats", response_model=UserTemplateStats, summary="Minhas estatísticas", tags=["Templates", "User"])
+@router.get("/my-stats", response_model=UserTemplateStats, summary="Minhas estatísticas", tags=["templates"])
 async def get_user_template_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -303,7 +303,7 @@ async def get_user_template_stats(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{template_id}", response_model=TemplateDetailResponse, summary="Obter template", tags=["Templates"])
+@router.get("/{template_id}", response_model=TemplateDetailResponse, summary="Obter template", tags=["templates"])
 async def get_template(
     template_id: str,
     db: Session = Depends(get_db),
@@ -351,7 +351,7 @@ async def get_template(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/{template_id}", response_model=TemplateResponse, summary="Atualizar template", tags=["Templates"])
+@router.put("/{template_id}", response_model=TemplateResponse, summary="Atualizar template", tags=["templates"])
 async def update_template(
     template_id: str,
     template_data: TemplateUpdate,
@@ -407,7 +407,7 @@ async def update_template(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{template_id}/publish", response_model=Dict[str, Any], summary="Publicar template", tags=["Templates", "Publishing"])
+@router.post("/{template_id}/publish", response_model=Dict[str, Any], summary="Publicar template", tags=["templates"])
 async def publish_template(
     template_id: str,
     db: Session = Depends(get_db),
@@ -464,7 +464,7 @@ async def publish_template(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{template_id}/download", response_model=Dict[str, Any], summary="Download de template", tags=["Templates", "Download"])
+@router.post("/{template_id}/download", response_model=Dict[str, Any], summary="Download de template", tags=["templates"])
 async def download_template(
     template_id: str,
     download_type: str = Query("full", pattern="^(full|preview|demo)$", description="Tipo de download"),
@@ -517,7 +517,7 @@ async def download_template(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/install", response_model=TemplateInstallResponse, summary="Instalar template", tags=["Templates", "Installation"])
+@router.post("/install", response_model=TemplateInstallResponse, summary="Instalar template", tags=["templates"])
 async def install_template(
     install_data: TemplateInstall,
     db: Session = Depends(get_db),
@@ -569,7 +569,7 @@ async def install_template(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/favorites", response_model=FavoriteResponse, status_code=status.HTTP_201_CREATED, summary="Adicionar favorito", tags=["Templates", "Favorites"])
+@router.post("/favorites", response_model=FavoriteResponse, status_code=status.HTTP_201_CREATED, summary="Adicionar favorito", tags=["templates"])
 async def add_to_favorites(
     favorite_data: FavoriteCreate,
     db: Session = Depends(get_db),
@@ -618,7 +618,7 @@ async def add_to_favorites(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/favorites/my", response_model=List[FavoriteResponse], summary="Meus favoritos", tags=["Templates", "Favorites"])
+@router.get("/favorites/my", response_model=List[FavoriteResponse], summary="Meus favoritos", tags=["templates"])
 async def get_my_favorites(
     page: int = Query(1, ge=1, description="Página"),
     per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
@@ -660,7 +660,7 @@ async def get_my_favorites(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{template_id}/reviews", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED, summary="Criar review", tags=["Templates", "Reviews"])
+@router.post("/{template_id}/reviews", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED, summary="Criar review", tags=["templates"])
 async def create_review(
     template_id: str,
     review_data: ReviewCreate,
@@ -721,7 +721,7 @@ async def create_review(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{template_id}/reviews", response_model=List[ReviewResponse], summary="Obter reviews", tags=["Templates", "Reviews"])
+@router.get("/{template_id}/reviews", response_model=List[ReviewResponse], summary="Obter reviews", tags=["templates"])
 async def get_template_reviews(
     template_id: str,
     page: int = Query(1, ge=1, description="Página"),
@@ -772,7 +772,7 @@ async def get_template_reviews(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/collections", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED, summary="Criar coleção", tags=["Templates", "Collections"])
+@router.post("/collections", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED, summary="Criar coleção", tags=["templates"])
 async def create_collection(
     collection_data: CollectionCreate,
     db: Session = Depends(get_db),
@@ -826,7 +826,7 @@ async def create_collection(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/collections", response_model=List[CollectionResponse], summary="Listar coleções", tags=["Templates", "Collections"])
+@router.get("/collections", response_model=List[CollectionResponse], summary="Listar coleções", tags=["templates"])
 async def get_collections(
     page: int = Query(1, ge=1, description="Página"),
     per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
@@ -865,7 +865,7 @@ async def get_collections(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{template_id}", summary="Deletar template", tags=["Templates"])
+@router.delete("/{template_id}", summary="Deletar template", tags=["templates"])
 def delete_template(template_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
         template_uuid = uuid.UUID(template_id)

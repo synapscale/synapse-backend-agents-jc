@@ -4,6 +4,7 @@ Testes de API endpoints
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
+import uuid
 
 
 @pytest.mark.api
@@ -46,7 +47,7 @@ class TestAgentEndpoints:
             "description": "A test agent",
             "agent_type": "GENERAL",
             "model_provider": "openai",
-            "model_name": "gpt-3.5-turbo",
+            "model": "gpt-3.5-turbo",
             "temperature": 0.7,
             "max_tokens": 1000
         }
@@ -97,9 +98,18 @@ class TestAnalyticsEndpoints:
     
     def test_analytics_overview(self, client: TestClient, auth_headers):
         """Teste do overview de analytics"""
-        params = {'start_date': '2023-01-01', 'end_date': '2023-12-31'}
-        response = client.get("/api/v1/analytics/metrics/user-behavior", headers=auth_headers, params=params)
-        assert response.status_code in [200, 401, 422]
+        response = client.get("/api/v1/analytics/overview", headers=auth_headers)
+        assert response.status_code in [200, 401, 403]
+        if response.status_code == 200:
+            data = response.json()
+            assert isinstance(data, dict)
+            assert "period" in data
+            assert "user_metrics" in data
+            assert "performance_metrics" in data
+            assert "business_metrics" in data
+            assert "trends" in data
+            assert "anomalies" in data
+            assert "generated_at" in data
     
     def test_analytics_metrics(self, client: TestClient, auth_headers):
         """Teste das métricas de analytics"""
@@ -161,14 +171,16 @@ class TestUserVariableEndpoints:
     def test_create_user_variable(self, client: TestClient, auth_headers):
         """Teste de criação de variável"""
         variable_data = {
-            "name": "test_variable",
+            "key": f"test_variable_{uuid.uuid4().hex[:8]}",
             "value": "test_value",
             "description": "A test variable",
             "category": "general"
         }
-        
         response = client.post("/api/v1/user-variables/", json=variable_data, headers=auth_headers)
         assert response.status_code in [200, 201, 401]
+        if response.status_code in [200, 201]:
+            data = response.json()
+            assert data["category"] == "general"
 
 
 @pytest.mark.api
@@ -176,6 +188,7 @@ class TestUserVariableEndpoints:
 class TestAPIIntegration:
     """Testes de integração da API"""
     
+    @pytest.mark.asyncio
     async def test_api_endpoints_respond(self, async_client: AsyncClient):
         """Teste se todos os endpoints principais respondem"""
         endpoints = [
