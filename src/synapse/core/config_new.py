@@ -157,15 +157,19 @@ class Settings(BaseSettings):
         default_factory=lambda: int(os.getenv("MAX_FILE_SIZE", "10485760")),
         description="Tamanho máximo de arquivo em bytes"
     )
-    ALLOWED_EXTENSIONS: List[str] = Field(
-        default_factory=lambda: (
-            os.getenv("ALLOWED_EXTENSIONS",
-                      ".txt,.pdf,.doc,.docx,.csv,.json,.xml").split(",")
-            if os.getenv("ALLOWED_EXTENSIONS")
-            else [".txt", ".pdf", ".doc", ".docx", ".csv", ".json", ".xml"]
-        ),
-        description="Extensões de arquivo permitidas"
+    ALLOWED_EXTENSIONS_STR: str = Field(
+        default_factory=lambda: os.getenv("ALLOWED_EXTENSIONS", ".txt,.pdf,.doc,.docx,.csv,.json,.xml"),
+        description="Extensões de arquivo permitidas (formato string)"
     )
+
+    @property
+    def ALLOWED_EXTENSIONS(self) -> list[str]:
+        """Converte ALLOWED_EXTENSIONS_STR de string separada por vírgulas para lista"""
+        if not self.ALLOWED_EXTENSIONS_STR:
+            return [".txt", ".pdf", ".doc", ".docx", ".csv", ".json", ".xml"]
+        # Remove espaços e filtra valores vazios
+        extensions = [ext.strip() for ext in self.ALLOWED_EXTENSIONS_STR.split(",") if ext.strip()]
+        return extensions if extensions else [".txt", ".pdf", ".doc", ".docx", ".csv", ".json", ".xml"]
 
     # Configurações de LLM
     OPENAI_API_KEY: Optional[str] = Field(
@@ -262,6 +266,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "allow"  # Permite campos extras do .env
         json_schema_extra = {
             "example": {
                 "key": "value"
