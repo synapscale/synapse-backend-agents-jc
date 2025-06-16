@@ -3,9 +3,10 @@ Configuração otimizada do sistema
 Criado por José - O melhor Full Stack do mundo
 Integra com DigitalOcean PostgreSQL e todas as funcionalidades
 """
-import os
+import json
 import logging
-from typing import Dict, List, Any, Optional
+import os
+from typing import Any
 
 from dotenv import load_dotenv
 from pydantic import Field, field_validator
@@ -74,7 +75,7 @@ class Settings(BaseSettings):
     )
 
     # Configurações de CORS
-    CORS_ORIGINS: List[str] = Field(
+    CORS_ORIGINS: list[str] = Field(
         default_factory=lambda: (
             os.getenv("CORS_ORIGINS",
                       "http://localhost:3000,http://127.0.0.1:3000").split(",")
@@ -93,10 +94,9 @@ class Settings(BaseSettings):
     )
 
     @property
-    def backend_cors_origins_list(self) -> List[str]:
+    def backend_cors_origins_list(self) -> list[str]:
         """Converte BACKEND_CORS_ORIGINS de string JSON para lista"""
         try:
-            import json
             result = json.loads(self.BACKEND_CORS_ORIGINS)
             return result if isinstance(result, list) else []
         except (json.JSONDecodeError, TypeError):
@@ -114,6 +114,7 @@ class Settings(BaseSettings):
     @field_validator('BACKEND_CORS_ORIGINS', mode='before')
     @classmethod
     def parse_cors_origins(cls, v: Any) -> str:
+        """Parse CORS origins from various formats to JSON string"""
         if isinstance(v, str):
             if not v:  # String vazia
                 # Busca do .env ou usa valores mínimos
@@ -122,16 +123,13 @@ class Settings(BaseSettings):
                     '["http://localhost:3000", "http://127.0.0.1:3000"]'
                 )
             try:
-                import json
                 # Tenta fazer parse para validar que é JSON válido
                 json.loads(v)
                 return v
             except json.JSONDecodeError:
                 # Se não for JSON válido, retorna como lista com um item
-                import json
                 return json.dumps([v.strip()])
         if isinstance(v, list):
-            import json
             return json.dumps(v)
         return str(v)
 
@@ -158,35 +156,45 @@ class Settings(BaseSettings):
         description="Tamanho máximo de arquivo em bytes"
     )
     ALLOWED_EXTENSIONS_STR: str = Field(
-        default_factory=lambda: os.getenv("ALLOWED_EXTENSIONS", ".txt,.pdf,.doc,.docx,.csv,.json,.xml"),
+        default_factory=lambda: os.getenv(
+            "ALLOWED_EXTENSIONS", ".txt,.pdf,.doc,.docx,.csv,.json,.xml"
+        ),
         description="Extensões de arquivo permitidas (formato string)"
     )
 
     @property
     def ALLOWED_EXTENSIONS(self) -> list[str]:
-        """Converte ALLOWED_EXTENSIONS_STR de string separada por vírgulas para lista"""
-        if not self.ALLOWED_EXTENSIONS_STR:
+        """Converte ALLOWED_EXTENSIONS_STR para lista"""
+        extensions_str = self.ALLOWED_EXTENSIONS_STR
+        if not extensions_str:
             return [".txt", ".pdf", ".doc", ".docx", ".csv", ".json", ".xml"]
+
         # Remove espaços e filtra valores vazios
-        extensions = [ext.strip() for ext in self.ALLOWED_EXTENSIONS_STR.split(",") if ext.strip()]
-        return extensions if extensions else [".txt", ".pdf", ".doc", ".docx", ".csv", ".json", ".xml"]
+        extensions = [
+            ext.strip()
+            for ext in extensions_str.split(",")
+            if ext.strip()
+        ]
+        return extensions if extensions else [
+            ".txt", ".pdf", ".doc", ".docx", ".csv", ".json", ".xml"
+        ]
 
     # Configurações de LLM
-    OPENAI_API_KEY: Optional[str] = Field(
+    OPENAI_API_KEY: str | None = Field(
         default_factory=lambda: os.getenv("OPENAI_API_KEY"),
         description="Chave da API OpenAI"
     )
-    ANTHROPIC_API_KEY: Optional[str] = Field(
+    ANTHROPIC_API_KEY: str | None = Field(
         default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"),
         description="Chave da API Anthropic"
     )
-    GOOGLE_API_KEY: Optional[str] = Field(
+    GOOGLE_API_KEY: str | None = Field(
         default_factory=lambda: os.getenv("GOOGLE_API_KEY"),
         description="Chave da API Google"
     )
 
     # Configurações de email
-    SMTP_HOST: Optional[str] = Field(
+    SMTP_HOST: str | None = Field(
         default_factory=lambda: os.getenv("SMTP_HOST"),
         description="Host SMTP"
     )
@@ -194,27 +202,27 @@ class Settings(BaseSettings):
         default_factory=lambda: int(os.getenv("SMTP_PORT", "587")),
         description="Porta SMTP"
     )
-    SMTP_USER: Optional[str] = Field(
+    SMTP_USER: str | None = Field(
         default_factory=lambda: os.getenv("SMTP_USER"),
         description="Usuário SMTP"
     )
-    SMTP_PASSWORD: Optional[str] = Field(
+    SMTP_PASSWORD: str | None = Field(
         default_factory=lambda: os.getenv("SMTP_PASSWORD"),
         description="Senha SMTP"
     )
-    EMAIL_FROM: Optional[str] = Field(
+    EMAIL_FROM: str | None = Field(
         default_factory=lambda: os.getenv("EMAIL_FROM"),
         description="Email remetente"
     )
-    SMTP_USERNAME: Optional[str] = Field(
+    SMTP_USERNAME: str | None = Field(
         default_factory=lambda: os.getenv("SMTP_USERNAME"),
         description="Usuário SMTP (compatibilidade)"
     )
-    SMTP_FROM_EMAIL: Optional[str] = Field(
+    SMTP_FROM_EMAIL: str | None = Field(
         default_factory=lambda: os.getenv("SMTP_FROM_EMAIL"),
         description="Email remetente (compatibilidade)"
     )
-    SMTP_FROM_NAME: Optional[str] = Field(
+    SMTP_FROM_NAME: str | None = Field(
         default_factory=lambda: os.getenv("SMTP_FROM_NAME"),
         description="Nome remetente (compatibilidade)"
     )
@@ -273,7 +281,7 @@ class Settings(BaseSettings):
             }
         }
 
-    def get_llm_providers(self) -> Dict[str, Any]:
+    def get_llm_providers(self) -> dict[str, Any]:
         """
         Retorna provedores LLM configurados
         """
@@ -306,7 +314,7 @@ class Settings(BaseSettings):
 
         return providers
 
-    def get_database_config(self) -> Dict[str, Any]:
+    def get_database_config(self) -> dict[str, Any]:
         """
         Retorna configuração do banco de dados
         """
@@ -359,4 +367,3 @@ if settings.ENVIRONMENT == "development":
 logger.info(
     "✅ Configurações carregadas para ambiente: %s", settings.ENVIRONMENT
 )
-
