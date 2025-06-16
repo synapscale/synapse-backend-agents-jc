@@ -43,18 +43,22 @@ async def test_conversation_agent_message(
     async_client: AsyncClient, db_session, test_user, test_utils, auth_headers
 ):
     agent = await test_utils.create_test_agent(db_session, test_user)
-    conversation = Conversation(user_id=test_user.id, agent_id=agent.id)
-    db_session.add(conversation)
-    await db_session.commit()
-    await db_session.refresh(conversation)
+    # Criar conversa via API
+    resp_conv = await async_client.post(
+        "/api/v1/conversations/",
+        json={"agent_id": str(agent.id)},
+        headers=auth_headers,
+    )
+    assert resp_conv.status_code == 200
+    conversation_id = resp_conv.json()["id"]
 
     resp = await async_client.post(
-        f"/api/v1/conversations/{conversation.id}/messages", json={"content": "Hello"}, headers=auth_headers
+        f"/api/v1/conversations/{conversation_id}/messages", json={"content": "Hello"}, headers=auth_headers
     )
     assert resp.status_code == 200
 
     messages_resp = await async_client.get(
-        f"/api/v1/conversations/{conversation.id}/messages", headers=auth_headers
+        f"/api/v1/conversations/{conversation_id}/messages", headers=auth_headers
     )
     assert messages_resp.status_code == 200
     assert messages_resp.json()["total"] == 2

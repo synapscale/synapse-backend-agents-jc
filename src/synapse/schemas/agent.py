@@ -18,7 +18,7 @@ class AgentBase(BaseModel):
 
 class AgentCreate(AgentBase):
     model_provider: str = Field(default="openai")
-    model_name: str = Field(default="gpt-3.5-turbo")
+    model: str = Field(default="gpt-3.5-turbo")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=1000, ge=1, le=128000)
     tools: list[str] = Field(default_factory=list)
@@ -33,7 +33,7 @@ class AgentUpdate(BaseModel):
     personality: str | None = None
     instructions: str | None = None
     model_provider: str | None = None
-    model_name: str | None = None
+    model: str | None = None
     temperature: float | None = Field(None, ge=0.0, le=2.0)
     max_tokens: int | None = Field(None, ge=1, le=128000)
     tools: list[str] | None = None
@@ -47,7 +47,7 @@ class AgentResponse(AgentBase):
     user_id: str
     workspace_id: str | None = None
     model_provider: str
-    model_name: str
+    model: str
     temperature: float
     max_tokens: int
     status: str

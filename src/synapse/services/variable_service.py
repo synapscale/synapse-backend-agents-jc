@@ -41,8 +41,8 @@ class VariableService:
         skip: int = 0,
         limit: int = 100,
         search: Optional[str] = None,
-        category: Optional[str] = None,
         is_active: Optional[bool] = None,
+        category: Optional[str] = None,
         sort_by: str = "key",
         sort_order: str = "asc",
     ) -> Tuple[List[UserVariable], int]:
@@ -61,11 +61,11 @@ class VariableService:
                 ),
             )
 
-        if category:
-            query = query.filter(UserVariable.category == category.upper())
-
         if is_active is not None:
             query = query.filter(UserVariable.is_active == is_active)
+
+        if category is not None:
+            query = query.filter(UserVariable.category == category)
 
         # Contar total antes de aplicar paginação
         total = query.count()
@@ -77,8 +77,6 @@ class VariableService:
             order_column = UserVariable.created_at
         elif sort_by == "updated_at":
             order_column = UserVariable.updated_at
-        elif sort_by == "category":
-            order_column = UserVariable.category
         else:
             order_column = UserVariable.key
 
@@ -179,11 +177,11 @@ class VariableService:
         if variable_data.description is not None:
             variable.description = variable_data.description
 
-        if variable_data.category is not None:
-            variable.category = variable_data.category
-
         if variable_data.is_active is not None:
             variable.is_active = variable_data.is_active
+
+        if variable_data.category is not None:
+            variable.category = variable_data.category
 
         db.commit()
         db.refresh(variable)
@@ -366,7 +364,7 @@ class VariableService:
                     key=key,
                     value=value,
                     description=f"Importado de arquivo .env",
-                    category=import_data.default_category,
+                    category=None,
                     is_encrypted=True,
                 )
                 variables_to_create.append(variable)
@@ -408,25 +406,6 @@ class VariableService:
             UserVariable.user_id == user_id,
             UserVariable.is_active == True,
         )
-
-        # Filtrar por categorias se especificado
-        if export_data.categories:
-            query = query.filter(
-                UserVariable.category.in_([c.upper() for c in export_data.categories])
-            )
-
-        # Filtrar variáveis sensíveis se não incluídas
-        if not export_data.include_sensitive:
-            query = query.filter(
-                ~UserVariable.key.like("%KEY%"),
-                ~UserVariable.key.like("%SECRET%"),
-                ~UserVariable.key.like("%TOKEN%"),
-                ~UserVariable.key.like("%PASSWORD%"),
-                ~UserVariable.key.like("%PASS%"),
-                ~UserVariable.key.like("%AUTH%"),
-                ~UserVariable.key.like("%CREDENTIAL%"),
-                ~UserVariable.key.like("%PRIVATE%"),
-            )
 
         variables = query.order_by(UserVariable.key).all()
 
@@ -513,25 +492,6 @@ class VariableService:
         )
         sensitive = sensitive_query.scalar() or 0
 
-        # Contagem por categoria
-        categories_count = {}
-        categories = (
-            db.query(
-                UserVariable.category,
-                func.count(UserVariable.id),
-            )
-            .filter(
-                UserVariable.user_id == user_id,
-            )
-            .group_by(
-                UserVariable.category,
-            )
-            .all()
-        )
-
-        for category, count in categories:
-            categories_count[category or "UNCATEGORIZED"] = count
-
         # Última atualização
         last_updated = (
             db.query(
@@ -541,6 +501,14 @@ class VariableService:
                 UserVariable.user_id == user_id,
             )
             .scalar()
+        )
+
+        # Contar por categoria
+        categories_count = dict(
+            db.query(UserVariable.category, func.count(UserVariable.id))
+            .filter(UserVariable.user_id == user_id)
+            .group_by(UserVariable.category)
+            .all()
         )
 
         return UserVariableStats(
@@ -649,20 +617,3 @@ class VariableService:
         Retorna todas as variáveis ativas do usuário como string .env
         """
         return UserVariable.get_user_env_string(user_id, db)
-
-    @staticmethod
-    def get_available_categories(db: Session, user_id: int) -> list[str]:
-        """
-        Retorna todas as categorias usadas pelo usuário
-        """
-        categories = (
-            db.query(UserVariable.category)
-            .filter(
-                UserVariable.user_id == user_id,
-                UserVariable.category.isnot(None),
-            )
-            .distinct()
-            .all()
-        )
-
-        return [c[0] for c in categories if c[0]]

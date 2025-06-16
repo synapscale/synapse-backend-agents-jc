@@ -22,20 +22,9 @@ Antes de iniciar a instalação, certifique-se de que seu sistema atende aos seg
 
 ### Para Instalação Local
 
-- **Python**: Versão 3.11 ou superior
-  - Verifique sua versão com: `python --version`
-  - Caso não tenha, instale em: [python.org](https://www.python.org/downloads/)
-
-- **Poetry**: Gerenciador de dependências
-  - Instale com: `curl -sSL https://install.python-poetry.org | python3 -`
-  - Verifique a instalação com: `poetry --version`
-
-- **PostgreSQL**: Versão 12 ou superior (opcional, pode usar SQLite para desenvolvimento)
-  - Instale conforme seu sistema operacional: [postgresql.org/download](https://www.postgresql.org/download/)
-  - Crie um banco de dados: `createdb synapse`
-
-- **Redis**: Versão 6 ou superior (opcional, para rate limiting)
-  - Instale conforme seu sistema operacional: [redis.io/download](https://redis.io/download/)
+- **Python 3.11** (exclusivamente)
+- PostgreSQL 13+
+- Redis 6+ (opcional)
 
 ### Para Instalação com Docker
 
@@ -49,78 +38,45 @@ Antes de iniciar a instalação, certifique-se de que seu sistema atende aos seg
 
 ## Instalação Local Passo a Passo
 
-Siga estas etapas para instalar o SynapScale localmente:
-
-### 1. Extrair o Pacote
-
 ```bash
-# Crie um diretório para o projeto
-mkdir -p ~/projects
-cd ~/projects
+# 1. Remova ambientes virtuais antigos, se existirem
+rm -rf venv .venv env ENV
 
-# Extraia o arquivo zip
-unzip synapse-backend-final.zip -d synapse-backend
-cd synapse-backend
-```
+# 2. Crie o ambiente virtual com Python 3.11
+python3.11 -m venv venv
+source venv/bin/activate
 
-### 2. Configurar o Ambiente Virtual
+# 3. Atualize o pip
+pip install --upgrade pip
 
-```bash
-# Instalar dependências com Poetry
-poetry install
+# 4. Instale o torch antes das demais dependências
+pip install torch
 
-# Ativar o ambiente virtual
-poetry shell
-```
+# 5. Instale as dependências do projeto
+pip install -r requirements.txt
 
-### 3. Configurar Variáveis de Ambiente
-
-```bash
-# Copiar arquivo de exemplo
+# 6. Configure o arquivo .env (obrigatório)
 cp .env.example .env
+# Edite o .env conforme necessário
 
-# Editar o arquivo .env com seu editor preferido
-nano .env
+# 7. Inicie o servidor no modo desejado
+./dev.sh    # Desenvolvimento (com reload automático)
+# ou
+./prod.sh   # Produção (otimizado)
 ```
 
-Edite as seguintes variáveis no arquivo `.env`:
+> **Atenção:** Sempre ative o ambiente virtual com `source venv/bin/activate` antes de rodar scripts ou comandos Python.
 
-- `ENVIRONMENT`: Defina como `development`, `testing` ou `production`
-- `SECRET_KEY`: Gere uma chave segura com `openssl rand -hex 32`
-- `DATABASE_URL`: Configure a URL do banco de dados
-- `STORAGE_BASE_PATH`: Defina o caminho para armazenamento de arquivos
+---
 
-### 4. Inicializar o Banco de Dados
+## Migrações de Banco de Dados
 
-```bash
-# Executar migrações
-alembic upgrade head
-```
-
-### 5. Criar Diretórios de Armazenamento
-
-```bash
-# Criar diretórios para cada categoria de arquivo
-mkdir -p storage/image storage/video storage/audio storage/document storage/archive
-```
-
-### 6. Iniciar a Aplicação
-
-```bash
-# Usando o script de inicialização
-chmod +x scripts/start.sh
-./scripts/start.sh
-
-# OU manualmente
-uvicorn src.synapse.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 7. Verificar a Instalação
-
-Abra seu navegador e acesse:
-- API: http://localhost:8000
-- Documentação: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+- As migrações **não são mais executadas automaticamente** ao iniciar o backend.
+- Se precisar rodar migrações, use manualmente:
+  ```bash
+  alembic upgrade head
+  ```
+- Consulte `docs/database/alembic_guide.md` para detalhes.
 
 ## Instalação com Docker Passo a Passo
 

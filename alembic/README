@@ -1,1 +1,78 @@
-Generic single-database configuration.
+# Guia de Migrações Alembic — Padrão para Equipe
+
+## Estrutura de Diretórios
+- **alembic/**: scripts e configuração principal
+  - **alembic/env.py**: lógica de ambiente Alembic
+  - **alembic/versions/**: arquivos de migração versionados
+  - **alembic/README**: este guia
+- **config/alembic.ini**: arquivo de configuração principal (ajuste o caminho se necessário)
+
+---
+
+## Convenções de Nomes
+- **Revisions**: sempre use hashes curtos (ex: `1234abcd5678`) como valor de `revision` e nome do arquivo (ex: `1234abcd5678_add_field_to_table.py`).
+- **down_revision**: sempre aponte para o hash da migração anterior.
+- **Nunca use nomes longos ou descritivos como revision.**
+
+---
+
+## Passo a Passo para Criar e Aplicar Migrações
+
+### 1. Gerar uma nova migração
+```sh
+alembic revision -m "descrição curta" -c config/alembic.ini
+```
+- O arquivo será criado em `alembic/versions/`.
+- Edite o arquivo para definir as operações de upgrade/downgrade.
+
+### 2. Migração envolvendo Enum (padrão seguro)
+**Sempre separe em duas migrações:**
+- **Primeira:** Adicione o novo valor ao Enum.
+- **Segunda:** Adicione a coluna que usa o novo valor como default.
+
+**Exemplo:**
+```python
+# Migração 1: Adiciona valor ao Enum
+revision = '1234abcd5678'
+down_revision = 'anterior'
+def upgrade():
+    op.execute("ALTER TYPE meu_enum ADD VALUE IF NOT EXISTS 'novo_valor';")
+
+def downgrade():
+    pass  # Não é possível remover valores de Enum facilmente
+
+# Migração 2: Adiciona coluna usando o Enum
+revision = '2345bcde6789'
+down_revision = '1234abcd5678'
+def upgrade():
+    op.add_column(
+        'minha_tabela',
+        sa.Column('nova_coluna', sa.Enum(..., name='meu_enum'), nullable=False, server_default="novo_valor"),
+        schema='meu_schema'  # especifique o schema se necessário
+    )
+
+def downgrade():
+    op.drop_column('minha_tabela', 'nova_coluna', schema='meu_schema')
+```
+
+### 3. Aplicar as migrações
+```sh
+# Sempre rode na ordem correta:
+alembic upgrade <revision> -c config/alembic.ini
+# ou para todas até o topo:
+alembic upgrade head -c config/alembic.ini
+```
+
+### 4. Dicas para execução
+- **Sempre confira o schema**: use o parâmetro `schema='...'` se sua tabela não está no schema padrão.
+- **Nunca misture alteração de Enum e uso do novo valor na mesma migração.**
+- **Documente o propósito da migração no docstring.**
+- **Para múltiplos ambientes:** garanta que o `alembic.ini` aponte para o banco correto.
+
+---
+
+## Resumo
+- Use sempre revisions curtos.
+- Separe alterações de Enum e uso do valor novo.
+- Especifique schema quando necessário.
+- Siga a estrutura e comandos deste guia para migrações seguras e reprodutíveis.

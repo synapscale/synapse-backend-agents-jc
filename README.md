@@ -271,3 +271,72 @@ Este projeto é licenciado sob os termos da licença MIT - veja o arquivo [LICEN
 ---
 
 **SynapScale Backend** - Desenvolvido com ❤️ pela equipe SynapScale.
+
+## ⚠️ Requisito Obrigatório
+
+- **Python 3.11** (exclusivamente). Outras versões não são suportadas devido às dependências de ML.
+
+---
+
+## 🛠️ Instalação Recomendada
+
+```bash
+# 1. Remova ambientes virtuais antigos, se existirem
+rm -rf venv .venv env ENV
+
+# 2. Crie o ambiente virtual com Python 3.11
+python3.11 -m venv venv
+source venv/bin/activate
+
+# 3. Atualize o pip
+pip install --upgrade pip
+
+# 4. Instale o torch antes das demais dependências
+pip install torch
+
+# 5. Instale as dependências do projeto
+pip install -r requirements.txt
+
+# 6. Configure o arquivo .env (obrigatório)
+cp .env.example .env
+# Edite o .env conforme necessário
+```
+
+> **Atenção:** Sempre ative o ambiente virtual com `source venv/bin/activate` antes de rodar scripts ou comandos Python.
+
+---
+
+## ❌ Não use outras versões de Python
+- O projeto não funcionará corretamente com Python 3.12, 3.13 ou superior.
+- Não utilize múltiplos ambientes virtuais. Use sempre o `venv` criado com Python 3.11.
+
+---
+
+## 🧩 Arquitetura dos Modelos Principais
+
+- **Node**: Representa um componente reutilizável de workflow (ex: LLM, API, condição, etc).
+- **WorkflowNode**: Representa uma instância de um Node dentro de um workflow específico.
+- O relacionamento entre eles é bidirecional:
+  - `Node.workflow_instances` lista todas as instâncias de um Node em workflows.
+  - `WorkflowNode.node` referencia o Node base daquela instância.
+- Isso permite flexibilidade e reuso de componentes em múltiplos workflows.
+
+---
+
+# Scripts e Utilitários
+
+O repositório segue uma organização avançada para scripts e utilitários:
+
+- **scripts/**: Scripts de manutenção, organização, validação e automação do repositório. Não execute em produção. Inclui scripts para limpeza, validação de migrations, organização de requirements, execução de testes automatizados, análise e reorganização do repositório.
+- **tools/testing/**: Scripts de teste e diagnose (não rodados em produção).
+- **tools/utilities/**: Utilitários de ambiente, segurança, geração de tokens, masking, etc.
+- **tools/utils/**: Scripts de validação de setup, propagação de variáveis, etc.
+- **tools/database/**: Scripts utilitários para manipulação de banco de dados (criação de usuários, schemas, checagens).
+- **setup/templates/**: Templates de configuração (ex: .env.template). Agora realocados para docs/config-templates/.
+- **docs/config-templates/**: Local central para templates de configuração e exemplos de arquivos de ambiente.
+
+Cada subdiretório relevante possui um README próprio explicando o propósito dos scripts/utilitários daquele diretório.
+
+Consulte cada script individualmente para instruções de uso.
+
+---

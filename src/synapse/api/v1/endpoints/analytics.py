@@ -40,16 +40,17 @@ from synapse.schemas.analytics import (
     RealTimeStats,
     AlertRule,
     AlertResponse,
+    AnalyticsOverview,
 )
 from synapse.api.deps import get_current_user, get_admin_user
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["Analytics"])
+router = APIRouter()
 
 # ==================== EVENTOS ====================
 
 
-@router.post("/events", response_model=EventResponse, summary="Registrar evento de analytics", tags=["Analytics"])
+@router.post("/events", response_model=EventResponse, summary="Registrar evento de analytics", tags=["analytics"])
 async def track_event(
     event_data: EventCreate,
     current_user: User = Depends(get_current_user),
@@ -87,7 +88,7 @@ async def track_event(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/events/batch", summary="Registrar múltiplos eventos", tags=["Analytics"])
+@router.post("/events/batch", summary="Registrar múltiplos eventos", tags=["analytics"])
 async def track_events_batch(
     events: List[EventCreate],
     current_user: User = Depends(get_current_user),
@@ -122,7 +123,7 @@ async def track_events_batch(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/events", response_model=List[EventResponse], summary="Listar eventos do usuário", tags=["Analytics"])
+@router.get("/events", response_model=List[EventResponse], summary="Listar eventos do usuário", tags=["analytics"])
 async def get_events(
     event_type: Optional[str] = Query(None, description="Tipo do evento"),
     start_date: Optional[datetime] = Query(None, description="Data de início"),
@@ -181,7 +182,7 @@ async def get_events(
 # ==================== MÉTRICAS ====================
 
 
-@router.get("/metrics/user-behavior", summary="Métricas de comportamento do usuário", tags=["Analytics", "Metrics"])
+@router.get("/metrics/user-behavior", summary="Métricas de comportamento do usuário", tags=["analytics", "metrics"])
 async def get_user_behavior_metrics(
     start_date: datetime = Query(..., description="Data de início"),
     end_date: datetime = Query(..., description="Data de fim"),
@@ -230,7 +231,7 @@ async def get_user_behavior_metrics(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/metrics/system-performance", summary="Métricas de performance do sistema", tags=["Analytics", "Metrics", "Admin"])
+@router.get("/metrics/system-performance", summary="Métricas de performance do sistema", tags=["analytics", "metrics", "admin"])
 async def get_system_performance_metrics(
     start_date: datetime = Query(..., description="Data de início"),
     end_date: datetime = Query(..., description="Data de fim"),
@@ -275,7 +276,7 @@ async def get_system_performance_metrics(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/metrics/business", summary="Métricas de negócio", tags=["Analytics", "Metrics", "Admin"])
+@router.get("/metrics/business", summary="Métricas de negócio", tags=["analytics", "metrics", "admin"])
 async def get_business_metrics(
     start_date: datetime = Query(..., description="Data de início"),
     end_date: datetime = Query(..., description="Data de fim"),
@@ -320,7 +321,7 @@ async def get_business_metrics(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/metrics/real-time", response_model=RealTimeStats, summary="Métricas em tempo real", tags=["Analytics", "Metrics"])
+@router.get("/metrics/real-time", response_model=RealTimeStats, summary="Métricas em tempo real", tags=["analytics", "metrics"])
 async def get_real_time_metrics(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -355,7 +356,7 @@ async def get_real_time_metrics(
 # ==================== CONSULTAS CUSTOMIZADAS ====================
 
 
-@router.post("/queries", response_model=QueryResponse, summary="Executar consulta customizada", tags=["Analytics", "Queries"])
+@router.post("/queries", response_model=QueryResponse, summary="Executar consulta customizada", tags=["analytics", "queries"])
 async def execute_analytics_query(
     query: AnalyticsQuery,
     current_user: User = Depends(get_current_user),
@@ -393,7 +394,7 @@ async def execute_analytics_query(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/queries/validate", summary="Validar consulta", tags=["Analytics", "Queries"])
+@router.post("/queries/validate", summary="Validar consulta", tags=["analytics", "queries"])
 async def validate_analytics_query(
     query: AnalyticsQuery,
     current_user: User = Depends(get_current_user),
@@ -427,7 +428,7 @@ async def validate_analytics_query(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/queries/saved", summary="Listar consultas salvas", tags=["Analytics", "Queries"])
+@router.get("/queries/saved", summary="Listar consultas salvas", tags=["analytics", "queries"])
 async def get_saved_queries(
     limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
@@ -463,7 +464,7 @@ async def get_saved_queries(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/queries/save", summary="Salvar consulta", tags=["Analytics", "Queries"])
+@router.post("/queries/save", summary="Salvar consulta", tags=["analytics", "queries"])
 async def save_query(
     query: AnalyticsQuery,
     name: str = Query(..., description="Nome da consulta"),
@@ -508,7 +509,7 @@ async def save_query(
 # ==================== DASHBOARDS ====================
 
 
-@router.post("/dashboards", response_model=DashboardResponse, summary="Criar dashboard", tags=["Analytics", "Dashboards"])
+@router.post("/dashboards", response_model=DashboardResponse, summary="Criar dashboard", tags=["analytics", "dashboards"])
 async def create_dashboard(
     dashboard_data: DashboardCreate,
     current_user: User = Depends(get_current_user),
@@ -546,7 +547,7 @@ async def create_dashboard(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/dashboards", response_model=List[DashboardResponse], summary="Listar dashboards do usuário", tags=["Analytics", "Dashboards"])
+@router.get("/dashboards", response_model=List[DashboardResponse], summary="Listar dashboards do usuário", tags=["analytics", "dashboards"])
 async def get_user_dashboards(
     limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
@@ -582,7 +583,7 @@ async def get_user_dashboards(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/dashboards/{dashboard_id}", response_model=DashboardResponse, summary="Obter dashboard específico", tags=["Analytics", "Dashboards"])
+@router.get("/dashboards/{dashboard_id}", response_model=DashboardResponse, summary="Obter dashboard específico", tags=["analytics", "dashboards"])
 async def get_dashboard(
     dashboard_id: int,
     current_user: User = Depends(get_current_user),
@@ -623,7 +624,7 @@ async def get_dashboard(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/dashboards/{dashboard_id}", response_model=DashboardResponse, summary="Atualizar dashboard", tags=["Analytics", "Dashboards"])
+@router.put("/dashboards/{dashboard_id}", response_model=DashboardResponse, summary="Atualizar dashboard", tags=["analytics", "dashboards"])
 async def update_dashboard(
     dashboard_id: int,
     dashboard_data: DashboardUpdate,
@@ -670,7 +671,7 @@ async def update_dashboard(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/dashboards/{dashboard_id}", summary="Deletar dashboard", tags=["Analytics", "Dashboards"])
+@router.delete("/dashboards/{dashboard_id}", summary="Deletar dashboard", tags=["analytics", "dashboards"])
 async def delete_dashboard(
     dashboard_id: int,
     current_user: User = Depends(get_current_user),
@@ -711,7 +712,7 @@ async def delete_dashboard(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/dashboards/{dashboard_id}/data", response_model=DashboardData, summary="Obter dados do dashboard", tags=["Analytics", "Dashboards"])
+@router.get("/dashboards/{dashboard_id}/data", response_model=DashboardData, summary="Obter dados do dashboard", tags=["analytics", "dashboards"])
 async def get_dashboard_data(
     dashboard_id: int,
     refresh: bool = Query(False, description="Forçar atualização dos dados"),
@@ -754,7 +755,7 @@ async def get_dashboard_data(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/dashboards/{dashboard_id}/share", summary="Compartilhar dashboard", tags=["Analytics", "Dashboards"])
+@router.post("/dashboards/{dashboard_id}/share", summary="Compartilhar dashboard", tags=["analytics", "dashboards"])
 async def share_dashboard(
     dashboard_id: int,
     public: bool = Query(True, description="Tornar público"),
@@ -801,7 +802,7 @@ async def share_dashboard(
 # ==================== RELATÓRIOS ====================
 
 
-@router.post("/reports", response_model=ReportResponse, summary="Criar relatório", tags=["Analytics", "Reports"])
+@router.post("/reports", response_model=ReportResponse, summary="Criar relatório", tags=["analytics", "reports"])
 async def create_report(
     report_data: ReportCreate,
     current_user: User = Depends(get_current_user),
@@ -839,7 +840,7 @@ async def create_report(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/reports", response_model=List[ReportResponse], summary="Listar relatórios do usuário", tags=["Analytics", "Reports"])
+@router.get("/reports", response_model=List[ReportResponse], summary="Listar relatórios do usuário", tags=["analytics", "reports"])
 async def get_user_reports(
     status: Optional[str] = Query(
         None, pattern="^(draft|scheduled|running|completed|failed)$", description="Filtrar por status"
@@ -879,7 +880,7 @@ async def get_user_reports(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/reports/{report_id}", response_model=ReportResponse, summary="Obter relatório específico", tags=["Analytics", "Reports"])
+@router.get("/reports/{report_id}", response_model=ReportResponse, summary="Obter relatório específico", tags=["analytics", "reports"])
 async def get_report(
     report_id: int,
     current_user: User = Depends(get_current_user),
@@ -920,7 +921,7 @@ async def get_report(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/reports/{report_id}", response_model=ReportResponse, summary="Atualizar relatório", tags=["Analytics", "Reports"])
+@router.put("/reports/{report_id}", response_model=ReportResponse, summary="Atualizar relatório", tags=["analytics", "reports"])
 async def update_report(
     report_id: int,
     report_data: ReportUpdate,
@@ -967,7 +968,7 @@ async def update_report(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/reports/{report_id}", summary="Deletar relatório", tags=["Analytics", "Reports"])
+@router.delete("/reports/{report_id}", summary="Deletar relatório", tags=["analytics", "reports"])
 async def delete_report(
     report_id: int,
     current_user: User = Depends(get_current_user),
@@ -1008,7 +1009,7 @@ async def delete_report(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/reports/{report_id}/execute", response_model=ReportExecutionResponse, summary="Executar relatório", tags=["Analytics", "Reports"])
+@router.post("/reports/{report_id}/execute", response_model=ReportExecutionResponse, summary="Executar relatório", tags=["analytics", "reports"])
 async def execute_report(
     report_id: int,
     background_tasks: BackgroundTasks,
@@ -1054,7 +1055,7 @@ async def execute_report(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/reports/{report_id}/executions", response_model=List[ReportExecutionResponse], summary="Histórico de execuções", tags=["Analytics", "Reports"])
+@router.get("/reports/{report_id}/executions", response_model=List[ReportExecutionResponse], summary="Histórico de execuções", tags=["analytics", "reports"])
 async def get_report_executions(
     report_id: int,
     limit: int = Query(10, ge=1, le=50, description="Limite de resultados"),
@@ -1102,7 +1103,7 @@ async def get_report_executions(
 # ==================== INSIGHTS ====================
 
 
-@router.post("/insights", response_model=InsightResponse, summary="Gerar insights personalizados", tags=["Analytics", "Insights"])
+@router.post("/insights", response_model=InsightResponse, summary="Gerar insights personalizados", tags=["analytics", "insights"])
 async def generate_insights(
     insight_request: InsightRequest,
     current_user: User = Depends(get_current_user),
@@ -1140,7 +1141,7 @@ async def generate_insights(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/insights/system", response_model=SystemInsights, summary="Insights do sistema", tags=["Analytics", "Insights", "Admin"])
+@router.get("/insights/system", response_model=SystemInsights, summary="Insights do sistema", tags=["analytics", "insights", "admin"])
 async def get_system_insights(
     days: int = Query(7, ge=1, le=90, description="Período em dias"),
     current_admin: User = Depends(get_admin_user),
@@ -1175,7 +1176,7 @@ async def get_system_insights(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/insights/user", summary="Insights do usuário", tags=["Analytics", "Insights"])
+@router.get("/insights/user", summary="Insights do usuário", tags=["analytics", "insights"])
 async def get_user_insights(
     days: int = Query(30, ge=1, le=365, description="Período em dias"),
     current_user: User = Depends(get_current_user),
@@ -1209,7 +1210,7 @@ async def get_user_insights(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/insights/trends", summary="Insights de tendências", tags=["Analytics", "Insights"])
+@router.get("/insights/trends", summary="Insights de tendências", tags=["analytics", "insights"])
 async def get_trending_insights(
     category: Optional[str] = Query(None, description="Categoria de insights"),
     limit: int = Query(10, ge=1, le=50, description="Limite de resultados"),
@@ -1248,7 +1249,7 @@ async def get_trending_insights(
 # ==================== ANÁLISES AVANÇADAS ====================
 
 
-@router.post("/analysis/funnel", response_model=FunnelResult, summary="Análise de funil", tags=["Analytics", "Analysis"])
+@router.post("/analysis/funnel", response_model=FunnelResult, summary="Análise de funil", tags=["analytics", "analysis"])
 async def analyze_funnel(
     funnel_config: FunnelAnalysis,
     current_user: User = Depends(get_current_user),
@@ -1286,7 +1287,7 @@ async def analyze_funnel(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/analysis/cohort", response_model=CohortResult, summary="Análise de coorte", tags=["Analytics", "Analysis"])
+@router.post("/analysis/cohort", response_model=CohortResult, summary="Análise de coorte", tags=["analytics", "analysis"])
 async def analyze_cohort(
     cohort_config: CohortAnalysis,
     current_user: User = Depends(get_current_user),
@@ -1324,7 +1325,7 @@ async def analyze_cohort(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/analysis/ab-test", response_model=ABTestResult, summary="Análise de teste A/B", tags=["Analytics", "Analysis"])
+@router.post("/analysis/ab-test", response_model=ABTestResult, summary="Análise de teste A/B", tags=["analytics", "analysis"])
 async def analyze_ab_test(
     test_config: ABTestConfig,
     current_user: User = Depends(get_current_user),
@@ -1362,7 +1363,7 @@ async def analyze_ab_test(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/analysis/correlation", summary="Análise de correlação", tags=["Analytics", "Analysis"])
+@router.get("/analysis/correlation", summary="Análise de correlação", tags=["analytics", "analysis"])
 async def analyze_correlation(
     metric1: str = Query(..., description="Primeira métrica"),
     metric2: str = Query(..., description="Segunda métrica"),
@@ -1408,7 +1409,7 @@ async def analyze_correlation(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/analysis/anomalies", summary="Detecção de anomalias", tags=["Analytics", "Analysis"])
+@router.get("/analysis/anomalies", summary="Detecção de anomalias", tags=["analytics", "analysis"])
 async def detect_anomalies(
     metric: str = Query(..., description="Métrica para análise"),
     days: int = Query(30, ge=7, le=365, description="Período em dias"),
@@ -1453,7 +1454,7 @@ async def detect_anomalies(
 # ==================== EXPORTAÇÕES ====================
 
 
-@router.post("/export", response_model=ExportResponse, summary="Exportar dados", tags=["Analytics", "Export"])
+@router.post("/export", response_model=ExportResponse, summary="Exportar dados", tags=["analytics", "export"])
 async def export_data(
     export_request: ExportRequest,
     background_tasks: BackgroundTasks,
@@ -1496,7 +1497,7 @@ async def export_data(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/exports", response_model=List[ExportResponse], summary="Listar exportações do usuário", tags=["Analytics", "Export"])
+@router.get("/exports", response_model=List[ExportResponse], summary="Listar exportações do usuário", tags=["analytics", "export"])
 async def get_user_exports(
     status: Optional[str] = Query(None, pattern="^(pending|processing|completed|failed)$", description="Filtrar por status"),
     limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
@@ -1534,7 +1535,7 @@ async def get_user_exports(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/exports/{export_id}/download", summary="Download de exportação", tags=["Analytics", "Export"])
+@router.get("/exports/{export_id}/download", summary="Download de exportação", tags=["analytics", "export"])
 async def download_export(
     export_id: int,
     current_user: User = Depends(get_current_user),
@@ -1579,7 +1580,7 @@ async def download_export(
 # ==================== ALERTAS ====================
 
 
-@router.post("/alerts", response_model=AlertResponse, summary="Criar alerta", tags=["Analytics", "Alerts"])
+@router.post("/alerts", response_model=AlertResponse, summary="Criar alerta", tags=["analytics", "alerts"])
 async def create_alert(
     alert_rule: AlertRule,
     current_user: User = Depends(get_current_user),
@@ -1617,7 +1618,7 @@ async def create_alert(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/alerts", response_model=List[AlertResponse], summary="Listar alertas do usuário", tags=["Analytics", "Alerts"])
+@router.get("/alerts", response_model=List[AlertResponse], summary="Listar alertas do usuário", tags=["analytics", "alerts"])
 async def get_user_alerts(
     status: Optional[str] = Query(None, pattern="^(active|paused|triggered)$", description="Filtrar por status"),
     limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
@@ -1655,7 +1656,7 @@ async def get_user_alerts(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/alerts/{alert_id}", response_model=AlertResponse, summary="Atualizar alerta", tags=["Analytics", "Alerts"])
+@router.put("/alerts/{alert_id}", response_model=AlertResponse, summary="Atualizar alerta", tags=["analytics", "alerts"])
 async def update_alert(
     alert_id: int,
     alert_rule: AlertRule,
@@ -1702,7 +1703,7 @@ async def update_alert(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/alerts/{alert_id}", summary="Deletar alerta", tags=["Analytics", "Alerts"])
+@router.delete("/alerts/{alert_id}", summary="Deletar alerta", tags=["analytics", "alerts"])
 async def delete_alert(
     alert_id: int,
     current_user: User = Depends(get_current_user),
@@ -1743,7 +1744,7 @@ async def delete_alert(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/alerts/{alert_id}/pause", summary="Pausar alerta", tags=["Analytics", "Alerts"])
+@router.post("/alerts/{alert_id}/pause", summary="Pausar alerta", tags=["analytics", "alerts"])
 async def pause_alert(
     alert_id: int,
     current_user: User = Depends(get_current_user),
@@ -1784,7 +1785,7 @@ async def pause_alert(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/alerts/{alert_id}/resume", summary="Reativar alerta", tags=["Analytics", "Alerts"])
+@router.post("/alerts/{alert_id}/resume", summary="Reativar alerta", tags=["analytics", "alerts"])
 async def resume_alert(
     alert_id: int,
     current_user: User = Depends(get_current_user),
@@ -1828,7 +1829,7 @@ async def resume_alert(
 # ==================== ADMINISTRAÇÃO ====================
 
 
-@router.get("/admin/stats", summary="Estatísticas administrativas", tags=["Analytics", "Admin"])
+@router.get("/admin/stats", summary="Estatísticas administrativas", tags=["analytics", "admin"])
 async def get_admin_analytics_stats(
     current_admin: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
@@ -1861,7 +1862,7 @@ async def get_admin_analytics_stats(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/admin/cleanup", summary="Limpeza de dados antigos", tags=["Analytics", "Admin"])
+@router.post("/admin/cleanup", summary="Limpeza de dados antigos", tags=["analytics", "admin"])
 async def cleanup_old_data(
     days: int = Query(90, ge=30, le=365, description="Manter dados dos últimos N dias"),
     current_admin: User = Depends(get_admin_user),
@@ -1896,7 +1897,7 @@ async def cleanup_old_data(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/admin/recompute-metrics", summary="Recomputar métricas", tags=["Analytics", "Admin"])
+@router.post("/admin/recompute-metrics", summary="Recomputar métricas", tags=["analytics", "admin"])
 async def recompute_metrics(
     background_tasks: BackgroundTasks,
     start_date: datetime = Query(..., description="Data de início"),
@@ -1941,4 +1942,42 @@ async def recompute_metrics(
         raise
     except Exception as e:
         logger.error(f"Erro ao iniciar recomputação por admin {current_admin.id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.get(
+    "/overview",
+    response_model=AnalyticsOverview,
+    summary="Visão geral de analytics",
+    tags=["analytics"],
+)
+async def get_analytics_overview(
+    current_admin: User = Depends(get_admin_user),
+    db: Session = Depends(get_db),
+) -> AnalyticsOverview:
+    """
+    Obtém uma visão geral de analytics para o sistema.
+    
+    Retorna informações sobre o uso, performance e recursos
+    do sistema analytics para administradores.
+    
+    Args:
+        current_admin: Usuário administrador autenticado
+        db: Sessão do banco de dados
+        
+    Returns:
+        AnalyticsOverview: Visão geral de analytics
+        
+    Raises:
+        HTTPException: 403 se usuário não é admin
+        HTTPException: 500 se erro interno do servidor
+    """
+    try:
+        logger.info(f"Gerando visão geral de analytics para admin {current_admin.id}")
+        service = AnalyticsService(db)
+        overview = service.get_analytics_overview()
+        logger.info(f"Visão geral de analytics obtida por admin {current_admin.id}")
+        return overview
+    except Exception as e:
+        logger.error(f"Erro ao obter visão geral de analytics por admin {current_admin.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")

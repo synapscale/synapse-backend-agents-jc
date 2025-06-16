@@ -111,7 +111,7 @@ npm run test:e2e
 
 ## 📚 Documentação
 
-- Atualize README.md se necessário
+- Atualize o README principal (README.md) se necessário
 - Documente APIs no Swagger
 - Adicione comentários em código complexo
 - Mantenha CHANGELOG.md atualizado

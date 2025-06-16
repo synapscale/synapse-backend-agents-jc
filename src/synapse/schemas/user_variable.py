@@ -20,11 +20,9 @@ class UserVariableBase(BaseModel):
     description: str | None = Field(
         None, max_length=500, description="Descrição opcional da variável"
     )
-    category: str | None = Field(
-        None, max_length=100, description="Categoria da variável"
-    )
     is_encrypted: bool = Field(True, description="Se o valor deve ser criptografado")
     is_active: bool = Field(True, description="Se a variável está ativa")
+    category: str | None = Field(None, max_length=100, description="Categoria da variável")
 
     @validator("key")
     def validate_key_format(cls, v):
@@ -78,34 +76,6 @@ class UserVariableBase(BaseModel):
 
         return v
 
-    @validator("category")
-    def validate_category(cls, v):
-        """Valida a categoria da variável"""
-        if v is None:
-            return None
-
-        valid_categories = [
-            "API_KEYS",
-            "CREDENTIALS",
-            "CONFIG",
-            "URLS",
-            "TOKENS",
-            "DATABASE",
-            "EMAIL",
-            "STORAGE",
-            "SOCIAL",
-            "PAYMENT",
-            "OTHER",
-        ]
-
-        v = v.upper()
-        if v not in valid_categories:
-            raise ValueError(
-                f'Categoria deve ser uma das seguintes: {", ".join(valid_categories)}'
-            )
-
-        return v
-
 
 class UserVariableCreate(UserVariableBase):
     """Schema para criação de variável do usuário"""
@@ -116,8 +86,8 @@ class UserVariableUpdate(BaseModel):
 
     value: str | None = Field(None, description="Novo valor da variável")
     description: str | None = Field(None, max_length=500, description="Nova descrição")
-    category: str | None = Field(None, max_length=100, description="Nova categoria")
     is_active: bool | None = Field(None, description="Status ativo/inativo")
+    category: str | None = Field(None, max_length=100, description="Nova categoria")
 
     @validator("value")
     def validate_value(cls, v):
@@ -133,48 +103,22 @@ class UserVariableUpdate(BaseModel):
 
         return v
 
-    @validator("category")
-    def validate_category(cls, v):
-        """Valida a categoria da variável"""
-        if v is None:
-            return None
-
-        valid_categories = [
-            "API_KEYS",
-            "CREDENTIALS",
-            "CONFIG",
-            "URLS",
-            "TOKENS",
-            "DATABASE",
-            "EMAIL",
-            "STORAGE",
-            "SOCIAL",
-            "PAYMENT",
-            "OTHER",
-        ]
-
-        v = v.upper()
-        if v not in valid_categories:
-            raise ValueError(
-                f'Categoria deve ser uma das seguintes: {", ".join(valid_categories)}'
-            )
-
-        return v
-
 
 class UserVariableResponse(BaseModel):
     """Schema para resposta de variável do usuário"""
 
-    id: int
+    id: str
     key: str
-    description: str | None
-    category: str | None
+    value: str | None = None
+    description: str | None = None
+    category: str | None = None
     is_active: bool
-    is_sensitive: bool = Field(description="Se a variável contém dados sensíveis")
-    created_at: datetime
-    updated_at: datetime
+    is_encrypted: bool
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    class Config:
+        orm_mode = True
 
 
 class UserVariableWithValue(UserVariableResponse):
@@ -188,7 +132,7 @@ class UserVariableList(BaseModel):
 
     variables: list[UserVariableResponse]
     total: int
-    categories: list[str] = Field(description="Categorias disponíveis")
+    categories: list[str] = Field(default_factory=list, description="Categorias distintas das variáveis")
 
 
 class UserVariableBulkCreate(BaseModel):
@@ -211,9 +155,6 @@ class UserVariableImport(BaseModel):
     env_content: str = Field(..., description="Conteúdo do arquivo .env")
     overwrite_existing: bool = Field(
         False, description="Se deve sobrescrever variáveis existentes"
-    )
-    default_category: str | None = Field(
-        "CONFIG", description="Categoria padrão para variáveis importadas"
     )
 
     @validator("env_content")
@@ -254,9 +195,6 @@ class UserVariableExport(BaseModel):
     format: str = Field("env", description="Formato de exportação (env, json, yaml)")
     include_sensitive: bool = Field(
         False, description="Se deve incluir variáveis sensíveis"
-    )
-    categories: list[str] | None = Field(
-        None, description="Categorias específicas para exportar"
     )
 
     @validator("format")

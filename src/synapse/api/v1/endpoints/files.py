@@ -36,10 +36,10 @@ from synapse.services.file_service import FileService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Files"])
+router = APIRouter()
 
 
-@router.post("/upload", response_model=FileUploadResponse, summary="Upload de arquivo", tags=["Files"])
+@router.post("/upload", response_model=FileUploadResponse, summary="Upload de arquivo", tags=["files"])
 async def upload_file(
     category: str = Form(..., description="Categoria do arquivo"),
     file: UploadFile = File(..., description="Arquivo a ser enviado"),
@@ -147,7 +147,12 @@ async def upload_file(
         raise HTTPException(status_code=500, detail="Erro interno do servidor durante upload")
 
 
-@router.get("/", response_model=FileListResponse, summary="Listar arquivos", tags=["Files"])
+@router.get(
+    "/",
+    response_model=FileListResponse,
+    summary="Listar arquivos",
+    tags=["files"],
+)
 async def list_files(
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(10, ge=1, le=100, description="Itens por página"),
@@ -234,7 +239,7 @@ async def list_files(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{file_id}", response_model=FileResponse, summary="Obter arquivo", tags=["Files"])
+@router.get("/{file_id}", response_model=FileResponse, summary="Obter arquivo", tags=["files"])
 async def get_file(
     file_id: UUID,
     db: Session = Depends(get_db),
@@ -310,7 +315,7 @@ async def get_file(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{file_id}/download", response_model=FileDownloadResponse, summary="Download de arquivo", tags=["Files", "Download"])
+@router.get("/{file_id}/download", response_model=FileDownloadResponse, summary="Download de arquivo", tags=["files", "Download"])
 async def download_file(
     file_id: UUID,
     db: Session = Depends(get_db),
@@ -386,7 +391,7 @@ async def download_file(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{file_id}", summary="Deletar arquivo", tags=["Files"])
+@router.delete("/{file_id}", summary="Deletar arquivo", tags=["files"])
 async def delete_file(
     file_id: UUID,
     db: Session = Depends(get_db),

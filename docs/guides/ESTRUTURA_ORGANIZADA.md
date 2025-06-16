@@ -30,7 +30,7 @@ synapse-backend/
 ├── 💻 src/             # Código fonte principal
 ├── 🧪 tests/           # Testes automatizados
 └── 📝 Scripts raiz     # Conveniência
-    ├── setup.sh        # Configuração
+    ├── setup.sh        # Configuração (se existir)
     ├── dev.sh          # Desenvolvimento
     └── prod.sh         # Produção
 ```
@@ -78,10 +78,14 @@ Todas as configurações estão agora em `config/`:
 
 ## 5. Fluxo de trabalho completo 🔄
 
-1. **Primeira vez**: Execute `./setup.sh` para configurar tudo
+1. **Primeira vez**: Execute `./setup.sh` (se existir) ou siga o guia de setup manual
 2. **Desenvolvimento**: Execute `./dev.sh` para servidor com reload
 3. **Produção**: Execute `./prod.sh` para servidor otimizado
 4. **Configurações**: Edite apenas o `.env` na raiz
+
+---
+
+> Scripts antigos como `auto_setup.sh`, `start_master.sh`, etc. não são mais utilizados.
 
 ## 6. Documentação Completa 📚
 

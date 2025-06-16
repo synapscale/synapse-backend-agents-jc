@@ -139,9 +139,9 @@ class TemplateUpdate(BaseModel):
 class TemplateResponse(TemplateBase):
     """Schema de resposta para template"""
 
-    id: int
+    id: str
     template_id: str
-    author_id: int
+    author_id: str
     status: TemplateStatus
     is_public: bool
     is_featured: bool
@@ -242,9 +242,9 @@ class ReviewUpdate(BaseModel):
 class ReviewResponse(ReviewBase):
     """Schema de resposta para review"""
 
-    id: int
-    template_id: int
-    user_id: int
+    id: str
+    template_id: str
+    user_id: str
     is_verified_purchase: bool
     is_helpful_count: int
     version_reviewed: str | None = None
@@ -270,9 +270,9 @@ class DownloadCreate(BaseModel):
 class DownloadResponse(BaseModel):
     """Schema de resposta para download"""
 
-    id: int
-    template_id: int
-    user_id: int
+    id: str
+    template_id: str
+    user_id: str
     download_type: str
     template_version: str | None = None
     downloaded_at: datetime
@@ -349,9 +349,9 @@ class CollectionUpdate(BaseModel):
 class CollectionResponse(CollectionBase):
     """Schema de resposta para coleção"""
 
-    id: int
+    id: str
     collection_id: str
-    creator_id: int
+    creator_id: str
     is_featured: bool
     template_ids: list[int]
     view_count: int

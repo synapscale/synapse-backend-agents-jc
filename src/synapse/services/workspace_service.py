@@ -33,7 +33,7 @@ class WorkspaceService:
     
     # ==================== WORKSPACES ====================
     
-    def create_workspace(self, workspace_data: WorkspaceCreate, owner_id: int) -> Workspace:
+    def create_workspace(self, workspace_data: WorkspaceCreate, owner_id: int) -> dict:
         """Cria um novo workspace"""
         
         # Gerar slug único
@@ -72,9 +72,9 @@ class WorkspaceService:
             f"Workspace '{workspace.name}' foi criado"
         )
         
-        return workspace
+        return workspace.to_dict()
     
-    def update_workspace(self, workspace_id: int, workspace_data: WorkspaceUpdate, user_id: int) -> Optional[Workspace]:
+    def update_workspace(self, workspace_id: int, workspace_data: WorkspaceUpdate, user_id: int) -> Optional[dict]:
         """Atualiza um workspace"""
         
         workspace = self.get_workspace(workspace_id)
@@ -99,19 +99,20 @@ class WorkspaceService:
         # Registrar atividade
         self._log_activity(
             workspace_id, user_id, "updated", "workspace", workspace_id,
-            f"Workspace '{workspace.name}' foi atualizado"
+            f"Workspace '{workspace['name']}' foi atualizado"
         )
         
-        return workspace
+        return workspace.to_dict() if workspace else None
     
-    def get_workspace(self, workspace_id: int) -> Optional[Workspace]:
+    def get_workspace(self, workspace_id: int) -> Optional[dict]:
         """Obtém um workspace por ID"""
-        return self.db.query(Workspace).filter(
+        workspace = self.db.query(Workspace).filter(
             and_(
                 Workspace.id == workspace_id,
                 Workspace.status == "active"
             )
         ).first()
+        return workspace.to_dict() if workspace else None
     
     def get_workspace_by_slug(self, slug: str) -> Optional[Workspace]:
         """Obtém um workspace por slug"""
@@ -122,19 +123,16 @@ class WorkspaceService:
             )
         ).first()
     
-    def get_user_workspaces(self, user_id: int) -> List[Workspace]:
-        """Obtém workspaces do usuário"""
-        
-        # Workspaces onde é membro
-        member_workspaces = self.db.query(Workspace).join(WorkspaceMember).filter(
+    def get_user_workspaces(self, user_id: int, limit: int = 20, offset: int = 0) -> List[dict]:
+        """Obtém workspaces do usuário com paginação opcional"""
+        query = self.db.query(Workspace).join(WorkspaceMember).filter(
             and_(
                 WorkspaceMember.user_id == user_id,
                 WorkspaceMember.status == "active",
                 Workspace.status == "active"
             )
-        ).all()
-        
-        return member_workspaces
+        )
+        return [w.to_dict() for w in query.offset(offset).limit(limit).all()]
     
     def delete_workspace(self, workspace_id: int, user_id: int) -> bool:
         """Deleta um workspace (soft delete)"""
@@ -144,11 +142,11 @@ class WorkspaceService:
             return False
         
         # Apenas owner pode deletar
-        if workspace.owner_id != user_id:
+        if workspace['owner_id'] != user_id:
             raise PermissionError("Apenas o proprietário pode deletar o workspace")
         
-        workspace.status = "deleted"
-        workspace.updated_at = datetime.utcnow()
+        workspace['status'] = "deleted"
+        workspace['updated_at'] = datetime.utcnow()
         
         self.db.commit()
         
@@ -168,7 +166,7 @@ class WorkspaceService:
             raise PermissionError("Usuário não tem permissão para convidar membros")
         
         # Verificar limite de membros
-        if workspace.member_count >= workspace.max_members:
+        if workspace['member_count'] >= workspace['max_members']:
             raise ValueError("Limite de membros atingido")
         
         # Verificar se já é membro
@@ -265,7 +263,7 @@ class WorkspaceService:
             "joined",
             "member",
             user_id,
-            f"{user.full_name} entrou no workspace",
+            f"{user['full_name']} entrou no workspace",
         )
 
         return member
@@ -278,7 +276,7 @@ class WorkspaceService:
             return False
 
         # Não pode remover o owner
-        if workspace.owner_id == member_id:
+        if workspace['owner_id'] == member_id:
             raise ValueError("Não é possível remover o proprietário")
 
         # Verificar permissão
@@ -304,7 +302,7 @@ class WorkspaceService:
         member.left_at = datetime.utcnow()
 
         # Atualizar contador
-        workspace.member_count -= 1
+        workspace['member_count'] -= 1
 
         self.db.commit()
 
@@ -316,7 +314,7 @@ class WorkspaceService:
             "removed",
             "member",
             member_id,
-            f"{user.full_name if user else 'Usuário'} foi removido do workspace",
+            f"{user['full_name'] if user else 'Usuário'} foi removido do workspace",
         )
 
         return True
@@ -363,7 +361,7 @@ class WorkspaceService:
             "role_changed",
             "member",
             member_id,
-            f"Papel de {user.full_name if user else 'Usuário'} alterado de {old_role.value} para {new_role.value}",
+            f"Papel de {user['full_name'] if user else 'Usuário'} alterado de {old_role.value} para {new_role.value}",
         )
 
         return member
@@ -397,7 +395,7 @@ class WorkspaceService:
             raise PermissionError("Usuário não tem permissão para criar projetos")
 
         # Verificar limite de projetos
-        if workspace.project_count >= workspace.max_projects:
+        if workspace['project_count'] >= workspace['max_projects']:
             raise ValueError("Limite de projetos atingido")
 
         # Criar workflow se não fornecido
@@ -427,7 +425,7 @@ class WorkspaceService:
         self.db.add(project)
 
         # Atualizar contador
-        workspace.project_count += 1
+        workspace['project_count'] += 1
 
         self.db.commit()
         self.db.refresh(project)
@@ -548,7 +546,7 @@ class WorkspaceService:
         # Atualizar contador
         workspace = self.get_workspace(project.workspace_id)
         if workspace:
-            workspace.project_count -= 1
+            workspace['project_count'] -= 1
 
         self.db.commit()
 
@@ -625,7 +623,7 @@ class WorkspaceService:
             "added_collaborator",
             "project",
             project_id,
-            f"{user.full_name if user else 'Usuário'} foi adicionado como colaborador",
+            f"{user['full_name'] if user else 'Usuário'} foi adicionado como colaborador",
         )
 
         return collaborator
@@ -747,7 +745,7 @@ class WorkspaceService:
         # Atualizar contador
         workspace = self.get_workspace(workspace_id)
         if workspace:
-            workspace.member_count += 1
+            workspace['member_count'] += 1
 
         self.db.flush()
 
@@ -878,8 +876,8 @@ class WorkspaceService:
         # Atualizar contador de atividades
         workspace = self.get_workspace(workspace_id)
         if workspace:
-            workspace.activity_count += 1
-            workspace.last_activity_at = datetime.utcnow()
+            workspace['activity_count'] += 1
+            workspace['last_activity_at'] = datetime.utcnow()
 
     # ==================== ANALYTICS ====================
 
@@ -895,14 +893,14 @@ class WorkspaceService:
 
         # Estatísticas básicas
         stats = {
-            "member_count": workspace.member_count,
-            "project_count": workspace.project_count,
-            "activity_count": workspace.activity_count,
-            "storage_used_mb": workspace.storage_used_mb,
-            "storage_limit_mb": workspace.max_storage_mb,
+            "member_count": workspace['member_count'],
+            "project_count": workspace['project_count'],
+            "activity_count": workspace['activity_count'],
+            "storage_used_mb": workspace['storage_used_mb'],
+            "storage_limit_mb": workspace['max_storage_mb'],
             "storage_usage_percent": (
-                (workspace.storage_used_mb / workspace.max_storage_mb) * 100
-                if workspace.max_storage_mb > 0
+                (workspace['storage_used_mb'] / workspace['max_storage_mb']) * 100
+                if workspace['max_storage_mb'] > 0
                 else 0
             ),
         }

@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional, List
 from collections.abc import AsyncGenerator
 from pydantic import BaseModel
 import asyncio
+from synapse.api.v1.endpoints.llm.schemas import ListModelsResponse
 
 
 class LLMResponse(BaseModel):
@@ -245,6 +246,91 @@ class UnifiedLLMService:
             "estimation_method": "character_and_word_based",
             "note": "Esta é uma estimativa. Para contagem precisa, use APIs específicas dos provedores.",
         }
+
+    async def list_models(self, provider: str | None = None):
+        """
+        Lista todos os modelos disponíveis, agrupados por provedor.
+        Retorna informações detalhadas mockadas para cada modelo.
+        """
+        # Mock de modelos por provedor
+        all_models = {
+            "openai": [
+                {
+                    "id": "gpt-4o",
+                    "name": "GPT-4o",
+                    "provider": "openai",
+                    "capabilities": ["text", "vision", "function_calling"],
+                    "context_window": 128000,
+                    "pricing": {"input": 0.005, "output": 0.015},
+                    "status": "available",
+                },
+                {
+                    "id": "gpt-4-turbo",
+                    "name": "GPT-4 Turbo",
+                    "provider": "openai",
+                    "capabilities": ["text", "vision"],
+                    "context_window": 128000,
+                    "pricing": {"input": 0.01, "output": 0.03},
+                    "status": "available",
+                },
+                {
+                    "id": "gpt-3.5-turbo",
+                    "name": "GPT-3.5 Turbo",
+                    "provider": "openai",
+                    "capabilities": ["text"],
+                    "context_window": 16385,
+                    "pricing": {"input": 0.001, "output": 0.002},
+                    "status": "available",
+                },
+            ],
+            "claude": [
+                {
+                    "id": "claude-3-opus-20240229",
+                    "name": "Claude 3 Opus",
+                    "provider": "claude",
+                    "capabilities": ["text", "vision", "reasoning"],
+                    "context_window": 200000,
+                    "pricing": {"input": 0.015, "output": 0.075},
+                    "status": "available",
+                },
+                {
+                    "id": "claude-3-sonnet-20240229",
+                    "name": "Claude 3 Sonnet",
+                    "provider": "claude",
+                    "capabilities": ["text", "vision", "reasoning"],
+                    "context_window": 200000,
+                    "pricing": {"input": 0.008, "output": 0.024},
+                    "status": "available",
+                },
+            ],
+            "llama": [
+                {
+                    "id": "llama-3-70b",
+                    "name": "Llama 3 70B",
+                    "provider": "llama",
+                    "capabilities": ["text"],
+                    "context_window": 128000,
+                    "pricing": {"input": 0.002, "output": 0.004},
+                    "status": "available",
+                },
+                {
+                    "id": "llama-2-70b",
+                    "name": "Llama 2 70B",
+                    "provider": "llama",
+                    "capabilities": ["text"],
+                    "context_window": 4096,
+                    "pricing": {"input": 0.001, "output": 0.002},
+                    "status": "available",
+                },
+            ],
+        }
+        # Filtrar por provedor se necessário
+        if provider:
+            models = {provider: all_models.get(provider, [])}
+        else:
+            models = all_models
+        count = sum(len(m) for m in models.values())
+        return ListModelsResponse(models=models, count=count)
 
 
 # Instância global do serviço unificado

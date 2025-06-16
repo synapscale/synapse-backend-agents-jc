@@ -46,11 +46,11 @@ from synapse.api.deps import get_current_user
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Workspaces"])
+router = APIRouter()
 
 # ==================== WORKSPACES ====================
 
-@router.post("/", response_model=WorkspaceResponse, summary="Criar workspace", tags=["Workspaces"])
+@router.post("/", response_model=WorkspaceResponse, summary="Criar workspace", tags=["workspaces"])
 async def create_workspace(
     workspace_data: WorkspaceCreate,
     current_user: User = Depends(get_current_user),
@@ -61,14 +61,19 @@ async def create_workspace(
         logger.info(f"Criando workspace '{workspace_data.name}' para usuário {current_user.id}")
         service = WorkspaceService(db)
         workspace = service.create_workspace(workspace_data, current_user.id)
-        logger.info(f"Workspace '{workspace_data.name}' criado com sucesso - ID: {workspace.id}")
-        return workspace
+        logger.info(f"Workspace '{workspace_data.name}' criado com sucesso - ID: {workspace['id']}")
+        return WorkspaceResponse(**workspace)
     except Exception as e:
         logger.error(f"Erro ao criar workspace para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/", response_model=List[WorkspaceResponse], summary="Listar workspaces", tags=["Workspaces"])
+@router.get(
+    "/",
+    response_model=List[WorkspaceResponse],
+    summary="Listar workspaces",
+    tags=["workspaces"],
+)
 async def get_user_workspaces(
     limit: int = Query(20, ge=1, le=100, description="Limite de resultados por página"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
@@ -81,13 +86,13 @@ async def get_user_workspaces(
         service = WorkspaceService(db)
         result = service.get_user_workspaces(current_user.id, limit, offset)
         logger.info(f"Retornados {len(result)} workspaces para usuário {current_user.id}")
-        return result
+        return [WorkspaceResponse(**w) for w in result]
     except Exception as e:
         logger.error(f"Erro ao listar workspaces para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/search", response_model=List[WorkspaceResponse], summary="Buscar workspaces", tags=["Workspaces"])
+@router.get("/search", response_model=List[WorkspaceResponse], summary="Buscar workspaces", tags=["workspaces"])
 async def search_workspaces(
     query: Optional[str] = Query(None, description="Termo de busca"),
     is_public: Optional[bool] = Query(None, description="Apenas workspaces públicos"),
@@ -123,7 +128,7 @@ async def search_workspaces(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{workspace_id}", response_model=WorkspaceResponse, summary="Obter workspace", tags=["Workspaces"])
+@router.get("/{workspace_id}", response_model=WorkspaceResponse, summary="Obter workspace", tags=["workspaces"])
 async def get_workspace(
     workspace_id: int,
     current_user: User = Depends(get_current_user),
@@ -138,7 +143,7 @@ async def get_workspace(
             logger.warning(f"Workspace {workspace_id} não encontrado para usuário {current_user.id}")
             raise HTTPException(status_code=404, detail="Workspace não encontrado")
         logger.info(f"Workspace {workspace_id} obtido com sucesso")
-        return workspace
+        return WorkspaceResponse(**workspace)
     except HTTPException:
         raise
     except Exception as e:
@@ -146,7 +151,7 @@ async def get_workspace(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/{workspace_id}", response_model=WorkspaceResponse, summary="Atualizar workspace", tags=["Workspaces"])
+@router.put("/{workspace_id}", response_model=WorkspaceResponse, summary="Atualizar workspace", tags=["workspaces"])
 async def update_workspace(
     workspace_id: int,
     workspace_data: WorkspaceUpdate,
@@ -170,7 +175,7 @@ async def update_workspace(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{workspace_id}", summary="Deletar workspace", tags=["Workspaces"])
+@router.delete("/{workspace_id}", summary="Deletar workspace", tags=["workspaces"])
 async def delete_workspace(
     workspace_id: int,
     current_user: User = Depends(get_current_user),
@@ -193,7 +198,7 @@ async def delete_workspace(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{workspace_id}/stats", response_model=WorkspaceStats, summary="Estatísticas workspace", tags=["Workspaces", "Statistics"])
+@router.get("/{workspace_id}/stats", response_model=WorkspaceStats, summary="Estatísticas workspace", tags=["workspaces", "Statistics"])
 async def get_workspace_stats(
     workspace_id: int,
     current_user: User = Depends(get_current_user),
@@ -218,7 +223,7 @@ async def get_workspace_stats(
 
 # ==================== MEMBROS ====================
 
-@router.post("/{workspace_id}/invite", summary="Convidar membro", tags=["Workspaces", "Members"])
+@router.post("/{workspace_id}/invite", summary="Convidar membro", tags=["workspaces", "Members"])
 async def invite_member(
     workspace_id: int,
     invite_data: MemberInvite,
@@ -243,7 +248,7 @@ async def invite_member(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{workspace_id}/members", response_model=List[MemberResponse], summary="Listar membros", tags=["Workspaces", "Members"])
+@router.get("/{workspace_id}/members", response_model=List[MemberResponse], summary="Listar membros", tags=["workspaces", "Members"])
 async def get_workspace_members(
     workspace_id: int,
     limit: int = Query(50, ge=1, le=200, description="Limite de resultados por página"),
@@ -265,7 +270,7 @@ async def get_workspace_members(
 
 # ==================== PROJETOS ====================
 
-@router.post("/{workspace_id}/projects", response_model=ProjectResponse, summary="Criar projeto", tags=["Workspaces", "Projects"])
+@router.post("/{workspace_id}/projects", response_model=ProjectResponse, summary="Criar projeto", tags=["workspaces", "Projects"])
 async def create_project(
     workspace_id: int,
     project_data: ProjectCreate,
@@ -289,7 +294,7 @@ async def create_project(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{workspace_id}/projects", response_model=List[ProjectResponse], summary="Listar projetos", tags=["Workspaces", "Projects"])
+@router.get("/{workspace_id}/projects", response_model=List[ProjectResponse], summary="Listar projetos", tags=["workspaces", "Projects"])
 async def get_workspace_projects(
     workspace_id: int,
     status: Optional[str] = Query(None, pattern="^(active|archived|deleted)$"),
@@ -421,7 +426,7 @@ async def delete_project(
     response_model=list[InvitationResponse],
     summary="Listar convites recebidos",
     response_description="Lista de convites retornada com sucesso",
-    tags=["Workspaces", "Membros"],
+    tags=["workspaces", "Membros"],
 )
 async def get_user_invitations(
     status: str | None = Query(None, pattern="^(pending|accepted|declined|expired)$", description="Status do convite"),
@@ -441,7 +446,7 @@ async def get_user_invitations(
     "/invitations/{invitation_id}/accept",
     summary="Aceitar convite de workspace",
     response_description="Convite aceito com sucesso",
-    tags=["Workspaces", "Membros"],
+    tags=["workspaces", "Membros"],
 )
 async def accept_invitation(
     invitation_id: int = Path(..., description="ID do convite"),
@@ -467,7 +472,7 @@ async def accept_invitation(
     "/invitations/{invitation_id}/decline",
     summary="Recusar convite de workspace",
     response_description="Convite recusado com sucesso",
-    tags=["Workspaces", "Membros"],
+    tags=["workspaces", "Membros"],
 )
 async def decline_invitation(
     invitation_id: int = Path(..., description="ID do convite"),

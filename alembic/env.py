@@ -25,8 +25,11 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Metadata vazio para agora - vamos criar as tabelas via scripts SQL
-target_metadata = None
+# Importar o Base do projeto para autogenerate funcionar
+sys.path.append(os.path.join(BASE_DIR, "src"))
+from synapse.database import Base
+
+target_metadata = Base.metadata
 
 
 def get_url() -> str:
