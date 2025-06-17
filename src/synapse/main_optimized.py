@@ -35,9 +35,9 @@ from .api.v1.router import api_router
 from synapse.middlewares.rate_limiting import rate_limit
 
 # Configure logging
+log_level_name = settings.LOG_LEVEL or "INFO"
 if settings.LOG_LEVEL is None:
-    raise RuntimeError("LOG_LEVEL deve ser definido nas variáveis de ambiente")
-log_level_name = settings.LOG_LEVEL
+    logger.warning("LOG_LEVEL não definido – usando INFO")
 logging.basicConfig(
     level=getattr(logging, log_level_name, logging.INFO),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -101,13 +101,32 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# -------- CORS CONFIGURATION centralizada --------
+cors_origins = settings.backend_cors_origins_list
+allow_methods = settings.CORS_ALLOW_METHODS or ["*"]
+allow_headers = settings.CORS_ALLOW_HEADERS or ["*"]
+expose_headers = settings.CORS_EXPOSE_HEADERS or []
+allow_credentials = settings.CORS_ALLOW_CREDENTIALS if settings.CORS_ALLOW_CREDENTIALS is not None else True
+max_age = settings.CORS_MAX_AGE or 600
+
+logger.debug(
+    "CORS: origins=%s methods=%s headers=%s expose=%s credentials=%s max_age=%s",
+    cors_origins,
+    allow_methods,
+    allow_headers,
+    expose_headers,
+    allow_credentials,
+    max_age,
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
+    allow_origins=cors_origins,
+    allow_credentials=allow_credentials,
+    allow_methods=allow_methods,
+    allow_headers=allow_headers,
+    expose_headers=expose_headers,
+    max_age=max_age,
 )
 
 # Security middleware

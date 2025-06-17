@@ -15,6 +15,36 @@ from pydantic_settings import BaseSettings
 load_dotenv()
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _parse_list_env(value: str | None) -> list[str]:
+    """Converte variável de ambiente em lista.
+
+    Aceita:
+    • JSON list em string: '["GET", "POST"]'
+    • Lista separada por vírgula: 'GET,POST,PUT'
+    Retorna lista vazia se value é None ou string vazia.
+    """
+    if not value:
+        return []
+    value = value.strip()
+    if not value:
+        return []
+    try:
+        if value.startswith("["):
+            import json as _json
+            parsed = _json.loads(value)
+            if isinstance(parsed, list):
+                return [str(v).strip() for v in parsed if str(v).strip()]
+    except Exception:
+        pass
+    # Fallback para separação por vírgula
+    return [v.strip() for v in value.split(',') if v.strip()]
+
+
 class Settings(BaseSettings):
     """
     Configurações da aplicação com validação
@@ -81,6 +111,32 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: str = Field(
         default_factory=lambda: os.getenv("BACKEND_CORS_ORIGINS"),
         description="Origens permitidas para CORS (formato JSON string)"
+    )
+
+    # --- Novas opções de CORS ---
+    CORS_ALLOW_METHODS: list[str] = Field(
+        default_factory=lambda: _parse_list_env(os.getenv("BACKEND_CORS_ALLOW_METHODS")),
+        description="Métodos HTTP permitidos"
+    )
+
+    CORS_ALLOW_HEADERS: list[str] = Field(
+        default_factory=lambda: _parse_list_env(os.getenv("BACKEND_CORS_ALLOW_HEADERS")),
+        description="Headers permitidos"
+    )
+
+    CORS_EXPOSE_HEADERS: list[str] = Field(
+        default_factory=lambda: _parse_list_env(os.getenv("BACKEND_CORS_EXPOSE_HEADERS")),
+        description="Headers expostos ao navegador"
+    )
+
+    CORS_ALLOW_CREDENTIALS: bool | None = Field(
+        default_factory=lambda: (env_val := os.getenv("BACKEND_CORS_ALLOW_CREDENTIALS")) and env_val.lower() == "true",
+        description="Se cookies/credenciais são permitidas"
+    )
+
+    CORS_MAX_AGE: int | None = Field(
+        default_factory=lambda: int(os.getenv("BACKEND_CORS_MAX_AGE")) if os.getenv("BACKEND_CORS_MAX_AGE") else None,
+        description="Tempo de cache do pre-flight em segundos"
     )
 
     @property
