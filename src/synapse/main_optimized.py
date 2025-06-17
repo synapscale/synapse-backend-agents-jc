@@ -4,14 +4,26 @@ Criado por José - um desenvolvedor Full Stack
 Implementa todas as melhores práticas de FastAPI, segurança e performance
 """
 
-import os
 import logging
+import time
+import os
+import sys
+from pathlib import Path as _PathHelper
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 import uvicorn
+
+# --- Garantir que pacote "synapse" seja encontrável sem PYTHONPATH (early) ---
+project_root = _PathHelper(__file__).resolve().parents[2]
+src_path = project_root / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+# ---------------------------------------------------------------
 
 from synapse.core.config_new import settings
 from .core.database_new import (
@@ -23,8 +35,9 @@ from .api.v1.router import api_router
 from synapse.middlewares.rate_limiting import rate_limit
 
 # Configure logging
+log_level_name = settings.LOG_LEVEL or "INFO"
 logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL),
+    level=getattr(logging, log_level_name, logging.INFO),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         (
@@ -53,7 +66,8 @@ async def lifespan(app: FastAPI):
         raise Exception("Failed to initialize database")
 
     # Create upload directory
-    os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
+    uploads_dir = settings.UPLOAD_FOLDER or "uploads"
+    os.makedirs(uploads_dir, exist_ok=True)
 
     # Create logs directory
     if settings.LOG_FILE:
@@ -74,6 +88,13 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
+    swagger_ui_parameters={
+        "defaultModelsExpandDepth": -1,
+        "docExpansion": "none",
+        "displayRequestDuration": True,
+        "tryItOutEnabled": True,
+    },
+    swagger_ui_css_url="/static/swagger-overrides.css?v=2" if settings.DEBUG else None,
     lifespan=lifespan,
 )
 
@@ -96,6 +117,11 @@ if not settings.DEBUG:
 # Include API routers
 app.include_router(api_router, prefix="/api/v1")
 
+# Static mount for CSS (debug only)
+if settings.DEBUG:
+    static_dir = _PathHelper(__file__).resolve().parent / "static"
+    static_dir.mkdir(exist_ok=True)
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Health checks
 @app.get("/health")

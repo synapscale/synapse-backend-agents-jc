@@ -1,0 +1,226 @@
+:root {
+  --primary-color: #4CAF50;
+  --secondary-color: #FF9800;
+  --error-color: #F44336;
+  --success-color: #4CAF50;
+  --text-color: #333333;
+  --background-color: #FFFFFF;
+  --code-background: #000000;
+  --code-text-color: #FFFFFF;
+  --border-color: #EEEEEE;
+  --header-color: #F8F8F8;
+  --tag-background: #f0f0f0;
+  --opblock-tag-background: #f5f5f5;
+  --opblock-get-background: #f0f8ff;
+  --opblock-post-background: #f0fff0;
+  --opblock-put-background: #fff8f0;
+  --opblock-delete-background: #fff0f0;
+  --parameters-background: #fafafa;
+  --responses-background: #f2f2f2;
+  --get: #61affe;
+  --post: #49cc90;
+  --put: #fca130;
+  --delete: #f93e3e;
+}
+
+body.swagger-section {
+  background: var(--tag-background);
+}
+
+.swagger-ui .wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Bloco pai de tags (tag section) */
+.swagger-ui .opblock-tag-section {
+  background: #f5f5f5 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important;
+  margin-bottom: 25px;
+  padding: 15px 10px;
+  position: relative;
+  width: 100%;
+  transition: box-shadow 0.2s;
+}
+
+.swagger-ui .opblock-tag-section:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18) !important;
+}
+
+/* Título do bloco pai */
+.swagger-ui .opblock-tag-section > h4 {
+  background: var(--background-color);
+  border-radius: 6px;
+  padding: 1rem 1.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+  color: var(--text-color);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+
+/* Endpoints: cartões menores, centralizados, sombra, fundo branco */
+.swagger-ui .opblock {
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.14) !important;
+  margin: 0 auto 15px auto;
+  width: 95%;
+  max-width: 95%;
+  overflow: hidden;
+  background: #fff;
+  border-left: 4px solid var(--border-color);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.swagger-ui .opblock:hover {
+  box-shadow: 0 6px 15px rgba(0,0,0,0.18);
+  transform: translateY(-1px);
+}
+
+/* Cores por método HTTP */
+.swagger-ui .opblock-get {
+  border-left: 4px solid var(--get) !important;
+}
+.swagger-ui .opblock-post {
+  border-left: 4px solid var(--post) !important;
+}
+.swagger-ui .opblock-put {
+  border-left: 4px solid var(--put) !important;
+}
+.swagger-ui .opblock-delete {
+  border-left: 4px solid var(--delete) !important;
+}
+
+/* Título do endpoint */
+.swagger-ui .opblock-summary {
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--text-color);
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  font-size: 1.08rem;
+}
+
+/* Headers do método para melhor legibilidade */
+.swagger-ui .opblock-summary-method {
+  min-width: 70px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.08rem;
+  color: inherit;
+}
+.swagger-ui .opblock-get .opblock-summary-method { color: var(--get); }
+.swagger-ui .opblock-post .opblock-summary-method { color: var(--post); }
+.swagger-ui .opblock-put .opblock-summary-method { color: var(--put); }
+.swagger-ui .opblock-delete .opblock-summary-method { color: var(--delete); }
+
+/* Detalhes internos recuados */
+.swagger-ui .opblock .opblock-body {
+  background: #fff;
+  padding: 10px 15px;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+  border-radius: 6px !important;
+}
+
+/* Tabelas */
+.swagger-ui table {
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fff;
+}
+.swagger-ui table thead tr {
+  background: #e5e7eb;
+}
+
+/* Código */
+.swagger-ui .model-example {
+  background-color: var(--code-background) !important;
+}
+.swagger-ui .model-example pre,
+.swagger-ui .model-example pre span {
+  color: var(--code-text-color) !important;
+}
+.swagger-ui pre {
+  background: var(--code-background) !important;
+  border-radius: 4px;
+  color: var(--code-text-color) !important;
+  padding: 0.85rem 1rem;
+  font-family: monospace;
+  font-size: 1.01rem;
+}
+.swagger-ui pre span {
+  color: var(--code-text-color) !important;
+}
+
+/* Evitar texto púrpura/magenta em exemplos de código e parâmetros */
+.swagger-ui .microlight span,
+.swagger-ui code span,
+.swagger-ui .parameter__name code,
+.swagger-ui .parameter__type,
+.swagger-ui .parameter__in {
+  color: var(--text-color) !important;
+}
+
+/* Parâmetros obrigatórios destacados */
+.swagger-ui .parameter__name .required {
+  color: var(--delete);
+  font-weight: bold;
+}
+
+/* Descrição dos parâmetros */
+.swagger-ui .parameter__description {
+  color: var(--text-color);
+  font-size: 15px;
+}
+
+/* Exemplo de parâmetro */
+.swagger-ui .parameter__example {
+  color: var(--text-color);
+  background: #f5f5f5;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* Sombra interna para blocos de parâmetro para separação visual */
+.swagger-ui .parameters-container {
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 8px;
+  margin: 10px 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+
+/* Separação clara entre blocos de informação (tabelas, código, descrições) */
+.swagger-ui section.block, .swagger-ui .opblock-description-wrapper, .swagger-ui .opblock-external-docs-wrapper {
+  margin-bottom: 1.1rem;
+}
+
+/* Descrição da API: resetar cor para preto */
+.swagger-ui .info .markdown {
+  color: var(--text-color) !important;
+  font-size: 1.13rem !important;
+  font-family: inherit !important;
+}
+
+/* Remover cor roxa dos títulos */
+.swagger-ui .info h1, 
+.swagger-ui .info h2, 
+.swagger-ui .info h3, 
+.swagger-ui .info h4, 
+.swagger-ui .info h5 {
+  color: var(--text-color) !important;
+}
+
+/* Responsividade */
+@media (max-width: 900px) {
+  .swagger-ui .opblock {
+    width: 99% !important;
+    max-width: 99% !important;
+  }
+  .swagger-ui .opblock-tag-section {
+    padding: 10px 2px !important;
+  }
+} 
