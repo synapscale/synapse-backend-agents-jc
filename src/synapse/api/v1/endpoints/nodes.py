@@ -9,10 +9,11 @@ from typing import Optional, Dict, Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from synapse.api.deps import get_current_user
 from synapse.database import get_db
-from synapse.models.node import Node
+from synapse.models.node import Node, NodeType, NodeRating
 from synapse.models.user import User
 from synapse.schemas.node import (
     NodeCreate,
@@ -424,31 +425,29 @@ async def rate_node(
                 detail="Node não encontrado ou não público",
             )
 
-        # Aqui seria implementada a lógica de armazenar avaliações
-        # Por enquanto, vamos apenas simular o registro da avaliação
-        
-        # Simular atualização da média de ratings
-        if hasattr(node, 'ratings_count') and hasattr(node, 'average_rating'):
-            current_total = (node.average_rating or 0) * (node.ratings_count or 0)
-            new_total = current_total + rating
-            node.ratings_count = (node.ratings_count or 0) + 1
-            node.average_rating = new_total / node.ratings_count
-        else:
-            # Se não existem os campos, apenas logar
-            logger.info(f"Campos de rating não encontrados no modelo Node para {node_id}")
-
+        # Salvar avaliação do usuário
+        rating_obj = NodeRating(node_id=node.id, user_id=current_user.id, rating=rating)
+        db.add(rating_obj)
         db.commit()
+        db.refresh(rating_obj)
 
-        logger.info(f"Avaliação do node '{node.name}' (ID: {node_id}) registrada com sucesso - nota: {rating}")
-        
-        return {
-            "message": "Avaliação registrada com sucesso",
-            "node_id": node_id,
-            "node_name": node.name,
-            "user_rating": rating,
-            "average_rating": getattr(node, 'average_rating', None),
-            "total_ratings": getattr(node, 'ratings_count', None),
+        # Após avaliação, recalcule rating_average e rating_count
+        rating_stats = db.query(
+            func.avg(NodeRating.rating).label("avg_rating"),
+            func.count(NodeRating.rating).label("count_rating")
+        ).filter(NodeRating.node_id == node.id).first()
+        node.rating_average = float(rating_stats.avg_rating or 0)
+        node.rating_count = int(rating_stats.count_rating or 0)
+        db.commit()
+        db.refresh(node)
+        response = {
+            "id": str(node.id),
+            "name": node.name,
+            "category": node.category,
+            "rating_average": node.rating_average,
+            "rating_count": node.rating_count,
         }
+        return response
     except HTTPException:
         raise
     except Exception as e:

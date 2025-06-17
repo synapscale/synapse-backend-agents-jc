@@ -85,7 +85,9 @@ class Node(Base):
         server_default="operation"
     )
     status: Column[str] = Column(
-        Enum(NodeStatus), nullable=False, default=NodeStatus.DRAFT
+        Enum(NodeStatus, values_callable=lambda x: [e.value for e in x], name="nodestatus"),
+        nullable=False,
+        server_default="draft"
     )
     is_public = Column(Boolean, default=False)
     code_template = Column(Text)
@@ -265,3 +267,17 @@ class NodeTemplate(Base):
             "documentation": self.documentation,
             "examples": self.examples,
         }
+
+
+class NodeRating(Base):
+    __tablename__ = "node_ratings"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    node_id = Column(UUID(as_uuid=True), ForeignKey("nodes.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE"), nullable=False, index=True)
+    rating = Column(Integer, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+    updated_at = Column(DateTime(timezone=True), server_default=text("NOW()"), onupdate=text("NOW()"))
+
+    node = relationship("Node", backref="ratings")
+    user = relationship("User")

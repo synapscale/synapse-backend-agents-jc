@@ -497,14 +497,22 @@ async def list_workflow_executions(
         # Serializar execuções para o schema correto
         items = [
             ExecutionResponse(
-                execution_id=str(exec.id),
-                workflow_id=str(exec.workflow_id),
-                user_id=str(exec.user_id),
-                status=exec.status.value if hasattr(exec.status, 'value') else str(exec.status),
-                outputs=getattr(exec, 'outputs', None),
-                error=getattr(exec, 'error', None),
-                created_at=exec.created_at,
-                updated_at=exec.updated_at,
+                id=exec.id,
+                execution_id=str(exec.execution_id),
+                workflow_id=exec.workflow_id,
+                user_id=exec.user_id,
+                status=exec.status,
+                output_data=getattr(exec, 'output_data', None),
+                total_nodes=getattr(exec, 'total_nodes', 0),
+                completed_nodes=getattr(exec, 'completed_nodes', 0),
+                failed_nodes=getattr(exec, 'failed_nodes', 0),
+                progress_percentage=getattr(exec, 'progress_percentage', 0),
+                started_at=getattr(exec, 'started_at', None),
+                completed_at=getattr(exec, 'completed_at', None),
+                error_message=getattr(exec, 'error_message', None),
+                retry_count=getattr(exec, 'retry_count', 0),
+                created_at=getattr(exec, 'created_at', None),
+                updated_at=getattr(exec, 'updated_at', None),
             )
             for exec in executions
         ]
