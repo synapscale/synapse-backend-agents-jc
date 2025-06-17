@@ -84,15 +84,15 @@ app = FastAPI(
     title="Synapse Backend Agents JC",
     description="Backend for AI automation platform",
     version="1.0.0",
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None,
+    docs_url="/docs",
+    redoc_url="/redoc",
     swagger_ui_parameters={
         "defaultModelsExpandDepth": -1,
         "docExpansion": "none",
         "displayRequestDuration": True,
         "tryItOutEnabled": True,
     },
-    swagger_ui_css_url="/static/swagger-overrides.css?v=2" if settings.DEBUG else None,
+    swagger_ui_css_url="/static/swagger-overrides.css?v=2",
     lifespan=lifespan,
 )
 
@@ -240,9 +240,7 @@ async def root():
     return {
         "message": "Synapse Backend Agents JC",
         "version": "1.0.0",
-        "docs": (
-            "/docs" if settings.DEBUG else "Documentation available only in development"
-        ),
+        "docs": "/docs",
     }
 
 
