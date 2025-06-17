@@ -183,36 +183,33 @@ app = FastAPI(
     license_info={'name': 'MIT'}
 )
 
-# Configuração CORS usando sistema centralizado
-cors_origins = settings.BACKEND_CORS_ORIGINS
+# ------- CORS CONFIGURATION (centralizada) -------
+cors_origins = settings.backend_cors_origins_list
+
+allow_methods = settings.CORS_ALLOW_METHODS or ['*']
+allow_headers = settings.CORS_ALLOW_HEADERS or ['*']
+expose_headers = settings.CORS_EXPOSE_HEADERS or []
+allow_credentials = settings.CORS_ALLOW_CREDENTIALS if settings.CORS_ALLOW_CREDENTIALS is not None else True
+max_age = settings.CORS_MAX_AGE or 600
+
+logger.debug(
+    "CORS: origins=%s methods=%s headers=%s expose=%s credentials=%s max_age=%s",
+    cors_origins,
+    allow_methods,
+    allow_headers,
+    expose_headers,
+    allow_credentials,
+    max_age,
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=True,
-    allow_methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
-    allow_headers=[
-        'Accept',
-        'Accept-Language',
-        'Content-Language',
-        'Content-Type',
-        'Authorization',
-        'X-Requested-With',
-        'X-CSRF-Token',
-        'X-User-ID',
-        'X-Request-ID',
-        'Cache-Control',
-        'Pragma'
-    ],
-    expose_headers=[
-        'X-Total-Count',
-        'X-Page-Count',
-        'X-Per-Page',
-        'X-Current-Page',
-        'X-Request-ID',
-        'X-Rate-Limit-Remaining',
-        'X-Rate-Limit-Reset'
-    ]
+    allow_credentials=allow_credentials,
+    allow_methods=allow_methods,
+    allow_headers=allow_headers,
+    expose_headers=expose_headers,
+    max_age=max_age,
 )
 
 # Trusted host middleware para segurança
