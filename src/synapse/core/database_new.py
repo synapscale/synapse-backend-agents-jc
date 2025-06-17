@@ -218,12 +218,9 @@ def init_database():
     """
     try:
         engine = create_database_engine()
-
-        # Criar tabelas
         # Base.metadata.create_all(bind=engine)
-
         logger.info("✅ Database initialized successfully")
-
+        return True
     except Exception as e:
         logger.error(f"❌ Database initialization failed: {e}")
         raise
