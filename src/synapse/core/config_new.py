@@ -22,74 +22,64 @@ class Settings(BaseSettings):
 
     # Configurações do banco de dados
     DATABASE_URL: str = Field(
-        default_factory=lambda: os.getenv("DATABASE_URL", ""),
+        default_factory=lambda: os.getenv("DATABASE_URL"),
         description="URL de conexão com o banco de dados"
     )
     DATABASE_SCHEMA: str = Field(
-        default_factory=lambda: os.getenv("DATABASE_SCHEMA", "synapscale_db"),
+        default_factory=lambda: os.getenv("DATABASE_SCHEMA"),
         description="Schema do banco de dados"
     )
 
     # Configurações de segurança
     SECRET_KEY: str = Field(
-        default_factory=lambda: os.getenv("SECRET_KEY", ""),
+        default_factory=lambda: os.getenv("SECRET_KEY"),
         description="Chave secreta para JWT"
     )
     JWT_SECRET_KEY: str = Field(
-        default_factory=lambda: os.getenv("JWT_SECRET_KEY", ""),
+        default_factory=lambda: os.getenv("JWT_SECRET_KEY"),
         description="Chave secreta para assinatura JWT"
     )
     JWT_ALGORITHM: str = Field(
-        default_factory=lambda: os.getenv("JWT_ALGORITHM", "HS256"),
+        default_factory=lambda: os.getenv("JWT_ALGORITHM"),
         description="Algoritmo de assinatura JWT"
     )
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
-        default_factory=lambda: int(
-            os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")
-        ),
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int | None = Field(
+        default_factory=lambda: int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES")) if os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES") else None,
         description="Tempo de expiração do access token em minutos"
     )
-    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(
-        default_factory=lambda: int(
-            os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "7")
-        ),
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int | None = Field(
+        default_factory=lambda: int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS")) if os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS") else None,
         description="Tempo de expiração do refresh token em dias"
     )
 
     # Configurações do servidor
     HOST: str = Field(
-        default_factory=lambda: os.getenv("HOST", "0.0.0.0"),
+        default_factory=lambda: os.getenv("HOST"),
         description="Host do servidor"
     )
-    PORT: int = Field(
-        default_factory=lambda: int(os.getenv("PORT", "8000")),
+    PORT: int | None = Field(
+        default_factory=lambda: int(os.getenv("PORT")) if os.getenv("PORT") else None,
         description="Porta do servidor"
     )
-    DEBUG: bool = Field(
-        default_factory=lambda: os.getenv("DEBUG", "True").lower() == "true",
+    DEBUG: bool | None = Field(
+        default_factory=lambda: os.getenv("DEBUG") and os.getenv("DEBUG").lower() == "true",
         description="Modo debug"
     )
     ENVIRONMENT: str = Field(
-        default_factory=lambda: os.getenv("ENVIRONMENT", "development"),
+        default_factory=lambda: os.getenv("ENVIRONMENT"),
         description="Ambiente de execução"
     )
 
     # Configurações de CORS
     CORS_ORIGINS: list[str] = Field(
         default_factory=lambda: (
-            os.getenv("CORS_ORIGINS",
-                      "http://localhost:3000,http://127.0.0.1:3000").split(",")
-            if os.getenv("CORS_ORIGINS")
-            else ["http://localhost:3000", "http://127.0.0.1:3000"]
+            os.getenv("CORS_ORIGINS").split(",") if os.getenv("CORS_ORIGINS") else []
         ),
         description="Origens permitidas para CORS"
     )
 
     BACKEND_CORS_ORIGINS: str = Field(
-        default_factory=lambda: os.getenv(
-            "BACKEND_CORS_ORIGINS",
-            '["http://localhost:3000", "http://127.0.0.1:3000"]'
-        ),
+        default_factory=lambda: os.getenv("BACKEND_CORS_ORIGINS"),
         description="Origens permitidas para CORS (formato JSON string)"
     )
 
@@ -100,16 +90,7 @@ class Settings(BaseSettings):
             result = json.loads(self.BACKEND_CORS_ORIGINS)
             return result if isinstance(result, list) else []
         except (json.JSONDecodeError, TypeError):
-            # Fallback para valores padrão do .env ou valores mínimos
-            default_cors = os.getenv(
-                "CORS_FALLBACK",
-                '["http://localhost:3000", "http://127.0.0.1:3000"]'
-            )
-            try:
-                result = json.loads(default_cors)
-                return result if isinstance(result, list) else []
-            except (json.JSONDecodeError, TypeError):
-                return ["http://localhost:3000", "http://127.0.0.1:3000"]
+            return []
 
     @field_validator('BACKEND_CORS_ORIGINS', mode='before')
     @classmethod
@@ -117,11 +98,8 @@ class Settings(BaseSettings):
         """Parse CORS origins from various formats to JSON string"""
         if isinstance(v, str):
             if not v:  # String vazia
-                # Busca do .env ou usa valores mínimos
-                return os.getenv(
-                    "CORS_FALLBACK",
-                    '["http://localhost:3000", "http://127.0.0.1:3000"]'
-                )
+                # Se string vazia, retorna lista vazia em formato json
+                return "[]"
             try:
                 # Tenta fazer parse para validar que é JSON válido
                 json.loads(v)
@@ -134,31 +112,26 @@ class Settings(BaseSettings):
         return str(v)
 
     # Configurações de logging
-    LOG_LEVEL: str = Field(
-        default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"),
+    LOG_LEVEL: str | None = Field(
+        default_factory=lambda: os.getenv("LOG_LEVEL"),
         description="Nível de logging"
     )
-    LOG_FILE: str = Field(
-        default_factory=lambda: os.getenv("LOG_FILE", "logs/app.log"),
+    LOG_FILE: str | None = Field(
+        default_factory=lambda: os.getenv("LOG_FILE"),
         description="Arquivo de log"
     )
-    LOG_FORMAT: str = Field(
-        default_factory=lambda: os.getenv(
-            "LOG_FORMAT",
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        ),
+    LOG_FORMAT: str | None = Field(
+        default_factory=lambda: os.getenv("LOG_FORMAT"),
         description="Formato do log (compatibilidade)"
     )
 
     # Configurações de upload
-    MAX_FILE_SIZE: int = Field(
-        default_factory=lambda: int(os.getenv("MAX_FILE_SIZE", "10485760")),
+    MAX_FILE_SIZE: int | None = Field(
+        default_factory=lambda: int(os.getenv("MAX_FILE_SIZE")) if os.getenv("MAX_FILE_SIZE") else None,
         description="Tamanho máximo de arquivo em bytes"
     )
-    ALLOWED_EXTENSIONS_STR: str = Field(
-        default_factory=lambda: os.getenv(
-            "ALLOWED_EXTENSIONS", ".txt,.pdf,.doc,.docx,.csv,.json,.xml"
-        ),
+    ALLOWED_EXTENSIONS_STR: str | None = Field(
+        default_factory=lambda: os.getenv("ALLOWED_EXTENSIONS"),
         description="Extensões de arquivo permitidas (formato string)"
     )
 
@@ -175,9 +148,7 @@ class Settings(BaseSettings):
             for ext in extensions_str.split(",")
             if ext.strip()
         ]
-        return extensions if extensions else [
-            ".txt", ".pdf", ".doc", ".docx", ".csv", ".json", ".xml"
-        ]
+        return extensions
 
     # Configurações de LLM
     OPENAI_API_KEY: str | None = Field(
@@ -198,8 +169,8 @@ class Settings(BaseSettings):
         default_factory=lambda: os.getenv("SMTP_HOST"),
         description="Host SMTP"
     )
-    SMTP_PORT: int = Field(
-        default_factory=lambda: int(os.getenv("SMTP_PORT", "587")),
+    SMTP_PORT: int | None = Field(
+        default_factory=lambda: int(os.getenv("SMTP_PORT")) if os.getenv("SMTP_PORT") else None,
         description="Porta SMTP"
     )
     SMTP_USER: str | None = Field(
@@ -228,45 +199,39 @@ class Settings(BaseSettings):
     )
 
     # Configurações de Redis
-    REDIS_URL: str = Field(
-        default_factory=lambda: os.getenv(
-            "REDIS_URL", "redis://localhost:6379/0"
-        ),
+    REDIS_URL: str | None = Field(
+        default_factory=lambda: os.getenv("REDIS_URL"),
         description="URL do Redis"
     )
 
     # Configurações de WebSocket
-    WEBSOCKET_ENABLED: bool = Field(
-        default_factory=lambda: os.getenv(
-            "WEBSOCKET_ENABLED", "True"
-        ).lower() == "true",
+    WEBSOCKET_ENABLED: bool | None = Field(
+        default_factory=lambda: os.getenv("WEBSOCKET_ENABLED") and os.getenv("WEBSOCKET_ENABLED").lower() == "true",
         description="WebSocket habilitado"
     )
-    WEBSOCKET_PATH: str = Field(
-        default_factory=lambda: os.getenv("WEBSOCKET_PATH", "/ws"),
+    WEBSOCKET_PATH: str | None = Field(
+        default_factory=lambda: os.getenv("WEBSOCKET_PATH"),
         description="Caminho do WebSocket"
     )
 
     # Configurações de API
-    API_V1_STR: str = Field(
-        default_factory=lambda: os.getenv("API_V1_STR", "/api/v1"),
+    API_V1_STR: str | None = Field(
+        default_factory=lambda: os.getenv("API_V1_STR"),
         description="Prefixo da API v1"
     )
 
-    PROJECT_NAME: str = Field(
-        default_factory=lambda: os.getenv(
-            "PROJECT_NAME", "SynapScale Backend"
-        ),
+    PROJECT_NAME: str | None = Field(
+        default_factory=lambda: os.getenv("PROJECT_NAME"),
         description="Nome do projeto (compatibilidade)"
     )
 
-    VERSION: str = Field(
-        default_factory=lambda: os.getenv("VERSION", "1.0.0"),
+    VERSION: str | None = Field(
+        default_factory=lambda: os.getenv("VERSION"),
         description="Versão do projeto (compatibilidade)"
     )
 
-    UPLOAD_FOLDER: str = Field(
-        default_factory=lambda: os.getenv("UPLOAD_FOLDER", "uploads"),
+    UPLOAD_FOLDER: str | None = Field(
+        default_factory=lambda: os.getenv("UPLOAD_FOLDER"),
         description="Diretório de uploads (compatibilidade)"
     )
 
@@ -338,15 +303,14 @@ def setup_logging() -> None:
     """
     Configura o sistema de logging
     """
-    # Criar diretório de logs se não existir
-    os.makedirs(os.path.dirname(settings.LOG_FILE), exist_ok=True)
+    log_file = settings.LOG_FILE or "logs/app.log"
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
-    # Configurar logging
     logging.basicConfig(
-        level=getattr(logging, settings.LOG_LEVEL),
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=getattr(logging, (settings.LOG_LEVEL or "INFO"), logging.INFO),
+        format=settings.LOG_FORMAT or "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler(settings.LOG_FILE),
+            logging.FileHandler(log_file),
             logging.StreamHandler()
         ]
     )

@@ -86,7 +86,8 @@ def setup_logging() -> None:
     apropriados para o ambiente atual.
     """
     # Configurar nível de log baseado no ambiente
-    log_level = getattr(logging, settings.LOG_LEVEL)
+    log_level_name = settings.LOG_LEVEL or "INFO"
+    log_level = getattr(logging, log_level_name, logging.INFO)
 
     # Configurar logger raiz
     root_logger = logging.getLogger()
@@ -122,7 +123,7 @@ def setup_logging() -> None:
 
     # Log inicial
     logging.info(
-        f"Logging configurado: nível={settings.LOG_LEVEL}, "
+        f"Logging configurado: nível={settings.LOG_LEVEL or 'INFO'}, "
         f"ambiente={settings.ENVIRONMENT}",
     )
 

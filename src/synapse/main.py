@@ -7,13 +7,27 @@ Sistema de configuração centralizada elimina todas as duplicações
 import logging
 import time
 import os
+import sys
+from pathlib import Path as _PathHelper
+import uvicorn
+
+# --- Garantir que o pacote "synapse" seja encontrado mesmo se PYTHONPATH não estiver definido ---
+project_root = _PathHelper(__file__).resolve().parents[2]  # .../synapse-backend-agents-jc
+src_path = project_root / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+# ---------------------------------------------------------------------------------------------
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
+from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from sqlalchemy.orm import Session
+from pathlib import Path
+from fastapi.openapi.utils import get_openapi
 
 # Importar do sistema centralizado
 from synapse.core.config_new import settings
@@ -22,7 +36,8 @@ from synapse.api.v1.router import api_router
 from synapse.middlewares.rate_limiting import rate_limit
 
 # Configuração de logging otimizada com sistema centralizado
-log_level = getattr(logging, settings.LOG_LEVEL)
+log_level_name = settings.LOG_LEVEL or "INFO"
+log_level = getattr(logging, log_level_name, logging.INFO)
 logging.basicConfig(
     level=log_level,
     format=settings.LOG_FORMAT,
@@ -66,7 +81,7 @@ async def lifespan(app: FastAPI):
             raise Exception(f"Configurações inválidas: {config_errors}")
         
         # Criar diretórios necessários usando configurações centralizadas
-        upload_dir = settings.UPLOAD_FOLDER
+        upload_dir = settings.UPLOAD_FOLDER or "uploads"
         os.makedirs(upload_dir, exist_ok=True)
         logger.info(f'📁 Diretório de uploads criado: {upload_dir}')
         
@@ -154,8 +169,15 @@ app = FastAPI(
     todas as duplicações e melhora a manutenibilidade.
     ''',
     version=settings.VERSION,
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    swagger_ui_parameters={
+        "defaultModelsExpandDepth": -1,          # esconde lista lateral de schemas
+        "docExpansion": "none",                # inicia colapsado
+        "displayRequestDuration": True,         # mostra tempo de requisição
+        "tryItOutEnabled": True,                # permite executar
+    },
+    swagger_ui_css_url="/static/custom-swagger-ui.css?v=1",
     lifespan=lifespan,
     contact={'name': 'SynapScale Team', 'email': 'support@synapscale.com'},
     license_info={'name': 'MIT'}
@@ -344,13 +366,15 @@ async def root():
     """
     Endpoint raiz da API com informações gerais
     """
+    docs_url = "/docs" if settings.DEBUG else None
+    redoc_url = "/redoc" if settings.DEBUG else None
     return {
         "message": "🚀 SynapScale Backend API",
         "description": "API de Automação e IA - Versão Otimizada com Configuração Centralizada",
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
-        "docs": None,
-        "redoc": None,
+        "docs": docs_url,
+        "redoc": redoc_url,
         "health": "/health",
         "api_prefix": settings.API_V1_STR,
         "features": {
@@ -373,6 +397,8 @@ async def api_info():
     """
     Informações detalhadas sobre a API e configurações públicas
     """
+    docs_url = "/docs" if settings.DEBUG else None
+    redoc_url = "/redoc" if settings.DEBUG else None
     return {
         "api": {
             "name": settings.PROJECT_NAME,
@@ -382,8 +408,8 @@ async def api_info():
         },
         "endpoints": {
             "health": "/health",
-            "docs": None,
-            "redoc": None,
+            "docs": docs_url,
+            "redoc": redoc_url,
             "openapi": "/openapi.json"
         },
         "configuration": {
@@ -406,6 +432,55 @@ async def api_info():
 
 # Incluir roteador principal da API
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# ------------------------------------------------------------
+# Static assets (apenas para DEBUG) – contém o CSS de override
+# ------------------------------------------------------------
+if settings.DEBUG:
+    static_dir = Path(__file__).resolve().parent / "static"
+    static_dir.mkdir(exist_ok=True)
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+# ------------------------------------------------------------
+# OpenAPI personalizado – garante refs corretas de schemas
+# ------------------------------------------------------------
+def custom_openapi():
+    """Gera um esquema OpenAPI customizado resolvendo refs de schemas."""
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=[{"name": "health", "description": "Endpoints de saúde"},
+              {"name": "info", "description": "Informações da API"},
+              {"name": "root", "description": "Endpoint raiz"}],
+    )
+
+    # Garantir que todos os $ref de componentes apontem para #/components/schemas/<Model>
+    # FastAPI normalmente já faz isso, mas caso algum caminho absoluto apareça, normalizamos.
+    def _fix_refs(obj):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k == "$ref" and isinstance(v, str) and not v.startswith("#/components/"):
+                    # Extrai o nome do schema e monta referência local
+                    schema_name = v.split("/")[-1]
+                    obj[k] = f"#/components/schemas/{schema_name}"
+                else:
+                    _fix_refs(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                _fix_refs(item)
+
+    _fix_refs(openapi_schema)
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+# Aplica função personalizada
+app.openapi = custom_openapi
 
 if __name__ == "__main__":
     logger.info(f"🚀 Iniciando servidor em modo desenvolvimento...")
