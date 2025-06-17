@@ -39,7 +39,7 @@ class Settings(BaseSettings):
         default_factory=lambda: os.getenv("JWT_SECRET_KEY"),
         description="Chave secreta para assinatura JWT"
     )
-    JWT_ALGORITHM: str = Field(
+    JWT_ALGORITHM: str | None = Field(
         default_factory=lambda: os.getenv("JWT_ALGORITHM"),
         description="Algoritmo de assinatura JWT"
     )
@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     )
 
     # Configurações do servidor
-    HOST: str = Field(
+    HOST: str | None = Field(
         default_factory=lambda: os.getenv("HOST"),
         description="Host do servidor"
     )
@@ -65,7 +65,7 @@ class Settings(BaseSettings):
         default_factory=lambda: os.getenv("DEBUG") and os.getenv("DEBUG").lower() == "true",
         description="Modo debug"
     )
-    ENVIRONMENT: str = Field(
+    ENVIRONMENT: str | None = Field(
         default_factory=lambda: os.getenv("ENVIRONMENT"),
         description="Ambiente de execução"
     )
