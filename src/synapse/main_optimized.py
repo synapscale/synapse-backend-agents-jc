@@ -133,9 +133,19 @@ app.add_middleware(
 
 # Security middleware
 if not settings.DEBUG:
+    # Usar BACKEND_CORS_ORIGINS como fonte para allowed_hosts
+    cors_origins_env = os.getenv("BACKEND_CORS_ORIGINS")
+    if cors_origins_env:
+        if cors_origins_env.strip().startswith("["):
+            import json as _json
+            trusted_hosts = _json.loads(cors_origins_env)
+        else:
+            trusted_hosts = [h.strip() for h in cors_origins_env.split(",") if h.strip()]
+    else:
+        trusted_hosts = ["*"]
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=settings.get_trusted_hosts(),
+        allowed_hosts=trusted_hosts,
     )
 
 # Include API routers

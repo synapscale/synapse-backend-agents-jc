@@ -213,19 +213,25 @@ app.add_middleware(
 )
 
 # Trusted host middleware para segurança
-allowed_hosts = [
-    "synapscale.com",
-    "*.synapscale.com",
-    "localhost",
-    "127.0.0.1",
-    "testserver",
-]
-if settings.DEBUG:
-    allowed_hosts = ["*"]
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=allowed_hosts,
-)
+if not settings.DEBUG:
+    cors_origins_env = os.getenv("BACKEND_CORS_ORIGINS")
+    if cors_origins_env:
+        if cors_origins_env.strip().startswith("["):
+            import json as _json
+            trusted_hosts = _json.loads(cors_origins_env)
+        else:
+            trusted_hosts = [h.strip() for h in cors_origins_env.split(",") if h.strip()]
+    else:
+        trusted_hosts = ["*"]
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=trusted_hosts,
+    )
+else:
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=["*"],
+    )
 
 @app.middleware('http')
 async def add_security_headers(request: Request, call_next):
