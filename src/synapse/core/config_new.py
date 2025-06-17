@@ -387,3 +387,22 @@ if settings.ENVIRONMENT == "development":
 logger.info(
     "✅ Configurações carregadas para ambiente: %s", settings.ENVIRONMENT
 )
+
+# =============================
+# Validação automática de variáveis obrigatórias
+# =============================
+REQUIRED_ENV_VARS = [
+    "SECRET_KEY",
+    "JWT_SECRET_KEY",
+    "DATABASE_URL",
+    "DATABASE_SCHEMA",
+    "UPLOAD_FOLDER",
+    "BACKEND_CORS_ORIGINS",
+    "HOST",
+    "PORT",
+    "ENVIRONMENT",
+    "DEBUG",
+]
+_missing = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
+if _missing:
+    raise RuntimeError(f"Variáveis de ambiente obrigatórias ausentes: {', '.join(_missing)}")

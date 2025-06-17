@@ -18,13 +18,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 import uvicorn
 
-# --- Garantir que pacote "synapse" seja encontrável sem PYTHONPATH (early) ---
-project_root = _PathHelper(__file__).resolve().parents[2]
-src_path = project_root / "src"
-if str(src_path) not in sys.path:
-    sys.path.insert(0, str(src_path))
-# ---------------------------------------------------------------
-
 from synapse.core.config_new import settings
 from .core.database_new import (
     test_database_connection,
