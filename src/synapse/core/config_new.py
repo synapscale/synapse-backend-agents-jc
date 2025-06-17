@@ -363,9 +363,16 @@ def setup_logging() -> None:
     log_file = settings.LOG_FILE or "logs/app.log"
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
 
+    # Corrige o formato do log se estiver como 'json'
+    log_format = settings.LOG_FORMAT
+    if log_format == "json":
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    elif not log_format:
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
     logging.basicConfig(
         level=getattr(logging, (settings.LOG_LEVEL or "INFO"), logging.INFO),
-        format=settings.LOG_FORMAT or "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        format=log_format,
         handlers=[
             logging.FileHandler(log_file),
             logging.StreamHandler()
