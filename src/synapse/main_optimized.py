@@ -35,7 +35,9 @@ from .api.v1.router import api_router
 from synapse.middlewares.rate_limiting import rate_limit
 
 # Configure logging
-log_level_name = settings.LOG_LEVEL or "INFO"
+if settings.LOG_LEVEL is None:
+    raise RuntimeError("LOG_LEVEL deve ser definido nas variáveis de ambiente")
+log_level_name = settings.LOG_LEVEL
 logging.basicConfig(
     level=getattr(logging, log_level_name, logging.INFO),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -65,9 +67,10 @@ async def lifespan(app: FastAPI):
     if not init_database():
         raise Exception("Failed to initialize database")
 
-    # Create upload directory
-    uploads_dir = settings.UPLOAD_FOLDER or "uploads"
-    os.makedirs(uploads_dir, exist_ok=True)
+    # Create upload directory, exige definição explícita
+    if settings.UPLOAD_FOLDER is None:
+        raise RuntimeError("UPLOAD_FOLDER deve ser definido nas variáveis de ambiente")
+    os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
 
     # Create logs directory
     if settings.LOG_FILE:
@@ -204,6 +207,8 @@ async def rate_limit_middleware(request, call_next):
 
 
 if __name__ == "__main__":
+    if settings.HOST is None or settings.PORT is None:
+        raise RuntimeError("HOST e PORT devem ser definidos nas variáveis de ambiente")
     uvicorn.run(
         "main:app",
         host=settings.HOST,
