@@ -36,8 +36,6 @@ from synapse.middlewares.rate_limiting import rate_limit
 
 # Configure logging
 log_level_name = settings.LOG_LEVEL or "INFO"
-if settings.LOG_LEVEL is None:
-    logger.warning("LOG_LEVEL não definido – usando INFO")
 logging.basicConfig(
     level=getattr(logging, log_level_name, logging.INFO),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -51,6 +49,10 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
+
+# Avisar se LOG_LEVEL não foi definido explicitamente
+if settings.LOG_LEVEL is None:
+    logger.warning("LOG_LEVEL não definido – usando INFO")
 
 
 @asynccontextmanager
@@ -226,12 +228,12 @@ async def rate_limit_middleware(request, call_next):
 
 
 if __name__ == "__main__":
-    if settings.HOST is None or settings.PORT is None:
-        raise RuntimeError("HOST e PORT devem ser definidos nas variáveis de ambiente")
+    host = settings.HOST or "0.0.0.0"
+    port = settings.PORT or 8000
     uvicorn.run(
         "main:app",
-        host=settings.HOST,
-        port=settings.PORT,
+        host=host,
+        port=port,
         reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower(),
+        log_level=log_level_name.lower(),
     )
