@@ -12,7 +12,20 @@ from contextlib import contextmanager
 
 from synapse.core.config_new import settings
 from synapse.models.agent import Agent
-from synapse.models.analytics import Analytics
+from synapse.models.analytics import (
+    AnalyticsEvent,
+    UserBehaviorMetric,
+    SystemPerformanceMetric,
+    BusinessMetric,
+    CustomReport,
+    ReportExecution,
+    UserInsight,
+    AnalyticsDashboard,
+    AnalyticsAlert,
+    AnalyticsExport,
+    AnalyticsMetric,
+    AnalyticsReport,
+)
 from synapse.models.conversation import Conversation
 from synapse.models.file import File
 from synapse.models.marketplace import MarketplaceComponent
