@@ -215,18 +215,40 @@ app.add_middleware(
 # Trusted host middleware para segurança
 if not settings.DEBUG:
     cors_origins_env = os.getenv("BACKEND_CORS_ORIGINS")
+    trusted_hosts = None
     if cors_origins_env:
-        if cors_origins_env.strip().startswith("["):
-            import json as _json
-            trusted_hosts = _json.loads(cors_origins_env)
-        else:
-            trusted_hosts = [h.strip() for h in cors_origins_env.split(",") if h.strip()]
+        try:
+            if cors_origins_env.strip().startswith("["):
+                import json as _json
+                trusted_hosts = _json.loads(cors_origins_env)
+            else:
+                trusted_hosts = [h.strip() for h in cors_origins_env.split(",") if h.strip()]
+            # Ajuste automático: remover protocolo e barras finais
+            def clean_host(host):
+                host = host.strip()
+                if host.startswith("http://"):
+                    host = host[len("http://"):]
+                elif host.startswith("https://"):
+                    host = host[len("https://"):]
+                return host.rstrip("/")
+            trusted_hosts = [clean_host(h) for h in trusted_hosts]
+        except Exception as e:
+            logger.error(f"Erro ao processar BACKEND_CORS_ORIGINS para TrustedHostMiddleware: {e}")
+            trusted_hosts = ["*"]
     else:
         trusted_hosts = ["*"]
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=trusted_hosts,
-    )
+    try:
+        app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=trusted_hosts,
+        )
+    except Exception as e:
+        logger.error(f"Erro ao adicionar TrustedHostMiddleware com hosts {trusted_hosts}: {e}")
+        # Tentar ajuste extra: permitir todos
+        app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=["*"],
+        )
 else:
     app.add_middleware(
         TrustedHostMiddleware,
