@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from typing import Any
+import sys
 
 from dotenv import load_dotenv
 from pydantic import Field, field_validator
@@ -388,21 +389,30 @@ logger.info(
     "✅ Configurações carregadas para ambiente: %s", settings.ENVIRONMENT
 )
 
-# =============================
-# Validação automática de variáveis obrigatórias
-# =============================
-REQUIRED_ENV_VARS = [
-    "SECRET_KEY",
-    "JWT_SECRET_KEY",
-    "DATABASE_URL",
-    "DATABASE_SCHEMA",
-    "UPLOAD_FOLDER",
-    "BACKEND_CORS_ORIGINS",
-    "HOST",
-    "PORT",
-    "ENVIRONMENT",
-    "DEBUG",
-]
+# Detecta se está rodando Alembic ou testes
+IS_ALEMBIC = "alembic" in sys.argv[0] or "alembic" in " ".join(sys.argv)
+IS_TEST = "pytest" in sys.argv[0] or "pytest" in " ".join(sys.argv)
+
+if IS_ALEMBIC or IS_TEST:
+    REQUIRED_ENV_VARS = [
+        "SECRET_KEY",
+        "JWT_SECRET_KEY",
+        "DATABASE_URL",
+        "DATABASE_SCHEMA",
+    ]
+else:
+    REQUIRED_ENV_VARS = [
+        "SECRET_KEY",
+        "JWT_SECRET_KEY",
+        "DATABASE_URL",
+        "DATABASE_SCHEMA",
+        "UPLOAD_FOLDER",
+        "BACKEND_CORS_ORIGINS",
+        "HOST",
+        "PORT",
+        "ENVIRONMENT",
+        "DEBUG",
+    ]
 _missing = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
 if _missing:
     raise RuntimeError(f"Variáveis de ambiente obrigatórias ausentes: {', '.join(_missing)}")
