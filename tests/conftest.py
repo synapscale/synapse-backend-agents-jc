@@ -135,7 +135,7 @@ class TestUtils:
             output_schema={},
             parameters_schema={},
             description="Node de teste",
-            is_public=False,
+            is_public=True,
             icon="🔧",
             color="#6366f1",
             documentation=None,
@@ -164,13 +164,19 @@ async def test_utils(db_session):
 
 class MockWebSocket:
     async def accept(self):
-        pass
+        import asyncio; await asyncio.sleep(0)
     async def close(self, code=None):
-        pass
+        import asyncio; await asyncio.sleep(0)
     async def send_json(self, data):
-        pass
+        import asyncio; await asyncio.sleep(0)
     async def receive_json(self):
+        import asyncio; await asyncio.sleep(0)
         return {}
+    async def send_text(self, data):
+        import asyncio; await asyncio.sleep(0)
+    def __getattr__(self, name):
+        print(f"[MockWebSocket] Método inesperado acessado: {name}")
+        raise AttributeError(f"MockWebSocket não implementa '{name}'")
 
 @pytest_asyncio.fixture
 async def mock_websocket():

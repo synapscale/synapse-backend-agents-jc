@@ -6,6 +6,7 @@ Sistema completo de execução de workflows
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, Field, validator
 
@@ -64,10 +65,10 @@ class ExecutionUpdate(BaseModel):
 class ExecutionResponse(ExecutionBase):
     """Schema de resposta para execução de workflow"""
 
-    id: int
+    id: UUID
     execution_id: str
-    workflow_id: int
-    user_id: int
+    workflow_id: UUID
+    user_id: UUID
     status: ExecutionStatus
     output_data: dict[str, Any] | None = None
     total_nodes: int
