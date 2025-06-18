@@ -106,7 +106,7 @@ class UserVariable(Base):
     @classmethod
     def create_variable(
         cls,
-        user_id: int,
+        user_id,  # UUID ou string que será convertida para UUID
         key: str,
         value: str,
         description: str = None,

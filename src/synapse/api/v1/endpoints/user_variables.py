@@ -58,8 +58,16 @@ async def get_user_variables(
     Lista todas as variáveis do usuário com paginação e filtros.
     """
     try:
-        variables, total = VariableService.get_user_variables_paginated(
-            db, current_user.id, skip, limit, search, is_active, category, sort_by, sort_order
+        variables, total = VariableService.get_variables(
+            db=db,
+            user_id=current_user.id,
+            skip=skip,
+            limit=limit,
+            search=search,
+            is_active=is_active,
+            category=category,
+            sort_by=sort_by,
+            sort_order=sort_order,
         )
 
         return UserVariableList(
@@ -67,7 +75,6 @@ async def get_user_variables(
                 UserVariableResponse(
                     id=v.id,
                     key=v.key,
-                    value=v.get_decrypted_value() if include_values else None,
                     description=v.description,
                     category=v.category,
                     is_encrypted=v.is_encrypted,
@@ -98,7 +105,7 @@ async def get_variable(
     """
     Obtém uma variável específica do usuário por ID.
     """
-    variable = VariableService.get_user_variable_by_id(db, current_user.id, variable_id)
+    variable = VariableService.get_variable_by_id(db, variable_id, current_user.id)
     if not variable:
         raise HTTPException(status_code=404, detail="Variável não encontrada")
     
@@ -132,7 +139,7 @@ async def create_variable(
     Cria uma nova variável para o usuário.
     """
     try:
-        variable = VariableService.create_user_variable(db, current_user.id, variable_data)
+        variable = VariableService.create_variable(db, current_user.id, variable_data)
         return UserVariableResponse(
             id=variable.id,
             key=variable.key,
@@ -181,7 +188,7 @@ async def create_user_api_key(
         # Criar/atualizar API key usando user_variables
         success = user_variables_llm_service.create_or_update_user_api_key(
             db=db,
-            user_id=str(current_user.id),
+            user_id=current_user.id,  # Manter como UUID
             provider=provider.lower(),
             api_key=request.value
         )
@@ -217,7 +224,7 @@ async def list_user_api_keys(
         
         api_keys = user_variables_llm_service.list_user_api_keys(
             db=db,
-            user_id=str(current_user.id)
+            user_id=current_user.id  # Manter como UUID
         )
         
         return api_keys
@@ -241,7 +248,7 @@ async def delete_user_api_key(
         
         success = user_variables_llm_service.delete_user_api_key(
             db=db,
-            user_id=str(current_user.id),
+            user_id=current_user.id,  # Manter como UUID
             provider=provider.lower()
         )
         

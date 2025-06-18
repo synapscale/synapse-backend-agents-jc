@@ -2,6 +2,8 @@
 Este diretório contém a documentação detalhada da API do SynapScale Backend.
 
 ## Endpoints Disponíveis
+- [🔑 **Guia de API Keys de Usuário**](./user_variables_api_keys_guide.md) - **NOVO v1.1.0**: Configuração de API keys específicas por usuário para provedores LLM
+- [Guia Completo da API](./API_GUIDE.md) - Documentação completa de todos os endpoints da API
 - [Endpoints de Arquivos](./files_endpoints.md) - Documentação completa para upload, download, listagem e gerenciamento de arquivos
 - [Endpoints de LLMs](./llm/endpoints.md) - Documentação completa para geração de texto, contagem de tokens e gerenciamento de modelos de linguagem
 - [Endpoints da Tess AI](./llm/tess_endpoints.md) - Documentação específica para integração com a Tess AI e seus agentes
