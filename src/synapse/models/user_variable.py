@@ -45,13 +45,16 @@ class UserVariable(Base):
     def get_encryption_key():
         """
         Obtém a chave de criptografia das variáveis de ambiente
+        CRÍTICO: Não gera chave padrão - falha se não configurada
         """
         encryption_key = os.getenv("ENCRYPTION_KEY")
         if not encryption_key:
-            # Gerar uma chave padrão para desenvolvimento (NUNCA usar em produção)
-            encryption_key = base64.urlsafe_b64encode(
-                b"synapse-dev-encryption-key-32b"
-            ).decode()
+            # CRÍTICO: Não gerar chave padrão - deve ser configurada explicitamente
+            raise ValueError(
+                "ENCRYPTION_KEY não configurada. Esta chave é essencial para "
+                "criptografar API keys de usuários. Configure uma chave segura "
+                "nas variáveis de ambiente."
+            )
         return encryption_key
 
     @classmethod

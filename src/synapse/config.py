@@ -349,14 +349,23 @@ def validate_settings():
         if not settings.DATABASE_URL.startswith("postgresql"):
             errors.append("Use PostgreSQL em produção")
 
+        # Validar chave de criptografia (essencial para API keys de usuário)
+        if not settings.ENCRYPTION_KEY:
+            errors.append("ENCRYPTION_KEY deve ser definida para criptografia de API keys de usuários")
+
     # Validar configuração de email se notificações estão habilitadas
     if settings.EMAIL_NOTIFICATIONS_ENABLED:
         if not settings.SMTP_USERNAME or not settings.SMTP_PASSWORD:
-            errors.append(
-                "Configuração SMTP necessária para notificações por email"
-            )
+            if settings.is_production():
+                # Em produção, desabilita notificações por email se SMTP não configurado
+                print("⚠️  Aviso: SMTP não configurado. Notificações por email desabilitadas automaticamente.")
+                settings.EMAIL_NOTIFICATIONS_ENABLED = False
+            else:
+                errors.append(
+                    "Configuração SMTP necessária para notificações por email"
+                )
 
-    # Validar pelo menos um provedor LLM
+    # Aviso sobre provedores LLM (não obrigatório devido ao sistema de API keys por usuário)
     if not any([
         settings.OPENAI_API_KEY,
         settings.CLAUDE_API_KEY,
@@ -365,7 +374,8 @@ def validate_settings():
         settings.DEEPSEEK_API_KEY,
         settings.LLAMA_API_KEY
     ]):
-        errors.append("Pelo menos um provedor LLM deve ser configurado")
+        # Apenas aviso, não erro crítico - usuários podem configurar suas próprias API keys
+        print("⚠️  Aviso: Nenhuma API key global configurada. Sistema funcionará com API keys específicas de usuários.")
 
     if errors:
         raise ValueError(f"Erros de configuração: {'; '.join(errors)}")
@@ -376,9 +386,11 @@ try:
     validate_settings()
 except ValueError as e:
     if settings.is_production():
+        # Em produção, falha apenas por erros críticos (não por falta de API keys LLM)
+        print(f"❌ Erro crítico de configuração: {e}")
         raise e
     else:
-        print(f"Aviso: {e}")
+        print(f"⚠️  Aviso de configuração: {e}")
 
 # Configurações específicas por ambiente
 if settings.is_development():
