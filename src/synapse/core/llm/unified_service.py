@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional, List
 from collections.abc import AsyncGenerator
 from pydantic import BaseModel
 import asyncio
-from synapse.api.v1.endpoints.llm.schemas import ListModelsResponse
+# Removed circular import - will import locally when needed
 
 
 class LLMResponse(BaseModel):
@@ -330,7 +330,8 @@ class UnifiedLLMService:
         else:
             models = all_models
         count = sum(len(m) for m in models.values())
-        return ListModelsResponse(models=models, count=count)
+        # Return plain dict instead of schema object to avoid circular import
+        return {"models": models, "count": count}
 
 
 # Instância global do serviço unificado

@@ -53,6 +53,9 @@ class Settings:
             else []
         )
 
+        # LLM Configuration
+        self.LLM_DEFAULT_PROVIDER = os.getenv("LLM_DEFAULT_PROVIDER", "openai")
+
         # OpenAI
         self.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
         self.OPENAI_ORG_ID = os.getenv("OPENAI_ORG_ID")

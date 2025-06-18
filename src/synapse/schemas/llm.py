@@ -6,7 +6,7 @@ sobre modelos e provedores disponíveis.
 """
 
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Any
 
 from pydantic import BaseModel, Field
 
@@ -245,4 +245,90 @@ class LLMCountTokensResponse(BaseModel):
     metadata: dict | None = Field(
         None,
         description="Metadados adicionais",
+    )
+
+
+class LLMChatRequest(BaseModel):
+    """Requisição para chat completion."""
+    
+    messages: list[dict[str, str]] = Field(
+        ...,
+        description="Lista de mensagens do chat",
+        example=[
+            {"role": "user", "content": "Olá, como você está?"},
+            {"role": "assistant", "content": "Olá! Estou bem, obrigado. Como posso ajudá-lo hoje?"},
+            {"role": "user", "content": "Preciso de ajuda com Python"}
+        ]
+    )
+    provider: LLMProvider | None = Field(
+        None,
+        description="Provedor LLM a ser usado (opcional, padrão: openai)",
+    )
+    model: str | None = Field(
+        None,
+        description="Modelo específico do provedor (opcional)",
+    )
+    temperature: float | None = Field(
+        0.7,
+        description="Controle de aleatoriedade (0.0-1.0, padrão: 0.7)",
+    )
+    max_tokens: int | None = Field(
+        1000,
+        description="Limite de tokens na resposta (padrão: 1000)",
+    )
+    top_p: float | None = Field(
+        1.0,
+        description="Controle de diversidade via amostragem nucleus (0.0-1.0)",
+    )
+    frequency_penalty: float | None = Field(
+        0.0,
+        description="Reduz repetições de palavras (-2.0 a 2.0)",
+    )
+    presence_penalty: float | None = Field(
+        0.0,
+        description="Incentiva novos tópicos (-2.0 a 2.0)",
+    )
+    stop: str | list[str] | None = Field(
+        None,
+        description="Sequências que indicam fim da geração",
+    )
+    stream: bool | None = Field(
+        False,
+        description="Se verdadeiro, retorna tokens à medida que são gerados",
+    )
+    functions: list[dict] | None = Field(
+        None,
+        description="Funções disponíveis para function calling",
+    )
+    function_call: str | dict | None = Field(
+        None,
+        description="Controle de function calling",
+    )
+
+
+class LLMResponse(BaseModel):
+    """Resposta padrão dos LLMs (unificada)."""
+    
+    content: str = Field(..., description="Conteúdo gerado pelo modelo")
+    model: str = Field(..., description="Modelo usado")
+    provider: str = Field(..., description="Provedor usado")
+    usage: dict[str, int] = Field(
+        default_factory=dict,
+        description="Informações de uso (tokens)",
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Metadados adicionais",
+    )
+    finish_reason: str | None = Field(
+        None,
+        description="Razão de término da geração",
+    )
+    function_call: dict | None = Field(
+        None,
+        description="Detalhes da chamada de função, se aplicável",
+    )
+    tool_calls: list[dict] | None = Field(
+        None,
+        description="Detalhes das chamadas de ferramentas, se aplicável",
     )

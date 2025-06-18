@@ -217,6 +217,10 @@ class Settings(BaseSettings):
         return extensions
 
     # Configurações de LLM
+    LLM_DEFAULT_PROVIDER: str | None = Field(
+        default_factory=lambda: os.getenv("LLM_DEFAULT_PROVIDER", "openai"),
+        description="Provedor LLM padrão"
+    )
     OPENAI_API_KEY: str | None = Field(
         default_factory=lambda: os.getenv("OPENAI_API_KEY"),
         description="Chave da API OpenAI"
@@ -225,9 +229,29 @@ class Settings(BaseSettings):
         default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"),
         description="Chave da API Anthropic"
     )
+    CLAUDE_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("CLAUDE_API_KEY"),
+        description="Chave da API Claude (alias para Anthropic)"
+    )
     GOOGLE_API_KEY: str | None = Field(
         default_factory=lambda: os.getenv("GOOGLE_API_KEY"),
         description="Chave da API Google"
+    )
+    GEMINI_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("GEMINI_API_KEY"),
+        description="Chave da API Gemini (alias para Google)"
+    )
+    GROK_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("GROK_API_KEY"),
+        description="Chave da API Grok"
+    )
+    DEEPSEEK_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("DEEPSEEK_API_KEY"),
+        description="Chave da API DeepSeek"
+    )
+    LLAMA_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("LLAMA_API_KEY"),
+        description="Chave da API Llama"
     )
 
     # Configurações de email
