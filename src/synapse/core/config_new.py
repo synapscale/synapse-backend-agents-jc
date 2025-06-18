@@ -142,12 +142,21 @@ class Settings(BaseSettings):
 
     @property
     def backend_cors_origins_list(self) -> list[str]:
-        """Converte BACKEND_CORS_ORIGINS de string JSON para lista"""
-        try:
-            result = json.loads(self.BACKEND_CORS_ORIGINS)
-            return result if isinstance(result, list) else []
-        except (json.JSONDecodeError, TypeError):
+        """Converte BACKEND_CORS_ORIGINS de string JSON ou CSV para lista"""
+        val = self.BACKEND_CORS_ORIGINS
+        logger = logging.getLogger(__name__)
+        if not val:
             return []
+        try:
+            result = json.loads(val)
+            if isinstance(result, list):
+                return [o.strip().rstrip("/") for o in result]
+        except Exception as e:
+            logger.warning(f"BACKEND_CORS_ORIGINS não é JSON válido: {e}. Tentando CSV.")
+        if "," in val:
+            return [o.strip().rstrip("/") for o in val.split(",") if o.strip()]
+        logger.warning("BACKEND_CORS_ORIGINS não é JSON nem CSV. Usando valor bruto.")
+        return [val.strip().rstrip("/")]
 
     @field_validator('BACKEND_CORS_ORIGINS', mode='before')
     @classmethod
