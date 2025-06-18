@@ -12,9 +12,11 @@ from typing import Optional, Dict, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from enum import Enum
+from sqlalchemy.orm import Session
 
-from synapse.api.deps import get_current_user
-from synapse.core.llm import unified_service
+from synapse.api.deps import get_current_user, get_db
+from synapse.core.llm import llm_service
+from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
 from synapse.logger_config import get_logger
 from synapse.api.v1.endpoints.llm.schemas import (
     GenerateTextResponse,
@@ -22,6 +24,13 @@ from synapse.api.v1.endpoints.llm.schemas import (
     ListModelsResponse,
     ListProvidersResponse,
 )
+from synapse.schemas.llm import (
+    LLMGenerateRequest as GenerateRequest,
+    LLMChatRequest as ChatRequest,
+    LLMResponse
+)
+from synapse.schemas.user_variable import UserVariableCreate
+from synapse.models.user import User
 
 logger = get_logger(__name__)
 
@@ -55,158 +64,70 @@ class ModelEnum(str, Enum):
     deepseek_coder = "deepseek-coder"
 
 
-@router.post("/generate", response_model=GenerateTextResponse, summary="Gerar texto", tags=["llm"])
+@router.post("/generate", response_model=LLMResponse, tags=["LLM"])
 async def generate_text(
-    prompt: str = Query(
-        ...,
-        description="Texto de entrada para o modelo processar",
-        example="Explique o conceito de machine learning em termos simples.",
-    ),
-    provider: Optional[ProviderEnum] = Query(
-        None,
-        description="Provedor LLM a ser usado",
-        example="openai",
-    ),
-    model: Optional[str] = Query(
-        None,
-        description="Modelo específico do provedor",
-        example="gpt-4o",
-    ),
-    max_tokens: Optional[int] = Query(
-        1000,
-        description="Limite máximo de tokens na resposta",
-        ge=1,
-        le=8192,
-        example=500,
-    ),
-    temperature: Optional[float] = Query(
-        0.7,
-        description="Controle de aleatoriedade (0.0-1.0)",
-        ge=0.0,
-        le=1.0,
-        example=0.7,
-    ),
-    top_p: Optional[float] = Query(
-        None,
-        description="Probabilidade acumulada para amostragem de núcleo (0.0-1.0)",
-        ge=0.0,
-        le=1.0,
-        example=0.95,
-    ),
-    top_k: Optional[int] = Query(
-        None,
-        description="Número de tokens mais prováveis a considerar",
-        ge=1,
-        le=100,
-        example=40,
-    ),
-    use_cache: Optional[bool] = Query(
-        None,
-        description="Se deve usar cache para respostas idênticas",
-        example=True,
-    ),
-    current_user=Depends(get_current_user),
-) -> GenerateTextResponse:
+    request: GenerateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """
-    Gera texto a partir de um prompt usando o provedor de LLM escolhido.
-
-    ## Função
-    Este endpoint permite gerar texto usando qualquer provedor de LLM disponível na plataforma.
-    É o principal endpoint para interações com modelos de linguagem.
-
-    ## Quando Usar
-    - Quando precisar gerar conteúdo de texto baseado em um prompt
-    - Quando quiser obter respostas de um LLM específico
-    - Para criar resumos, explicações, traduções ou qualquer geração de texto
-
-    ## Parâmetros Importantes
-    - **prompt**: O texto que você envia para o modelo processar (obrigatório)
-    - **provider**: Qual provedor de LLM usar (ex: openai, claude, gemini)
-    - **model**: Modelo específico a ser usado (ex: gpt-4o, claude-3-opus)
-    - **temperature**: Controla a aleatoriedade das respostas (0.0 = determinístico, 1.0 = muito aleatório)
-    - **max_tokens**: Limite máximo de tokens na resposta
-
-    ## Resultado Esperado
-    Retorna um objeto JSON contendo:
-    - O texto gerado pelo modelo
-    - Informações sobre o provedor e modelo utilizados
-    - Estatísticas de uso (tokens)
-    - Metadados adicionais sobre a geração
-
-    ## Exemplo de Uso
-    ```python
-    import requests
-
-    url = "https://api.synapscale.com/api/v1/llm/generate"
-    headers = {"Authorization": "Bearer seu_token"}
-    params = {
-        "prompt": "Explique o conceito de machine learning em termos simples.",
-        "provider": "openai",
-        "model": "gpt-4o",
-        "max_tokens": 500,
-        "temperature": 0.7
-    }
-
-    response = requests.post(url, params=params, headers=headers)
-    print(response.json()["text"])
-    ```
+    Gera texto usando LLM com API key específica do usuário (se disponível)
     
-    Args:
-        prompt: Texto de entrada para geração
-        provider: Provedor de LLM a ser usado
-        model: Modelo específico do provedor
-        max_tokens: Limite máximo de tokens
-        temperature: Controle de aleatoriedade
-        top_p: Probabilidade acumulada para amostragem
-        top_k: Número de tokens mais prováveis
-        use_cache: Se deve usar cache
-        current_user: Usuário autenticado
-        
-    Returns:
-        GenerateTextResponse: Texto gerado e metadados
-        
-    Raises:
-        HTTPException: 400 se parâmetros inválidos
-        HTTPException: 429 se limite de rate exceeded
-        HTTPException: 500 se erro interno do servidor
+    Automaticamente usa API keys pessoais do usuário quando configuradas,
+    com fallback para API keys globais do sistema.
     """
     try:
-        logger.info(f"Geração de texto solicitada por usuário {current_user.id} - provider: {provider}, model: {model}")
-        logger.info(f"Prompt (primeiros 50 chars): {prompt[:50]}...")
-        
-        # Validações de entrada
-        if not prompt or len(prompt.strip()) == 0:
-            logger.warning(f"Prompt vazio fornecido por usuário {current_user.id}")
-            raise HTTPException(
-                status_code=400,
-                detail="Prompt não pode estar vazio"
-            )
-        
-        if len(prompt) > 100000:  # Limite de 100k caracteres
-            logger.warning(f"Prompt muito longo ({len(prompt)} chars) fornecido por usuário {current_user.id}")
-            raise HTTPException(
-                status_code=400,
-                detail="Prompt muito longo. Máximo permitido: 100.000 caracteres"
-            )
-
-        result = await unified_service.generate_text(
-            prompt=prompt,
-            provider=provider.value if provider else None,
-            model=model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-            use_cache=use_cache,
+        # Usar novo serviço que integra user_variables
+        response = await user_variables_llm_service.generate_text_for_user(
+            prompt=request.prompt,
+            user_id=str(current_user.id),
+            db=db,
+            model=request.model,
+            provider=request.provider,
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            top_p=request.top_p,
+            frequency_penalty=request.frequency_penalty,
+            presence_penalty=request.presence_penalty,
         )
-
-        logger.info(f"Texto gerado com sucesso para usuário {current_user.id} - {getattr(result, 'tokens_used', 0)} tokens")
-        return result
-    except HTTPException:
-        raise
+        
+        return response
     except Exception as e:
-        logger.error(f"Erro ao gerar texto para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        logger.error(f"Erro na geração de texto: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/chat", response_model=LLMResponse, tags=["LLM"])
+async def chat_completion(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Chat completion usando API key específica do usuário (se disponível)
+    
+    Automaticamente usa API keys pessoais do usuário quando configuradas,
+    com fallback para API keys globais do sistema.
+    """
+    try:
+        # Usar novo serviço que integra user_variables
+        response = await user_variables_llm_service.chat_completion_for_user(
+            messages=request.messages,
+            user_id=str(current_user.id),
+            db=db,
+            model=request.model,
+            provider=request.provider,
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            top_p=request.top_p,
+            frequency_penalty=request.frequency_penalty,
+            presence_penalty=request.presence_penalty,
+        )
+        
+        return response
+    except Exception as e:
+        logger.error(f"Erro no chat completion: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/count-tokens", response_model=CountTokensResponse, summary="Contar tokens", tags=["llm", "Tokens"])
@@ -263,7 +184,7 @@ async def count_tokens(
                 detail="Texto não pode estar vazio"
             )
 
-        result = await unified_service.count_tokens(
+        result = await llm_service.count_tokens(
             text=text,
             provider=provider.value if provider else None,
             model=model,
@@ -306,7 +227,7 @@ async def list_models(
     try:
         logger.info(f"Listagem de modelos solicitada por usuário {current_user.id} - provider: {provider}")
         
-        result = await unified_service.list_models(
+        result = await llm_service.list_models(
             provider=provider.value if provider else None
         )
 
@@ -333,7 +254,7 @@ async def list_providers() -> ListProvidersResponse:
     """
     try:
         logger.info("Listagem de provedores solicitada")
-        result = unified_service.get_available_providers()
+        result = llm_service.get_available_providers()
         return ListProvidersResponse(**result)
     except Exception as e:
         logger.error(f"Erro ao listar provedores: {str(e)}")
@@ -437,7 +358,7 @@ async def generate_text_with_provider(
                 detail="Prompt não pode estar vazio"
             )
 
-        result = await unified_service.generate_text(
+        result = await llm_service.generate_text(
             prompt=prompt,
             provider=provider.value,
             model=model,
@@ -507,7 +428,7 @@ async def count_tokens_with_provider(
                 detail="Texto não pode estar vazio"
             )
 
-        result = await unified_service.count_tokens(
+        result = await llm_service.count_tokens(
             text=text,
             provider=provider.value,
             model=model,
@@ -551,7 +472,7 @@ async def list_models_for_provider(
     try:
         logger.info(f"Listagem de modelos para provedor '{provider}' solicitada por usuário {current_user.id}")
         
-        result = await unified_service.list_models(provider=provider.value)
+        result = await llm_service.list_models(provider=provider.value)
 
         logger.info(f"Modelos do provedor '{provider}' listados para usuário {current_user.id}")
         return result

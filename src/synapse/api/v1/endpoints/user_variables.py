@@ -1,16 +1,16 @@
 """
-Endpoints para gerenciamento de variáveis do usuário
+Endpoints da API para gerenciamento de variáveis do usuário
 Criado por José - um desenvolvedor Full Stack
-API REST completa para sistema de variáveis personalizado
+Sistema de variáveis personalizado para usuários
 """
 
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, status, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, File, UploadFile, status
 from sqlalchemy.orm import Session
 
-from synapse.database import get_db
-from synapse.api.deps import get_current_user
+from synapse.api.deps import get_current_user, get_db
 from synapse.models.user import User
+from synapse.models.user_variable import UserVariable
 from synapse.schemas.user_variable import (
     UserVariableCreate,
     UserVariableUpdate,
@@ -26,6 +26,9 @@ from synapse.schemas.user_variable import (
     UserVariableBulkValidation,
 )
 from synapse.services.variable_service import VariableService
+from synapse.logger_config import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -52,75 +55,38 @@ async def get_user_variables(
     current_user: User = Depends(get_current_user),
 ) -> UserVariableList:
     """
-    Lista todas as variáveis do usuário autenticado, com filtros, busca e paginação.
-
-    - **skip**: Quantos registros pular (para paginação)
-    - **limit**: Quantos registros retornar (máximo 500)
-    - **search**: Termo para buscar por chave ou descrição
-    - **is_active**: Filtrar por status ativo/inativo
-    - **category**: Filtrar por categoria da variável
-    - **sort_by**: Campo para ordenação
-    - **sort_order**: Ordem de classificação (asc/desc)
-    - **include_values**: Se deve incluir os valores das variáveis na resposta
-
-    Exemplo de resposta:
-    ```json
-    {
-      "variables": [
-        {
-          "id": 1,
-          "key": "API_KEY",
-          "description": "Chave da API",
-          "is_active": true,
-          "is_sensitive": true,
-          ...
-        }
-      ],
-      "total": 1,
-      "categories": ["CONFIG", "SECRET"]
-    }
-    ```
+    Lista todas as variáveis do usuário com paginação e filtros.
     """
-    variables, total = VariableService.get_variables(
-        db=db,
-        user_id=current_user.id,
-        skip=skip,
-        limit=limit,
-        search=search,
-        is_active=is_active,
-        category=category,
-        sort_by=sort_by,
-        sort_order=sort_order,
-    )
-    # Converter para response models
-    if include_values:
-        variable_responses = [
-            UserVariableWithValue(
-                **var.to_dict(include_value=True),
-                is_sensitive=var.is_sensitive(),
-            )
-            for var in variables
-        ]
-    else:
-        variable_responses = [
-            UserVariableResponse(
-                **var.to_dict(include_value=False),
-                is_sensitive=var.is_sensitive(),
-            )
-            for var in variables
-        ]
-    # Obter categorias distintas
-    categories = list({v.category for v in variables if v.category})
-    # Logging de auditoria
-    if search or is_active is not None:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Usuário {current_user.id} buscou variáveis com filtros: search={search}, is_active={is_active}")
-    return UserVariableList(
-        variables=variable_responses,
-        total=total,
-        categories=categories,
-    )
+    try:
+        variables, total = VariableService.get_user_variables_paginated(
+            db, current_user.id, skip, limit, search, is_active, category, sort_by, sort_order
+        )
+
+        return UserVariableList(
+            variables=[
+                UserVariableResponse(
+                    id=v.id,
+                    key=v.key,
+                    value=v.get_decrypted_value() if include_values else None,
+                    description=v.description,
+                    category=v.category,
+                    is_encrypted=v.is_encrypted,
+                    is_active=v.is_active,
+                    created_at=v.created_at,
+                    updated_at=v.updated_at,
+                )
+                for v in variables
+            ],
+            total=total,
+            skip=skip,
+            limit=limit,
+        )
+    except Exception as e:
+        logger.error(f"Erro ao listar variáveis do usuário {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro interno ao listar variáveis"
+        )
 
 
 @router.get("/{variable_id}", response_model=UserVariableWithValue)
@@ -130,57 +96,22 @@ async def get_variable(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Obtém uma variável específica pelo ID
+    Obtém uma variável específica do usuário por ID.
     """
-    variable = VariableService.get_variable_by_id(db, variable_id, current_user.id)
-
-    return UserVariableWithValue(
-        **variable.to_dict(include_value=True),
-        is_sensitive=variable.is_sensitive(),
-    )
-
-
-@router.get(
-    "/key/{key}",
-    response_model=UserVariableWithValue,
-    summary="Obter variável do usuário por chave",
-    response_description="Variável retornada com sucesso",
-    tags=["user-variables"],
-)
-async def get_variable_by_key(
-    key: str = Path(..., description="Chave da variável a ser consultada"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> UserVariableWithValue:
-    """
-    Obtém uma variável específica do usuário autenticado pela chave.
-
-    - **key**: Chave da variável
-
-    Exemplo de resposta:
-    ```json
-    {
-      "id": 1,
-      "key": "API_KEY",
-      "description": "Chave da API",
-      "is_active": true,
-      "is_sensitive": true,
-      ...
-    }
-    ```
-    """
-    variable = VariableService.get_variable_by_key(db, key, current_user.id)
+    variable = VariableService.get_user_variable_by_id(db, current_user.id, variable_id)
     if not variable:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Usuário {current_user.id} tentou acessar variável inexistente por chave: {key}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Variável com chave '{key}' não encontrada",
-        )
+        raise HTTPException(status_code=404, detail="Variável não encontrada")
+    
     return UserVariableWithValue(
-        **variable.to_dict(include_value=True),
-        is_sensitive=variable.is_sensitive(),
+        id=variable.id,
+        key=variable.key,
+        value=variable.get_decrypted_value(),
+        description=variable.description,
+        category=variable.category,
+        is_encrypted=variable.is_encrypted,
+        is_active=variable.is_active,
+        created_at=variable.created_at,
+        updated_at=variable.updated_at,
     )
 
 
@@ -198,375 +129,183 @@ async def create_variable(
     current_user: User = Depends(get_current_user),
 ) -> UserVariableResponse:
     """
-    Cria uma nova variável para o usuário autenticado.
-
-    Corpo de requisição:
-    ```json
-    {
-      "key": "API_KEY",
-      "value": "123456",
-      "description": "Chave da API",
-      "is_active": true
-    }
-    ```
-
-    Exemplo de resposta:
-    ```json
-    {
-      "id": 1,
-      "key": "API_KEY",
-      "description": "Chave da API",
-      "is_active": true,
-      "is_sensitive": true,
-      ...
-    }
-    ```
+    Cria uma nova variável para o usuário.
     """
-    variable = VariableService.create_variable(db, current_user.id, variable_data)
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} criou variável: {variable_data.key}")
-    return UserVariableResponse(
-        **variable.to_dict(include_value=False),
-        is_sensitive=variable.is_sensitive(),
-    )
+    try:
+        variable = VariableService.create_user_variable(db, current_user.id, variable_data)
+        return UserVariableResponse(
+            id=variable.id,
+            key=variable.key,
+            description=variable.description,
+            category=variable.category,
+            is_encrypted=variable.is_encrypted,
+            is_active=variable.is_active,
+            created_at=variable.created_at,
+            updated_at=variable.updated_at,
+        )
+    except Exception as e:
+        logger.error(f"Erro ao criar variável para usuário {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro interno ao criar variável"
+        )
 
 
-@router.put(
-    "/{variable_id}",
-    response_model=UserVariableResponse,
-    summary="Atualizar variável do usuário",
-    response_description="Variável atualizada com sucesso",
-    tags=["user-variables"],
-)
-async def update_variable(
-    variable_id: int = Path(..., description="ID da variável a ser atualizada"),
-    variable_data: UserVariableUpdate = ...,
-    db: Session = Depends(get_db),
+# ============================================================================
+# NOVOS ENDPOINTS PARA API KEYS LLM USANDO USER_VARIABLES
+# ============================================================================
+
+@router.post("/api-keys/{provider}", response_model=dict, tags=["User API Keys"])
+async def create_user_api_key(
+    provider: str,
+    request: UserVariableCreate,
     current_user: User = Depends(get_current_user),
-) -> UserVariableResponse:
-    """
-    Atualiza uma variável existente do usuário autenticado.
-
-    - **variable_id**: ID da variável
-
-    Corpo de requisição:
-    ```json
-    {
-      "value": "novo_valor",
-      "description": "Nova descrição",
-      "is_active": false
-    }
-    ```
-
-    Exemplo de resposta:
-    ```json
-    {
-      "id": 1,
-      "key": "API_KEY",
-      "description": "Nova descrição",
-      "is_active": false,
-      "is_sensitive": true,
-      ...
-    }
-    ```
-    """
-    variable = VariableService.update_variable(
-        db, variable_id, current_user.id, variable_data
-    )
-    if not variable:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Usuário {current_user.id} tentou atualizar variável inexistente: {variable_id}")
-        raise HTTPException(status_code=404, detail="Variável não encontrada")
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} atualizou variável: {variable_id}")
-    return UserVariableResponse(
-        **variable.to_dict(include_value=False),
-        is_sensitive=variable.is_sensitive(),
-    )
-
-
-@router.delete(
-    "/{variable_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Remover variável do usuário",
-    response_description="Variável removida com sucesso",
-    tags=["user-variables"],
-)
-async def delete_variable(
-    variable_id: int = Path(..., description="ID da variável a ser removida"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     """
-    Remove uma variável do usuário autenticado pelo ID.
-
-    - **variable_id**: ID da variável
+    Configura uma API key específica do usuário para um provedor LLM
+    
+    Usa a tabela user_variables existente com categoria 'api_keys'
     """
-    VariableService.delete_variable(db, variable_id, current_user.id)
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} removeu variável: {variable_id}")
-
-
-@router.post(
-    "/bulk",
-    response_model=list[UserVariableResponse],
-    status_code=status.HTTP_201_CREATED,
-    summary="Criar múltiplas variáveis em lote",
-    response_description="Variáveis criadas em lote com sucesso",
-    tags=["user-variables"],
-)
-async def bulk_create_variables(
-    variables_data: UserVariableBulkCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> list[UserVariableResponse]:
-    """
-    Cria múltiplas variáveis para o usuário autenticado em uma única requisição.
-    """
-    variables = VariableService.bulk_create_variables(
-        db,
-        current_user.id,
-        variables_data.variables,
-    )
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} criou {len(variables)} variáveis em lote.")
-    return [
-        UserVariableResponse(
-            **var.to_dict(include_value=False),
-            is_sensitive=var.is_sensitive(),
+    try:
+        from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+        
+        # Validar provedor
+        valid_providers = ["openai", "anthropic", "google", "grok", "deepseek", "llama"]
+        if provider.lower() not in valid_providers:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Provedor inválido. Valores aceitos: {', '.join(valid_providers)}"
+            )
+        
+        # Criar/atualizar API key usando user_variables
+        success = user_variables_llm_service.create_or_update_user_api_key(
+            db=db,
+            user_id=str(current_user.id),
+            provider=provider.lower(),
+            api_key=request.value
         )
-        for var in variables
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Erro ao salvar API key")
+        
+        return {
+            "message": f"API key {provider} configurada com sucesso",
+            "provider": provider.lower(),
+            "status": "success"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao criar API key: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.get("/api-keys", response_model=List[dict], tags=["User API Keys"])
+async def list_user_api_keys(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Lista todas as API keys configuradas pelo usuário
+    
+    Retorna dados mascarados para segurança
+    """
+    try:
+        from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+        
+        api_keys = user_variables_llm_service.list_user_api_keys(
+            db=db,
+            user_id=str(current_user.id)
+        )
+        
+        return api_keys
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar API keys: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.delete("/api-keys/{provider}", response_model=dict, tags=["User API Keys"])
+async def delete_user_api_key(
+    provider: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Remove uma API key específica do usuário
+    """
+    try:
+        from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+        
+        success = user_variables_llm_service.delete_user_api_key(
+            db=db,
+            user_id=str(current_user.id),
+            provider=provider.lower()
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail=f"API key para {provider} não encontrada"
+            )
+        
+        return {
+            "message": f"API key {provider} removida com sucesso",
+            "provider": provider.lower(),
+            "status": "success"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao remover API key: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.get("/api-keys/providers", response_model=List[dict], tags=["User API Keys"])
+async def get_supported_providers():
+    """
+    Lista todos os provedores LLM suportados
+    """
+    providers = [
+        {
+            "name": "openai",
+            "display_name": "OpenAI",
+            "models": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"],
+            "description": "OpenAI GPT models"
+        },
+        {
+            "name": "anthropic", 
+            "display_name": "Anthropic Claude",
+            "models": ["claude-3-haiku", "claude-3-sonnet", "claude-3-opus"],
+            "description": "Anthropic Claude models"
+        },
+        {
+            "name": "google",
+            "display_name": "Google Gemini", 
+            "models": ["gemini-pro", "gemini-pro-vision"],
+            "description": "Google Gemini models"
+        },
+        {
+            "name": "grok",
+            "display_name": "xAI Grok",
+            "models": ["grok-beta"],
+            "description": "xAI Grok models"
+        },
+        {
+            "name": "deepseek",
+            "display_name": "DeepSeek",
+            "models": ["deepseek-chat", "deepseek-coder"],
+            "description": "DeepSeek models"
+        },
+        {
+            "name": "llama",
+            "display_name": "Meta Llama",
+            "models": ["llama-2-70b", "llama-2-13b"],
+            "description": "Meta Llama models"
+        }
     ]
-
-
-@router.put(
-    "/bulk",
-    response_model=dict[int, UserVariableResponse],
-    summary="Atualizar múltiplas variáveis em lote",
-    response_description="Variáveis atualizadas em lote com sucesso",
-    tags=["user-variables"],
-)
-async def bulk_update_variables(
-    updates_data: UserVariableBulkUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> dict[int, UserVariableResponse]:
-    """
-    Atualiza múltiplas variáveis do usuário autenticado em uma única requisição.
-    """
-    updated = VariableService.bulk_update_variables(
-        db, current_user.id, updates_data.updates
-    )
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} atualizou {len(updated)} variáveis em lote.")
-    return {
-        var.id: UserVariableResponse(
-            **var.to_dict(include_value=False),
-            is_sensitive=var.is_sensitive(),
-        )
-        for var in updated
-    }
-
-
-@router.delete(
-    "/bulk",
-    response_model=dict[str, int],
-    summary="Remover múltiplas variáveis em lote",
-    response_description="Variáveis removidas em lote com sucesso",
-    tags=["user-variables"],
-)
-async def bulk_delete_variables(
-    variable_ids: list[int],
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> dict[str, int]:
-    """
-    Remove múltiplas variáveis do usuário autenticado em uma única requisição.
-    """
-    count = VariableService.bulk_delete_variables(db, current_user.id, variable_ids)
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} removeu {count} variáveis em lote.")
-    return {"removed": count}
-
-
-@router.post(
-    "/import",
-    response_model=Dict[str, Any],
-    summary="Importar variáveis via JSON",
-    response_description="Variáveis importadas com sucesso",
-    tags=["user-variables"],
-)
-async def import_variables(
-    import_data: UserVariableImport,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
-    """
-    Importa variáveis do usuário autenticado a partir de um JSON.
-    """
-    result = VariableService.import_variables(db, current_user.id, import_data)
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} importou variáveis via JSON.")
-    return result
-
-
-@router.post(
-    "/import/file",
-    response_model=Dict[str, Any],
-    summary="Importar variáveis via arquivo .env",
-    response_description="Variáveis importadas de arquivo com sucesso",
-    tags=["user-variables"],
-)
-async def import_variables_from_file(
-    file: UploadFile = File(..., description="Arquivo .env para importar"),
-    overwrite_existing: bool = Query(
-        False, description="Sobrescrever variáveis existentes"
-    ),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
-    """
-    Importa variáveis do usuário autenticado a partir de um arquivo .env.
-    """
-    result = VariableService.import_variables_from_file(
-        db, current_user.id, file, overwrite_existing
-    )
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} importou variáveis via arquivo .env.")
-    return result
-
-
-@router.post(
-    "/export",
-    response_model=Dict[str, Any],
-    summary="Exportar variáveis do usuário",
-    response_description="Variáveis exportadas com sucesso",
-    tags=["user-variables"],
-)
-async def export_variables(
-    export_data: UserVariableExport,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
-    """
-    Exporta variáveis do usuário autenticado para JSON ou .env.
-    """
-    result = VariableService.export_variables(db, current_user.id, export_data)
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Usuário {current_user.id} exportou variáveis.")
-    return result
-
-
-@router.get(
-    "/stats/summary",
-    response_model=UserVariableStats,
-    summary="Obter estatísticas das variáveis do usuário",
-    response_description="Estatísticas retornadas com sucesso",
-    tags=["user-variables"],
-)
-async def get_variables_stats(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> UserVariableStats:
-    """
-    Obtém estatísticas das variáveis do usuário autenticado.
-    """
-    stats = VariableService.get_variables_stats(db, current_user.id)
-    return stats
-
-
-@router.post(
-    "/validate",
-    response_model=UserVariableValidation,
-    summary="Validar chave de variável",
-    response_description="Validação de chave realizada com sucesso",
-    tags=["user-variables"],
-)
-async def validate_variable_key(
-    key: str = Query(..., description="Chave da variável para validar"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> UserVariableValidation:
-    """
-    Valida se a chave de variável é válida e disponível para o usuário autenticado.
-    """
-    return VariableService.validate_variable_key(db, current_user.id, key)
-
-
-@router.post(
-    "/validate/bulk",
-    response_model=UserVariableBulkValidation,
-    summary="Validar múltiplas chaves de variáveis",
-    response_description="Validação em lote realizada com sucesso",
-    tags=["user-variables"],
-)
-async def validate_variable_keys_bulk(
-    keys: list[str],
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> UserVariableBulkValidation:
-    """
-    Valida múltiplas chaves de variáveis para o usuário autenticado.
-    """
-    return VariableService.validate_variable_keys_bulk(db, current_user.id, keys)
-
-
-@router.get(
-    "/env/dict",
-    response_model=dict[str, str],
-    summary="Obter variáveis do usuário como dicionário",
-    response_description="Variáveis retornadas como dicionário",
-    tags=["user-variables"],
-)
-async def get_env_dict(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> dict[str, str]:
-    """
-    Retorna todas as variáveis do usuário autenticado como um dicionário.
-    """
-    return VariableService.get_env_dict(db, current_user.id)
-
-
-@router.get(
-    "/env/string",
-    response_model=dict[str, str],
-    summary="Obter variáveis do usuário como string .env",
-    response_description="Variáveis retornadas como string .env",
-    tags=["user-variables"],
-)
-async def get_env_string(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> dict[str, str]:
-    """
-    Retorna todas as variáveis do usuário autenticado como uma string no formato .env.
-    """
-    return VariableService.get_env_string(db, current_user.id)
-
-
-# Endpoints para uso interno (workflows)
-@router.get(
-    "/internal/env-dict/{user_id}",
-    response_model=dict[str, str],
-    include_in_schema=False,
-)
-async def get_user_env_dict_internal(
-    user_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    Endpoint interno para obter variáveis de um usuário específico
-    Usado pelo sistema de execução de workflows
-    """
-    return VariableService.get_user_env_dict(db, user_id)
+    
+    return providers 
