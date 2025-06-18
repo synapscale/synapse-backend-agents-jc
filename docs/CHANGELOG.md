@@ -65,6 +65,51 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Lazy loading implementado
 - Índices de banco otimizados
 
+## [1.1.0] - 2025-06-18
+
+### ✨ Adicionado
+- **Sistema de API Keys Específicas por Usuário**
+  - Usuários podem configurar suas próprias API keys para provedores LLM
+  - Fallback automático para API keys globais do sistema
+  - Criptografia nativa usando infraestrutura existente
+  - Suporte para 6 provedores: OpenAI, Anthropic, Google, Grok, DeepSeek, Llama
+- **Novos Endpoints de Gerenciamento de API Keys**
+  - `POST /api/v1/user-variables/api-keys/{provider}` - Configurar API key
+  - `GET /api/v1/user-variables/api-keys` - Listar API keys (mascaradas)
+  - `DELETE /api/v1/user-variables/api-keys/{provider}` - Remover API key
+  - `GET /api/v1/user-variables/api-keys/providers` - Listar provedores suportados
+- **UserVariablesLLMService**
+  - Serviço integrado para gerenciar API keys específicas de usuários
+  - Integração transparente com todos os endpoints LLM existentes
+  - Sistema de categorização automática (`category="api_keys"`)
+
+### 🔧 Melhorado
+- **Endpoints LLM Existentes**
+  - Todos os endpoints `/api/v1/llm/*` agora usam API keys específicas do usuário automaticamente
+  - Fallback transparente para API keys globais quando usuário não tem configurada
+  - Zero breaking changes - compatibilidade total mantida
+- **Sistema user_variables**
+  - Reutilização da tabela existente para API keys
+  - Melhor aproveitamento da criptografia nativa
+  - Consistência arquitetural mantida
+
+### 🛡️ Segurança
+- **Criptografia de API Keys**
+  - Todas as API keys de usuários são criptografadas com Fernet
+  - Valores mascarados na listagem (`****1234`)
+  - Descriptografia apenas quando necessário para chamadas API
+- **Validação Robusta**
+  - Validação de provedores suportados
+  - Sanitização de entrada de dados
+  - Tratamento seguro de erros
+
+### 📚 Documentação
+- **Documentação Completa de API Keys**
+  - Guia detalhado de implementação
+  - Exemplos de uso para todos os endpoints
+  - Fluxo completo documentado
+  - Diagramas de arquitetura atualizados
+
 ## [Unreleased]
 
 ### 🔮 Planejado

@@ -37,7 +37,7 @@ class VariableService:
     @staticmethod
     def get_variables(
         db: Session,
-        user_id: int,
+        user_id,  # UUID from current_user.id
         skip: int = 0,
         limit: int = 100,
         search: Optional[str] = None,
@@ -93,7 +93,7 @@ class VariableService:
         return variables, total
 
     @staticmethod
-    def get_variable_by_id(db: Session, variable_id: int, user_id: int) -> UserVariable:
+    def get_variable_by_id(db: Session, variable_id: int, user_id) -> UserVariable:
         """
         Obtém uma variável específica pelo ID
         """
@@ -112,7 +112,7 @@ class VariableService:
         return variable
 
     @staticmethod
-    def get_variable_by_key(db: Session, key: str, user_id: int) -> Optional[UserVariable]:
+    def get_variable_by_key(db: Session, key: str, user_id) -> Optional[UserVariable]:
         """
         Obtém uma variável específica pela chave
         """
@@ -128,7 +128,7 @@ class VariableService:
     @staticmethod
     def create_variable(
         db: Session,
-        user_id: int,
+        user_id,  # UUID from current_user.id
         variable_data: UserVariableCreate,
     ) -> UserVariable:
         """

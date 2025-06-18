@@ -21,7 +21,7 @@ class UserVariablesLLMService(RealLLMService):
     def __init__(self):
         super().__init__()
     
-    def get_user_api_key(self, db: Session, user_id: str, provider: str) -> Optional[str]:
+    def get_user_api_key(self, db: Session, user_id, provider: str) -> Optional[str]:
         """
         Obtém a API key específica do usuário a partir da tabela user_variables
         
@@ -71,7 +71,7 @@ class UserVariablesLLMService(RealLLMService):
     def create_or_update_user_api_key(
         self, 
         db: Session, 
-        user_id: str, 
+        user_id,  # UUID (não converter para string)
         provider: str, 
         api_key: str
     ) -> bool:
@@ -136,7 +136,7 @@ class UserVariablesLLMService(RealLLMService):
             logger.error(f"Erro ao criar/atualizar API key para usuário {user_id}: {e}")
             return False
     
-    def list_user_api_keys(self, db: Session, user_id: str) -> List[Dict[str, Any]]:
+    def list_user_api_keys(self, db: Session, user_id) -> List[Dict[str, Any]]:
         """
         Lista todas as API keys configuradas pelo usuário
         
@@ -188,7 +188,7 @@ class UserVariablesLLMService(RealLLMService):
             logger.error(f"Erro ao listar API keys do usuário {user_id}: {e}")
             return []
     
-    def delete_user_api_key(self, db: Session, user_id: str, provider: str) -> bool:
+    def delete_user_api_key(self, db: Session, user_id, provider: str) -> bool:
         """
         Remove uma API key do usuário
         
@@ -236,7 +236,7 @@ class UserVariablesLLMService(RealLLMService):
     async def generate_text_for_user(
         self,
         prompt: str,
-        user_id: str,
+        user_id,  # UUID
         db: Session,
         model: str | None = None,
         provider: str | None = None,
@@ -269,7 +269,7 @@ class UserVariablesLLMService(RealLLMService):
     async def chat_completion_for_user(
         self,
         messages: list[dict[str, str]],
-        user_id: str,
+        user_id,  # UUID
         db: Session,
         model: str | None = None,
         provider: str | None = None,

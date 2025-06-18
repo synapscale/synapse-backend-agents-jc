@@ -8,6 +8,32 @@
 
 > Plataforma de Automação com IA - Backend completo e otimizado para gerenciamento de workflows, agentes AI e automações empresariais.
 
+## 🆕 **Novidades v1.1.0**
+
+### 🔑 **Sistema de API Keys Específicas por Usuário**
+
+Agora os usuários podem configurar suas próprias API keys para provedores LLM:
+
+- ✅ **6 Provedores Suportados**: OpenAI, Anthropic, Google, Grok, DeepSeek, Llama
+- ✅ **Fallback Automático**: Usa chaves globais se usuário não configurou
+- ✅ **Criptografia Segura**: Todas as chaves são criptografadas
+- ✅ **Zero Breaking Changes**: Endpoints existentes funcionam normalmente
+
+**Exemplo de uso**:
+```bash
+# Configurar API key pessoal
+curl -X POST "http://localhost:8000/api/v1/user-variables/api-keys/openai" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"value": "sk-proj-sua-chave"}'
+
+# Usar LLM normalmente (usa automaticamente sua chave)
+curl -X POST "http://localhost:8000/api/v1/llm/generate" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"prompt": "Explique IA", "provider": "openai"}'
+```
+
+📚 **[Documentação Completa das API Keys](./docs/api/user_variables_api_keys_guide.md)**
+
 ## 📋 Sumário
 
 1. [🏁 Início Rápido](#-início-rápido)

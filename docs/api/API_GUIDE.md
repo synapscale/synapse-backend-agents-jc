@@ -48,6 +48,53 @@ sequenceDiagram
 
 ## 📚 Endpoints por Categoria
 
+### 🔑 **API Keys de Usuário (`/api/v1/user-variables/api-keys`)**
+
+> **Novo em v1.1.0**: Sistema de API Keys específicas por usuário para provedores LLM
+
+O sistema permite que usuários configurem suas próprias API keys para provedores LLM, oferecendo:
+- ✅ **Controle individual** sobre custos e limites
+- ✅ **Fallback automático** para chaves globais do sistema
+- ✅ **Criptografia segura** com Fernet
+- ✅ **Integração transparente** com todos os endpoints LLM
+
+#### Configurar API Key
+
+```http
+POST /api/v1/user-variables/api-keys/{provider}
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "value": "sk-proj-1234567890abcdef",
+  "description": "Minha chave OpenAI pessoal"
+}
+```
+
+**Provedores suportados**: `openai`, `anthropic`, `google`, `grok`, `deepseek`, `llama`
+
+#### Listar API Keys (Mascaradas)
+
+```http
+GET /api/v1/user-variables/api-keys
+Authorization: Bearer <access_token>
+```
+
+#### Remover API Key
+
+```http
+DELETE /api/v1/user-variables/api-keys/{provider}
+Authorization: Bearer <access_token>
+```
+
+#### Listar Provedores Suportados
+
+```http
+GET /api/v1/user-variables/api-keys/providers
+```
+
+> 📚 **Documentação Completa**: [Guia de API Keys](./user_variables_api_keys_guide.md)
+
 ### 🔐 **Autenticação (`/api/v1/auth`)**
 
 #### Registro de Usuário
