@@ -28,7 +28,34 @@
 }
 
 .swagger-ui .topbar {
-    background-color: var(--primary-color);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-bottom: 3px solid #5a67d8;
+}
+
+.swagger-ui .topbar .download-url-wrapper {
+    display: none;
+}
+
+.swagger-ui .info {
+    margin: 30px 0;
+    background: #f8fafc;
+    padding: 25px;
+    border-radius: 12px;
+    border-left: 4px solid #5a67d8;
+}
+
+.swagger-ui .info .title {
+    color: #2d3748 !important;
+    font-size: 2.2em !important;
+    font-weight: 700 !important;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.swagger-ui .info .description {
+    color: #4a5568 !important;
+    font-size: 1.1em !important;
+    line-height: 1.6;
 }
 
 /* ===== BANNER INFORMATIVO SOBRE AUTENTICAÇÃO ===== */
@@ -380,4 +407,371 @@
 
 .swagger-ui .model-example .tab-item.active {
     color: #000000 !important;
+}
+
+/* ==================== OCULTAR OAUTH2 DUPLICADA ==================== */
+/* Ocultar seção OAuth2 (password) que causa confusão */
+.swagger-ui .auth-container .auth-wrapper:has(.scopes h4:contains("OAuth2")) {
+    display: none !important;
+}
+
+/* Alternativa mais específica: ocultar qualquer seção que contenha "OAuth2 (password)" */
+.swagger-ui .auth-container .auth-wrapper {
+    position: relative;
+}
+
+.swagger-ui .auth-container .auth-wrapper:has(h4):has(.scopes) {
+    display: none !important;
+}
+
+/* Ocultar especificamente a seção OAuth2 Password Flow */
+.swagger-ui .auth-container .auth-wrapper[data-flow="password"] {
+    display: none !important;
+}
+
+/* Estilo específico para manter apenas HTTPBasic e HTTPBearer visíveis */
+.swagger-ui .auth-container .auth-wrapper:not(:has(h4:contains("HTTPBasic"))):not(:has(h4:contains("HTTPBearer"))) {
+    display: none !important;
+}
+
+/* ==================== SEÇÕES DE AUTENTICAÇÃO ESPECÍFICAS ==================== */
+/* Destacar seção HTTPBasic */
+.swagger-ui .auth-container h4:contains("HTTPBasic") {
+    background: linear-gradient(135deg, #48bb78, #68d391) !important;
+    color: white !important;
+    padding: 10px 15px !important;
+    border-radius: 6px !important;
+    margin: 15px 0 10px 0 !important;
+}
+
+.swagger-ui .auth-container h4:contains("HTTPBasic")::before {
+    content: "🔐 ";
+    font-size: 1.2em;
+}
+
+/* Destacar seção HTTPBearer */
+.swagger-ui .auth-container h4:contains("HTTPBearer") {
+    background: linear-gradient(135deg, #4299e1, #63b3ed) !important;
+    color: white !important;
+    padding: 10px 15px !important;
+    border-radius: 6px !important;
+    margin: 15px 0 10px 0 !important;
+}
+
+.swagger-ui .auth-container h4:contains("HTTPBearer")::before {
+    content: "🔑 ";
+    font-size: 1.2em;
+}
+
+/* ==================== MODAL DE AUTORIZAÇÃO ==================== */
+.swagger-ui .dialog-ux .modal-ux {
+    max-width: 800px !important;
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+.swagger-ui .dialog-ux .modal-ux-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 20px !important;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.swagger-ui .dialog-ux .modal-ux-header h3 {
+    color: white !important;
+    font-size: 1.5em !important;
+    margin: 0 !important;
+}
+
+/* ==================== INSTRUÇÕES MELHORADAS ==================== */
+.swagger-ui .auth-container p {
+    background: #edf2f7 !important;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    border-left: 4px solid #4299e1 !important;
+    margin: 10px 0 !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
+/* ==================== ANIMAÇÕES ==================== */
+@keyframes pulse-orange {
+    0% {
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5);
+    }
+    100% {
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+    }
+}
+
+/* ==================== ENDPOINTS DESTACADOS ==================== */
+.swagger-ui .opblock-tag {
+    background: #f7fafc !important;
+    border-radius: 8px !important;
+    margin: 20px 0 !important;
+    padding: 15px !important;
+    border-left: 4px solid #5a67d8 !important;
+}
+
+.swagger-ui .opblock.opblock-post .opblock-summary-path:contains("/docs-login") {
+    background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%) !important;
+    color: white !important;
+}
+
+.swagger-ui .opblock.opblock-get .opblock-summary-path:contains("/test-token") {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important;
+    color: #2d3748 !important;
+}
+
+/* ==================== RESPONSIVIDADE ==================== */
+@media (max-width: 768px) {
+    .swagger-ui .info .title {
+        font-size: 1.8em !important;
+    }
+    
+    .swagger-ui .authorization__btn {
+        padding: 10px 20px !important;
+        font-size: 14px !important;
+    }
+    
+    .swagger-ui .dialog-ux .modal-ux {
+        max-width: 95% !important;
+        margin: 20px !important;
+    }
+}
+
+/* SynapScale Backend API - Unified Documentation Styles v4.1 */
+/* Estilos customizados para interface de documentação unificada */
+
+/* ============================
+   ESQUEMAS DE AUTENTICAÇÃO
+============================ */
+
+/* Ocultar esquemas OAuth2 duplicados que causam confusão */
+.auth-container .scopes:has([data-name*="OAuth2"]),
+.auth-wrapper .scopes:has([data-name*="OAuth2"]),
+.auth-container .auth-btn-wrapper:has([data-name*="OAuth2"]),
+.auth-wrapper .auth-btn-wrapper:has([data-name*="OAuth2"]) {
+    display: none !important;
+}
+
+/* Melhorar aparência dos esquemas de autenticação principais */
+.auth-container .scopes,
+.auth-wrapper .scopes {
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+/* Destacar HTTPBasic e HTTPBearer especificamente */
+.auth-container .scopes:has([data-name="HTTPBasic"]),
+.auth-wrapper .scopes:has([data-name="HTTPBasic"]) {
+    border-left: 4px solid #28a745;
+    background-color: #f0fff4;
+}
+
+.auth-container .scopes:has([data-name="HTTPBearer"]),
+.auth-wrapper .scopes:has([data-name="HTTPBearer"]) {
+    border-left: 4px solid #007bff;
+    background-color: #f0f8ff;
+}
+
+/* ============================
+   MODAL DE AUTORIZAÇÃO
+============================ */
+
+/* Melhorar o modal de autorização */
+.auth-container,
+.auth-wrapper {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 25px;
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+/* Título do modal de autorização */
+.auth-container h4,
+.auth-wrapper h4 {
+    color: #2c3e50;
+    font-size: 1.4em;
+    margin-bottom: 20px;
+    text-align: center;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+/* Adicionar instruções de uso */
+.auth-container::before,
+.auth-wrapper::before {
+    content: "💡 Como usar: Para HTTPBasic use seu email como 'Username' e sua senha como 'Password'. Para HTTPBearer use um token JWT válido obtido no endpoint /auth/login.";
+    display: block;
+    background: #e7f3ff;
+    border: 1px solid #b8daff;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: #0056b3;
+    line-height: 1.4;
+}
+
+/* Botões de autorização */
+.auth-btn-wrapper button,
+.btn.authorize {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 5px;
+}
+
+.auth-btn-wrapper button:hover,
+.btn.authorize:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+}
+
+/* Botão de logout */
+.btn.authorize.unlocked {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.btn.authorize.unlocked:hover {
+    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+}
+
+/* ============================
+   CAMPOS DE INPUT
+============================ */
+
+/* Melhorar campos de input no modal */
+.auth-container input[type="text"],
+.auth-container input[type="password"],
+.auth-wrapper input[type="text"],
+.auth-wrapper input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.auth-container input[type="text"]:focus,
+.auth-container input[type="password"]:focus,
+.auth-wrapper input[type="text"]:focus,
+.auth-wrapper input[type="password"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+}
+
+/* ============================
+   INDICADORES DE STATUS
+============================ */
+
+/* Indicador de autenticação ativa */
+.authorize-wrapper .btn.authorize.unlocked::after {
+    content: " ✓ Autenticado";
+    font-size: 0.8em;
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* Melhorar indicador de cadeado */
+.auth-container .locked,
+.auth-wrapper .locked {
+    color: #dc3545;
+}
+
+.auth-container .unlocked,
+.auth-wrapper .unlocked {
+    color: #28a745;
+}
+
+/* ============================
+   RESPONSIVIDADE
+============================ */
+
+@media (max-width: 768px) {
+    .auth-container,
+    .auth-wrapper {
+        margin: 10px;
+        padding: 20px;
+        max-width: calc(100% - 20px);
+    }
+    
+    .auth-container::before,
+    .auth-wrapper::before {
+        font-size: 0.8em;
+        padding: 10px;
+    }
+}
+
+/* ============================
+   MELHORIAS GERAIS DA UI
+============================ */
+
+/* Melhorar o botão principal de autorização no topo */
+.topbar-wrapper .authorize-wrapper {
+    margin-left: auto;
+}
+
+.topbar-wrapper .btn.authorize {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.topbar-wrapper .btn.authorize:hover {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+}
+
+/* Status do botão quando autenticado */
+.topbar-wrapper .btn.authorize.unlocked {
+    background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+}
+
+.topbar-wrapper .btn.authorize.unlocked:hover {
+    background: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
+}
+
+/* ============================
+   CORREÇÕES FINAIS
+============================ */
+
+/* Garantir que elementos ocultos não ocupem espaço */
+[style*="display: none"] {
+    display: none !important;
+}
+
+/* Melhorar legibilidade geral */
+.swagger-ui {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Adicionar animações suaves */
+* {
+    transition: all 0.2s ease;
 } 

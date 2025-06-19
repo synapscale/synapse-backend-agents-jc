@@ -33,7 +33,11 @@ except ImportError:
 
 from synapse.config import Settings
 from synapse.logger_config import get_logger
-# Removed circular import - using dict returns instead
+# Import for ListModelsResponse to avoid circular import issues
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from synapse.api.v1.endpoints.llm.schemas import ListModelsResponse
 
 logger = get_logger(__name__)
 
@@ -443,6 +447,10 @@ class RealLLMService:
             models = all_models
 
         count = sum(len(m) for m in models.values())
+        
+        # Import here to avoid circular imports
+        from synapse.api.v1.endpoints.llm.schemas import ListModelsResponse
+        
         return ListModelsResponse(models=models, count=count)
 
     def _get_model_display_name(self, model_id: str) -> str:

@@ -119,6 +119,13 @@ class UserVariableResponse(BaseModel):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 class UserVariableWithValue(UserVariableResponse):

@@ -171,6 +171,15 @@ class TemplateResponse(TemplateBase):
     published_at: datetime | None = None
     last_used_at: datetime | None = None
 
+    @validator("id", "template_id", "author_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     class Config:
         from_attributes = True
 
@@ -255,6 +264,15 @@ class ReviewResponse(ReviewBase):
     user_name: str | None = None
     user_avatar: str | None = None
 
+    @validator("id", "template_id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     class Config:
         from_attributes = True
 
@@ -276,6 +294,15 @@ class DownloadResponse(BaseModel):
     download_type: str
     template_version: str | None = None
     downloaded_at: datetime
+
+    @validator("id", "template_id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
     class Config:
         from_attributes = True
@@ -366,6 +393,15 @@ class CollectionResponse(CollectionBase):
     # Templates da coleção (resumo)
     templates_count: int = 0
     templates_preview: list[TemplateResponse] | None = None
+
+    @validator("id", "collection_id", "creator_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
     class Config:
         from_attributes = True

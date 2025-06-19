@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, validator
 
 from synapse.core.config.constants import FILE_CATEGORIES
 
@@ -79,6 +79,15 @@ class FileInDB(FileBase):
     created_at: datetime = Field(..., description="Data de criação")
     updated_at: datetime = Field(..., description="Data de última atualização")
 
+    @validator("id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     class Config:
         """Configuração do modelo Pydantic."""
 
@@ -98,6 +107,15 @@ class FileResponse(BaseModel):
     is_public: bool
     created_at: str
     updated_at: str
+
+    @validator("id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
     class Config:
         """Configuração do modelo Pydantic."""

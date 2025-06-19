@@ -96,7 +96,7 @@ async def get_user_variables(
         )
 
 
-@router.get("/{variable_id}", response_model=UserVariableWithValue)
+@router.get("/{variable_id}", response_model=UserVariableWithValue, tags=["user-variables"])
 async def get_variable(
     variable_id: int,
     db: Session = Depends(get_db),
@@ -162,7 +162,7 @@ async def create_variable(
 # NOVOS ENDPOINTS PARA API KEYS LLM USANDO USER_VARIABLES
 # ============================================================================
 
-@router.post("/api-keys/{provider}", response_model=dict, tags=["User API Keys"])
+@router.post("/api-keys/{provider}", response_model=dict, tags=["user-variables"])
 async def create_user_api_key(
     provider: str,
     request: UserVariableCreate,
@@ -209,7 +209,7 @@ async def create_user_api_key(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/api-keys", response_model=List[dict], tags=["User API Keys"])
+@router.get("/api-keys", response_model=List[dict], tags=["user-variables"])
 async def list_user_api_keys(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -234,7 +234,7 @@ async def list_user_api_keys(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/api-keys/{provider}", response_model=dict, tags=["User API Keys"])
+@router.delete("/api-keys/{provider}", response_model=dict, tags=["user-variables"])
 async def delete_user_api_key(
     provider: str,
     current_user: User = Depends(get_current_user),
@@ -271,7 +271,7 @@ async def delete_user_api_key(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/api-keys/providers", response_model=List[dict], tags=["User API Keys"])
+@router.get("/api-keys/providers", response_model=List[dict], tags=["user-variables"])
 async def get_supported_providers():
     """
     Lista todos os provedores LLM suportados

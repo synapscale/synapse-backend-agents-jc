@@ -5,7 +5,7 @@ Validação e serialização para workspaces colaborativos
 """
 
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enum
 
@@ -97,6 +97,15 @@ class WorkspaceResponse(WorkspaceBase):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "owner_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 # ==================== MEMBER SCHEMAS ====================
@@ -189,6 +198,15 @@ class ProjectResponse(ProjectBase):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "workspace_id", "workflow_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 # ==================== COLLABORATOR SCHEMAS ====================
@@ -257,6 +275,15 @@ class CommentResponse(CommentBase):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "project_id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 # ==================== ACTIVITY SCHEMAS ====================
@@ -277,6 +304,15 @@ class ActivityResponse(BaseModel):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "workspace_id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 # ==================== VERSION SCHEMAS ====================
@@ -439,3 +475,12 @@ class IntegrationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "workspace_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v

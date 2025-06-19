@@ -64,7 +64,7 @@ class ModelEnum(str, Enum):
     deepseek_coder = "deepseek-coder"
 
 
-@router.post("/generate", response_model=LLMResponse, tags=["LLM"])
+@router.post("/generate", response_model=LLMResponse, tags=["llm"])
 async def generate_text(
     request: GenerateRequest,
     current_user: User = Depends(get_current_user),
@@ -97,7 +97,7 @@ async def generate_text(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/chat", response_model=LLMResponse, tags=["LLM"])
+@router.post("/chat", response_model=LLMResponse, tags=["llm"])
 async def chat_completion(
     request: ChatRequest,
     current_user: User = Depends(get_current_user),

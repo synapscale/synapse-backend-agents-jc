@@ -88,6 +88,15 @@ class ExecutionResponse(ExecutionBase):
     created_at: datetime
     updated_at: datetime
 
+    @validator("id", "execution_id", "workflow_id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     model_config = {"from_attributes": True}
 
 
@@ -160,6 +169,15 @@ class NodeExecutionResponse(NodeExecutionBase):
     created_at: datetime
     updated_at: datetime
 
+    @validator("execution_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     model_config = {"from_attributes": True}
 
 
@@ -194,6 +212,15 @@ class QueueItemResponse(BaseModel):
     metadata: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
+
+    @validator("queue_id", "worker_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
     model_config = {"from_attributes": True}
 

@@ -9,6 +9,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 import uuid
+from typing import Union, Optional
 
 from synapse.core.config_new import settings
 from synapse.database import get_db
@@ -17,10 +18,14 @@ from synapse.core.auth.jwt import verify_token
 from synapse.core.auth.password import verify_password
 
 # Esquema de autenticação OAuth2 (Bearer Token)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+# Removido auto_error=False para evitar conflitos na documentação
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/auth/login",
+    auto_error=False  # Não gerar erro automaticamente
+)
 
 # Esquema de autenticação básica (email/senha) para documentação
-basic_auth = HTTPBasic()
+basic_auth = HTTPBasic(auto_error=False)
 
 
 async def get_current_user_basic(
@@ -47,6 +52,9 @@ async def get_current_user_basic(
         headers={"WWW-Authenticate": "Basic"},
     )
 
+    if not credentials:
+        raise credentials_exception
+
     # Buscar usuário por email (username na autenticação básica)
     user = db.query(User).filter(User.email == credentials.username).first()
     
@@ -67,7 +75,7 @@ async def get_current_user_basic(
     return user
 
 
-async def get_current_user(
+async def get_current_user_jwt(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
@@ -89,6 +97,10 @@ async def get_current_user(
         detail="Não foi possível validar as credenciais",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    # Verificar se o token foi fornecido (pode ser None devido ao auto_error=False)
+    if token is None:
+        raise credentials_exception
 
     try:
         # Decodificar token JWT
@@ -122,6 +134,48 @@ async def get_current_user(
         )
 
     return user
+
+
+async def get_current_user(
+    token: Optional[str] = Depends(oauth2_scheme),
+    credentials: Optional[HTTPBasicCredentials] = Depends(basic_auth),
+    db: Session = Depends(get_db),
+) -> User:
+    """
+    Obtém o usuário atual usando tanto JWT quanto Basic Auth.
+    Tenta primeiro JWT, depois Basic Auth se JWT não estiver disponível.
+
+    Args:
+        token: Token JWT de autenticação (opcional)
+        credentials: Credenciais básicas (opcional)
+        db: Sessão do banco de dados
+
+    Returns:
+        Objeto User do usuário autenticado
+
+    Raises:
+        HTTPException: Se nenhuma autenticação válida for fornecida
+    """
+    # Tentar autenticação JWT primeiro
+    if token:
+        try:
+            return await get_current_user_jwt(token, db)
+        except HTTPException:
+            pass  # Se JWT falhar, tenta Basic Auth
+
+    # Tentar autenticação Basic se JWT não funcionou ou não foi fornecido
+    if credentials:
+        try:
+            return await get_current_user_basic(credentials, db)
+        except HTTPException:
+            pass  # Se Basic Auth também falhar, lança erro
+
+    # Se nenhuma autenticação funcionou
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Credenciais de autenticação necessárias",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 async def get_admin_user(current_user: User = Depends(get_current_user)) -> User:

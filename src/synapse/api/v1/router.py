@@ -30,7 +30,6 @@ api_router = APIRouter()
 api_router.include_router(
     auth_router,
     prefix="/auth",
-    tags=["authentication"],
     responses={401: {"description": "Unauthorized"}},
 )
 
@@ -38,7 +37,6 @@ api_router.include_router(
 api_router.include_router(
     user_variables_router,
     prefix="/user-variables",
-    tags=["user-variables"],
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Variable not found"},
@@ -49,7 +47,6 @@ api_router.include_router(
 api_router.include_router(
     workflows_router,
     prefix="/workflows",
-    tags=["workflows"],
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Workflow not found"},
@@ -60,7 +57,6 @@ api_router.include_router(
 api_router.include_router(
     executions_router,
     prefix="/executions",
-    tags=["executions"],
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Execution not found"},
@@ -71,7 +67,6 @@ api_router.include_router(
 api_router.include_router(
     templates_router,
     prefix="/templates",
-    tags=["templates"],
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Template not found"},
@@ -82,7 +77,6 @@ api_router.include_router(
 api_router.include_router(
     nodes_router,
     prefix="/nodes",
-    tags=["nodes"],
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Node not found"},
@@ -93,7 +87,6 @@ api_router.include_router(
 api_router.include_router(
     agents_router,
     prefix="/agents",
-    tags=["agents"],
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Agent not found"},
@@ -104,7 +97,6 @@ api_router.include_router(
 api_router.include_router(
     llm_router,
     prefix="/llm",
-    tags=["llm"],
     responses={
         401: {"description": "Unauthorized"},
         429: {"description": "Rate limit exceeded"},
@@ -115,7 +107,6 @@ api_router.include_router(
 api_router.include_router(
     conversations_router,
     prefix="/conversations",
-    tags=["conversations"],
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Conversation not found"},
@@ -126,7 +117,6 @@ api_router.include_router(
 api_router.include_router(
     files_router,
     prefix="/files",
-    tags=["files"],
     responses={
         401: {"description": "Unauthorized"},
         413: {"description": "File too large"},
@@ -136,7 +126,6 @@ api_router.include_router(
 # WebSockets - Comunicação em tempo real
 api_router.include_router(
     websockets_router,
-    tags=["websockets"],
     responses={
         401: {"description": "Unauthorized"},
         4001: {"description": "Invalid token"},
@@ -147,7 +136,6 @@ api_router.include_router(
 api_router.include_router(
     marketplace_router,
     prefix="/marketplace",
-    tags=["marketplace"],
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Component not found"},
@@ -158,7 +146,6 @@ api_router.include_router(
 api_router.include_router(
     workspaces_router,
     prefix="/workspaces",
-    tags=["workspaces"],
     responses={
         401: {"description": "Unauthorized"},
         403: {"description": "Access denied"},
@@ -169,7 +156,6 @@ api_router.include_router(
 api_router.include_router(
     analytics_router,
     prefix="/analytics",
-    tags=["analytics"],
     responses={
         401: {"description": "Unauthorized"},
         429: {"description": "Rate limit exceeded"},
