@@ -5,8 +5,7 @@ Sistema JWT completo para autenticação e autorização
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 import jwt
-from fastapi import HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from synapse.core.config_new import settings
 from synapse.database import get_db
@@ -14,7 +13,7 @@ from synapse.models.user import User, RefreshToken
 import secrets
 import uuid
 
-security = HTTPBearer()
+# HTTPBearer foi movido para deps.py
 
 
 class JWTManager:
@@ -131,97 +130,9 @@ class JWTManager:
 jwt_manager = JWTManager()
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
-) -> User:
-    """Dependency para obter o usuário atual autenticado"""
-    token = credentials.credentials
-
-    try:
-        payload = jwt_manager.verify_token(token)
-        email: str = payload.get("sub")
-        user_id: str = payload.get("user_id")
-
-        if email is None or user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token inválido",
-            )
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Não foi possível validar as credenciais",
-        )
-
-    user = db.query(User).filter(User.email == email).first()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuário não encontrado",
-        )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuário inativo",
-        )
-
-    return user
-
-
-async def get_current_active_user(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    """Dependency para obter usuário ativo"""
-    if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Usuário inativo",
-        )
-    return current_user
-
-
-async def get_current_verified_user(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    """Dependency para obter usuário verificado"""
-    if not current_user.is_verified:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email não verificado",
-        )
-    return current_user
-
-
-def require_permission(permission: str):
-    """Decorator para exigir permissão específica"""
-
-    def permission_checker(current_user: User = Depends(get_current_user)) -> User:
-        if not current_user.has_permission(permission):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permissão '{permission}' necessária",
-            )
-        return current_user
-
-    return permission_checker
-
-
-def require_role(role: str):
-    """Decorator para exigir role específico"""
-
-    def role_checker(current_user: User = Depends(get_current_user)) -> User:
-        if current_user.role != role:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Role '{role}' necessário",
-            )
-        return current_user
-
-    return role_checker
+# NOTA: As funções get_current_user, get_current_active_user, get_current_verified_user
+# foram movidas para src/synapse/api/deps.py para evitar dependências circulares
+# e manter uma arquitetura mais limpa. Use as importações de deps.py nos endpoints.
 
 
 # Funções utilitárias

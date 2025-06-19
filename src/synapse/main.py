@@ -176,8 +176,9 @@ app = FastAPI(
         "docExpansion": "none",                # inicia colapsado
         "displayRequestDuration": True,         # mostra tempo de requisição
         "tryItOutEnabled": True,                # permite executar
+        "persistAuthorization": True,           # manter autenticação entre sessões
     },
-    swagger_ui_css_url="/static/custom-swagger-ui.css?v=1",
+            swagger_ui_css_url="/static/unified-docs-styles.css?v=3",
     lifespan=lifespan,
     contact={'name': 'SynapScale Team', 'email': 'support@synapscale.com'},
     license_info={'name': 'MIT'}
@@ -467,7 +468,7 @@ if settings.DEBUG:
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # ------------------------------------------------------------
-# OpenAPI personalizado – garante refs corretas de schemas
+# OpenAPI personalizado – garante refs corretas de schemas e configura autenticação
 # ------------------------------------------------------------
 def custom_openapi():
     """Gera um esquema OpenAPI customizado resolvendo refs de schemas."""
@@ -483,6 +484,27 @@ def custom_openapi():
               {"name": "info", "description": "Informações da API"},
               {"name": "root", "description": "Endpoint raiz"}],
     )
+
+    # Configurar esquemas de segurança para facilitar o uso na documentação
+    openapi_schema["components"]["securitySchemes"] = {
+        "HTTPBasic": {
+            "type": "http",
+            "scheme": "basic",
+            "description": "🔐 **Login com Email/Senha** - Digite seu email no campo 'Username' e sua senha no campo 'Password'"
+        },
+        "HTTPBearer": {
+            "type": "http", 
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "🔑 **Token JWT** - Use o token obtido após fazer login (formato: Bearer <token>)"
+        }
+    }
+
+    # Configurar segurança global para usar ambos os esquemas
+    openapi_schema["security"] = [
+        {"HTTPBasic": []},
+        {"HTTPBearer": []}
+    ]
 
     # Garantir que todos os $ref de componentes apontem para #/components/schemas/<Model>
     # FastAPI normalmente já faz isso, mas caso algum caminho absoluto apareça, normalizamos.

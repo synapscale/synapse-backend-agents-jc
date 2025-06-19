@@ -104,7 +104,7 @@ class GenerateTextRequest(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "prompt": "Explique o conceito de machine learning em termos simples.",
                 "provider": "claude",
@@ -138,7 +138,7 @@ class CountTokensRequest(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "text": "Este é um exemplo de texto para contar tokens.",
                 "provider": "openai",
@@ -241,7 +241,7 @@ class ProviderSpecificParams(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "presence_penalty": 0.0,
                 "frequency_penalty": 0.0,
@@ -328,7 +328,7 @@ class GenerateTextWithProviderRequest(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "prompt": "Explique o conceito de machine learning em termos simples.",
                 "model": "claude-3-sonnet-20240229",
@@ -387,7 +387,7 @@ class ModelInfo(BaseModel):
     status: ModelStatus = Field(..., description="Status de disponibilidade do modelo")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "claude-3-sonnet-20240229",
                 "name": "Claude 3 Sonnet",
@@ -416,7 +416,7 @@ class ProviderInfo(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "id": "claude",
                 "name": "Claude (Anthropic)",
@@ -437,7 +437,7 @@ class ListModelsResponse(BaseModel):
     count: int = Field(..., description="Número total de modelos")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "models": {
                     "claude": [
@@ -495,7 +495,7 @@ class ListProvidersResponse(BaseModel):
     count: int = Field(..., description="Número total de provedores")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "providers": [
                     {
@@ -539,7 +539,7 @@ class GenerateTextResponse(BaseModel):
     finish_reason: FinishReason = Field(..., description="Razão de término da geração")
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "text": "Machine learning é uma forma de inteligência artificial que permite aos computadores aprender com dados e melhorar com a experiência, sem serem explicitamente programados para cada tarefa. Em termos simples, em vez de dar instruções detalhadas ao computador sobre como resolver um problema, você fornece exemplos do problema e da solução, e o computador aprende os padrões para resolver problemas semelhantes no futuro.\n\nPense nisso como ensinar uma criança: em vez de explicar todas as regras gramaticais, você mostra exemplos de frases corretas, e ela aprende os padrões com o tempo. Da mesma forma, algoritmos de machine learning identificam padrões em dados e usam esses padrões para fazer previsões ou tomar decisões sobre novos dados.",
                 "provider": "claude",
@@ -564,7 +564,7 @@ class CountTokensResponse(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "token_count": 9,
                 "provider": "openai",
