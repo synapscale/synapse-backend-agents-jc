@@ -6,7 +6,7 @@ como autenticação, validação e injeção de dependências.
 """
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBasic, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 import uuid
 
@@ -14,9 +14,57 @@ from synapse.core.config_new import settings
 from synapse.database import get_db
 from synapse.models.user import User
 from synapse.core.auth.jwt import verify_token
+from synapse.core.auth.password import verify_password
 
-# Esquema de autenticação OAuth2
+# Esquema de autenticação OAuth2 (Bearer Token)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+
+# Esquema de autenticação básica (email/senha) para documentação
+basic_auth = HTTPBasic()
+
+
+async def get_current_user_basic(
+    credentials: HTTPBasicCredentials = Depends(basic_auth),
+    db: Session = Depends(get_db),
+) -> User:
+    """
+    Obtém o usuário atual a partir das credenciais básicas (email/senha).
+    Usado principalmente na documentação Swagger para facilitar o login.
+
+    Args:
+        credentials: Credenciais básicas (email como username, senha)
+        db: Sessão do banco de dados
+
+    Returns:
+        Objeto User do usuário autenticado
+
+    Raises:
+        HTTPException: Se as credenciais forem inválidas
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Email ou senha inválidos",
+        headers={"WWW-Authenticate": "Basic"},
+    )
+
+    # Buscar usuário por email (username na autenticação básica)
+    user = db.query(User).filter(User.email == credentials.username).first()
+    
+    if not user:
+        raise credentials_exception
+
+    # Verificar senha
+    if not verify_password(credentials.password, user.hashed_password):
+        raise credentials_exception
+
+    # Verificar se usuário está ativo
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Usuário inativo",
+        )
+
+    return user
 
 
 async def get_current_user(

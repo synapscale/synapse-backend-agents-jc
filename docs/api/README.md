@@ -2,6 +2,7 @@
 Este diretório contém a documentação detalhada da API do SynapScale Backend.
 
 ## Endpoints Disponíveis
+- [🔐 **Guia de Autenticação na Documentação**](./docs_authentication_guide.md) - **NOVO**: Login com email/senha na documentação Swagger
 - [🔑 **Guia de API Keys de Usuário**](./user_variables_api_keys_guide.md) - **NOVO v1.1.0**: Configuração de API keys específicas por usuário para provedores LLM
 - [Guia Completo da API](./API_GUIDE.md) - Documentação completa de todos os endpoints da API
 - [Endpoints de Arquivos](./files_endpoints.md) - Documentação completa para upload, download, listagem e gerenciamento de arquivos

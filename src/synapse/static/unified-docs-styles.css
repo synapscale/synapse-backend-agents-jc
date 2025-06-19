@@ -1,0 +1,383 @@
+/* Estilos unificados para Swagger UI com autenticação melhorada */
+
+/* ===== VARIÁVEIS CSS ===== */
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #FF9800;
+    --error-color: #F44336;
+    --success-color: #4CAF50;
+    --text-color: #333333;
+    --background-color: #FFFFFF;
+    --code-background: #1E1E1E;
+    --code-text-color: #FFFFFF;
+    --border-color: #EEEEEE;
+    --header-color: #F8F8F8;
+    --opblock-background: #f7f7f7;
+    --opblock-get-background: #e8f6f0;
+    --opblock-post-background: #e7f0f7;
+    --opblock-put-background: #f7f0e7;
+    --opblock-delete-background: #f7e7e7;
+    --parameters-background: #fafafa;
+    --responses-background: #f2f2f2;
+}
+
+/* ===== ESTILOS GERAIS ===== */
+.swagger-ui {
+    font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+    color: var(--text-color);
+}
+
+.swagger-ui .topbar {
+    background-color: var(--primary-color);
+}
+
+/* ===== BANNER INFORMATIVO SOBRE AUTENTICAÇÃO ===== */
+.swagger-ui .info::after {
+    content: "🔐 COMO FAZER LOGIN: Clique em 'Authorize' → Use 'HTTPBasic' → Digite seu EMAIL como Username e sua SENHA";
+    display: block;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); }
+    50% { box-shadow: 0 4px 20px rgba(76, 175, 80, 0.5); }
+}
+
+/* ===== BOTÃO AUTHORIZE DESTACADO ===== */
+.swagger-ui .btn.authorize {
+    background: linear-gradient(135deg, #FF9800, #F57C00) !important;
+    color: white !important;
+    font-weight: bold !important;
+    font-size: 16px !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4) !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    animation: btn-glow 3s infinite !important;
+}
+
+.swagger-ui .btn.authorize:hover {
+    background: linear-gradient(135deg, #F57C00, #E65100) !important;
+    box-shadow: 0 6px 16px rgba(255, 152, 0, 0.6) !important;
+    transform: translateY(-2px) !important;
+}
+
+@keyframes btn-glow {
+    0%, 100% { box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4); }
+    50% { box-shadow: 0 4px 20px rgba(255, 152, 0, 0.6); }
+}
+
+/* ===== MODAL DE AUTENTICAÇÃO MELHORADO ===== */
+.swagger-ui .modal-ux .modal-dialog {
+    max-width: 600px !important;
+}
+
+.swagger-ui .auth-container {
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    background: white !important;
+}
+
+.swagger-ui .auth-container h4 {
+    background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+    color: white !important;
+    padding: 15px 20px !important;
+    margin: -1px -1px 20px -1px !important;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* Instruções no modal de auth */
+.swagger-ui .auth-container::before {
+    content: "💡 DICA: Use seu EMAIL como 'Username' e sua SENHA normal";
+    display: block;
+    background: #E3F2FD;
+    color: #1976D2;
+    padding: 12px 16px;
+    margin: -20px -1px 20px -1px;
+    border-radius: 0;
+    font-weight: bold;
+    text-align: center;
+    border-left: 4px solid #2196F3;
+}
+
+/* Destacar seção HTTPBasic */
+.swagger-ui .auth-container .auth-wrapper:first-of-type {
+    border: 3px solid #4CAF50 !important;
+    border-radius: 8px !important;
+    background: #F1F8E9 !important;
+    position: relative;
+}
+
+.swagger-ui .auth-container .auth-wrapper:first-of-type::before {
+    content: "👆 USE ESTA OPÇÃO";
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #4CAF50;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* ===== CAMPOS DE INPUT MELHORADOS ===== */
+.swagger-ui .auth-container input[type="text"],
+.swagger-ui .auth-container input[type="password"] {
+    border: 2px solid #E0E0E0 !important;
+    border-radius: 6px !important;
+    padding: 12px 16px !important;
+    font-size: 16px !important;
+    transition: border-color 0.3s ease !important;
+}
+
+.swagger-ui .auth-container input[type="text"]:focus,
+.swagger-ui .auth-container input[type="password"]:focus {
+    border-color: #4CAF50 !important;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.3) !important;
+}
+
+.swagger-ui .auth-container input[type="text"]::placeholder {
+    color: #666 !important;
+    opacity: 1 !important;
+}
+
+/* Botão de autorizar no modal */
+.swagger-ui .auth-btn-wrapper .btn.modal-btn.auth.authorize {
+    background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+    color: white !important;
+    font-weight: bold !important;
+    padding: 12px 30px !important;
+    border-radius: 6px !important;
+    border: none !important;
+    font-size: 16px !important;
+}
+
+/* ===== ENDPOINT DOCS-LOGIN DESTACADO ===== */
+.swagger-ui .opblock[id*="docs-login"] {
+    border-left: 6px solid #FF9800 !important;
+    background: linear-gradient(135deg, #FFF3E0, #FFEBCA) !important;
+}
+
+.swagger-ui .opblock[id*="docs-login"] .opblock-summary {
+    background: linear-gradient(135deg, #FFE0B2, #FFCC80) !important;
+}
+
+.swagger-ui .opblock[id*="docs-login"] .opblock-summary::before {
+    content: "⭐ ";
+    font-size: 18px;
+}
+
+/* ===== ESTILOS BASE PRESERVADOS ===== */
+
+/* Títulos */
+.swagger-ui .info h1, 
+.swagger-ui .info h2, 
+.swagger-ui .info h3, 
+.swagger-ui .info h4, 
+.swagger-ui .info h5 {
+    color: var(--text-color);
+}
+
+/* Links */
+.swagger-ui a {
+    color: var(--primary-color);
+}
+
+.swagger-ui a:hover {
+    color: var(--secondary-color);
+}
+
+/* Botões gerais */
+.swagger-ui .btn {
+    border-radius: 4px;
+}
+
+.swagger-ui .btn.execute {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.swagger-ui .btn.try-out__btn {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+/* ===== MÉTODOS HTTP ===== */
+.swagger-ui .opblock-get .opblock-summary-method {
+    background-color: #61affe;
+}
+
+.swagger-ui .opblock-post .opblock-summary-method {
+    background-color: #49cc90;
+}
+
+.swagger-ui .opblock-put .opblock-summary-method {
+    background-color: #fca130;
+}
+
+.swagger-ui .opblock-delete .opblock-summary-method {
+    background-color: #f93e3e;
+}
+
+/* ===== BLOCOS DE OPERAÇÃO ===== */
+.swagger-ui .opblock {
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    margin-bottom: 16px;
+    background-color: var(--opblock-background);
+}
+
+.swagger-ui .opblock-get {
+    background-color: var(--opblock-get-background);
+    border-color: #61affe;
+}
+
+.swagger-ui .opblock-post {
+    background-color: var(--opblock-post-background);
+    border-color: #49cc90;
+}
+
+.swagger-ui .opblock-put {
+    background-color: var(--opblock-put-background);
+    border-color: #fca130;
+}
+
+.swagger-ui .opblock-delete {
+    background-color: var(--opblock-delete-background);
+    border-color: #f93e3e;
+}
+
+.swagger-ui .opblock .opblock-summary {
+    padding: 8px 16px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* ===== SEÇÕES ===== */
+.swagger-ui .parameters-container {
+    background-color: var(--parameters-background);
+    border-radius: 4px;
+    padding: 8px;
+    margin: 10px 0;
+}
+
+.swagger-ui .responses-wrapper {
+    background-color: var(--responses-background);
+    border-radius: 4px;
+    padding: 8px;
+    margin: 10px 0;
+}
+
+/* ===== TEXTO E DESCRIÇÕES ===== */
+.swagger-ui .markdown p, 
+.swagger-ui .markdown li {
+    color: var(--text-color);
+}
+
+.swagger-ui .parameters-col_description {
+    color: var(--text-color);
+}
+
+.swagger-ui .parameter__name {
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+.swagger-ui .parameter__type {
+    color: var(--text-color);
+}
+
+.swagger-ui .parameter__deprecated {
+    color: var(--error-color);
+}
+
+.swagger-ui .parameter__in {
+    color: var(--text-color);
+}
+
+/* ===== TABELAS ===== */
+.swagger-ui table {
+    border-collapse: collapse;
+}
+
+.swagger-ui table thead tr th {
+    background-color: var(--header-color);
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.swagger-ui table tbody tr td {
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+/* ===== CÓDIGO E EXEMPLOS ===== */
+.swagger-ui .highlight-code {
+    background-color: var(--code-background);
+}
+
+.swagger-ui .microlight {
+    background-color: var(--code-background);
+    color: var(--code-text-color);
+    padding: 10px;
+    border-radius: 4px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* ===== ESQUEMAS ===== */
+.swagger-ui .model-box {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+}
+
+.swagger-ui .model-title {
+    color: var(--text-color);
+}
+
+/* ===== RESPOSTAS ===== */
+.swagger-ui .responses-table .response-col_status {
+    color: var(--text-color);
+}
+
+.swagger-ui .response-col_description__inner div.markdown {
+    color: var(--text-color);
+}
+
+/* ===== CORREÇÕES PARA ELEMENTOS ROXOS/ROSAS ===== */
+.swagger-ui .microlight span,
+.swagger-ui pre span,
+.swagger-ui code span,
+.swagger-ui .parameter__name,
+.swagger-ui .parameter__type,
+.swagger-ui .parameter__in,
+.swagger-ui .parameter__name code,
+.swagger-ui .info code,
+.swagger-ui .info .parameter__name,
+.swagger-ui .info .parameter__type,
+.swagger-ui .info .parameter__in {
+    color: #000000 !important;
+}
+
+.swagger-ui .auth-wrapper *, 
+.swagger-ui .auth-container * {
+    color: #000000 !important;
+}
+
+.swagger-ui .example pre *, 
+.swagger-ui .example code *, 
+.swagger-ui .example .microlight * {
+    color: #000000 !important;
+}
+
+.swagger-ui .model-example .tab-item.active {
+    color: #000000 !important;
+} 

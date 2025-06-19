@@ -8,10 +8,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status, Form
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 
-from synapse.api.deps import get_current_user, get_current_active_user
+from synapse.api.deps import get_current_user, get_current_active_user, get_current_user_basic
 from synapse.core.auth.jwt import jwt_manager
 from synapse.core.email.service import email_service
 from synapse.database import get_db
@@ -34,6 +34,73 @@ from synapse.services.user_defaults import create_user_defaults
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+@router.post(
+    "/docs-login", 
+    response_model=Token, 
+    tags=["Authentication"],
+    summary="🔐 Login para Documentação Swagger",
+    description="""
+    **Endpoint especial para facilitar o login na documentação Swagger**
+    
+    ## 📝 Como usar:
+    
+    ### Opção 1: Botão "Authorize" (Recomendado)
+    1. Clique no botão **"Authorize"** 🔓 no topo da documentação
+    2. Escolha **"HTTPBasic"** 
+    3. Digite seu **email** no campo "Username"
+    4. Digite sua **senha** no campo "Password"
+    5. Clique em "Authorize"
+    
+    ### Opção 2: Endpoint direto
+    1. Use este endpoint diretamente
+    2. Copie o `access_token` da resposta
+    3. Clique em "Authorize" e cole o token no campo Bearer
+    
+    ## ✅ Vantagens:
+    - **Fácil de usar**: Apenas email e senha
+    - **Automático**: Funciona em todos os endpoints automaticamente
+    - **Seguro**: Gera token JWT válido
+    
+    ## 📋 Exemplo:
+    - **Username**: `usuario@exemplo.com`
+    - **Password**: `sua_senha_aqui`
+    """
+)
+async def docs_login(
+    user: User = Depends(get_current_user_basic),
+    db: Session = Depends(get_db),
+):
+    try:
+        # Criar tokens JWT para o usuário
+        access_token = jwt_manager.create_access_token(
+            data={"user_id": str(user.id), "sub": user.email}
+        )
+        refresh_token = jwt_manager.create_refresh_token(str(user.id), db)
+
+        logger.info(f"Login via documentação realizado: {user.email}")
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": jwt_manager.access_token_expire_minutes * 60,
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "name": user.name,
+                "is_active": user.is_active,
+                "is_verified": user.is_verified,
+            },
+        }
+
+    except Exception as e:
+        logger.error(f"Erro no login via documentação: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro interno no servidor",
+        )
 
 
 @router.post(
