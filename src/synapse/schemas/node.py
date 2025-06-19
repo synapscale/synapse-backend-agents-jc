@@ -3,7 +3,7 @@ Schemas Pydantic para nodes
 """
 
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
 
 
@@ -65,6 +65,15 @@ class NodeResponse(NodeBase):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "user_id", "workspace_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 class NodeListResponse(BaseModel):

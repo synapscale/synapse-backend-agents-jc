@@ -83,8 +83,13 @@ class UserResponse(BaseModel):
     updated_at: datetime | None
 
     @validator("id", pre=True)
-    def str_id(cls, v):
-        return str(v) if v is not None else v
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
     model_config = {"from_attributes": True}
 
@@ -216,6 +221,15 @@ class WorkflowResponse(WorkflowBase):
     updated_at: datetime | None
     definition: dict | None = None
 
+    @validator("id", "user_id", "workspace_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     model_config = {"from_attributes": True}
 
 
@@ -288,6 +302,15 @@ class NodeResponse(NodeBase):
     output_schema: dict | None = None
     parameters_schema: dict | None = None
 
+    @validator("id", "user_id", "workspace_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     model_config = {"from_attributes": True}
 
 
@@ -343,6 +366,15 @@ class AgentResponse(AgentBase):
     created_at: datetime | None
     updated_at: datetime | None
 
+    @validator("id", "user_id", "workspace_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     model_config = {"from_attributes": True}
 
 
@@ -366,6 +398,15 @@ class ConversationResponse(BaseModel):
     created_at: datetime | None
     updated_at: datetime | None
 
+    @validator("id", "user_id", "agent_id", "workspace_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
+
     model_config = {"from_attributes": True}
 
 
@@ -385,6 +426,15 @@ class MessageResponse(BaseModel):
     tokens_used: int
     processing_time_ms: int
     created_at: datetime | None
+
+    @validator("id", "conversation_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
     model_config = {"from_attributes": True}
 

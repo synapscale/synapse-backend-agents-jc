@@ -3,7 +3,7 @@ Schemas Pydantic para conversations e messages
 """
 
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from datetime import datetime
 
 
@@ -30,6 +30,15 @@ class ConversationResponse(ConversationBase):
     last_message_at: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+    @validator("id", "user_id", "agent_id", "workspace_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
     model_config = {"from_attributes": True}
 
@@ -69,6 +78,15 @@ class MessageResponse(MessageBase):
     feedback: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+    @validator("id", "conversation_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
     model_config = {"from_attributes": True}
 

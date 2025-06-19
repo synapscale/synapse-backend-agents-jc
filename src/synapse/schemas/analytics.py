@@ -97,6 +97,15 @@ class EventResponse(EventBase):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 # ==================== METRIC SCHEMAS ====================
@@ -241,6 +250,15 @@ class DashboardResponse(DashboardBase):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 class DashboardData(BaseModel):
@@ -326,6 +344,15 @@ class ReportResponse(ReportBase):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 class ReportExecutionResponse(BaseModel):
@@ -389,6 +416,15 @@ class InsightResponse(BaseModel):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 # ==================== SYSTEM INSIGHTS ====================

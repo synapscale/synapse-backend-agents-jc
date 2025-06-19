@@ -178,7 +178,7 @@ app = FastAPI(
         "tryItOutEnabled": True,                # permite executar
         "persistAuthorization": True,           # manter autenticação entre sessões
     },
-            swagger_ui_css_url="/static/unified-docs-styles.css?v=3",
+            swagger_ui_css_url="/static/unified-docs-styles.css?v=4.1",
     lifespan=lifespan,
     contact={'name': 'SynapScale Team', 'email': 'support@synapscale.com'},
     license_info={'name': 'MIT'}
@@ -275,6 +275,21 @@ async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
     process_time = time.time() - start_time
     response.headers['X-Process-Time'] = str(process_time)
+    return response
+
+@app.middleware('http')
+async def log_auth_requests(request: Request, call_next):
+    """Log de requisições de autenticação para debug"""
+    
+    # Se for uma requisição para a API, log dos headers de autenticação
+    if request.url.path.startswith("/api/v1/"):
+        auth_header = request.headers.get("authorization")
+        if auth_header:
+            logger.debug(f"Auth header presente: {auth_header[:20]}...")
+        else:
+            logger.debug(f"Sem auth header - Path: {request.url.path}")
+    
+    response = await call_next(request)
     return response
 
 @app.middleware('http')
@@ -487,23 +502,24 @@ def custom_openapi():
 
     # Configurar esquemas de segurança para facilitar o uso na documentação
     openapi_schema["components"]["securitySchemes"] = {
-        "HTTPBasic": {
-            "type": "http",
-            "scheme": "basic",
-            "description": "🔐 **Login com Email/Senha** - Digite seu email no campo 'Username' e sua senha no campo 'Password'"
-        },
         "HTTPBearer": {
             "type": "http", 
             "scheme": "bearer",
             "bearerFormat": "JWT",
-            "description": "🔑 **Token JWT** - Use o token obtido após fazer login (formato: Bearer <token>)"
+            "description": "🔑 **Token JWT** - Obtenha um token através do endpoint /auth/login ou /auth/docs-login"
+        },
+        "HTTPBasic": {
+            "type": "http",
+            "scheme": "basic",
+            "description": "🔐 **Login Direto** - Digite seu email no campo 'Username' e sua senha no campo 'Password'"
         }
     }
 
-    # Configurar segurança global para usar ambos os esquemas
+    # Configurar segurança global para aceitar AMBOS os esquemas
+    # Isso permite que o usuário escolha qualquer um no modal de autorização
     openapi_schema["security"] = [
-        {"HTTPBasic": []},
-        {"HTTPBearer": []}
+        {"HTTPBearer": []},
+        {"HTTPBasic": []}
     ]
 
     # Garantir que todos os $ref de componentes apontem para #/components/schemas/<Model>

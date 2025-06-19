@@ -6,6 +6,7 @@ import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict
+import time
 
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordRequestForm, HTTPBasicCredentials
@@ -39,34 +40,47 @@ router = APIRouter()
 @router.post(
     "/docs-login", 
     response_model=Token, 
-    tags=["Authentication"],
+    tags=["authentication"],
     summary="🔐 Login para Documentação Swagger",
     description="""
     **Endpoint especial para facilitar o login na documentação Swagger**
     
-    ## 📝 Como usar:
+    ## 📝 Como usar na documentação:
     
-    ### Opção 1: Botão "Authorize" (Recomendado)
-    1. Clique no botão **"Authorize"** 🔓 no topo da documentação
-    2. Escolha **"HTTPBasic"** 
-    3. Digite seu **email** no campo "Username"
-    4. Digite sua **senha** no campo "Password"
-    5. Clique em "Authorize"
+    ### ✅ Método Recomendado (2 passos):
     
-    ### Opção 2: Endpoint direto
-    1. Use este endpoint diretamente
-    2. Copie o `access_token` da resposta
-    3. Clique em "Authorize" e cole o token no campo Bearer
+    #### Passo 1: Obter Token
+    1. **Clique no botão "Authorize"** 🔓 no topo da documentação
+    2. **No modal de autorização**:
+       - Encontre a seção **"HTTPBasic"**
+       - Digite seu **email** no campo "Username"
+       - Digite sua **senha** no campo "Password"  
+       - Clique em **"Authorize"** nesta seção
+    3. **Execute este endpoint** (/auth/docs-login) para obter o token JWT
     
-    ## ✅ Vantagens:
-    - **Fácil de usar**: Apenas email e senha
-    - **Automático**: Funciona em todos os endpoints automaticamente
-    - **Seguro**: Gera token JWT válido
+    #### Passo 2: Usar Token
+    4. **Copie o `access_token`** da resposta
+    5. **No modal de autorização**:
+       - Encontre a seção **"HTTPBearer"**
+       - Cole o token no campo "Value"
+       - Clique em **"Authorize"** nesta seção
+    6. **Pronto!** Agora você pode usar todos os endpoints
     
-    ## 📋 Exemplo:
-    - **Username**: `usuario@exemplo.com`
-    - **Password**: `sua_senha_aqui`
-    """
+    ## 🔄 Fluxo Alternativo:
+    
+    Use diretamente o endpoint `/auth/login` com form data se preferir.
+    
+    ## ⚠️ Importante:
+    
+    - Use **HTTPBasic** apenas para este endpoint
+    - Use **HTTPBearer** para todos os outros endpoints
+    - O token expira em 30 minutos
+    """,
+    dependencies=[],  # Remove security dependency to use explicit basic auth
+    responses={
+        200: {"description": "Login realizado com sucesso"},
+        401: {"description": "Credenciais inválidas"}
+    }
 )
 async def docs_login(
     user: User = Depends(get_current_user_basic),
@@ -680,3 +694,104 @@ async def delete_account(
     db.commit()
     logger.info(f"Conta excluída com sucesso para user_id: {current_user.id}")
     return {"message": "Conta excluída com sucesso"}
+
+
+@router.get(
+    "/test-token",
+    tags=["authentication"],
+    summary="🧪 Teste de Token JWT",
+    description="""
+    **Endpoint para testar se a autenticação JWT está funcionando**
+    
+    Use este endpoint para verificar se:
+    - Seu token JWT está válido
+    - A autenticação está funcionando corretamente
+    - O usuário está sendo identificado
+    
+    ## 📝 Como usar:
+    1. Faça login com `/auth/docs-login` ou `/auth/login`
+    2. Configure o token Bearer no botão "Authorize"
+    3. Execute este endpoint para testar
+    
+    Se estiver funcionando, você verá suas informações de usuário.
+    """
+)
+async def test_token(
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Testa se o token JWT está funcionando corretamente
+    """
+    return {
+        "message": "✅ Token JWT válido!",
+        "user": {
+            "id": str(current_user.id),
+            "email": current_user.email,
+            "name": current_user.name if hasattr(current_user, 'name') else current_user.full_name,
+            "is_active": current_user.is_active,
+            "is_verified": current_user.is_verified,
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status": "authenticated"
+    }
+
+
+@router.get(
+    "/test-hybrid-auth",
+    tags=["authentication"],
+    summary="🧪 Teste de Autenticação Híbrida",
+    description="""
+    **Endpoint para testar se a autenticação híbrida está funcionando**
+    
+    Este endpoint aceita **AMBOS** os métodos de autenticação:
+    - **HTTPBearer**: Token JWT no header Authorization
+    - **HTTPBasic**: Email/senha diretamente no modal de autorização
+    
+    ## 📝 Como usar:
+    
+    ### Opção 1: HTTPBearer (Token JWT)
+    1. Faça login com `/auth/login` ou `/auth/docs-login`
+    2. No modal "Authorize", seção **HTTPBearer**:
+       - Cole o token JWT no campo "Value"
+       - Clique "Authorize"
+    3. Execute este endpoint
+    
+    ### Opção 2: HTTPBasic (Email/Senha)
+    1. No modal "Authorize", seção **HTTPBasic**:
+       - Digite seu **email** no campo "Username"
+       - Digite sua **senha** no campo "Password"
+       - Clique "Authorize"
+    2. Execute este endpoint
+    
+    ## ✅ Resultado:
+    Se funcionando corretamente, você verá suas informações de usuário
+    independente do método de autenticação usado.
+    """
+)
+async def test_hybrid_authentication(
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Testa se a autenticação híbrida (HTTPBasic + HTTPBearer) está funcionando
+    """
+    return {
+        "message": "✅ Autenticação híbrida funcionando corretamente!",
+        "user": {
+            "id": str(current_user.id),
+            "email": current_user.email,
+            "name": current_user.name if hasattr(current_user, 'name') else current_user.full_name,
+            "is_active": current_user.is_active,
+            "is_verified": current_user.is_verified,
+            "is_admin": current_user.is_admin if hasattr(current_user, 'is_admin') else False,
+        },
+        "authentication": {
+            "status": "authenticated",
+            "methods_supported": [
+                "HTTPBearer (JWT Token)",
+                "HTTPBasic (Email/Password)"
+            ],
+            "note": "Este endpoint aceita ambos os métodos de autenticação automaticamente"
+        },
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "server_time": time.time()
+    }
