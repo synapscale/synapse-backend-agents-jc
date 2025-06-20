@@ -82,6 +82,12 @@ class Settings(BaseSettings):
         default_factory=lambda: int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS")) if os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS") else None,
         description="Tempo de expiração do refresh token em dias"
     )
+    
+    # CHAVE DE CRIPTOGRAFIA CRÍTICA (FALTAVA!)
+    ENCRYPTION_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("ENCRYPTION_KEY"),
+        description="Chave de criptografia para dados sensíveis (Base64)"
+    )
 
     # Configurações do servidor
     HOST: str | None = Field(
@@ -253,6 +259,34 @@ class Settings(BaseSettings):
         default_factory=lambda: os.getenv("LLAMA_API_KEY"),
         description="Chave da API Llama"
     )
+    
+    # Mais APIs LLM que faltavam
+    OPENAI_ORG_ID: str | None = Field(
+        default_factory=lambda: os.getenv("OPENAI_ORG_ID"),
+        description="ID da organização OpenAI"
+    )
+    HUGGINGFACE_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("HUGGINGFACE_API_KEY"),
+        description="Chave da API HuggingFace"
+    )
+    MISTRAL_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("MISTRAL_API_KEY"),
+        description="Chave da API Mistral"
+    )
+    COHERE_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("COHERE_API_KEY"),
+        description="Chave da API Cohere"
+    )
+    
+    # Configurações específicas para Tess
+    TESS_API_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("TESS_API_KEY"),
+        description="Chave da API Tess"
+    )
+    TESS_API_BASE_URL: str | None = Field(
+        default_factory=lambda: os.getenv("TESS_API_BASE_URL", "https://tess.pareto.io/api"),
+        description="URL base da API Tess"
+    )
 
     # Configurações de email
     SMTP_HOST: str | None = Field(
@@ -287,11 +321,23 @@ class Settings(BaseSettings):
         default_factory=lambda: os.getenv("SMTP_FROM_NAME"),
         description="Nome remetente (compatibilidade)"
     )
+    SMTP_USE_TLS: bool = Field(
+        default_factory=lambda: os.getenv("SMTP_USE_TLS", "True") == "True",
+        description="Usar TLS no SMTP"
+    )
 
     # Configurações de Redis
     REDIS_URL: str | None = Field(
         default_factory=lambda: os.getenv("REDIS_URL"),
         description="URL do Redis"
+    )
+    REDIS_PASSWORD: str | None = Field(
+        default_factory=lambda: os.getenv("REDIS_PASSWORD"),
+        description="Senha do Redis"
+    )
+    REDIS_DB: int = Field(
+        default_factory=lambda: int(os.getenv("REDIS_DB", "0")),
+        description="Banco de dados do Redis"
     )
 
     # Configurações de WebSocket
@@ -323,6 +369,174 @@ class Settings(BaseSettings):
     UPLOAD_FOLDER: str | None = Field(
         default_factory=lambda: os.getenv("UPLOAD_FOLDER"),
         description="Diretório de uploads (compatibilidade)"
+    )
+    
+    # Configurações de Armazenamento que faltavam
+    STORAGE_TYPE: str = Field(
+        default_factory=lambda: os.getenv("STORAGE_TYPE", "local"),
+        description="Tipo de armazenamento (local, s3, gcs)"
+    )
+    STORAGE_BASE_PATH: str = Field(
+        default_factory=lambda: os.getenv("STORAGE_BASE_PATH", "./storage"),
+        description="Caminho base para armazenamento local"
+    )
+    MAX_UPLOAD_SIZE: int = Field(
+        default_factory=lambda: int(os.getenv("MAX_UPLOAD_SIZE", "52428800")),
+        description="Tamanho máximo de upload em bytes"
+    )
+    ALLOWED_FILE_TYPES: str = Field(
+        default_factory=lambda: os.getenv("ALLOWED_FILE_TYPES", '[]'),
+        description="Tipos de arquivo permitidos (JSON)"
+    )
+    
+    # AWS S3 (se STORAGE_TYPE=s3)
+    AWS_ACCESS_KEY_ID: str | None = Field(
+        default_factory=lambda: os.getenv("AWS_ACCESS_KEY_ID"),
+        description="Chave de acesso AWS"
+    )
+    AWS_SECRET_ACCESS_KEY: str | None = Field(
+        default_factory=lambda: os.getenv("AWS_SECRET_ACCESS_KEY"),
+        description="Chave secreta AWS"
+    )
+    AWS_BUCKET_NAME: str | None = Field(
+        default_factory=lambda: os.getenv("AWS_BUCKET_NAME"),
+        description="Nome do bucket S3"
+    )
+    AWS_REGION: str = Field(
+        default_factory=lambda: os.getenv("AWS_REGION", "us-east-1"),
+        description="Região AWS"
+    )
+    
+    # Google Cloud Storage (se STORAGE_TYPE=gcs)
+    GCS_BUCKET_NAME: str | None = Field(
+        default_factory=lambda: os.getenv("GCS_BUCKET_NAME"),
+        description="Nome do bucket GCS"
+    )
+    GCS_CREDENTIALS_PATH: str | None = Field(
+        default_factory=lambda: os.getenv("GCS_CREDENTIALS_PATH"),
+        description="Caminho para credenciais GCS"
+    )
+    
+    # Configurações de Segurança Avançada
+    ENABLE_HTTPS_REDIRECT: bool = Field(
+        default_factory=lambda: os.getenv("ENABLE_HTTPS_REDIRECT", "False") == "True",
+        description="Habilitar redirecionamento HTTPS"
+    )
+    SECURE_COOKIES: bool = Field(
+        default_factory=lambda: os.getenv("SECURE_COOKIES", "False") == "True",
+        description="Usar cookies seguros"
+    )
+    CSRF_PROTECTION: bool = Field(
+        default_factory=lambda: os.getenv("CSRF_PROTECTION", "True") == "True",
+        description="Habilitar proteção CSRF"
+    )
+    
+    # Configurações de Cache que faltavam
+    CACHE_TTL_DEFAULT: int = Field(
+        default_factory=lambda: int(os.getenv("CACHE_TTL_DEFAULT", "300")),
+        description="TTL padrão do cache"
+    )
+    CACHE_TTL_USER_DATA: int = Field(
+        default_factory=lambda: int(os.getenv("CACHE_TTL_USER_DATA", "900")),
+        description="TTL do cache para dados de usuário"
+    )
+    CACHE_TTL_STATIC_DATA: int = Field(
+        default_factory=lambda: int(os.getenv("CACHE_TTL_STATIC_DATA", "3600")),
+        description="TTL do cache para dados estáticos"
+    )
+    
+    # Configurações de Execução
+    WORKFLOW_EXECUTION_TIMEOUT: int = Field(
+        default_factory=lambda: int(os.getenv("WORKFLOW_EXECUTION_TIMEOUT", "300")),
+        description="Timeout de execução de workflow"
+    )
+    MAX_CONCURRENT_EXECUTIONS: int = Field(
+        default_factory=lambda: int(os.getenv("MAX_CONCURRENT_EXECUTIONS", "10")),
+        description="Máximo de execuções concorrentes"
+    )
+    EXECUTION_RETRY_ATTEMPTS: int = Field(
+        default_factory=lambda: int(os.getenv("EXECUTION_RETRY_ATTEMPTS", "3")),
+        description="Tentativas de retry de execução"
+    )
+    
+    # Configurações de Marketplace
+    MARKETPLACE_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("MARKETPLACE_ENABLED", "True") == "True",
+        description="Habilitar marketplace"
+    )
+    MARKETPLACE_APPROVAL_REQUIRED: bool = Field(
+        default_factory=lambda: os.getenv("MARKETPLACE_APPROVAL_REQUIRED", "True") == "True",
+        description="Exigir aprovação no marketplace"
+    )
+    MARKETPLACE_COMMISSION_RATE: float = Field(
+        default_factory=lambda: float(os.getenv("MARKETPLACE_COMMISSION_RATE", "0.15")),
+        description="Taxa de comissão do marketplace"
+    )
+    
+    # Configurações de Notificações
+    NOTIFICATIONS_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("NOTIFICATIONS_ENABLED", "True") == "True",
+        description="Habilitar notificações"
+    )
+    EMAIL_NOTIFICATIONS_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("EMAIL_NOTIFICATIONS_ENABLED", "True") == "True",
+        description="Habilitar notificações por email"
+    )
+    PUSH_NOTIFICATIONS_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("PUSH_NOTIFICATIONS_ENABLED", "False") == "True",
+        description="Habilitar notificações push"
+    )
+    
+    # Configurações de Analytics
+    ANALYTICS_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("ANALYTICS_ENABLED", "True") == "True",
+        description="Habilitar analytics"
+    )
+    ANALYTICS_RETENTION_DAYS: int = Field(
+        default_factory=lambda: int(os.getenv("ANALYTICS_RETENTION_DAYS", "90")),
+        description="Dias de retenção de analytics"
+    )
+    
+    # Configurações de Backup
+    BACKUP_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("BACKUP_ENABLED", "True") == "True",
+        description="Habilitar backup"
+    )
+    BACKUP_INTERVAL_HOURS: int = Field(
+        default_factory=lambda: int(os.getenv("BACKUP_INTERVAL_HOURS", "24")),
+        description="Intervalo de backup em horas"
+    )
+    BACKUP_RETENTION_DAYS: int = Field(
+        default_factory=lambda: int(os.getenv("BACKUP_RETENTION_DAYS", "30")),
+        description="Dias de retenção de backup"
+    )
+    
+    # Configurações de Desenvolvimento
+    RELOAD_ON_CHANGE: bool = Field(
+        default_factory=lambda: os.getenv("RELOAD_ON_CHANGE", "True") == "True",
+        description="Recarregar ao modificar código"
+    )
+    SHOW_DOCS: bool = Field(
+        default_factory=lambda: os.getenv("SHOW_DOCS", "True") == "True",
+        description="Mostrar documentação"
+    )
+    ENABLE_PROFILING: bool = Field(
+        default_factory=lambda: os.getenv("ENABLE_PROFILING", "False") == "True",
+        description="Habilitar profiling"
+    )
+    
+    # Configurações de Monitoramento
+    SENTRY_DSN: str | None = Field(
+        default_factory=lambda: os.getenv("SENTRY_DSN"),
+        description="DSN do Sentry"
+    )
+    ENABLE_METRICS: bool = Field(
+        default_factory=lambda: os.getenv("ENABLE_METRICS", "True") == "True",
+        description="Habilitar métricas"
+    )
+    ENABLE_TRACING: bool = Field(
+        default_factory=lambda: os.getenv("ENABLE_TRACING", "False") == "True",
+        description="Habilitar tracing"
     )
 
     class Config:
@@ -368,6 +582,67 @@ class Settings(BaseSettings):
             }
 
         return providers
+    
+    def get_database_url(self) -> str:
+        """Retorna URL do banco de dados formatada"""
+        return self.DATABASE_URL
+
+    def get_cors_origins(self) -> list[str]:
+        """Retorna lista de origens CORS permitidas"""
+        return self.backend_cors_origins_list
+
+    def is_production(self) -> bool:
+        """Verifica se está em ambiente de produção"""
+        return self.ENVIRONMENT and self.ENVIRONMENT.lower() == "production"
+
+    def is_development(self) -> bool:
+        """Verifica se está em ambiente de desenvolvimento"""
+        return self.ENVIRONMENT and self.ENVIRONMENT.lower() == "development"
+    
+    def get_storage_config(self) -> dict:
+        """Retorna configuração de armazenamento"""
+        config = {
+            "type": self.STORAGE_TYPE,
+            "max_size": self.MAX_UPLOAD_SIZE,
+            "allowed_types": self.ALLOWED_FILE_TYPES
+        }
+
+        if self.STORAGE_TYPE == "local":
+            config["base_path"] = self.STORAGE_BASE_PATH
+        elif self.STORAGE_TYPE == "s3":
+            config.update({
+                "aws_access_key_id": self.AWS_ACCESS_KEY_ID,
+                "aws_secret_access_key": self.AWS_SECRET_ACCESS_KEY,
+                "bucket_name": self.AWS_BUCKET_NAME,
+                "region": self.AWS_REGION
+            })
+        elif self.STORAGE_TYPE == "gcs":
+            config.update({
+                "bucket_name": self.GCS_BUCKET_NAME,
+                "credentials_path": self.GCS_CREDENTIALS_PATH
+            })
+
+        return config
+
+    def get_email_config(self) -> dict:
+        """Retorna configuração de email"""
+        return {
+            "host": self.SMTP_HOST,
+            "port": self.SMTP_PORT,
+            "username": self.SMTP_USERNAME,
+            "password": self.SMTP_PASSWORD,
+            "from_email": self.SMTP_FROM_EMAIL,
+            "from_name": self.SMTP_FROM_NAME,
+            "use_tls": self.SMTP_USE_TLS
+        }
+
+    def get_redis_config(self) -> dict:
+        """Retorna configuração do Redis"""
+        return {
+            "url": self.REDIS_URL,
+            "password": self.REDIS_PASSWORD,
+            "db": self.REDIS_DB
+        }
 
     def get_database_config(self) -> dict[str, Any]:
         """
@@ -456,3 +731,88 @@ else:
 _missing = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
 if _missing:
     raise RuntimeError(f"Variáveis de ambiente obrigatórias ausentes: {', '.join(_missing)}")
+
+# Validações de configuração CRÍTICAS
+def validate_settings():
+    """Valida configurações críticas"""
+    errors = []
+
+    # Validar chaves secretas em produção
+    if settings.is_production():
+        if not settings.SECRET_KEY or len(settings.SECRET_KEY) < 32:
+            errors.append(
+                "SECRET_KEY deve ser definida com pelo menos 32 caracteres"
+            )
+
+        if not settings.JWT_SECRET_KEY or len(settings.JWT_SECRET_KEY) < 32:
+            errors.append(
+                "JWT_SECRET_KEY deve ser definida com pelo menos 32 caracteres"
+            )
+
+        if not settings.DATABASE_URL or not settings.DATABASE_URL.startswith("postgresql"):
+            errors.append("Use PostgreSQL em produção")
+
+        # Validar chave de criptografia (essencial para API keys de usuário)
+        if not settings.ENCRYPTION_KEY:
+            errors.append("ENCRYPTION_KEY deve ser definida para criptografia de API keys de usuários")
+
+    # Validar configuração de email se notificações estão habilitadas
+    if settings.EMAIL_NOTIFICATIONS_ENABLED:
+        if not settings.SMTP_USERNAME or not settings.SMTP_PASSWORD:
+            if settings.is_production():
+                # Em produção, desabilita notificações por email se SMTP não configurado
+                print("⚠️  Aviso: SMTP não configurado. Notificações por email desabilitadas automaticamente.")
+                settings.EMAIL_NOTIFICATIONS_ENABLED = False
+            else:
+                errors.append(
+                    "Configuração SMTP necessária para notificações por email"
+                )
+
+    # Validação da ENCRYPTION_KEY (também em desenvolvimento para evitar erros silenciosos)
+    if settings.ENCRYPTION_KEY:
+        import base64
+        import binascii
+        try:
+            decoded_key = base64.b64decode(settings.ENCRYPTION_KEY)
+            if len(decoded_key) != 32:
+                errors.append("ENCRYPTION_KEY deve ter 32 bytes quando decodificada (256-bits)")
+        except (binascii.Error, ValueError):
+            errors.append("ENCRYPTION_KEY não é um Base-64 válido")
+
+    # Aviso sobre provedores LLM (não obrigatório devido ao sistema de API keys por usuário)
+    if not any([
+        settings.OPENAI_API_KEY,
+        settings.CLAUDE_API_KEY,
+        settings.GEMINI_API_KEY,
+        settings.GROK_API_KEY,
+        settings.DEEPSEEK_API_KEY,
+        settings.LLAMA_API_KEY
+    ]):
+        # Apenas aviso, não erro crítico - usuários podem configurar suas próprias API keys
+        print("⚠️  Aviso: Nenhuma API key global configurada. Sistema funcionará com API keys específicas de usuários.")
+
+    if errors:
+        raise ValueError(f"Erros de configuração: {'; '.join(errors)}")
+
+# Executar validação na importação
+try:
+    validate_settings()
+except ValueError as e:
+    if settings.is_production():
+        # Em produção, falha apenas por erros críticos (não por falta de API keys LLM)
+        print(f"❌ Erro crítico de configuração: {e}")
+        raise e
+    else:
+        print(f"⚠️  Aviso de configuração: {e}")
+
+# Configurações específicas por ambiente
+if settings.is_development():
+    # Configurações de desenvolvimento
+    settings.RELOAD_ON_CHANGE = True
+    settings.SHOW_DOCS = True
+elif settings.is_production():
+    # Configurações de produção
+    settings.DEBUG = False
+    settings.RELOAD_ON_CHANGE = False
+    settings.SECURE_COOKIES = True
+    settings.ENABLE_HTTPS_REDIRECT = True

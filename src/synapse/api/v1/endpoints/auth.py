@@ -177,12 +177,17 @@ async def register_user(
         db.commit()
         db.refresh(user)
         logger.info(f"Usuário criado com sucesso: {user.email} (ID: {user.id})")
-        # Criar dados padrão para o novo usuário
+        # Criar dados padrão para o novo usuário (workspace individual + plano FREE)
         try:
-            create_user_defaults(db, user.id, user.email, user.username)
-            logger.info(f"Dados padrão criados para usuário: {user.email}")
+            defaults_result = create_user_defaults(db, user)
+            if defaults_result["success"]:
+                logger.info(f"✅ Dados padrão criados para usuário: {user.email}")
+                logger.info(f"   - Workspace individual: {defaults_result['workspace']['name']}")
+                logger.info(f"   - Plano: {defaults_result['subscription']['plan_name']}")
+            else:
+                logger.error(f"❌ Falha ao criar dados padrão: {defaults_result['error']}")
         except Exception as e:
-            logger.error(f"Erro ao criar dados padrão para usuário {user.email}: {str(e)}")
+            logger.error(f"❌ Erro ao criar dados padrão para usuário {user.email}: {str(e)}")
         # Gerar token de verificação de email
         verification_token = secrets.token_urlsafe(32)
         expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
