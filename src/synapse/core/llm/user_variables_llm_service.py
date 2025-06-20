@@ -51,11 +51,11 @@ class UserVariablesLLMService(RealLLMService):
                 logger.warning(f"Provedor {provider} não suportado")
                 return None
             
-            # Buscar a variável do usuário na categoria 'api_keys'
+            # Buscar a variável do usuário nas categorias 'api_keys' ou 'ai'
             user_variable = db.query(UserVariable).filter(
                 UserVariable.user_id == user_id,
                 UserVariable.key == key_name,
-                UserVariable.category == "api_keys",
+                UserVariable.category.in_(["api_keys", "ai"]),
                 UserVariable.is_active == True
             ).first()
             
@@ -150,7 +150,7 @@ class UserVariablesLLMService(RealLLMService):
         try:
             api_keys = db.query(UserVariable).filter(
                 UserVariable.user_id == user_id,
-                UserVariable.category == "api_keys"
+                UserVariable.category.in_(["api_keys", "ai"])
             ).all()
             
             result = []
@@ -244,8 +244,8 @@ class UserVariablesLLMService(RealLLMService):
         **kwargs,
     ) -> LLMResponse:
         """
-        Gera texto usando API key específica do usuário (se disponível)
-        Fallback para API keys globais se necessário
+        Gera texto usando API key específica do usuário
+        REQUER que o usuário tenha configurado uma API key para o provedor
         """
         # Determinar provedor padrão se não especificado
         if not provider:
@@ -257,15 +257,19 @@ class UserVariablesLLMService(RealLLMService):
         if user_api_key:
             logger.info(f"Usando API key específica do usuário {user_id} para {provider}")
             
-            # Usar API key do usuário temporariamente
+            # Usar API key do usuário
             return await self._generate_with_custom_key(
                 prompt, provider, model, user_api_key, **kwargs
             )
         else:
-            logger.info(f"Usando API key global para usuário {user_id} (provider: {provider})")
+            # Erro: usuário não tem API key configurada
+            logger.warning(f"Usuário {user_id} não tem API key configurada para {provider}")
             
-            # Fallback para API keys globais
-            return await self.generate_text(prompt, model, provider, **kwargs)
+            raise Exception(
+                f"API key não configurada para o provedor '{provider}'. "
+                f"Por favor, configure sua API key em Configurações > API Keys antes de usar este provedor. "
+                f"Provedores disponíveis: OpenAI, Anthropic, Google, Grok, DeepSeek, Llama."
+            )
     
     async def chat_completion_for_user(
         self,
@@ -278,6 +282,7 @@ class UserVariablesLLMService(RealLLMService):
     ) -> LLMResponse:
         """
         Chat completion usando API key específica do usuário
+        REQUER que o usuário tenha configurado uma API key para o provedor
         """
         # Determinar provedor padrão se não especificado
         if not provider:
@@ -289,15 +294,19 @@ class UserVariablesLLMService(RealLLMService):
         if user_api_key:
             logger.info(f"Chat usando API key específica do usuário {user_id} para {provider}")
             
-            # Usar API key do usuário temporariamente
+            # Usar API key do usuário
             return await self._chat_with_custom_key(
                 messages, provider, model, user_api_key, **kwargs
             )
         else:
-            logger.info(f"Chat usando API key global para usuário {user_id} (provider: {provider})")
+            # Erro: usuário não tem API key configurada
+            logger.warning(f"Usuário {user_id} não tem API key configurada para {provider}")
             
-            # Fallback para API keys globais
-            return await self.chat_completion(messages, model, provider, **kwargs)
+            raise Exception(
+                f"API key não configurada para o provedor '{provider}'. "
+                f"Por favor, configure sua API key em Configurações > API Keys antes de usar este provedor. "
+                f"Provedores disponíveis: OpenAI, Anthropic, Google, Grok, DeepSeek, Llama."
+            )
     
     # Métodos auxiliares (mesmos da implementação anterior)
     async def _generate_with_custom_key(self, prompt: str, provider: str, model: str | None, api_key: str, **kwargs) -> LLMResponse:

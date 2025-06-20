@@ -420,6 +420,9 @@ class RealLLMService:
         """
         Lista todos os modelos disponíveis, agrupados por provedor.
         """
+        # Import here to avoid circular imports
+        from synapse.api.v1.endpoints.llm.schemas import ListModelsResponse, ModelInfo
+        
         # Real models data based on initialized providers
         all_models = {}
         
@@ -427,14 +430,15 @@ class RealLLMService:
             if info.get("available"):
                 models_list = []
                 for model_id in info.get("models", []):
-                    model_info = {
-                        "id": model_id,
-                        "name": self._get_model_display_name(model_id),
-                        "provider": provider_id,
-                        "capabilities": self._get_model_capabilities(model_id),
-                        "context_window": self._get_model_context_window(model_id),
-                        "status": "available",
-                    }
+                    # Create proper ModelInfo objects
+                    model_info = ModelInfo(
+                        id=model_id,
+                        name=self._get_model_display_name(model_id),
+                        provider=provider_id,
+                        capabilities=self._get_model_capabilities(model_id),
+                        context_window=self._get_model_context_window(model_id),
+                        status="available"
+                    )
                     models_list.append(model_info)
                 
                 if models_list:
@@ -447,9 +451,6 @@ class RealLLMService:
             models = all_models
 
         count = sum(len(m) for m in models.values())
-        
-        # Import here to avoid circular imports
-        from synapse.api.v1.endpoints.llm.schemas import ListModelsResponse
         
         return ListModelsResponse(models=models, count=count)
 
@@ -468,20 +469,22 @@ class RealLLMService:
         }
         return names.get(model_id, model_id.title())
 
-    def _get_model_capabilities(self, model_id: str) -> list[str]:
+    def _get_model_capabilities(self, model_id: str) -> list:
         """Get capabilities for model"""
+        from synapse.api.v1.endpoints.llm.schemas import ModelCapability
+        
         capabilities = {
-            "gpt-4o": ["text", "vision", "function_calling"],
-            "gpt-4-turbo": ["text", "vision"],
-            "gpt-3.5-turbo": ["text"],
-            "claude-3-opus-20240229": ["text", "vision", "reasoning"],
-            "claude-3-sonnet-20240229": ["text", "vision", "reasoning"],
-            "claude-3-haiku-20240307": ["text", "reasoning"],
-            "gemini-1.5-pro": ["text", "vision", "code"],
-            "gemini-1.5-flash": ["text", "vision", "code"],
-            "gemini-1.0-pro": ["text"],
+            "gpt-4o": [ModelCapability.text, ModelCapability.vision, ModelCapability.function_calling],
+            "gpt-4-turbo": [ModelCapability.text, ModelCapability.vision],
+            "gpt-3.5-turbo": [ModelCapability.text],
+            "claude-3-opus-20240229": [ModelCapability.text, ModelCapability.vision, ModelCapability.reasoning],
+            "claude-3-sonnet-20240229": [ModelCapability.text, ModelCapability.vision, ModelCapability.reasoning],
+            "claude-3-haiku-20240307": [ModelCapability.text, ModelCapability.reasoning],
+            "gemini-1.5-pro": [ModelCapability.text, ModelCapability.vision, ModelCapability.code],
+            "gemini-1.5-flash": [ModelCapability.text, ModelCapability.vision, ModelCapability.code],
+            "gemini-1.0-pro": [ModelCapability.text],
         }
-        return capabilities.get(model_id, ["text"])
+        return capabilities.get(model_id, [ModelCapability.text])
 
     def _get_model_context_window(self, model_id: str) -> int:
         """Get context window for model"""
