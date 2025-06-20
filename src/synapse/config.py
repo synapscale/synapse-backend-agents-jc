@@ -365,6 +365,16 @@ def validate_settings():
                     "Configuração SMTP necessária para notificações por email"
                 )
 
+    # Validação extra da ENCRYPTION_KEY (também em desenvolvimento para evitar erros silenciosos)
+    if settings.ENCRYPTION_KEY:
+        import base64, binascii
+        try:
+            decoded_key = base64.b64decode(settings.ENCRYPTION_KEY)
+            if len(decoded_key) != 32:
+                errors.append("ENCRYPTION_KEY deve ter 32 bytes quando decodificada (256-bits)")
+        except (binascii.Error, ValueError):
+            errors.append("ENCRYPTION_KEY não é um Base-64 válido")
+
     # Aviso sobre provedores LLM (não obrigatório devido ao sistema de API keys por usuário)
     if not any([
         settings.OPENAI_API_KEY,

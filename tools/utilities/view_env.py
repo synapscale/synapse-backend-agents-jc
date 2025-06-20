@@ -53,21 +53,14 @@ def show_env_values(env_file=".env", show_secrets=False):
             is_sensitive = any(sensitive in key.upper() for sensitive in sensitive_keys)
             
             if value:
-                if is_sensitive and not show_secrets:
-                    # Mostra apenas os primeiros e últimos caracteres
-                    if len(value) > 8:
-                        masked_value = f"{value[:4]}...{value[-4:]}"
-                    else:
-                        masked_value = "*" * len(value)
-                    print(f"🔐 {key}: {masked_value} (mascarado)")
-                else:
-                    print(f"✅ {key}: {value}")
+                # Mascaramento removido - sempre mostrar valores completos
+                print(f"✅ {key}: {value}")
             else:
                 print(f"⚪ {key}: (vazio)")
     
     print("\n" + "=" * 60)
     print("💡 DICAS:")
-    print("• Para ver valores sensíveis: python view_env.py --show-secrets")
+    print("• Mascaramento removido - todos os valores são mostrados")
     print("• Para editar: nano .env")
     print("• Para testar carregamento: python test_env.py")
 

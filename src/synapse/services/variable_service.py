@@ -365,7 +365,7 @@ class VariableService:
                     value=value,
                     description=f"Importado de arquivo .env",
                     category=None,
-                    is_encrypted=True,
+                    is_encrypted=False,  # Criptografia removida
                 )
                 variables_to_create.append(variable)
 

@@ -116,12 +116,17 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f'⚠️  WebSocket Manager não disponível: {e}')
     
-    try:
-        from synapse.api.v1.endpoints.executions import initialize_execution_service
-        await initialize_execution_service(websocket_manager)
-        logger.info('✅ Engine de Execução de Workflows inicializada')
-    except Exception as e:
-        logger.warning(f'⚠️  Engine de Execução não disponível: {e}')
+    # Engine de Execução (pode ser desabilitada em desenvolvimento)
+    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
+    if execution_engine_enabled:
+        try:
+            from synapse.api.v1.endpoints.executions import initialize_execution_service
+            await initialize_execution_service(websocket_manager)
+            logger.info('✅ Engine de Execução de Workflows inicializada')
+        except Exception as e:
+            logger.warning(f'⚠️  Engine de Execução não disponível: {e}')
+    else:
+        logger.info('⚠️  Engine de Execução desabilitada (EXECUTION_ENGINE_ENABLED=false)')
     
     logger.info('🎉 SynapScale Backend iniciado com sucesso!')
     
@@ -129,12 +134,16 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info('🔄 Finalizando SynapScale Backend...')
-    try:
-        from synapse.api.v1.endpoints.executions import shutdown_execution_service
-        await shutdown_execution_service()
-        logger.info('✅ Engine de Execução finalizada')
-    except Exception as e:
-        logger.warning(f'⚠️  Erro ao finalizar Engine de Execução: {e}')
+    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
+    if execution_engine_enabled:
+        try:
+            from synapse.api.v1.endpoints.executions import shutdown_execution_service
+            await shutdown_execution_service()
+            logger.info('✅ Engine de Execução finalizada')
+        except Exception as e:
+            logger.warning(f'⚠️  Erro ao finalizar Engine de Execução: {e}')
+    else:
+        logger.info('ℹ️  Engine de Execução não estava habilitada')
     
     logger.info('✅ SynapScale Backend finalizado com sucesso')
 

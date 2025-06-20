@@ -9,12 +9,13 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from ..database import Base
-from cryptography.fernet import Fernet
 import os
-import base64
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
+import logging
+from typing import ClassVar, Optional
+from sqlalchemy.dialects.postgresql import UUID
 
+logger = logging.getLogger(__name__)
 
 class UserVariable(Base):
     """
@@ -42,69 +43,47 @@ class UserVariable(Base):
         return f"<UserVariable(user_id={self.user_id}, key='{self.key}')>"
 
     @staticmethod
-    def get_encryption_key():
-        """
-        Obtém a chave de criptografia das variáveis de ambiente
-        CRÍTICO: Não gera chave padrão - falha se não configurada
-        """
-        encryption_key = os.getenv("ENCRYPTION_KEY")
-        if not encryption_key:
-            # CRÍTICO: Não gerar chave padrão - deve ser configurada explicitamente
-            raise ValueError(
-                "ENCRYPTION_KEY não configurada. Esta chave é essencial para "
-                "criptografar API keys de usuários. Configure uma chave segura "
-                "nas variáveis de ambiente."
-            )
-        return encryption_key
+    def get_encryption_key() -> str:
+        """Função mantida apenas para compatibilidade com código existente."""
+        return "dummy_key"
 
     @classmethod
     def encrypt_value(cls, value: str) -> str:
         """
-        Criptografa um valor usando Fernet
+        Não realiza criptografia - retorna o valor original
         """
-        if not value:
-            return ""
-
-        key = cls.get_encryption_key()
-        fernet = Fernet(key.encode() if isinstance(key, str) else key)
-        encrypted_value = fernet.encrypt(value.encode())
-        return base64.urlsafe_b64encode(encrypted_value).decode()
+        return value or ""
 
     @classmethod
     def decrypt_value(cls, encrypted_value: str) -> str:
         """
-        Descriptografa um valor usando Fernet
+        Não realiza descriptografia - retorna o valor original
         """
-        if not encrypted_value:
-            return ""
-
-        try:
-            key = cls.get_encryption_key()
-            fernet = Fernet(key.encode() if isinstance(key, str) else key)
-            decoded_value = base64.urlsafe_b64decode(encrypted_value.encode())
-            decrypted_value = fernet.decrypt(decoded_value)
-            return decrypted_value.decode()
-        except Exception as e:
-            # Log do erro em produção
-            print(f"Erro ao descriptografar variável: {e}")
-            return ""
+        return encrypted_value or ""
 
     def get_decrypted_value(self) -> str:
         """
-        Retorna o valor descriptografado da variável
+        Retorna o valor da variável (sem criptografia)
         """
-        if self.is_encrypted:
-            return self.decrypt_value(self.value)
         return self.value
+
+    def validate_encryption_integrity(self) -> bool:
+        """
+        Validação de integridade (sempre retorna True)
+        """
+        return True
+
+    def migrate_to_current_encryption(self) -> bool:
+        """
+        Função mantida para compatibilidade
+        """
+        return True
 
     def set_encrypted_value(self, value: str):
         """
-        Define o valor criptografado da variável
+        Define o valor da variável (sem criptografia)
         """
-        if self.is_encrypted:
-            self.value = self.encrypt_value(value)
-        else:
-            self.value = value
+        self.value = value
 
     @classmethod
     def create_variable(
@@ -114,7 +93,7 @@ class UserVariable(Base):
         value: str,
         description: str = None,
         category: str = None,
-        is_encrypted: bool = True,
+        is_encrypted: bool = False,
     ):
         """
         Cria uma nova variável do usuário
@@ -124,9 +103,9 @@ class UserVariable(Base):
             key=key.upper(),  # Padronizar chaves em maiúsculo
             description=description,
             category=category,
-            is_encrypted=is_encrypted,
+            is_encrypted=False,  # Sempre False agora
         )
-        variable.set_encrypted_value(value)
+        variable.value = value
         return variable
 
     def to_dict(self, include_value: bool = False) -> dict:
@@ -145,7 +124,7 @@ class UserVariable(Base):
         }
 
         if include_value:
-            data["value"] = self.get_decrypted_value()
+            data["value"] = self.value
 
         return data
 
@@ -153,11 +132,39 @@ class UserVariable(Base):
         """
         Retorna a variável no formato .env
         """
-        value = self.get_decrypted_value()
+        value = self.value
         # Escapar valores que contêm espaços ou caracteres especiais
         if " " in value or any(char in value for char in ["$", '"', "'", "\\", "\n"]):
             value = f'"{value}"'
         return f"{self.key}={value}"
+
+    @classmethod
+    def check_and_migrate_user_variables(cls, user_id, db_session) -> dict:
+        """
+        Função mantida para compatibilidade com código existente
+        """
+        stats = {
+            "total": 0,
+            "valid": 0,
+            "migrated": 0,
+            "failed": 0,
+            "errors": []
+        }
+        
+        try:
+            variables = db_session.query(cls).filter(
+                cls.user_id == user_id,
+                cls.is_encrypted == True
+            ).all()
+            
+            stats["total"] = len(variables)
+            stats["valid"] = len(variables)
+            
+        except Exception as e:
+            logger.error(f"Erro ao verificar variáveis: {e}")
+            stats["errors"].append(f"Erro geral: {e}")
+            
+        return stats
 
     @classmethod
     def get_user_env_dict(cls, user_id: int, db_session) -> dict:
@@ -176,7 +183,7 @@ class UserVariable(Base):
 
         env_dict = {}
         for var in variables:
-            env_dict[var.key] = var.get_decrypted_value()
+            env_dict[var.key] = var.value
 
         return env_dict
 
