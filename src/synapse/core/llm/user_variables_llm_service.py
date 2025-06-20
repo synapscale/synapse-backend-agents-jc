@@ -123,7 +123,7 @@ class UserVariablesLLMService(RealLLMService):
                     value=api_key,
                     category="api_keys",
                     description=f"Chave da API {provider.title()}",
-                    is_encrypted=True
+                    is_encrypted=False  # Criptografia removida
                 )
                 db.add(new_variable)
                 db.commit()
@@ -155,9 +155,9 @@ class UserVariablesLLMService(RealLLMService):
             
             result = []
             for key in api_keys:
-                # Mascarar a chave para segurança
+                # Mascaramento removido - mostrar valor completo
                 decrypted_value = key.get_decrypted_value()
-                masked_value = f"****{decrypted_value[-4:] if len(decrypted_value) >= 4 else '****'}"
+                displayed_value = decrypted_value
                 
                 # Mapear de volta para o nome do provedor
                 provider_mapping = {
@@ -175,11 +175,12 @@ class UserVariablesLLMService(RealLLMService):
                     "id": str(key.id),
                     "provider_name": provider_name,
                     "key_name": key.key,
-                    "masked_value": masked_value,
+                    "value": displayed_value,  # Valor completo sem mascaramento
                     "is_active": key.is_active,
                     "description": key.description,
                     "created_at": key.created_at.isoformat() if key.created_at else None,
-                    "updated_at": key.updated_at.isoformat() if key.updated_at else None
+                    "updated_at": key.updated_at.isoformat() if key.updated_at else None,
+                    "masking_disabled": True
                 })
             
             return result

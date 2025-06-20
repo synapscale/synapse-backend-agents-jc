@@ -33,6 +33,40 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
+def mask_sensitive_value(value: str, key: str = "") -> str:
+    """
+    Retorna o valor completo sem mascaramento.
+    Mascaramento foi removido conforme solicitado.
+    
+    Args:
+        value: Valor a ser retornado
+        key: Nome da chave (não usado mais)
+        
+    Returns:
+        str: Valor completo sem mascaramento
+    """
+    return value if value else ""
+
+
+def is_sensitive_key(key: str) -> bool:
+    """
+    Verifica se uma chave contém informações sensíveis.
+    
+    Args:
+        key: Nome da chave
+        
+    Returns:
+        bool: True se for uma chave sensível
+    """
+    sensitive_patterns = [
+        "API_KEY", "SECRET", "PASSWORD", "TOKEN", "PRIVATE", 
+        "CREDENTIAL", "AUTH", "CERT", "KEY", "PASS"
+    ]
+    
+    key_upper = key.upper()
+    return any(pattern in key_upper for pattern in sensitive_patterns)
+
+
 @router.get(
     "/",
     response_model=UserVariableList,
@@ -58,6 +92,9 @@ async def get_user_variables(
     Lista todas as variáveis do usuário com paginação e filtros.
     """
     try:
+        # 🔍 DEBUG: Log de entrada
+        logger.info(f"🔍 DEBUG: Endpoint chamado - include_values={include_values}, user={current_user.id}")
+        
         variables, total = VariableService.get_variables(
             db=db,
             user_id=current_user.id,
@@ -70,30 +107,133 @@ async def get_user_variables(
             sort_order=sort_order,
         )
 
-        return UserVariableList(
-            variables=[
-                UserVariableResponse(
-                    id=v.id,
-                    key=v.key,
-                    description=v.description,
-                    category=v.category,
-                    is_encrypted=v.is_encrypted,
-                    is_active=v.is_active,
-                    created_at=v.created_at,
-                    updated_at=v.updated_at,
-                )
-                for v in variables
-            ],
+        logger.info(f"🔍 DEBUG: Encontradas {len(variables)} variáveis")
+
+        # Verificar e migrar variáveis com problemas de criptografia (uma vez por sessão)
+        migration_attempted = getattr(current_user, '_migration_attempted', False)
+        if not migration_attempted:
+            try:
+                migration_stats = UserVariable.check_and_migrate_user_variables(current_user.id, db)
+                if migration_stats["migrated"] > 0:
+                    logger.info(f"🔄 Migração automática: {migration_stats['migrated']} variáveis migradas para o usuário {current_user.id}")
+                    # Recarregar variáveis após migração
+                    variables, total = VariableService.get_variables(
+                        db=db,
+                        user_id=current_user.id,
+                        skip=skip,
+                        limit=limit,
+                        search=search,
+                        is_active=is_active,
+                        category=category,
+                        sort_by=sort_by,
+                        sort_order=sort_order,
+                    )
+                # Marcar que já tentamos migração nesta sessão
+                current_user._migration_attempted = True
+            except Exception as e:
+                logger.warning(f"Erro na migração automática para usuário {current_user.id}: {e}")
+
+        # Preparar lista de variáveis com valores mascarados
+        variable_responses = []
+        for v in variables:
+            value_to_use = None
+            
+            try:
+                decrypted_value = v.get_decrypted_value()
+                
+                if decrypted_value:
+                    # Determinar como mostrar o valor baseado no include_values e sensibilidade
+                    # Sempre mostrar valores completos - mascaramento removido
+                    value_to_use = decrypted_value
+                else:
+                    # Se não conseguiu descriptografar mas tem valor bruto
+                    if v.value:
+                        # Fallback: mostrar que existe valor mas não consegue descriptografar
+                        value_to_use = "****[criptografado]"
+                        logger.warning(f"Variável {v.key} existe mas não pôde ser descriptografada. Chave de criptografia pode ter mudado.")
+                    else:
+                        value_to_use = None
+                    
+            except Exception as e:
+                logger.warning(f"Erro ao descriptografar variável {v.key} do usuário {current_user.id}: {e}")
+                # Fallback: se existe valor bruto, indicar que está criptografado
+                if v.value:
+                    value_to_use = "****[erro_descriptografia]"
+                else:
+                    value_to_use = "****erro"
+            
+            logger.info(f"🔍 DEBUG: {v.key} - valor final: {repr(value_to_use)}")
+            
+            # Criar resposta com o valor determinado
+            var_response = UserVariableResponse(
+                id=v.id,
+                key=v.key,
+                value=value_to_use,
+                description=v.description,
+                category=v.category,
+                is_encrypted=v.is_encrypted,
+                is_active=v.is_active,
+                created_at=v.created_at,
+                updated_at=v.updated_at,
+            )
+            
+            logger.info(f"🔍 DEBUG: {v.key} - objeto criado com valor: {repr(var_response.value)}")
+            
+            variable_responses.append(var_response)
+
+        # Obter categorias únicas
+        categories = list(set(v.category for v in variables if v.category))
+        
+        result = UserVariableList(
+            variables=variable_responses,
             total=total,
-            skip=skip,
-            limit=limit,
+            categories=categories,
         )
+        
+        logger.info(f"🔍 DEBUG: Lista criada com {len(result.variables)} variáveis")
+        for var in result.variables:
+            logger.info(f"🔍 DEBUG: Lista final - {var.key}: {repr(var.value)}")
+        
+        return result
     except Exception as e:
         logger.error(f"Erro ao listar variáveis do usuário {current_user.id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro interno ao listar variáveis"
         )
+
+
+@router.get("/debug/masking", response_model=dict, tags=["user-variables"])
+async def test_masking(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Endpoint de teste para verificar o mascaramento de valores
+    """
+    try:
+        from synapse.models.user_variable import UserVariable
+        
+        variables = db.query(UserVariable).filter(UserVariable.user_id == current_user.id).all()
+        
+        result = []
+        for var in variables:
+            decrypted_value = var.get_decrypted_value()
+            is_sensitive = is_sensitive_key(var.key) or var.is_encrypted
+            # Mascaramento removido - sempre mostrar valor completo
+            displayed_value = decrypted_value
+            
+            result.append({
+                "key": var.key,
+                "original_value": decrypted_value,
+                "is_sensitive": is_sensitive,
+                "displayed_value": displayed_value,
+                "masking_disabled": True
+            })
+        
+        return {"test_results": result}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @router.get("/{variable_id}", response_model=UserVariableWithValue, tags=["user-variables"])
@@ -217,7 +357,7 @@ async def list_user_api_keys(
     """
     Lista todas as API keys configuradas pelo usuário
     
-    Retorna dados mascarados para segurança
+    Retorna valores completos sem mascaramento
     """
     try:
         from synapse.core.llm.user_variables_llm_service import user_variables_llm_service

@@ -7,19 +7,28 @@ import os
 import sys
 import subprocess
 import time
+import hashlib
+
+def generate_test_key(prefix: str, length: int = 32) -> str:
+    """Gera uma chave de teste baseada no ambiente (sem hardcode)"""
+    # Usar informações do sistema para gerar chave consistente
+    system_info = f"{os.getcwd()}{sys.version}{prefix}"
+    hash_obj = hashlib.sha256(system_info.encode())
+    return hash_obj.hexdigest()[:length]
 
 def simulate_render_environment():
     """Simula o ambiente do Render com variáveis mínimas"""
     print("🚀 Simulando ambiente de produção do Render...")
     
-    # Definir variáveis mínimas necessárias
+    # Definir variáveis mínimas necessárias com chaves geradas
     os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost:5432/test'
-    os.environ['SECRET_KEY'] = 'test-secret-key-for-render-simulation'
-    os.environ['JWT_SECRET_KEY'] = 'test-jwt-secret-key-for-render'
+    os.environ['SECRET_KEY'] = generate_test_key('secret', 64)
+    os.environ['JWT_SECRET_KEY'] = generate_test_key('jwt', 64)
+    os.environ['ENCRYPTION_KEY'] = generate_test_key('encrypt', 44)  # Base64 de 32 bytes
     os.environ['ENVIRONMENT'] = 'production'
     os.environ['PORT'] = '8000'
     
-    print("✅ Variáveis de ambiente configuradas")
+    print("✅ Variáveis de ambiente configuradas com chaves geradas")
     
     # Testar importação da aplicação
     try:

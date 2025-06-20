@@ -5,6 +5,7 @@ API completa para gerenciamento de execuções em tempo real
 """
 
 import logging
+import os
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
@@ -47,8 +48,22 @@ def get_execution_service() -> ExecutionService:
         RuntimeError: Se o serviço não foi inicializado
     """
     global execution_service
+    
+    # Verifica se a engine está habilitada PRIMEIRO
+    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
+    if not execution_engine_enabled:
+        raise HTTPException(
+            status_code=503, 
+            detail="🚫 Engine de execução desabilitada. Configure EXECUTION_ENGINE_ENABLED=true para habilitar."
+        )
+    
+    # Só cria se realmente habilitado
     if execution_service is None:
-        execution_service = ExecutionService(websocket_manager)
+        raise HTTPException(
+            status_code=503,
+            detail="🚫 Serviço de execução não foi inicializado. Verifique se EXECUTION_ENGINE_ENABLED=true."
+        )
+    
     return execution_service
 
 
@@ -866,6 +881,13 @@ async def initialize_execution_service(ws_manager: Optional[ConnectionManager] =
         RuntimeError: Se falha na inicialização
     """
     global execution_service, websocket_manager
+    
+    # Verifica se a engine está habilitada
+    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
+    if not execution_engine_enabled:
+        logger.info("⚠️  Engine de Execução desabilitada via EXECUTION_ENGINE_ENABLED=false")
+        return
+    
     try:
         logger.info("Inicializando serviço de execução")
         websocket_manager = ws_manager
@@ -888,6 +910,13 @@ async def shutdown_execution_service() -> None:
         RuntimeError: Se falha no shutdown
     """
     global execution_service
+    
+    # Verifica se a engine está habilitada
+    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
+    if not execution_engine_enabled:
+        logger.info("ℹ️  Engine de Execução já estava desabilitada")
+        return
+    
     try:
         if execution_service:
             logger.info("Finalizando serviço de execução")

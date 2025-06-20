@@ -650,7 +650,7 @@ class ExecutionEngine:
                         except StopIteration:
                             pass
 
-                await asyncio.sleep(1)  # Verifica a fila a cada segundo
+                await asyncio.sleep(5)  # Verifica a fila a cada 5 segundos
 
             except (asyncio.CancelledError, DatabaseError) as e:
                 logger.error("❌ Erro no processador de fila: %s", str(e))

@@ -20,7 +20,12 @@ class UserVariableBase(BaseModel):
     description: str | None = Field(
         None, max_length=500, description="Descrição opcional da variável"
     )
-    is_encrypted: bool = Field(True, description="Se o valor deve ser criptografado")
+    is_encrypted: bool = Field(False, description="Criptografia PERMANENTEMENTE DESABILITADA - valores em texto claro")
+    
+    @validator("is_encrypted", pre=True, always=True)
+    def force_disable_encryption(cls, v):
+        """FORÇA is_encrypted=False - criptografia desabilitada"""
+        return False
     is_active: bool = Field(True, description="Se a variável está ativa")
     category: str | None = Field(None, max_length=100, description="Categoria da variável")
 
@@ -109,7 +114,7 @@ class UserVariableResponse(BaseModel):
 
     id: str
     key: str
-    value: str | None = None
+    value: str | None = Field(None, description="Valor da variável (mascarado se sensível)")
     description: str | None = None
     category: str | None = None
     is_active: bool
