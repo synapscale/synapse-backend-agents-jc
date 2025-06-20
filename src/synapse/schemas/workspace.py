@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field, validator
 from datetime import datetime
 from enum import Enum
 
+from synapse.models.workspace import WorkspaceType
+
 # ==================== ENUMS ====================
 
 
@@ -60,7 +62,16 @@ class WorkspaceBase(BaseModel):
 
 
 class WorkspaceCreate(WorkspaceBase):
-    pass
+    type: WorkspaceType = WorkspaceType.INDIVIDUAL
+    plan_id: str | None = None  # UUID como string
+    is_public: bool = False
+    allow_guest_access: bool = False
+    require_approval: bool = True
+    enable_real_time_editing: bool = True
+    enable_comments: bool = True
+    enable_chat: bool = True
+    enable_video_calls: bool = False
+    notification_settings: dict[str, Any] | None = None
 
 
 class WorkspaceUpdate(BaseModel):
@@ -84,8 +95,24 @@ class WorkspaceUpdate(BaseModel):
 class WorkspaceResponse(WorkspaceBase):
     id: str
     slug: str
-    owner_id: str
-    owner_name: str
+    type: WorkspaceType
+    owner_id: str  # UUID como string
+    owner_name: str | None = None
+    plan_id: str  # UUID como string
+    plan_name: str | None = None
+    plan_type: str | None = None
+    is_public: bool = False
+    is_template: bool = False
+    allow_guest_access: bool = False
+    require_approval: bool = True
+    max_members: int | None = None
+    max_projects: int | None = None
+    max_storage_mb: int | None = None
+    enable_real_time_editing: bool = True
+    enable_comments: bool = True
+    enable_chat: bool = True
+    enable_video_calls: bool = False
+    notification_settings: dict[str, Any] | None = None
     member_count: int = 0
     project_count: int = 0
     activity_count: int = 0
@@ -98,7 +125,7 @@ class WorkspaceResponse(WorkspaceBase):
     class Config:
         from_attributes = True
     
-    @validator("id", "owner_id", pre=True)
+    @validator("id", "owner_id", "plan_id", pre=True)
     def convert_uuid_to_string(cls, v):
         """Converte UUID para string"""
         if v is None:
@@ -119,8 +146,8 @@ class MemberInvite(BaseModel):
 
 class MemberResponse(BaseModel):
     id: int
-    workspace_id: int
-    user_id: int
+    workspace_id: str
+    user_id: str
     user_name: str
     user_email: str
     user_avatar: str | None = None
@@ -131,6 +158,15 @@ class MemberResponse(BaseModel):
 
     class Config:
         from_attributes = True
+    
+    @validator("workspace_id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 class MemberUpdate(BaseModel):
@@ -141,10 +177,10 @@ class MemberUpdate(BaseModel):
 
 
 class InvitationResponse(BaseModel):
-    id: int
-    workspace_id: int
+    id: str
+    workspace_id: str
     workspace_name: str
-    inviter_id: int
+    inviter_id: str
     inviter_name: str
     email: str
     role: WorkspaceRole
@@ -157,6 +193,15 @@ class InvitationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "workspace_id", "inviter_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 # ==================== PROJECT SCHEMAS ====================
@@ -172,7 +217,7 @@ class ProjectBase(BaseModel):
 
 
 class ProjectCreate(ProjectBase):
-    workflow_id: int | None = None
+    workflow_id: str | None = None
 
 
 class ProjectUpdate(BaseModel):
@@ -220,14 +265,14 @@ class CollaboratorPermissions(BaseModel):
 
 
 class CollaboratorAdd(BaseModel):
-    user_id: int
+    user_id: str
     permissions: CollaboratorPermissions
 
 
 class CollaboratorResponse(BaseModel):
-    id: int
-    project_id: int
-    user_id: int
+    id: str
+    project_id: str
+    user_id: str
     user_name: str
     user_email: str
     user_avatar: str | None = None
@@ -239,6 +284,15 @@ class CollaboratorResponse(BaseModel):
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "project_id", "user_id", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 # ==================== COMMENT SCHEMAS ====================
@@ -253,7 +307,7 @@ class CommentBase(BaseModel):
 
 
 class CommentCreate(CommentBase):
-    parent_id: int | None = None
+    parent_id: str | None = None
 
 
 class CommentUpdate(BaseModel):
@@ -267,7 +321,7 @@ class CommentResponse(CommentBase):
     user_id: str
     user_name: str
     user_avatar: str | None = None
-    parent_id: int | None = None
+    parent_id: str | None = None
     reply_count: int = 0
     is_resolved: bool = False
     created_at: datetime
@@ -276,7 +330,7 @@ class CommentResponse(CommentBase):
     class Config:
         from_attributes = True
     
-    @validator("id", "project_id", "user_id", pre=True)
+    @validator("id", "project_id", "user_id", "parent_id", pre=True)
     def convert_uuid_to_string(cls, v):
         """Converte UUID para string"""
         if v is None:
@@ -319,19 +373,28 @@ class ActivityResponse(BaseModel):
 
 
 class ProjectVersionResponse(BaseModel):
-    id: int
-    project_id: int
+    id: str
+    project_id: str
     version_number: int
     name: str | None = None
     description: str | None = None
     workflow_data: dict[str, Any]
-    created_by: int
+    created_by: str
     creator_name: str
     is_current: bool = False
     created_at: datetime
 
     class Config:
         from_attributes = True
+    
+    @validator("id", "project_id", "created_by", pre=True)
+    def convert_uuid_to_string(cls, v):
+        """Converte UUID para string"""
+        if v is None:
+            return v
+        if hasattr(v, '__str__'):
+            return str(v)
+        return v
 
 
 class VersionCreate(BaseModel):
@@ -371,7 +434,7 @@ class WorkspaceSearch(BaseModel):
 
 class ProjectSearch(BaseModel):
     query: str | None = None
-    workspace_id: int | None = None
+    workspace_id: str | None = None
     status: ProjectStatus | None = None
     has_collaborators: bool | None = None
     sort_by: str | None = Field("updated", pattern="^(updated|created|name|activity)$")
@@ -391,8 +454,8 @@ class BulkMemberOperation(BaseModel):
 
 class BulkProjectOperation(BaseModel):
     action: str = Field(..., pattern="^(archive|delete|move_workspace)$")
-    project_ids: list[int] = Field(..., min_items=1, max_items=50)
-    target_workspace_id: int | None = None
+    project_ids: list[str] = Field(..., min_items=1, max_items=50)
+    target_workspace_id: str | None = None
     reason: str | None = Field(None, max_length=500)
 
 
@@ -407,16 +470,16 @@ class BulkOperationResponse(BaseModel):
 
 class RealTimeEvent(BaseModel):
     event_type: str
-    workspace_id: int
-    project_id: int | None = None
-    user_id: int
+    workspace_id: str  # UUID como string
+    project_id: str | None = None  # UUID como string
+    user_id: str  # UUID como string
     user_name: str
     data: dict[str, Any]
     timestamp: datetime
 
 
 class CursorPosition(BaseModel):
-    user_id: int
+    user_id: str  # UUID como string
     user_name: str
     user_color: str
     x: float
@@ -429,7 +492,7 @@ class EditOperation(BaseModel):
     operation_type: str = Field(..., pattern="^(insert|delete|update|move)$")
     node_id: str | None = None
     data: dict[str, Any]
-    user_id: int
+    user_id: str  # UUID como string
     timestamp: datetime
 
 
@@ -451,7 +514,7 @@ class NotificationSettings(BaseModel):
 
 
 class NotificationPreferences(BaseModel):
-    workspace_id: int
+    workspace_id: str  # UUID como string
     settings: NotificationSettings
 
 

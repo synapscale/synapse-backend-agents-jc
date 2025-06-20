@@ -26,15 +26,15 @@ from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
+# Import WorkspaceRole and WorkspaceActivity from dedicated modules to avoid conflicts
+from synapse.models.workspace_member import WorkspaceRole
 
-class WorkspaceRole(PyEnum):
-    """Papéis em um workspace"""
 
-    OWNER = "owner"
-    ADMIN = "admin"
-    EDITOR = "editor"
-    VIEWER = "viewer"
-    GUEST = "guest"
+class WorkspaceType(PyEnum):
+    """Tipos de workspace"""
+
+    INDIVIDUAL = "individual"
+    COLLABORATIVE = "collaborative"
 
 
 class PermissionLevel(PyEnum):
@@ -59,6 +59,9 @@ class Workspace(Base):
     name = Column(String(255), nullable=False)
     slug = Column(String(120), unique=True, nullable=False, index=True)
 
+    # Tipo do workspace (NOVO CAMPO)
+    type = Column(Enum(WorkspaceType), nullable=False, default=WorkspaceType.INDIVIDUAL)
+
     # Informações básicas
     description = Column(Text)
     avatar_url = Column(String(500))
@@ -66,6 +69,9 @@ class Workspace(Base):
 
     # Proprietário
     owner_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+
+    # Plano do workspace (NOVO CAMPO)
+    plan_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.plans.id"), nullable=False)
 
     # Configurações
     is_public = Column(Boolean, nullable=False, server_default=text("false"))
@@ -105,9 +111,10 @@ class Workspace(Base):
 
     # Relacionamentos
     owner = relationship("User", back_populates="owned_workspaces")
-    members = relationship(
-        "WorkspaceMember", back_populates="workspace", cascade="all, delete-orphan"
-    )
+    plan = relationship("Plan")
+    members = relationship("WorkspaceMember", back_populates="workspace", cascade="all, delete-orphan")
+    activities = relationship("WorkspaceActivity", back_populates="workspace", cascade="all, delete-orphan")
+    invitations = relationship("WorkspaceInvitation", back_populates="workspace", cascade="all, delete-orphan")
     projects = relationship(
         "WorkspaceProject", back_populates="workspace", cascade="all, delete-orphan"
     )
@@ -142,24 +149,70 @@ class Workspace(Base):
         """Verifica se excedeu o limite de armazenamento"""
         return self.storage_used_mb > self.max_storage_mb
 
-    def get_member_role(self, user_id: int):
+    def get_member_role(self, user_id):
         """Obtém o papel de um usuário no workspace"""
+        # Converter para UUID se necessário
+        if isinstance(user_id, str):
+            try:
+                user_id = uuid.UUID(user_id)
+            except ValueError:
+                return None
+        
         if self.owner_id == user_id:
             return WorkspaceRole.OWNER
 
         member = next((m for m in self.members if m.user_id == user_id), None)
         return WorkspaceRole(member.role) if member else None
 
+    def can_add_member(self) -> bool:
+        """Verifica se pode adicionar mais membros baseado no plano"""
+        if not self.plan:
+            return False
+        return self.member_count < self.plan.max_members_per_workspace
+
+    def can_create_project(self) -> bool:
+        """Verifica se pode criar mais projetos baseado no plano"""
+        if not self.plan:
+            return False
+        return self.project_count < self.plan.max_projects_per_workspace
+
+    def can_use_storage(self, additional_mb: float) -> bool:
+        """Verifica se pode usar mais armazenamento baseado no plano"""
+        if not self.plan:
+            return False
+        return (self.storage_used_mb + additional_mb) <= self.plan.max_storage_mb
+
+    def get_plan_limits(self) -> dict:
+        """Retorna os limites do plano atual"""
+        if not self.plan:
+            return {}
+        
+        return {
+            "max_members": self.plan.max_members_per_workspace,
+            "max_projects": self.plan.max_projects_per_workspace,
+            "max_storage_mb": self.plan.max_storage_mb,
+            "current_members": self.member_count,
+            "current_projects": self.project_count,
+            "current_storage_mb": self.storage_used_mb,
+            "can_add_member": self.can_add_member(),
+            "can_create_project": self.can_create_project(),
+            "features": self.plan.features if self.plan.features else {},
+        }
+
     def to_dict(self) -> dict:
         return {
             "id": str(self.id) if self.id else None,
             "name": self.name,
             "slug": self.slug,
+            "type": self.type.value if self.type else WorkspaceType.INDIVIDUAL.value,
             "description": self.description,
             "avatar_url": self.avatar_url,
             "color": self.color,
             "owner_id": str(self.owner_id) if self.owner_id else None,
             "owner_name": self.owner.full_name if self.owner and hasattr(self.owner, 'full_name') else None,
+            "plan_id": str(self.plan_id) if self.plan_id else None,
+            "plan_name": self.plan.name if self.plan and hasattr(self.plan, 'name') else None,
+            "plan_type": self.plan.type.value if self.plan and hasattr(self.plan, 'type') else None,
             "is_public": self.is_public,
             "allow_guest_access": self.allow_guest_access,
             "require_approval": self.require_approval,
@@ -182,80 +235,7 @@ class Workspace(Base):
         }
 
 
-class WorkspaceMember(Base):
-    """
-    Modelo para membros de workspace
-    """
-
-    __tablename__ = "workspace_members"
-
-    id = Column(Integer, primary_key=True, index=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
-
-    # Papel e permissões
-    role = Column(Enum(WorkspaceRole), nullable=False, default=WorkspaceRole.VIEWER)
-    custom_permissions = Column(JSON, default=dict)
-
-    # Status
-    status = Column(
-        String(20), default="active", nullable=False
-    )  # active, suspended, left
-    is_favorite = Column(Boolean, default=False, nullable=False)
-
-    # Configurações pessoais
-    notification_preferences = Column(JSON, default=dict)
-    last_seen_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    # Timestamps
-    joined_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    left_at = Column(DateTime)
-
-    # Relacionamentos
-    workspace = relationship("Workspace", back_populates="members")
-    user = relationship("User")
-
-    # Constraint para evitar duplicatas
-    __table_args__ = {"extend_existing": True}
-
-    def __repr__(self):
-        return f"<WorkspaceMember(workspace_id={self.workspace_id}, user_id={self.user_id}, role={self.role})>"
-
-    def has_permission(self, permission: str, resource_type: str = None) -> bool:
-        """Verifica se o membro tem uma permissão específica"""
-        # Owner tem todas as permissões
-        if self.role == WorkspaceRole.OWNER:
-            return True
-
-        # Admin tem quase todas as permissões
-        if self.role == WorkspaceRole.ADMIN:
-            return permission not in ["delete_workspace", "transfer_ownership"]
-
-        # Verificar permissões customizadas
-        if resource_type and resource_type in self.custom_permissions:
-            return self.custom_permissions[resource_type].get(permission, False)
-
-        # Permissões padrão por papel
-        default_permissions = {
-            WorkspaceRole.EDITOR: {
-                "read_projects",
-                "write_projects",
-                "create_projects",
-                "read_members",
-                "comment",
-                "chat",
-            },
-            WorkspaceRole.VIEWER: {
-                "read_projects",
-                "read_members",
-                "comment",
-            },
-            WorkspaceRole.GUEST: {
-                "read_projects",
-            },
-        }
-
-        return permission in default_permissions.get(self.role, set())
+# WorkspaceMember model moved to workspace_member.py to avoid conflicts
 
 
 class WorkspaceProject(Base):
@@ -349,85 +329,7 @@ class ProjectCollaborator(Base):
         return f"<ProjectCollaborator(project_id={self.project_id}, user_id={self.user_id})>"
 
 
-class WorkspaceInvitation(Base):
-    """
-    Modelo para convites de workspace
-    """
 
-    __tablename__ = "workspace_invitations"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False, index=True)
-    inviter_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
-    invited_user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), index=True)
-
-    # Destinatário
-    email = Column(String(255), nullable=False, index=True)
-
-    # Convite
-    role = Column(Enum(WorkspaceRole), nullable=False, default=WorkspaceRole.VIEWER)
-    message = Column(Text)
-    token = Column(String(100), unique=True, nullable=False, index=True)
-
-    # Status
-    status = Column(
-        String(20), default="pending", nullable=False
-    )  # pending, accepted, declined, expired
-
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
-    responded_at = Column(DateTime)
-
-    # Relacionamentos
-    workspace = relationship("Workspace", back_populates="invitations")
-    inviter = relationship("User", foreign_keys=[inviter_id])
-    invited_user = relationship("User", foreign_keys=[invited_user_id])
-
-    def __repr__(self):
-        return f"<WorkspaceInvitation(id={self.id}, workspace_id={self.workspace_id}, email='{self.email}')>"
-
-    @property
-    def is_expired(self):
-        """Verifica se o convite expirou"""
-        return datetime.utcnow() > self.expires_at
-
-
-class WorkspaceActivity(Base):
-    """
-    Modelo para atividades do workspace
-    """
-
-    __tablename__ = "workspace_activities"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
-
-    # Atividade
-    action = Column(
-        String(50), nullable=False, index=True
-    )  # created, updated, deleted, etc.
-    resource_type = Column(String(50), nullable=False)  # project, member, etc.
-    resource_id = Column(Integer)
-
-    # Detalhes
-    description = Column(String(500), nullable=False)
-    meta_data = Column(JSON, default=dict)
-
-    # Contexto
-    ip_address = Column(String(45))
-    user_agent = Column(String(500))
-
-    # Timestamp
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    # Relacionamentos
-    workspace = relationship("Workspace", back_populates="activities")
-    user = relationship("User")
-
-    def __repr__(self):
-        return f"<WorkspaceActivity(id={self.id}, action='{self.action}', resource_type='{self.resource_type}')>"
 
 
 class ProjectComment(Base):

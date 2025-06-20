@@ -39,15 +39,21 @@ from .marketplace import (
 )
 from .workspace import (
     Workspace,
-    WorkspaceMember,
     WorkspaceProject,
     ProjectCollaborator,
-    WorkspaceInvitation,
-    WorkspaceActivity,
     ProjectComment,
     ProjectVersion,
-    WorkspaceRole,
     PermissionLevel,
+    WorkspaceType,
+)
+from .workspace_member import WorkspaceMember, WorkspaceRole
+from .workspace_activity import WorkspaceActivity
+from .workspace_invitation import WorkspaceInvitation
+from .subscription import (
+    Plan,
+    UserSubscription,
+    PlanType,
+    SubscriptionStatus,
 )
 from .analytics import (
     AnalyticsEvent,
@@ -101,6 +107,11 @@ __all__ = [
     "ProjectVersion",
     "WorkspaceRole",
     "PermissionLevel",
+    "WorkspaceType",
+    "Plan",
+    "UserSubscription",
+    "PlanType",
+    "SubscriptionStatus",
     "AnalyticsEvent",
     "UserBehaviorMetric",
     "SystemPerformanceMetric",

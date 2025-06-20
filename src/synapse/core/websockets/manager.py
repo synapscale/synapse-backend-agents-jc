@@ -23,7 +23,7 @@ from synapse.models.message import Message
 from synapse.models.user import User
 from synapse.models.workflow import Workflow
 from synapse.models.workflow_execution import ExecutionStatus, WorkflowExecution
-from synapse.models.workspace import WorkspaceMember
+from synapse.models.workspace_member import WorkspaceMember
 
 logger = logging.getLogger(__name__)
 

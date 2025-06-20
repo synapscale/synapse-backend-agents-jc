@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from synapse.database import get_db
 from synapse.models.user import User
+from synapse.models.workspace_member import WorkspaceRole
 from synapse.services.workspace_service import WorkspaceService
 from synapse.schemas.workspace import (
     WorkspaceCreate,
@@ -50,21 +51,74 @@ router = APIRouter()
 
 # ==================== WORKSPACES ====================
 
-@router.post("/", response_model=WorkspaceResponse, summary="Criar workspace", tags=["workspaces"])
+@router.post("/", response_model=Dict[str, Any], summary="Criar workspace", tags=["workspaces"])
 async def create_workspace(
     workspace_data: WorkspaceCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> WorkspaceResponse:
-    """Cria um novo workspace colaborativo para o usuário autenticado"""
+) -> Dict[str, Any]:
+    """Cria um novo workspace para o usuário autenticado"""
     try:
         logger.info(f"Criando workspace '{workspace_data.name}' para usuário {current_user.id}")
         service = WorkspaceService(db)
-        workspace = service.create_workspace(workspace_data, current_user.id)
-        logger.info(f"Workspace '{workspace_data.name}' criado com sucesso - ID: {workspace['id']}")
-        return WorkspaceResponse(**workspace)
+        
+        # Verificar regras de criação
+        rules = service.get_workspace_creation_rules(current_user.id)
+        
+        # Determinar tipo do workspace baseado nas regras
+        if not rules["has_individual_workspace"]:
+            workspace_type = "INDIVIDUAL"
+        else:
+            workspace_type = "COLLABORATIVE"
+            if not rules["can_create_collaborative"]:
+                raise HTTPException(
+                    status_code=403, 
+                    detail="Seu plano não permite criar workspaces colaborativos"
+                )
+        
+        result = service.create_workspace(
+            user_id=current_user.id,
+            name=workspace_data.name,
+            description=workspace_data.description,
+            workspace_type=workspace_type
+        )
+        
+        if not result["success"]:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        logger.info(f"Workspace '{workspace_data.name}' criado com sucesso como {workspace_type}")
+        return {
+            "success": True,
+            "workspace": result["workspace"],
+            "type": workspace_type,
+            "message": f"Workspace criado como {workspace_type}"
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erro ao criar workspace para usuário {current_user.id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+
+@router.get("/creation-rules", summary="Obter regras de criação", tags=["workspaces"])
+async def get_workspace_creation_rules(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """Obtém as regras e limitações para criação de workspaces do usuário"""
+    try:
+        logger.info(f"Obtendo regras de criação de workspace para usuário {current_user.id}")
+        service = WorkspaceService(db)
+        rules = service.get_workspace_creation_rules(current_user.id)
+        limits = service.get_workspace_limits(current_user.id)
+        
+        return {
+            **rules,
+            "limits": limits,
+            "message": "Cada usuário pode ter apenas 1 workspace individual. Workspaces adicionais devem ser colaborativos."
+        }
+    except Exception as e:
+        logger.error(f"Erro ao obter regras de criação: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
@@ -84,7 +138,7 @@ async def get_user_workspaces(
     try:
         logger.info(f"Listando workspaces para usuário {current_user.id} - limit: {limit}, offset: {offset}")
         service = WorkspaceService(db)
-        result = service.get_user_workspaces(current_user.id, limit, offset)
+        result = service.get_user_workspaces(current_user.id)
         logger.info(f"Retornados {len(result)} workspaces para usuário {current_user.id}")
         return [WorkspaceResponse(**w) for w in result]
     except Exception as e:
@@ -130,168 +184,183 @@ async def search_workspaces(
 
 @router.get("/{workspace_id}", response_model=WorkspaceResponse, summary="Obter workspace", tags=["workspaces"])
 async def get_workspace(
-    workspace_id: int,
+    workspace_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> WorkspaceResponse:
-    """Obtém detalhes de um workspace específico do usuário autenticado"""
-    try:
-        logger.info(f"Obtendo workspace {workspace_id} para usuário {current_user.id}")
-        service = WorkspaceService(db)
-        workspace = service.get_workspace(workspace_id, current_user.id)
-        if not workspace:
-            logger.warning(f"Workspace {workspace_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Workspace não encontrado")
-        logger.info(f"Workspace {workspace_id} obtido com sucesso")
-        return WorkspaceResponse(**workspace)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao obter workspace {workspace_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    """Obtém detalhes de um workspace"""
+    service = WorkspaceService(db)
+    workspace = service.get_workspace(workspace_id)
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace não encontrado")
+    
+    # Verificar se usuário tem acesso
+    if not service._has_permission(workspace_id, str(current_user.id), "read"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    return workspace
 
 
 @router.put("/{workspace_id}", response_model=WorkspaceResponse, summary="Atualizar workspace", tags=["workspaces"])
 async def update_workspace(
-    workspace_id: int,
+    workspace_id: str,
     workspace_data: WorkspaceUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> WorkspaceResponse:
-    """Atualiza um workspace do usuário autenticado"""
+    """Atualiza um workspace"""
+    service = WorkspaceService(db)
+    
     try:
-        logger.info(f"Atualizando workspace {workspace_id} por usuário {current_user.id}")
-        service = WorkspaceService(db)
-        workspace = service.update_workspace(workspace_id, workspace_data, current_user.id)
+        workspace = service.update_workspace(workspace_id, workspace_data, str(current_user.id))
         if not workspace:
-            logger.warning(f"Workspace {workspace_id} não encontrado ou sem permissão")
             raise HTTPException(status_code=404, detail="Workspace não encontrado")
-        logger.info(f"Workspace {workspace_id} atualizado com sucesso")
         return workspace
-    except HTTPException:
-        raise
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
-        logger.error(f"Erro ao atualizar workspace {workspace_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.delete("/{workspace_id}", summary="Deletar workspace", tags=["workspaces"])
 async def delete_workspace(
-    workspace_id: int,
+    workspace_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Dict[str, str]:
-    """Remove um workspace do usuário autenticado"""
-    try:
-        logger.info(f"Deletando workspace {workspace_id} por usuário {current_user.id}")
-        service = WorkspaceService(db)
-        success = service.delete_workspace(workspace_id, current_user.id)
-        if not success:
-            logger.warning(f"Workspace {workspace_id} não encontrado ou sem permissão")
-            raise HTTPException(status_code=404, detail="Workspace não encontrado")
-        logger.info(f"Workspace {workspace_id} deletado com sucesso")
-        return {"message": "Workspace removido com sucesso"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao deletar workspace {workspace_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    """Deleta um workspace"""
+    service = WorkspaceService(db)
+    result = service.delete_workspace(workspace_id, str(current_user.id))
+    
+    if not result["success"]:
+        if "não encontrado" in result["error"]:
+            raise HTTPException(status_code=404, detail=result["error"])
+        elif "permissão" in result["error"]:
+            raise HTTPException(status_code=403, detail=result["error"])
+        else:
+            raise HTTPException(status_code=400, detail=result["error"])
+    
+    return {"message": result["message"]}
 
 
-@router.get("/{workspace_id}/stats", response_model=WorkspaceStats, summary="Estatísticas workspace", tags=["workspaces", "Statistics"])
+@router.get("/{workspace_id}/stats", response_model=dict)
 async def get_workspace_stats(
-    workspace_id: int,
+    workspace_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> WorkspaceStats:
+):
     """Obtém estatísticas do workspace"""
+    service = WorkspaceService(db)
+    
     try:
-        logger.info(f"Obtendo estatísticas do workspace {workspace_id} para usuário {current_user.id}")
-        service = WorkspaceService(db)
-        stats = service.get_workspace_stats(workspace_id, current_user.id)
-        if not stats:
-            logger.warning(f"Workspace {workspace_id} não encontrado para estatísticas")
-            raise HTTPException(status_code=404, detail="Workspace não encontrado")
-        logger.info(f"Estatísticas do workspace {workspace_id} obtidas com sucesso")
+        stats = service.get_workspace_stats(workspace_id, str(current_user.id))
         return stats
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao obter estatísticas do workspace {workspace_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
 
 # ==================== MEMBROS ====================
 
-@router.post("/{workspace_id}/invite", summary="Convidar membro", tags=["workspaces", "Members"])
-async def invite_member(
-    workspace_id: int,
-    invite_data: MemberInvite,
-    background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> Dict[str, str]:
-    """Convida um membro para o workspace"""
-    try:
-        logger.info(f"Convidando membro para workspace {workspace_id} por usuário {current_user.id}")
-        service = WorkspaceService(db)
-        success = service.invite_member(workspace_id, invite_data, current_user.id, background_tasks)
-        if not success:
-            logger.warning(f"Falha ao enviar convite para workspace {workspace_id}")
-            raise HTTPException(status_code=400, detail="Erro ao enviar convite")
-        logger.info(f"Convite enviado com sucesso para workspace {workspace_id}")
-        return {"message": "Convite enviado com sucesso"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao enviar convite para workspace {workspace_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{workspace_id}/members", response_model=List[MemberResponse], summary="Listar membros", tags=["workspaces", "Members"])
+@router.get("/{workspace_id}/members", response_model=List[MemberResponse])
 async def get_workspace_members(
-    workspace_id: int,
-    limit: int = Query(50, ge=1, le=200, description="Limite de resultados por página"),
-    offset: int = Query(0, ge=0, description="Offset para paginação"),
+    workspace_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> List[MemberResponse]:
+):
     """Lista membros do workspace"""
+    service = WorkspaceService(db)
+    
+    # Verificar permissão
+    if not service._has_permission(workspace_id, str(current_user.id), "read"):
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    members = service.get_workspace_members(workspace_id)
+    return members
+
+
+@router.post("/{workspace_id}/members/invite", response_model=dict)
+async def invite_member(
+    workspace_id: str,
+    invite_data: MemberInvite,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Convida um membro para o workspace"""
+    service = WorkspaceService(db)
+    
     try:
-        logger.info(f"Listando membros do workspace {workspace_id} para usuário {current_user.id}")
-        service = WorkspaceService(db)
-        members = service.get_workspace_members(workspace_id, current_user.id, limit, offset)
-        logger.info(f"Retornados {len(members)} membros do workspace {workspace_id}")
-        return members
-    except Exception as e:
-        logger.error(f"Erro ao listar membros do workspace {workspace_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        invitation = service.invite_member(workspace_id, invite_data, str(current_user.id))
+        return {"message": "Convite enviado com sucesso", "invitation_id": invitation.id}
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/{workspace_id}/members/{member_id}")
+async def remove_member(
+    workspace_id: str,
+    member_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Remove um membro do workspace"""
+    service = WorkspaceService(db)
+    
+    try:
+        success = service.remove_member(workspace_id, member_id, str(current_user.id))
+        if not success:
+            raise HTTPException(status_code=404, detail="Membro não encontrado")
+        return {"message": "Membro removido com sucesso"}
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.put("/{workspace_id}/members/{member_id}/role")
+async def update_member_role(
+    workspace_id: str,
+    member_id: int,
+    role_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Atualiza o role de um membro"""
+    service = WorkspaceService(db)
+    
+    try:
+        new_role = WorkspaceRole(role_data["role"])
+        member = service.update_member_role(workspace_id, member_id, new_role, str(current_user.id))
+        if not member:
+            raise HTTPException(status_code=404, detail="Membro não encontrado")
+        return {"message": "Role atualizado com sucesso"}
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ==================== PROJETOS ====================
 
-@router.post("/{workspace_id}/projects", response_model=ProjectResponse, summary="Criar projeto", tags=["workspaces", "Projects"])
+@router.post("/{workspace_id}/projects", response_model=dict)
 async def create_project(
-    workspace_id: int,
+    workspace_id: str,
     project_data: ProjectCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> ProjectResponse:
+):
     """Cria um novo projeto no workspace"""
+    service = WorkspaceService(db)
+    
     try:
-        logger.info(f"Criando projeto '{project_data.name}' no workspace {workspace_id}")
-        service = WorkspaceService(db)
-        project = service.create_project(workspace_id, project_data, current_user.id)
-        if not project:
-            logger.warning(f"Falha ao criar projeto no workspace {workspace_id}")
-            raise HTTPException(status_code=400, detail="Erro ao criar projeto")
-        logger.info(f"Projeto criado com sucesso - ID: {project.id}")
-        return project
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao criar projeto no workspace {workspace_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        project = service.create_project(workspace_id, project_data, str(current_user.id))
+        return {"message": "Projeto criado com sucesso", "project_id": str(project.id)}
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{workspace_id}/projects", response_model=List[ProjectResponse], summary="Listar projetos", tags=["workspaces", "Projects"])
@@ -543,24 +612,21 @@ async def restore_project_version(
 
 # ==================== ATIVIDADES ====================
 
-@router.get(
-    "/workspaces/{workspace_id}/activities", response_model=list[ActivityResponse]
-)
+@router.get("/{workspace_id}/activities", response_model=List[dict])
 async def get_workspace_activities(
-    workspace_id: int,
+    workspace_id: str,
     limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Obtém atividades do workspace"""
+    """Lista atividades do workspace"""
     service = WorkspaceService(db)
-    activities = service.get_workspace_activities(
-        workspace_id, current_user.id, limit, offset
-    )
-    if activities is None:
-        raise HTTPException(status_code=404, detail="Workspace não encontrado")
-    return activities
+    
+    try:
+        activities = service.get_workspace_activities(workspace_id, str(current_user.id), limit)
+        return [activity.to_dict() for activity in activities]
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
 
 @router.get("/projects/{project_id}/activities", response_model=list[ActivityResponse])

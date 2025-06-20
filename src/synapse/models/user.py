@@ -123,6 +123,11 @@ class User(Base):
         "AnalyticsDashboard", back_populates="user", cascade="all, delete-orphan", foreign_keys="AnalyticsDashboard.user_id"
     )
 
+    # Relacionamento de assinatura
+    subscription = relationship(
+        "UserSubscription", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+
     def verify_password(self, password: str) -> bool:
         """Verifica se a senha fornecida está correta"""
         return pwd_context.verify(password, self.hashed_password)
