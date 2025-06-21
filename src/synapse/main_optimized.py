@@ -378,7 +378,7 @@ async def detailed_health_check(db: Session = Depends(get_db)):
             text("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = :schema"),
             {"schema": settings.DATABASE_SCHEMA}
         )
-        table_count = result.scalar()
+        table_count = result.scalar() if result else 0
         
     except Exception as e:
         logger.error(f"Database detailed check failed: {e}")
