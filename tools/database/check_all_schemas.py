@@ -4,8 +4,17 @@ Script para verificar em quais schemas as tabelas foram criadas
 """
 
 import psycopg2
+import os
+from dotenv import load_dotenv
 
-DATABASE_URL = "postgresql://doadmin:AVNS_DDsc3wHcfGgbX_USTUt@db-banco-dados-automacoes-do-user-13851907-0.e.db.ondigitalocean.com:25060/defaultdb?sslmode=require"
+# SEGURANÇA: Carregar DATABASE_URL do .env
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    print("❌ ERRO: DATABASE_URL não encontrada no arquivo .env")
+    print("Configure a variável DATABASE_URL no seu arquivo .env")
+    exit(1)
 
 try:
     conn = psycopg2.connect(DATABASE_URL)
