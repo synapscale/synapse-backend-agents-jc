@@ -71,8 +71,55 @@ alembic upgrade head -c config/alembic.ini
 
 ---
 
+## Troubleshooting - Problemas Comuns
+
+### ❌ Erro: "column already exists" ou "DuplicateColumn"
+**Problema:** Uma migração está tentando criar uma coluna que já existe.
+**Solução:** Use lógica condicional PostgreSQL:
+
+```python
+def upgrade():
+    op.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema='schema_name' AND table_name='table_name' AND column_name='column_name'
+        ) THEN
+            ALTER TABLE schema_name.table_name 
+            ADD COLUMN column_name TYPE DEFAULT value;
+        END IF;
+    END$$;
+    """)
+```
+
+### ❌ Erro: "revision not found" ou "migration conflicts"
+**Problema:** Conflitos na árvore de migrações.
+**Solução:**
+1. Verificar histórico: `alembic history`
+2. Identificar branches: `alembic branches`
+3. Merge se necessário: `alembic merge -m "merge description" revision1 revision2`
+
+### ❌ Erro: "target database is not up to date"
+**Problema:** Banco local e produção estão em versões diferentes.
+**Solução:**
+1. Verificar versão atual: `alembic current`
+2. Aplicar migrações pendentes: `alembic upgrade head`
+3. Se necessário, fazer downgrade primeiro: `alembic downgrade revision`
+
+### ❌ Deploy falhando com erros de migração
+**Procedimento de emergência:**
+1. **Identificar migração problemática** nos logs
+2. **Fazer backup do banco** antes de qualquer ação
+3. **Corrigir migração** com lógica condicional (IF NOT EXISTS)
+4. **Testar localmente** antes de redeploy
+5. **Aplicar correção** via novo commit
+
+---
+
 ## Resumo
 - Use sempre revisions curtos.
 - Separe alterações de Enum e uso do valor novo.
 - Especifique schema quando necessário.
+- **Use lógica condicional para migrações robustas.**
 - Siga a estrutura e comandos deste guia para migrações seguras e reprodutíveis.

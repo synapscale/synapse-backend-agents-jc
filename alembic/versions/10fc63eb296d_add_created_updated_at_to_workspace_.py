@@ -21,24 +21,54 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Adicionar colunas created_at e updated_at à tabela workspace_members
-    op.add_column('workspace_members', 
-                  sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, 
-                           server_default=sa.text('CURRENT_TIMESTAMP')), schema='synapscale_db')
-    op.add_column('workspace_members', 
-                  sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False, 
-                           server_default=sa.text('CURRENT_TIMESTAMP')), schema='synapscale_db')
+    # Adicionar colunas created_at e updated_at à tabela workspace_members apenas se não existirem
+    op.execute("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema='synapscale_db' AND table_name='workspace_members' AND column_name='created_at'
+        ) THEN
+            ALTER TABLE synapscale_db.workspace_members 
+            ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL;
+        END IF;
+        
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema='synapscale_db' AND table_name='workspace_members' AND column_name='updated_at'
+        ) THEN
+            ALTER TABLE synapscale_db.workspace_members 
+            ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL;
+        END IF;
+    END$$;
+    """)
     
     # Atualizar created_at para usar joined_at quando disponível
     op.execute("""
         UPDATE synapscale_db.workspace_members 
         SET created_at = joined_at 
-        WHERE joined_at IS NOT NULL
+        WHERE joined_at IS NOT NULL AND created_at != joined_at
     """)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    # Remover as colunas adicionadas
-    op.drop_column('workspace_members', 'updated_at', schema='synapscale_db')
-    op.drop_column('workspace_members', 'created_at', schema='synapscale_db')
+    # Remover as colunas adicionadas apenas se existirem
+    op.execute("""
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema='synapscale_db' AND table_name='workspace_members' AND column_name='updated_at'
+        ) THEN
+            ALTER TABLE synapscale_db.workspace_members DROP COLUMN updated_at;
+        END IF;
+        
+        IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema='synapscale_db' AND table_name='workspace_members' AND column_name='created_at'
+        ) THEN
+            ALTER TABLE synapscale_db.workspace_members DROP COLUMN created_at;
+        END IF;
+    END$$;
+    """)
