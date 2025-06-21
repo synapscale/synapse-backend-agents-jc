@@ -93,6 +93,10 @@ def upgrade() -> None:
     op.drop_index(op.f('ix_public_workspace_members_user_id'), table_name='workspace_members', schema='synapscale_db')
     op.drop_index(op.f('ix_public_workspace_members_workspace_id'), table_name='workspace_members', schema='synapscale_db')
     op.drop_table('workspace_members', schema='synapscale_db')
+    # Drop dependent views before dropping the table
+    op.execute('DROP VIEW IF EXISTS banco_de_dados.vw_churn_rate_30_dias CASCADE')
+    op.execute('DROP VIEW IF EXISTS banco_de_dados.vw_assinaturas_novas_vs_canceladas CASCADE')
+    op.execute('DROP VIEW IF EXISTS banco_de_dados.vw_tentativas_com_retry_agendado CASCADE')
     op.drop_index(op.f('idx_psrh_platform_subscription'), table_name='platform_subscription__recurrency_history', schema='banco_de_dados')
     op.drop_index(op.f('idx_psrh_transaction'), table_name='platform_subscription__recurrency_history', schema='banco_de_dados')
     op.drop_table('platform_subscription__recurrency_history', schema='banco_de_dados')
