@@ -296,11 +296,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 # Include API routers
 app.include_router(api_router, prefix=getattr(settings, 'API_V1_STR', None) or "/api/v1")
 
-# Static files (apenas em debug)
-if getattr(settings, 'DEBUG', None):
-    static_dir = _PathHelper(__file__).resolve().parent / "static"
-    static_dir.mkdir(exist_ok=True)
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+# Static files - sempre disponível para CSS customizado
+static_dir = _PathHelper(__file__).resolve().parent / "static"
+static_dir.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Custom OpenAPI
 def custom_openapi():
@@ -339,10 +338,12 @@ app.openapi = custom_openapi
 # Endpoints customizados
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
+    """Documentação Swagger customizada com CSS"""
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
         title=app.title + " - API Documentation",
         swagger_ui_parameters=app.swagger_ui_parameters,
+        swagger_css_url="/static/unified-docs-styles.css?v=10.0",  # CSS customizado
     )
 
 # Health checks
