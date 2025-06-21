@@ -151,7 +151,7 @@ openapi_tags = [
 
 # Criar aplicação FastAPI
 app = FastAPI(
-    title=settings.PROJECT_NAME,
+    title=getattr(settings, 'PROJECT_NAME', None) or "SynapScale Backend API",
     description='''
     🚀 **SynapScale Backend API** - Plataforma de Automação com IA
     
@@ -174,7 +174,7 @@ app = FastAPI(
     * Headers de segurança
     * Validação de dados completa
     ''',
-    version=settings.VERSION,
+    version=getattr(settings, 'VERSION', None) or "2.0.0",
     openapi_tags=openapi_tags,
     docs_url=None,  # Desabilitar docs padrão para usar customizado
     redoc_url="/redoc",
