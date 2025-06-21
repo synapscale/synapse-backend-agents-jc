@@ -100,6 +100,8 @@ def upgrade() -> None:
     op.drop_index(op.f('idx_psrh_platform_subscription'), table_name='platform_subscription__recurrency_history', schema='banco_de_dados')
     op.drop_index(op.f('idx_psrh_transaction'), table_name='platform_subscription__recurrency_history', schema='banco_de_dados')
     op.drop_table('platform_subscription__recurrency_history', schema='banco_de_dados')
+    # Drop dependent view before dropping the table
+    op.execute('DROP VIEW IF EXISTS banco_de_dados.vw_vendas_com_problemas CASCADE')
     op.drop_index(op.f('idx_pts_platform_sale'), table_name='platform_transaction_status', schema='banco_de_dados')
     op.drop_index(op.f('idx_pts_platform_status'), table_name='platform_transaction_status', schema='banco_de_dados')
     op.drop_index(op.f('idx_pts_platform_subscription'), table_name='platform_transaction_status', schema='banco_de_dados')
