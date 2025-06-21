@@ -60,6 +60,8 @@ def upgrade() -> None:
     op.drop_table('business_metrics', schema='synapscale_db')
     # Drop dependent tables first to avoid foreign key constraint errors
     # platform_commission_participants will be dropped later after its dependencies
+    # Drop dependent view before dropping the table
+    op.execute('DROP VIEW IF EXISTS banco_de_dados.vw_cupons_mais_utilizados CASCADE')
     op.drop_index(op.f('idx_ptfeeh_coupon_name'), table_name='platform_transaction_fee_history', schema='banco_de_dados')
     op.drop_index(op.f('idx_ptfeeh_fee_currency'), table_name='platform_transaction_fee_history', schema='banco_de_dados')
     op.drop_index(op.f('idx_ptfeeh_tax_currency'), table_name='platform_transaction_fee_history', schema='banco_de_dados')
