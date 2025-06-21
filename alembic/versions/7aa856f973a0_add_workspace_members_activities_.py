@@ -156,9 +156,7 @@ def upgrade() -> None:
     op.drop_index(op.f('ix_public_workflow_templates_published_at'), table_name='workflow_templates', schema='synapscale_db')
     op.drop_index(op.f('ix_public_workflow_templates_status'), table_name='workflow_templates', schema='synapscale_db')
     op.drop_table('workflow_templates', schema='synapscale_db')
-    op.drop_index(op.f('idx_plans_platform_origin'), table_name='plans', schema='joaocastanheira_bancodedados')
-    op.drop_index(op.f('idx_plans_product_id'), table_name='plans', schema='joaocastanheira_bancodedados')
-    op.drop_table('plans', schema='joaocastanheira_bancodedados')
+    # plans table will be dropped later after subscriptions (dependency issue)
     op.drop_index(op.f('ix_public_user_behavior_metrics_date'), table_name='user_behavior_metrics', schema='synapscale_db')
     op.drop_index(op.f('ix_public_user_behavior_metrics_user_id'), table_name='user_behavior_metrics', schema='synapscale_db')
     op.drop_table('user_behavior_metrics', schema='synapscale_db')
@@ -332,9 +330,7 @@ def upgrade() -> None:
     op.drop_index(op.f('idx_tmp_produtos_codigo'), table_name='tmp_consolidado_produtos', schema='banco_de_dados_jc')
     op.drop_index(op.f('idx_tmp_produtos_origem'), table_name='tmp_consolidado_produtos', schema='banco_de_dados_jc')
     op.drop_table('tmp_consolidado_produtos', schema='banco_de_dados_jc')
-    op.drop_index(op.f('idx_psca_city'), table_name='platform_sale_client_address', schema='banco_de_dados')
-    op.drop_index(op.f('idx_psca_zip_code'), table_name='platform_sale_client_address', schema='banco_de_dados')
-    op.drop_table('platform_sale_client_address', schema='banco_de_dados')
+    # platform_sale_client_address will be dropped later after platform_sale_client (dependency issue)
     op.drop_index(op.f('idx_ptpay_payment_history'), table_name='platform_transaction_payment', schema='banco_de_dados')
     op.drop_index(op.f('idx_ptpay_platform_sale'), table_name='platform_transaction_payment', schema='banco_de_dados')
     op.drop_index(op.f('idx_ptpay_platform_subscription'), table_name='platform_transaction_payment', schema='banco_de_dados')
@@ -445,7 +441,7 @@ def upgrade() -> None:
     op.drop_index(op.f('ix_public_component_ratings_user_id'), table_name='component_ratings', schema='synapscale_db')
     op.drop_table('component_ratings', schema='synapscale_db')
     op.drop_table('analytics_exports', schema='synapscale_db')
-    op.drop_table('transaction_statuses', schema='joaocastanheira_bancodedados')
+    # transaction_statuses will be dropped later after transactions (dependency issue)
     op.drop_index(op.f('idx_ptpph_card_flag'), table_name='platform_transaction_payment_history', schema='banco_de_dados')
     op.drop_index(op.f('idx_ptpph_currency'), table_name='platform_transaction_payment_history', schema='banco_de_dados')
     op.drop_index(op.f('idx_ptpph_payment_type'), table_name='platform_transaction_payment_history', schema='banco_de_dados')
@@ -454,6 +450,16 @@ def upgrade() -> None:
     op.drop_index(op.f('idx_psc_profile'), table_name='platform_sale_client', schema='banco_de_dados')
     op.drop_index(op.f('uq_psc_email'), table_name='platform_sale_client', schema='banco_de_dados')
     op.drop_table('platform_sale_client', schema='banco_de_dados')
+    # Now safe to drop platform_sale_client_address after platform_sale_client is gone
+    op.drop_index(op.f('idx_psca_city'), table_name='platform_sale_client_address', schema='banco_de_dados')
+    op.drop_index(op.f('idx_psca_zip_code'), table_name='platform_sale_client_address', schema='banco_de_dados')
+    op.drop_table('platform_sale_client_address', schema='banco_de_dados')
+    
+    # Now safe to drop parent tables after all children tables are gone
+    op.drop_table('transaction_statuses', schema='joaocastanheira_bancodedados')
+    op.drop_index(op.f('idx_plans_platform_origin'), table_name='plans', schema='joaocastanheira_bancodedados')
+    op.drop_index(op.f('idx_plans_product_id'), table_name='plans', schema='joaocastanheira_bancodedados')
+    op.drop_table('plans', schema='joaocastanheira_bancodedados')
     # ### end Alembic commands ###
 
 
