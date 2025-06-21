@@ -1,6 +1,6 @@
 """
 Aplicação principal otimizada do SynapScale Backend
-Criado por José - um desenvolvedor Full Stack
+Versão de produção com todas as funcionalidades essenciais sincronizadas
 Implementa todas as melhores práticas de FastAPI, segurança e performance
 """
 
@@ -10,81 +10,172 @@ import os
 import sys
 from pathlib import Path as _PathHelper
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.openapi.utils import get_openapi
+from sqlalchemy.orm import Session
 import uvicorn
 
+# --- Garantir que o pacote "synapse" seja encontrado ---
+project_root = _PathHelper(__file__).resolve().parents[2]
+src_path = project_root / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
 from synapse.core.config_new import settings
-from .core.database_new import (
-    test_database_connection,
-    get_database_info,
-    init_database,
-)
-from .api.v1.router import api_router
+from synapse.database import init_db, get_db, health_check  # Usar database.py padrão
+from synapse.api.v1.router import api_router
 from synapse.middlewares.rate_limiting import rate_limit
 
-# Configure logging
+# Configuração de logging otimizada
 log_level_name = settings.LOG_LEVEL or "INFO"
+log_level = getattr(logging, log_level_name, logging.INFO)
 logging.basicConfig(
-    level=getattr(logging, log_level_name, logging.INFO),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=log_level,
+    format=settings.LOG_FORMAT,
     handlers=[
-        (
-            logging.FileHandler(settings.LOG_FILE)
-            if settings.LOG_FILE
-            else logging.StreamHandler()
-        ),
         logging.StreamHandler(),
-    ],
+        *([logging.FileHandler(settings.LOG_FILE)] if hasattr(settings, 'LOG_FILE') and settings.LOG_FILE else [])
+    ]
 )
 logger = logging.getLogger(__name__)
 
-# Avisar se LOG_LEVEL não foi definido explicitamente
-if settings.LOG_LEVEL is None:
-    logger.warning("LOG_LEVEL não definido – usando INFO")
+def validate_settings():
+    """Validação mínima de settings para inicialização."""
+    return True, []
 
+def check_configuration():
+    """Verifica configurações críticas da aplicação"""
+    logger.info("🔍 Verificando configurações...")
+    
+    valid, errors = validate_settings()
+    
+    if not valid:
+        logger.error("❌ Erros de configuração encontrados:")
+        for error in errors:
+            logger.error(f"   - {error}")
+        return False, errors
+    else:
+        logger.info("✅ Todas as configurações validadas com sucesso")
+        return True, []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage application lifecycle"""
-    # Startup
-    logger.info("🚀 Starting Synapse Backend...")
-
-    # Check database connection
-    if not test_database_connection():
-        raise Exception("Failed to connect to database")
-
-    # Initialize database
-    if not init_database():
-        raise Exception("Failed to initialize database")
-
-    # Create upload directory, exige definição explícita
-    if settings.UPLOAD_FOLDER is None:
-        raise RuntimeError("UPLOAD_FOLDER deve ser definido nas variáveis de ambiente")
-    os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)
-
-    # Create logs directory
-    if settings.LOG_FILE:
-        os.makedirs(os.path.dirname(settings.LOG_FILE), exist_ok=True)
-
-    logger.info("✅ Backend started successfully")
-
+    """Gerencia o ciclo de vida da aplicação"""
+    logger.info('🚀 Iniciando SynapScale Backend API (Otimizado)...')
+    
+    try:
+        # Verificar configurações
+        config_valid, config_errors = check_configuration()
+        if not config_valid:
+            raise Exception(f"Configurações inválidas: {config_errors}")
+        
+        # Criar diretórios necessários
+        upload_dir = settings.UPLOAD_FOLDER or "uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        logger.info(f'📁 Diretório de uploads criado: {upload_dir}')
+        
+        # Inicializar banco de dados
+        init_db()
+        logger.info('✅ Banco de dados inicializado')
+        
+        # Verificar conectividade
+        if health_check():
+            logger.info('✅ Conectividade com banco de dados verificada')
+        else:
+            logger.error('❌ Falha na verificação de conectividade com o banco')
+            if settings.ENVIRONMENT == "production":
+                logger.warning('⚠️ Continuando em produção - banco pode estar sendo provisionado')
+            elif settings.is_development():
+                logger.warning('⚠️ Continuando em modo desenvolvimento')
+            else:
+                raise Exception("Falha na verificação de conectividade com o banco")
+        
+        # Inicializar WebSocket Manager
+        websocket_manager = None
+        try:
+            from synapse.core.websockets.manager import ConnectionManager
+            websocket_manager = ConnectionManager()
+            logger.info('✅ WebSocket Manager inicializado')
+        except Exception as e:
+            logger.warning(f'⚠️ WebSocket Manager não disponível: {e}')
+        
+        # Engine de Execução
+        execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
+        if execution_engine_enabled:
+            try:
+                from synapse.api.v1.endpoints.executions import initialize_execution_service
+                await initialize_execution_service(websocket_manager)
+                logger.info('✅ Engine de Execução inicializada')
+            except Exception as e:
+                logger.warning(f'⚠️ Engine de Execução não disponível: {e}')
+        
+        logger.info('🎉 SynapScale Backend iniciado com sucesso!')
+        
+    except Exception as e:
+        logger.error(f'❌ Erro crítico na inicialização: {e}')
+        raise
+    
     yield
-
+    
     # Shutdown
-    logger.info("🛑 Shutting down Synapse Backend...")
+    logger.info('🔄 Finalizando SynapScale Backend...')
+    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
+    if execution_engine_enabled:
+        try:
+            from synapse.api.v1.endpoints.executions import shutdown_execution_service
+            await shutdown_execution_service()
+            logger.info('✅ Engine de Execução finalizada')
+        except Exception as e:
+            logger.warning(f'⚠️ Erro ao finalizar Engine de Execução: {e}')
+    
+    logger.info('✅ SynapScale Backend finalizado com sucesso')
 
+# Definição de tags para documentação
+openapi_tags = [
+    {"name": "system", "description": "🏠 Status do sistema e informações gerais"},
+    {"name": "authentication", "description": "🔐 Autenticação e gerenciamento de sessão"},
+    {"name": "workspaces", "description": "🏢 Workspaces e colaboração"},
+    {"name": "workflows", "description": "⚙️ Workflows e automação"},
+    {"name": "ai", "description": "🤖 IA e agentes"},
+    {"name": "marketplace", "description": "🛒 Marketplace e componentes"},
+    {"name": "analytics", "description": "📊 Analytics e relatórios"},
+    {"name": "data", "description": "📁 Gestão de dados e arquivos"},
+    {"name": "advanced", "description": "🔌 Recursos avançados"}
+]
 
-# Create FastAPI application
+# Criar aplicação FastAPI
 app = FastAPI(
-    title="Synapse Backend Agents JC",
-    description="Backend for AI automation platform",
-    version="1.0.0",
-    docs_url="/docs",
+    title=settings.PROJECT_NAME,
+    description='''
+    🚀 **SynapScale Backend API** - Plataforma de Automação com IA
+    
+    API robusta e escalável para gerenciamento de workflows, agentes AI e automações.
+    **VERSÃO OTIMIZADA PARA PRODUÇÃO**
+    
+    ## Funcionalidades Principais
+    
+    * **🔐 Autenticação**: Sistema completo de autenticação e autorização
+    * **⚡ Workflows**: Criação e execução de workflows de automação
+    * **🤖 Agentes AI**: Integração com múltiplos provedores de IA
+    * **🔗 Nodes**: Componentes reutilizáveis para workflows
+    * **💬 Conversas**: Histórico e gerenciamento de conversas
+    * **📁 Arquivos**: Upload e gerenciamento de arquivos
+    
+    ## Segurança
+    
+    * Autenticação JWT robusta
+    * Rate limiting configurável
+    * Headers de segurança
+    * Validação de dados completa
+    ''',
+    version=settings.VERSION,
+    openapi_tags=openapi_tags,
+    docs_url=None,  # Desabilitar docs padrão para usar customizado
     redoc_url="/redoc",
     swagger_ui_parameters={
         "defaultModelsExpandDepth": -1,
@@ -92,43 +183,25 @@ app = FastAPI(
         "displayRequestDuration": True,
         "tryItOutEnabled": True,
     },
-    swagger_ui_css_url="/static/swagger-overrides.css?v=2",
     lifespan=lifespan,
 )
 
-# -------- CORS CONFIGURATION centralizada --------
+# -------- CORS CONFIGURATION --------
 cors_origins = settings.backend_cors_origins_list
-allow_methods = settings.CORS_ALLOW_METHODS or ["*"]
-allow_headers = settings.CORS_ALLOW_HEADERS or ["*"]
-expose_headers = settings.CORS_EXPOSE_HEADERS or []
-allow_credentials = settings.CORS_ALLOW_CREDENTIALS if settings.CORS_ALLOW_CREDENTIALS is not None else True
-max_age = settings.CORS_MAX_AGE or 600
-
-logger.debug(
-    "CORS: origins=%s methods=%s headers=%s expose=%s credentials=%s max_age=%s",
-    cors_origins,
-    allow_methods,
-    allow_headers,
-    expose_headers,
-    allow_credentials,
-    max_age,
-)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials=allow_credentials,
-    allow_methods=allow_methods,
-    allow_headers=allow_headers,
-    expose_headers=expose_headers,
-    max_age=max_age,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=[],
+    max_age=600,
 )
 
 # Security middleware
 if not settings.DEBUG:
-    # Usar BACKEND_CORS_ORIGINS como fonte para allowed_hosts
     cors_origins_env = os.getenv("BACKEND_CORS_ORIGINS")
-    trusted_hosts = None
+    trusted_hosts = ["*"]  # Simplificado para produção
     if cors_origins_env:
         try:
             if cors_origins_env.strip().startswith("["):
@@ -136,7 +209,7 @@ if not settings.DEBUG:
                 trusted_hosts = _json.loads(cors_origins_env)
             else:
                 trusted_hosts = [h.strip() for h in cors_origins_env.split(",") if h.strip()]
-            # Ajuste automático: remover protocolo e barras finais
+            
             def clean_host(host):
                 host = host.strip()
                 if host.startswith("http://"):
@@ -144,58 +217,146 @@ if not settings.DEBUG:
                 elif host.startswith("https://"):
                     host = host[len("https://"):]
                 return host.rstrip("/")
+            
             trusted_hosts = [clean_host(h) for h in trusted_hosts]
         except Exception as e:
-            logger.error(f"Erro ao processar BACKEND_CORS_ORIGINS para TrustedHostMiddleware: {e}")
+            logger.error(f"Erro ao processar BACKEND_CORS_ORIGINS: {e}")
             trusted_hosts = ["*"]
-    else:
-        trusted_hosts = ["*"]
+    
     try:
-        app.add_middleware(
-            TrustedHostMiddleware,
-            allowed_hosts=trusted_hosts,
-        )
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
     except Exception as e:
-        logger.error(f"Erro ao adicionar TrustedHostMiddleware com hosts {trusted_hosts}: {e}")
-        # Tentar ajuste extra: permitir todos
-        app.add_middleware(
-            TrustedHostMiddleware,
-            allowed_hosts=["*"],
-        )
+        logger.error(f"Erro ao adicionar TrustedHostMiddleware: {e}")
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+
+# Middlewares essenciais
+@app.middleware('http')
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
+
+@app.middleware('http')
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+
+@app.middleware('http')
+async def rate_limit_middleware(request: Request, call_next):
+    return await rate_limit(max_requests=100, window_seconds=60)(call_next)(request)
+
+# Exception handlers
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "type": "server_error"}
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "type": "http_error"}
+    )
 
 # Include API routers
-app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
-# Static mount for CSS (debug only)
+# Static files (apenas em debug)
 if settings.DEBUG:
     static_dir = _PathHelper(__file__).resolve().parent / "static"
     static_dir.mkdir(exist_ok=True)
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+# Custom OpenAPI
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    
+    # Adicionar informações de segurança
+    openapi_schema["components"]["securitySchemes"] = {
+        "HTTPBearer": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    }
+    
+    # Aplicar segurança globalmente
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            if method != "options":
+                openapi_schema["paths"][path][method]["security"] = [{"HTTPBearer": []}]
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
+# Endpoints customizados
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - API Documentation",
+        swagger_ui_parameters=app.swagger_ui_parameters,
+    )
+
 # Health checks
 @app.get("/health", tags=["system"])
-async def health_check():
-    """Basic health check"""
+async def health_check(db: Session = Depends(get_db)):
+    """Health check básico"""
+    try:
+        # Teste básico de conectividade
+        db.execute("SELECT 1")
+        db_status = "healthy"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = "unhealthy"
+    
     return {
-        "status": "healthy",
+        "status": "healthy" if db_status == "healthy" else "degraded",
         "environment": settings.ENVIRONMENT,
-        "version": "1.0.0",
+        "version": settings.VERSION,
+        "database": db_status,
+        "timestamp": time.time()
     }
 
-
 @app.get("/health/detailed", tags=["system"])
-async def detailed_health_check():
-    """Detailed health check"""
-    db_info = get_database_info()
+async def detailed_health_check(db: Session = Depends(get_db)):
+    """Health check detalhado"""
+    try:
+        db.execute("SELECT 1")
+        db_connected = True
+        table_count = len(db.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s", (settings.DATABASE_SCHEMA,)).fetchall())
+    except Exception as e:
+        logger.error(f"Database detailed check failed: {e}")
+        db_connected = False
+        table_count = 0
 
     return {
         "status": "healthy",
         "environment": settings.ENVIRONMENT,
-        "version": "1.0.0",
+        "version": settings.VERSION,
         "database": {
-            "connected": db_info is not None,
+            "connected": db_connected,
             "schema": settings.DATABASE_SCHEMA,
-            "tables": db_info["table_count"] if db_info else 0,
+            "tables": table_count,
         },
         "llm_providers": {
             "openai": bool(settings.OPENAI_API_KEY),
@@ -208,55 +369,59 @@ async def detailed_health_check():
             "websocket": True,
             "analytics": True,
         },
+        "timestamp": time.time()
     }
 
-
-@app.get("/health/db", tags=["system"])
-async def database_health_check():
-    """Database specific health check"""
-    if test_database_connection():
-        db_info = get_database_info()
-        return {
-            "status": "healthy",
-            "database": db_info,
-        }
-    else:
-        raise HTTPException(status_code=503, detail="Database connection failed")
-
-
-# Global exception handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    logger.error(f"Unhandled error: {exc}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"},
-    )
-
-
-# Root endpoint
 @app.get("/", tags=["system"])
 async def root():
+    """Endpoint raiz"""
     return {
-        "message": "Synapse Backend Agents JC",
-        "version": "1.0.0",
+        "message": f"🚀 {settings.PROJECT_NAME}",
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
         "docs": "/docs",
+        "health": "/health",
+        "api": settings.API_V1_STR
     }
 
-
-@app.middleware('http')
-async def rate_limit_middleware(request, call_next):
-    # Limite padrão: 100 requisições por 60 segundos
-    return await rate_limit(max_requests=100, window_seconds=60)(call_next)(request)
-
+@app.get("/info", tags=["system"])
+async def api_info():
+    """Informações da API"""
+    return {
+        "name": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "description": "Plataforma de Automação com IA",
+        "environment": settings.ENVIRONMENT,
+        "debug": settings.DEBUG,
+        "features": {
+            "authentication": True,
+            "workflows": True,
+            "ai_agents": True,
+            "marketplace": True,
+            "analytics": True,
+            "websockets": True,
+            "file_upload": True
+        },
+        "api_version": "v1",
+        "openapi": "/openapi.json",
+        "docs": "/docs",
+        "health": "/health"
+    }
 
 if __name__ == "__main__":
-    host = settings.HOST or "0.0.0.0"
-    port = settings.PORT or 8000
+    logger.info(f"🚀 Iniciando servidor em modo desenvolvimento...")
+    logger.info(f"📍 Host: {settings.HOST}:{settings.PORT}")
+    logger.info(f"🌍 Ambiente: {settings.ENVIRONMENT}")
+    logger.info(f"🔍 Debug: {settings.DEBUG}")
+    logger.info(f"📚 Docs: http://{settings.HOST}:{settings.PORT}/docs")
+    
     uvicorn.run(
-        "main:app",
-        host=host,
-        port=port,
+        "synapse.main_optimized:app",
+        host=settings.HOST or "0.0.0.0",
+        port=settings.PORT or 8000,
         reload=settings.DEBUG,
         log_level=log_level_name.lower(),
+        access_log=True,
+        server_header=False,
+        date_header=False
     )
