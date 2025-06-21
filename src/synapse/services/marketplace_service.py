@@ -21,7 +21,7 @@ class MarketplaceService:
         # Usar a sessão do SQLAlchemy
         self.db = db
         # Schema deve ser sempre fornecido via variável de ambiente
-        self.schema = os.getenv("DATABASE_SCHEMA")
+        self.schema = os.getenv("DATABASE_SCHEMA", "synapscale_db")
     
     def search_components(self, search_params: Dict[str, Any]) -> Dict[str, Any]:
         """Busca componentes no marketplace usando SQLAlchemy"""
