@@ -164,7 +164,7 @@ api_router.include_router(
 
 
 # Health check endpoint
-@api_router.get("/health", tags=["health"])
+@api_router.get("/health", tags=["system"])
 async def health_check():
     """
     Endpoint de verificação de saúde da API

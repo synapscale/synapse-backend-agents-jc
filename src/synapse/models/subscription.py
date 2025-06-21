@@ -28,6 +28,7 @@ import uuid
 class PlanType(PyEnum):
     """Tipos de plano"""
     FREE = "free"
+    BASIC = "basic"
     PRO = "pro"
     ENTERPRISE = "enterprise"
 
@@ -51,7 +52,7 @@ class Plan(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False)
     slug = Column(String(50), unique=True, nullable=False)
-    type = Column(Enum(PlanType), nullable=False)
+    type = Column(Enum(PlanType, values_callable=lambda x: [e.value for e in x]), nullable=False)
 
     # Informações básicas
     description = Column(Text)
@@ -130,7 +131,7 @@ class UserSubscription(Base):
     plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=False)
 
     # Status da assinatura
-    status = Column(Enum(SubscriptionStatus), nullable=False, default=SubscriptionStatus.ACTIVE)
+    status = Column(Enum(SubscriptionStatus, values_callable=lambda x: [e.value for e in x]), nullable=False, default=SubscriptionStatus.ACTIVE)
     
     # Datas importantes
     started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

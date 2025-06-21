@@ -672,7 +672,7 @@ async def _get_user_executions(user_id: str, db: Session) -> Dict[str, Any]:
 @router.get(
     "/status",
     summary="Status do WebSocket",
-    tags=["websockets"],
+    tags=["advanced"],
 )
 async def get_websocket_global_stats(
     current_user: User = Depends(get_current_user),
@@ -714,7 +714,7 @@ async def get_websocket_global_stats(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/stats/execution/{execution_id}", summary="Estatísticas WebSocket de execução", tags=["websockets", "Statistics"])
+@router.get("/stats/execution/{execution_id}", summary="Estatísticas WebSocket de execução", tags=["advanced", "workflows"])
 async def get_websocket_execution_stats(
     execution_id: str,
     current_user: User = Depends(get_current_user),

@@ -64,7 +64,7 @@ class ModelEnum(str, Enum):
     deepseek_coder = "deepseek-coder"
 
 
-@router.post("/generate", response_model=LLMResponse, tags=["llm"])
+@router.post("/generate", response_model=LLMResponse, tags=["ai"])
 async def generate_text(
     request: GenerateRequest,
     current_user: User = Depends(get_current_user),
@@ -97,7 +97,7 @@ async def generate_text(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/chat", response_model=LLMResponse, tags=["llm"])
+@router.post("/chat", response_model=LLMResponse, tags=["ai"])
 async def chat_completion(
     request: ChatRequest,
     current_user: User = Depends(get_current_user),
@@ -130,7 +130,13 @@ async def chat_completion(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/count-tokens", response_model=CountTokensResponse, summary="Contar tokens", tags=["llm", "Tokens"])
+@router.post("/count-tokens", response_model=CountTokensResponse, summary="Contar tokens de texto", tags=["ai"])
+@router.get("/test-tags", summary="Teste de tags", tags=["ai"])
+async def test_tags():
+    """Endpoint de teste para verificar tags"""
+    return {"message": "teste"}
+
+@router.post("/count-tokens-original", response_model=CountTokensResponse, summary="Contar tokens de texto", tags=["ai"])
 async def count_tokens(
     text: str = Query(
         ...,
@@ -199,7 +205,7 @@ async def count_tokens(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/models", response_model=ListModelsResponse, summary="Listar modelos", tags=["llm"])
+@router.get("/models", response_model=ListModelsResponse, summary="Listar modelos", tags=["ai"])
 async def list_models(
     provider: Optional[ProviderEnum] = Query(
         None,
@@ -238,7 +244,7 @@ async def list_models(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/providers", response_model=ListProvidersResponse, summary="Listar provedores", tags=["llm", "Providers"])
+@router.get("/providers", response_model=ListProvidersResponse, summary="Listar provedores", tags=["ai"])
 async def list_providers() -> ListProvidersResponse:
     """
     Lista todos os provedores de LLM disponíveis na plataforma.
@@ -261,7 +267,7 @@ async def list_providers() -> ListProvidersResponse:
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{provider}/generate", response_model=GenerateTextResponse, summary="Gerar texto com provedor específico", tags=["llm"])
+@router.post("/{provider}/generate", response_model=GenerateTextResponse, summary="Gerar texto com provedor específico", tags=["ai"])
 async def generate_text_with_provider(
     provider: ProviderEnum = Path(
         ...,
@@ -379,7 +385,7 @@ async def generate_text_with_provider(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{provider}/count-tokens", response_model=CountTokensResponse, summary="Contar tokens com provedor específico", tags=["llm", "Tokens"])
+@router.post("/{provider}/count-tokens", response_model=CountTokensResponse, summary="Contar tokens com provedor específico", tags=["ai"])
 async def count_tokens_with_provider(
     provider: ProviderEnum = Path(
         ...,
@@ -443,7 +449,7 @@ async def count_tokens_with_provider(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{provider}/models", response_model=ListModelsResponse, summary="Listar modelos de provedor específico", tags=["llm"])
+@router.get("/{provider}/models", response_model=ListModelsResponse, summary="Listar modelos de provedor específico", tags=["ai"])
 async def list_models_for_provider(
     provider: ProviderEnum = Path(
         ...,

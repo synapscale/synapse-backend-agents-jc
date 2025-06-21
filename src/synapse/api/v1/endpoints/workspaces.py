@@ -244,7 +244,7 @@ async def delete_workspace(
     return {"message": result["message"]}
 
 
-@router.get("/{workspace_id}/stats", response_model=dict)
+@router.get("/{workspace_id}/stats", response_model=dict, summary="Obter estatísticas do workspace", tags=["workspaces"])
 async def get_workspace_stats(
     workspace_id: str,
     current_user: User = Depends(get_current_user),
@@ -262,7 +262,8 @@ async def get_workspace_stats(
 
 # ==================== MEMBROS ====================
 
-@router.get("/{workspace_id}/members", response_model=List[MemberResponse])
+
+@router.get("/{workspace_id}/members", response_model=List[MemberResponse], summary="Listar membros do workspace", tags=["workspaces"])
 async def get_workspace_members(
     workspace_id: str,
     current_user: User = Depends(get_current_user),
@@ -279,7 +280,7 @@ async def get_workspace_members(
     return members
 
 
-@router.post("/{workspace_id}/members/invite", response_model=dict)
+@router.post("/{workspace_id}/members/invite", response_model=dict, summary="Convidar membro para workspace", tags=["workspaces"])
 async def invite_member(
     workspace_id: str,
     invite_data: MemberInvite,
@@ -298,7 +299,7 @@ async def invite_member(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/{workspace_id}/members/{member_id}")
+@router.delete("/{workspace_id}/members/{member_id}", summary="Remover membro do workspace", tags=["workspaces"])
 async def remove_member(
     workspace_id: str,
     member_id: int,
@@ -319,7 +320,7 @@ async def remove_member(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.put("/{workspace_id}/members/{member_id}/role")
+@router.put("/{workspace_id}/members/{member_id}/role", summary="Atualizar role de membro", tags=["workspaces"])
 async def update_member_role(
     workspace_id: str,
     member_id: int,
@@ -344,7 +345,7 @@ async def update_member_role(
 
 # ==================== PROJETOS ====================
 
-@router.post("/{workspace_id}/projects", response_model=dict)
+@router.post("/{workspace_id}/projects", response_model=dict, summary="Criar projeto no workspace", tags=["workspaces"])
 async def create_project(
     workspace_id: str,
     project_data: ProjectCreate,
@@ -363,7 +364,7 @@ async def create_project(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{workspace_id}/projects", response_model=List[ProjectResponse], summary="Listar projetos", tags=["workspaces", "Projects"])
+@router.get("/{workspace_id}/projects", response_model=List[ProjectResponse], summary="Listar projetos", tags=["workspaces"])
 async def get_workspace_projects(
     workspace_id: int,
     status: Optional[str] = Query(None, pattern="^(active|archived|deleted)$"),
@@ -384,7 +385,7 @@ async def get_workspace_projects(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/projects/search", response_model=List[ProjectResponse], summary="Buscar projetos", tags=["Projects"])
+@router.get("/projects/search", response_model=List[ProjectResponse], summary="Buscar projetos", tags=["workspaces"])
 async def search_projects(
     query: Optional[str] = Query(None, description="Termo de busca"),
     workspace_id: Optional[int] = Query(None, description="ID do workspace"),
@@ -418,7 +419,7 @@ async def search_projects(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/projects/{project_id}", response_model=ProjectResponse, summary="Obter projeto", tags=["Projects"])
+@router.get("/projects/{project_id}", response_model=ProjectResponse, summary="Obter projeto", tags=["workspaces"])
 async def get_project(
     project_id: int,
     current_user: User = Depends(get_current_user),
@@ -441,7 +442,7 @@ async def get_project(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/projects/{project_id}", response_model=ProjectResponse, summary="Atualizar projeto", tags=["Projects"])
+@router.put("/projects/{project_id}", response_model=ProjectResponse, summary="Atualizar projeto", tags=["workspaces"])
 async def update_project(
     project_id: int,
     project_data: ProjectUpdate,
@@ -465,7 +466,7 @@ async def update_project(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/projects/{project_id}", summary="Deletar projeto", tags=["Projects"])
+@router.delete("/projects/{project_id}", summary="Deletar projeto", tags=["workspaces"])
 async def delete_project(
     project_id: int,
     current_user: User = Depends(get_current_user),
@@ -495,7 +496,7 @@ async def delete_project(
     response_model=list[InvitationResponse],
     summary="Listar convites recebidos",
     response_description="Lista de convites retornada com sucesso",
-    tags=["workspaces", "Membros"],
+    tags=["workspaces"],
 )
 async def get_user_invitations(
     status: str | None = Query(None, pattern="^(pending|accepted|declined|expired)$", description="Status do convite"),
@@ -515,7 +516,7 @@ async def get_user_invitations(
     "/invitations/{invitation_id}/accept",
     summary="Aceitar convite de workspace",
     response_description="Convite aceito com sucesso",
-    tags=["workspaces", "Membros"],
+    tags=["workspaces"],
 )
 async def accept_invitation(
     invitation_id: int = Path(..., description="ID do convite"),
@@ -541,7 +542,7 @@ async def accept_invitation(
     "/invitations/{invitation_id}/decline",
     summary="Recusar convite de workspace",
     response_description="Convite recusado com sucesso",
-    tags=["workspaces", "Membros"],
+    tags=["workspaces"],
 )
 async def decline_invitation(
     invitation_id: int = Path(..., description="ID do convite"),
@@ -566,7 +567,7 @@ async def decline_invitation(
 # ==================== VERSÕES ====================
 
 @router.get(
-    "/projects/{project_id}/versions", response_model=list[ProjectVersionResponse]
+    "/projects/{project_id}/versions", response_model=list[ProjectVersionResponse], summary="Listar versões do projeto", tags=["workspaces"]
 )
 async def get_project_versions(
     project_id: int,
@@ -583,7 +584,7 @@ async def get_project_versions(
     return versions
 
 
-@router.post("/projects/{project_id}/versions", response_model=ProjectVersionResponse)
+@router.post("/projects/{project_id}/versions", response_model=ProjectVersionResponse, summary="Criar versão do projeto", tags=["workspaces"])
 async def create_project_version(
     project_id: int,
     version_data: VersionCreate,
@@ -595,7 +596,7 @@ async def create_project_version(
     return service.create_project_version(project_id, version_data, current_user.id)
 
 
-@router.post("/projects/{project_id}/versions/{version_id}/restore")
+@router.post("/projects/{project_id}/versions/{version_id}/restore", summary="Restaurar versão do projeto", tags=["workspaces"])
 async def restore_project_version(
     project_id: int,
     version_id: int,
@@ -612,7 +613,7 @@ async def restore_project_version(
 
 # ==================== ATIVIDADES ====================
 
-@router.get("/{workspace_id}/activities", response_model=List[dict])
+@router.get("/{workspace_id}/activities", response_model=List[dict], summary="Listar atividades do workspace", tags=["workspaces"])
 async def get_workspace_activities(
     workspace_id: str,
     limit: int = Query(50, ge=1, le=200),
@@ -629,7 +630,7 @@ async def get_workspace_activities(
         raise HTTPException(status_code=403, detail=str(e))
 
 
-@router.get("/projects/{project_id}/activities", response_model=list[ActivityResponse])
+@router.get("/projects/{project_id}/activities", response_model=list[ActivityResponse], summary="Listar atividades do projeto", tags=["workspaces"])
 async def get_project_activities(
     project_id: int,
     limit: int = Query(50, ge=1, le=200),
@@ -650,7 +651,7 @@ async def get_project_activities(
 # ==================== OPERAÇÕES EM LOTE ====================
 
 @router.post(
-    "/workspaces/{workspace_id}/members/bulk", response_model=BulkOperationResponse
+    "/workspaces/{workspace_id}/members/bulk", response_model=BulkOperationResponse, summary="Operação em lote com membros", tags=["workspaces"]
 )
 async def bulk_member_operation(
     workspace_id: int,
@@ -664,7 +665,7 @@ async def bulk_member_operation(
 
 
 @router.post(
-    "/workspaces/{workspace_id}/projects/bulk", response_model=BulkOperationResponse
+    "/workspaces/{workspace_id}/projects/bulk", response_model=BulkOperationResponse, summary="Operação em lote com projetos", tags=["workspaces"]
 )
 async def bulk_project_operation(
     workspace_id: int,
@@ -679,7 +680,7 @@ async def bulk_project_operation(
 
 # ==================== NOTIFICAÇÕES ====================
 
-@router.get("/workspaces/{workspace_id}/notifications")
+@router.get("/workspaces/{workspace_id}/notifications", summary="Obter configurações de notificação", tags=["workspaces"])
 async def get_workspace_notification_settings(
     workspace_id: int,
     current_user: User = Depends(get_current_user),
@@ -693,7 +694,7 @@ async def get_workspace_notification_settings(
     return settings
 
 
-@router.put("/workspaces/{workspace_id}/notifications")
+@router.put("/workspaces/{workspace_id}/notifications", summary="Atualizar configurações de notificação", tags=["workspaces"])
 async def update_workspace_notification_settings(
     workspace_id: int,
     preferences: NotificationPreferences,
@@ -713,7 +714,7 @@ async def update_workspace_notification_settings(
 # ==================== INTEGRAÇÕES ====================
 
 @router.post(
-    "/workspaces/{workspace_id}/integrations", response_model=IntegrationResponse
+    "/workspaces/{workspace_id}/integrations", response_model=IntegrationResponse, summary="Criar integração do workspace", tags=["workspaces"]
 )
 async def create_workspace_integration(
     workspace_id: int,
@@ -727,7 +728,7 @@ async def create_workspace_integration(
 
 
 @router.get(
-    "/workspaces/{workspace_id}/integrations", response_model=list[IntegrationResponse]
+    "/workspaces/{workspace_id}/integrations", response_model=list[IntegrationResponse], summary="Listar integrações do workspace", tags=["workspaces"]
 )
 async def get_workspace_integrations(
     workspace_id: int,
@@ -742,7 +743,7 @@ async def get_workspace_integrations(
     return integrations
 
 
-@router.put("/integrations/{integration_id}", response_model=IntegrationResponse)
+@router.put("/integrations/{integration_id}", response_model=IntegrationResponse, summary="Atualizar integração", tags=["workspaces"])
 async def update_integration(
     integration_id: int,
     integration_data: WorkspaceIntegration,
@@ -759,7 +760,7 @@ async def update_integration(
     return integration
 
 
-@router.delete("/integrations/{integration_id}")
+@router.delete("/integrations/{integration_id}", summary="Deletar integração", tags=["workspaces"])
 async def delete_integration(
     integration_id: int,
     current_user: User = Depends(get_current_user),

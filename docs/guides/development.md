@@ -16,7 +16,7 @@ Este guia fornece instruções detalhadas para desenvolvedores que desejam contr
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/synapscale/synapse-backend-agents-jc.git
+git clone <URL_DO_SEU_REPOSITORIO>
 cd synapse-backend-agents-jc
 ```
 
@@ -52,7 +52,7 @@ O servidor estará disponível em `http://localhost:8000`.
 ## Estrutura do Projeto
 
 ```
-synapse-backend/
+synapse-backend-agents-jc/
 ├── alembic/                  # Migrações de banco de dados
 ├── docs/                     # Documentação
 │   └── api/                  # Documentação da API
@@ -64,18 +64,16 @@ synapse-backend/
 │       │   ├── auth/         # Autenticação e autorização
 │       │   ├── security/     # Segurança e validação
 │       │   └── storage/      # Gerenciamento de armazenamento
-│       ├── db/               # Configuração de banco de dados
 │       ├── middlewares/      # Middlewares da aplicação
 │       ├── models/           # Modelos de dados
 │       ├── schemas/          # Esquemas Pydantic
 │       └── services/         # Lógica de negócios
 ├── tests/                    # Testes automatizados
-│   ├── integration/          # Testes de integração
-│   └── unit/                 # Testes unitários
-├── utils/                    # Scripts utilitários
+├── tools/                    # Scripts e ferramentas utilitárias
+├── scripts/                  # Scripts de manutenção
 ├── .env.example              # Exemplo de variáveis de ambiente
-├── pyproject.toml            # Configuração do Poetry
-└── README.md (principal)     # Documentação principal do projeto
+├── requirements.txt          # Dependências do projeto
+└── README.md                 # Documentação principal do projeto
 ```
 
 ## Padrões de Desenvolvimento
@@ -92,17 +90,20 @@ O projeto utiliza as seguintes ferramentas para garantir a qualidade e consistê
 Para aplicar essas ferramentas ao código:
 
 ```bash
+# Ativar ambiente virtual
+source venv/bin/activate
+
 # Formatar código com Black
-poetry run black src/ tests/
+black src/ tests/
 
 # Verificar estilo com Flake8
-poetry run flake8 src/ tests/
+flake8 src/ tests/
 
 # Organizar imports
-poetry run isort src/ tests/
+isort src/ tests/
 
-# Verificar tipos
-poetry run mypy src/
+# Verificar tipos (se instalado)
+mypy src/
 ```
 
 ### Convenções de Nomenclatura
@@ -153,13 +154,13 @@ def upload_file(file: UploadFile, category: str, user_id: int) -> FileUploadResp
 Para criar uma nova migração após alterar modelos:
 
 ```bash
-poetry run alembic revision --autogenerate -m "descrição da migração"
+alembic revision --autogenerate -m "descrição da migração"
 ```
 
 Para aplicar migrações:
 
 ```bash
-poetry run alembic upgrade head
+alembic upgrade head
 ```
 
 ## Testes
@@ -167,15 +168,17 @@ poetry run alembic upgrade head
 ### Executando Testes
 
 ```bash
-# Executar todos os testes
-poetry run pytest
+# Ativar ambiente virtual
+source venv/bin/activate
 
-# Executar testes com cobertura
-poetry run pytest --cov=src
+# Executar todos os testes
+pytest
+
+# Executar testes com cobertura (se instalado)
+pytest --cov=src
 
 # Executar testes específicos
-poetry run pytest tests/unit/
-poetry run pytest tests/integration/
+pytest tests/
 ```
 
 ### Escrevendo Testes

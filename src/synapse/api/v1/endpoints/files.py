@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/upload", response_model=FileUploadResponse, summary="Upload de arquivo", tags=["files"])
+@router.post("/upload", response_model=FileUploadResponse, summary="Upload de arquivo", tags=["data"])
 async def upload_file(
     category: str = Form(..., description="Categoria do arquivo"),
     file: UploadFile = File(..., description="Arquivo a ser enviado"),
@@ -151,7 +151,7 @@ async def upload_file(
     "/",
     response_model=FileListResponse,
     summary="Listar arquivos",
-    tags=["files"],
+    tags=["data"],
 )
 async def list_files(
     page: int = Query(1, ge=1, description="Número da página"),
@@ -239,7 +239,7 @@ async def list_files(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{file_id}", response_model=FileResponse, summary="Obter arquivo", tags=["files"])
+@router.get("/{file_id}", response_model=FileResponse, summary="Obter arquivo", tags=["data"])
 async def get_file(
     file_id: UUID,
     db: Session = Depends(get_db),
@@ -315,7 +315,7 @@ async def get_file(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{file_id}/download", response_model=FileDownloadResponse, summary="Download de arquivo", tags=["files", "Download"])
+@router.get("/{file_id}/download", response_model=FileDownloadResponse, summary="Download de arquivo", tags=["data"])
 async def download_file(
     file_id: UUID,
     db: Session = Depends(get_db),
@@ -391,7 +391,7 @@ async def download_file(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{file_id}", summary="Deletar arquivo", tags=["files"])
+@router.delete("/{file_id}", summary="Deletar arquivo", tags=["data"])
 async def delete_file(
     file_id: UUID,
     db: Session = Depends(get_db),

@@ -173,7 +173,7 @@ if settings.DEBUG:
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Health checks
-@app.get("/health")
+@app.get("/health", tags=["system"])
 async def health_check():
     """Basic health check"""
     return {
@@ -183,7 +183,7 @@ async def health_check():
     }
 
 
-@app.get("/health/detailed")
+@app.get("/health/detailed", tags=["system"])
 async def detailed_health_check():
     """Detailed health check"""
     db_info = get_database_info()
@@ -211,7 +211,7 @@ async def detailed_health_check():
     }
 
 
-@app.get("/health/db")
+@app.get("/health/db", tags=["system"])
 async def database_health_check():
     """Database specific health check"""
     if test_database_connection():
@@ -235,7 +235,7 @@ async def global_exception_handler(request, exc):
 
 
 # Root endpoint
-@app.get("/")
+@app.get("/", tags=["system"])
 async def root():
     return {
         "message": "Synapse Backend Agents JC",

@@ -67,7 +67,7 @@ def get_execution_service() -> ExecutionService:
     return execution_service
 
 
-@router.post("/", response_model=ExecutionResponse, status_code=201, summary="Criar execução de workflow", tags=["executions"])
+@router.post("/", response_model=ExecutionResponse, status_code=201, summary="Criar execução de workflow", tags=["workflows"])
 async def create_execution(
     execution_data: ExecutionCreate,
     start_immediately: bool = Query(
@@ -115,7 +115,7 @@ async def create_execution(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/", response_model=List[ExecutionResponse], summary="Listar execuções do usuário", tags=["executions"])
+@router.get("/", response_model=List[ExecutionResponse], summary="Listar execuções do usuário", tags=["workflows"])
 async def list_executions(
     status: Optional[List[str]] = Query(None, description="Filtrar por status"),
     workflow_ids: Optional[List[int]] = Query(
@@ -204,7 +204,7 @@ async def list_executions(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/stats", response_model=ExecutionStats, summary="Estatísticas de execução", tags=["executions", "Statistics"])
+@router.get("/stats", response_model=ExecutionStats, summary="Estatísticas de execução", tags=["workflows"])
 async def get_execution_statistics(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -237,7 +237,7 @@ async def get_execution_statistics(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{execution_id}", response_model=ExecutionResponse, summary="Obter execução específica", tags=["executions"])
+@router.get("/{execution_id}", response_model=ExecutionResponse, summary="Obter execução específica", tags=["workflows"])
 async def get_execution(
     execution_id: str,
     db: Session = Depends(get_db),
@@ -281,7 +281,7 @@ async def get_execution(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{execution_id}/control", summary="Controlar execução", tags=["executions", "Control"])
+@router.post("/{execution_id}/control", summary="Controlar execução", tags=["workflows"])
 async def control_execution(
     execution_id: str,
     control: ExecutionControl,
@@ -346,7 +346,7 @@ async def control_execution(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/batch", summary="Controle em lote de execuções", tags=["executions", "Control", "Batch"])
+@router.post("/batch", summary="Controle em lote de execuções", tags=["workflows"])
 async def batch_control_executions(
     batch: ExecutionBatch,
     db: Session = Depends(get_db),
@@ -423,7 +423,7 @@ async def batch_control_executions(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{execution_id}/nodes", response_model=List[NodeExecutionResponse], summary="Obter nós da execução", tags=["executions", "Nodes"])
+@router.get("/{execution_id}/nodes", response_model=List[NodeExecutionResponse], summary="Obter nós da execução", tags=["workflows"])
 async def get_execution_nodes(
     execution_id: str,
     db: Session = Depends(get_db),
@@ -465,7 +465,7 @@ async def get_execution_nodes(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{execution_id}/logs", summary="Obter logs da execução", tags=["executions", "Logs"])
+@router.get("/{execution_id}/logs", summary="Obter logs da execução", tags=["workflows"])
 async def get_execution_logs(
     execution_id: str,
     include_nodes: bool = Query(default=True, description="Incluir logs dos nós"),
@@ -511,7 +511,7 @@ async def get_execution_logs(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{execution_id}/metrics", summary="Obter métricas da execução", tags=["executions", "Metrics"])
+@router.get("/{execution_id}/metrics", summary="Obter métricas da execução", tags=["workflows"])
 async def get_execution_metrics(
     execution_id: str,
     metric_types: Optional[List[str]] = Query(
@@ -559,7 +559,7 @@ async def get_execution_metrics(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/validate-workflow", summary="Validar workflow para execução", tags=["executions", "Validation"])
+@router.post("/validate-workflow", summary="Validar workflow para execução", tags=["workflows"])
 async def validate_workflow_for_execution(
     workflow_id: int,
     variables: Optional[Dict[str, Any]] = None,
@@ -649,7 +649,7 @@ async def validate_workflow_for_execution(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/queue/status", summary="Status da fila de execução", tags=["executions", "Queue"])
+@router.get("/queue/status", summary="Status da fila de execução", tags=["workflows"])
 async def get_queue_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -734,7 +734,7 @@ async def get_queue_status(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/admin/engine-status", summary="Status do engine de execução", tags=["executions", "Admin"])
+@router.get("/admin/engine-status", summary="Status do engine de execução", tags=["workflows", "advanced"])
 async def get_engine_status(
     current_user: User = Depends(get_current_user),
     service: ExecutionService = Depends(get_execution_service),
@@ -774,7 +774,7 @@ async def get_engine_status(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/admin/engine/start", summary="Iniciar engine de execução", tags=["executions", "Admin"])
+@router.post("/admin/engine/start", summary="Iniciar engine de execução", tags=["workflows", "advanced"])
 async def start_engine(
     current_user: User = Depends(get_current_user),
     service: ExecutionService = Depends(get_execution_service),
@@ -820,7 +820,7 @@ async def start_engine(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/admin/engine/stop", summary="Parar engine de execução", tags=["executions", "Admin"])
+@router.post("/admin/engine/stop", summary="Parar engine de execução", tags=["workflows", "advanced"])
 async def stop_engine(
     current_user: User = Depends(get_current_user),
     service: ExecutionService = Depends(get_execution_service),

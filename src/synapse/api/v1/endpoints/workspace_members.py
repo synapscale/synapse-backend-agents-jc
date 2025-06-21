@@ -25,7 +25,7 @@ router = APIRouter()
     response_model=dict,
     status_code=status.HTTP_201_CREATED,
     summary="Adicionar membro ao workspace",
-    tags=["workspace-members"],
+    tags=["workspaces"],
 )
 async def add_workspace_member(
     workspace_id: str,
@@ -88,7 +88,7 @@ async def add_workspace_member(
     "/{workspace_id}/members/{user_id}",
     response_model=dict,
     summary="Remover membro do workspace",
-    tags=["workspace-members"],
+    tags=["workspaces"],
 )
 async def remove_workspace_member(
     workspace_id: str,
@@ -148,7 +148,7 @@ async def remove_workspace_member(
     "/{workspace_id}/members/{user_id}/role",
     response_model=dict,
     summary="Atualizar role do membro",
-    tags=["workspace-members"],
+    tags=["workspaces"],
 )
 async def update_member_role(
     workspace_id: str,
@@ -208,7 +208,7 @@ async def update_member_role(
     "/{workspace_id}/members",
     response_model=List[WorkspaceMemberResponse],
     summary="Listar membros do workspace",
-    tags=["workspace-members"],
+    tags=["workspaces"],
 )
 async def list_workspace_members(
     workspace_id: str,
@@ -298,7 +298,7 @@ async def list_workspace_members(
     "/{workspace_id}/members/{user_id}",
     response_model=WorkspaceMemberResponse,
     summary="Obter detalhes de um membro específico",
-    tags=["workspace-members"],
+    tags=["workspaces"],
 )
 async def get_workspace_member(
     workspace_id: str,

@@ -1,0 +1,325 @@
+/* Estilos complementares para Swagger UI - Trabalha junto com CSS inline */
+
+/* Cores complementares */
+:root {
+    --info-color: #3b82f6;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --success-color: #10b981;
+}
+
+/* Topbar customization */
+.swagger-ui .topbar {
+    background: linear-gradient(135deg, var(--primary-color, #3b82f6), var(--secondary-color, #10b981));
+    padding: 1rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.swagger-ui .topbar .download-url-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.swagger-ui .topbar .download-url-wrapper .select-label span {
+    color: white;
+    font-weight: 500;
+}
+
+/* Melhorias nos parâmetros */
+.swagger-ui .parameters-container {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border: 1px solid #e2e8f0;
+}
+
+.swagger-ui .parameters-container .parameters {
+    margin: 0;
+}
+
+.swagger-ui .parameter__name {
+    font-weight: 600;
+    color: var(--primary-color, #3b82f6);
+}
+
+.swagger-ui .parameter__type {
+    color: #64748b;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+}
+
+.swagger-ui .parameter__deprecated {
+    color: var(--error-color);
+    text-decoration: line-through;
+}
+
+/* Melhorias nas respostas */
+.swagger-ui .responses-inner {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border: 1px solid #e2e8f0;
+}
+
+.swagger-ui .response {
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.swagger-ui .response .response-col_status {
+    font-weight: 600;
+    padding: 0.5rem;
+}
+
+.swagger-ui .response .response-col_description__inner {
+    padding: 0.5rem;
+}
+
+/* Status codes coloridos */
+.swagger-ui .response .response-col_status .response-undocumented {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.swagger-ui .response .response-col_status .response-undocumented[data-code^="2"] {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.swagger-ui .response .response-col_status .response-undocumented[data-code^="3"] {
+    background-color: var(--info-color);
+    color: white;
+}
+
+.swagger-ui .response .response-col_status .response-undocumented[data-code^="4"] {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.swagger-ui .response .response-col_status .response-undocumented[data-code^="5"] {
+    background-color: var(--error-color);
+    color: white;
+}
+
+/* Melhorias nos modelos */
+.swagger-ui section.models {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.swagger-ui section.models h4 {
+    color: var(--primary-color, #3b82f6);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.swagger-ui .model-container {
+    margin: 1rem 0;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.swagger-ui .model-box {
+    background-color: #f8fafc;
+    padding: 1rem;
+}
+
+.swagger-ui .model-box .model .property {
+    font-size: 0.875rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.swagger-ui .model-box .model .property:last-child {
+    border-bottom: none;
+}
+
+.swagger-ui .model-box .model .property-name {
+    font-weight: 600;
+    color: var(--primary-color, #3b82f6);
+}
+
+.swagger-ui .model-box .model .property-type {
+    color: #64748b;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.8rem;
+}
+
+/* Melhorias nos exemplos de código */
+.swagger-ui .highlight-code,
+.swagger-ui .microlight {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    padding: 1rem !important;
+    border-radius: 8px !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    overflow-x: auto !important;
+}
+
+.swagger-ui .microlight span {
+    color: inherit !important;
+}
+
+/* Melhorias nos inputs */
+.swagger-ui .parameters-col_description input,
+.swagger-ui .parameters-col_description select,
+.swagger-ui .parameters-col_description textarea {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+}
+
+.swagger-ui .parameters-col_description input:focus,
+.swagger-ui .parameters-col_description select:focus,
+.swagger-ui .parameters-col_description textarea:focus {
+    outline: none;
+    border-color: var(--primary-color, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Melhorias nos tabs */
+.swagger-ui .tab-header {
+    background-color: #f1f5f9;
+    border-radius: 8px 8px 0 0;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.swagger-ui .tab-header .tab-item {
+    background: transparent;
+    border: none;
+    padding: 0.75rem 1rem;
+    color: #64748b;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.swagger-ui .tab-header .tab-item:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color, #3b82f6);
+}
+
+.swagger-ui .tab-header .tab-item.active {
+    background-color: var(--primary-color, #3b82f6);
+    color: white;
+}
+
+/* Melhorias no body de requisição */
+.swagger-ui .opblock-section-request-body {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border: 1px solid #e2e8f0;
+}
+
+.swagger-ui .opblock-section-request-body .body-param-content {
+    margin: 0.5rem 0;
+}
+
+.swagger-ui .opblock-section-request-body pre {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    padding: 1rem !important;
+    border-radius: 6px !important;
+    overflow-x: auto !important;
+}
+
+/* Melhorias nos headers de seção */
+.swagger-ui .opblock-section-header {
+    background-color: transparent;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 0.75rem 0;
+    margin-bottom: 1rem;
+}
+
+.swagger-ui .opblock-section-header h4 {
+    color: var(--primary-color, #3b82f6);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Scrollbars personalizadas */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    .swagger-ui .parameters-container,
+    .swagger-ui .responses-inner,
+    .swagger-ui .opblock-section-request-body {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    
+    .swagger-ui .model-box {
+        background-color: #1e293b;
+    }
+    
+    .swagger-ui section.models {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    
+    .swagger-ui .tab-header {
+        background-color: #334155;
+    }
+    
+    .swagger-ui .tab-header .tab-item {
+        color: #94a3b8;
+    }
+    
+    .swagger-ui .tab-header .tab-item:hover {
+        background-color: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #334155;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #475569;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+} 

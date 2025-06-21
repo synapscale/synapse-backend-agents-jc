@@ -72,7 +72,7 @@ def is_sensitive_key(key: str) -> bool:
     response_model=UserVariableList,
     summary="Listar variáveis do usuário",
     response_description="Lista de variáveis do usuário retornada com sucesso",
-    tags=["user-variables"],
+    tags=["data"],
 )
 async def get_user_variables(
     skip: int = Query(0, ge=0, description="Número de registros para pular (paginação)"),
@@ -203,7 +203,7 @@ async def get_user_variables(
         )
 
 
-@router.get("/debug/masking", response_model=dict, tags=["user-variables"])
+@router.get("/debug/masking", response_model=dict, tags=["data"])
 async def test_masking(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -236,7 +236,7 @@ async def test_masking(
         return {"error": str(e)}
 
 
-@router.get("/{variable_id}", response_model=UserVariableWithValue, tags=["user-variables"])
+@router.get("/{variable_id}", response_model=UserVariableWithValue, tags=["data"])
 async def get_variable(
     variable_id: int,
     db: Session = Depends(get_db),
@@ -268,7 +268,7 @@ async def get_variable(
     status_code=status.HTTP_201_CREATED,
     summary="Criar nova variável do usuário",
     response_description="Variável criada com sucesso",
-    tags=["user-variables"],
+    tags=["data"],
 )
 async def create_variable(
     variable_data: UserVariableCreate,
@@ -302,7 +302,7 @@ async def create_variable(
 # NOVOS ENDPOINTS PARA API KEYS LLM USANDO USER_VARIABLES
 # ============================================================================
 
-@router.post("/api-keys/{provider}", response_model=dict, tags=["user-variables"])
+@router.post("/api-keys/{provider}", response_model=dict, tags=["data"])
 async def create_user_api_key(
     provider: str,
     request: UserVariableCreate,
@@ -349,7 +349,7 @@ async def create_user_api_key(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/api-keys", response_model=List[dict], tags=["user-variables"])
+@router.get("/api-keys", response_model=List[dict], tags=["data"])
 async def list_user_api_keys(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -374,7 +374,7 @@ async def list_user_api_keys(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/api-keys/{provider}", response_model=dict, tags=["user-variables"])
+@router.delete("/api-keys/{provider}", response_model=dict, tags=["data"])
 async def delete_user_api_key(
     provider: str,
     current_user: User = Depends(get_current_user),
@@ -411,7 +411,7 @@ async def delete_user_api_key(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/api-keys/providers", response_model=List[dict], tags=["user-variables"])
+@router.get("/api-keys/providers", response_model=List[dict], tags=["data"])
 async def get_supported_providers():
     """
     Lista todos os provedores LLM suportados

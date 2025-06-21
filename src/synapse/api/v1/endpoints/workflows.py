@@ -345,7 +345,7 @@ async def delete_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{workflow_id}/execute", response_model=WorkflowExecutionResponse, summary="Executar workflow", tags=["workflows", "Execution"])
+@router.post("/{workflow_id}/execute", response_model=WorkflowExecutionResponse, summary="Executar workflow", tags=["workflows"])
 async def execute_workflow(
     workflow_id: str,
     execution_data: WorkflowExecutionRequest,
@@ -430,7 +430,7 @@ async def execute_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{workflow_id}/executions", response_model=ExecutionListResponse, summary="Listar execuções", tags=["workflows", "Execution"])
+@router.get("/{workflow_id}/executions", response_model=ExecutionListResponse, summary="Listar execuções", tags=["workflows"])
 async def list_workflow_executions(
     workflow_id: str,
     page: int = Query(1, ge=1, description="Número da página"),

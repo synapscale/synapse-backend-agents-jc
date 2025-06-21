@@ -648,63 +648,121 @@ class WorkspaceService:
             "has_subscription": subscription is not None
         }
 
-    @staticmethod
-    def get_workspace_creation_rules(db: Session, user_id: str) -> Dict[str, Any]:
-        """Retorna regras de criação de workspace para o usuário"""
+    def get_workspace_creation_rules(self, user_id: str) -> Dict[str, Any]:
+        """
+        Obtém as regras de criação de workspaces para um usuário específico
         
-        # Buscar assinatura do usuário
-        subscription = db.query(UserSubscription).filter(
-            UserSubscription.user_id == user_id,
-            UserSubscription.status == SubscriptionStatus.ACTIVE
-        ).first()
-        
-        if not subscription:
+        Args:
+            user_id: ID do usuário
+            
+        Returns:
+            Dict com as regras de criação, incluindo:
+            - can_create_individual: bool
+            - can_create_collaborative: bool
+            - has_individual_workspace: bool
+            - current_workspaces: int
+            - max_workspaces: int
+            - user_username: str
+        """
+        try:
+            # Obter usuário
+            user = self.db.query(User).filter(User.id == user_id).first()
+            if not user:
+                raise ValueError("Usuário não encontrado")
+
+            # Obter assinatura ativa
+            subscription = (
+                self.db.query(UserSubscription)
+                .join(Plan)
+                .filter(
+                    and_(
+                        UserSubscription.user_id == user_id,
+                        UserSubscription.status == SubscriptionStatus.ACTIVE
+                    )
+                )
+                .first()
+            )
+            
+            # Se não tem assinatura, criar uma padrão (FREE)
+            if not subscription:
+                # Buscar plano FREE padrão
+                free_plan = self.db.query(Plan).filter(
+                    Plan.type == PlanType.FREE
+                ).first()
+                
+                if free_plan:
+                    subscription = UserSubscription(
+                        user_id=user_id,
+                        plan_id=free_plan.id,
+                        status=SubscriptionStatus.ACTIVE,
+                        start_date=datetime.now(timezone.utc),
+                        current_workspaces=0,
+                        current_storage_mb=0.0
+                    )
+                    self.db.add(subscription)
+                    self.db.commit()
+                    self.db.refresh(subscription)
+                else:
+                    # Fallback se não há plano FREE
+                    return {
+                        "can_create_individual": False,
+                        "can_create_collaborative": False,
+                        "has_individual_workspace": False,
+                        "current_workspaces": 0,
+                        "max_workspaces": 0,
+                        "user_username": user.username or user.email,
+                        "error": "Nenhum plano disponível"
+                    }
+
+            # Contar workspaces atuais
+            current_workspaces = (
+                self.db.query(Workspace)
+                .filter(Workspace.owner_id == user_id)
+                .count()
+            )
+
+            # Verificar se tem workspace individual
+            has_individual = (
+                self.db.query(Workspace)
+                .filter(
+                    and_(
+                        Workspace.owner_id == user_id,
+                        Workspace.type == WorkspaceType.INDIVIDUAL
+                    )
+                )
+                .count() > 0
+            )
+
+            # Determinar capacidades
+            can_create_individual = not has_individual and current_workspaces < subscription.plan.max_workspaces
+            can_create_collaborative = (
+                subscription.plan.allow_collaborative_workspaces and 
+                current_workspaces < subscription.plan.max_workspaces
+            )
+
             return {
-                "can_create": False,
-                "forced_type": None,
-                "reason": "Sem assinatura ativa",
-                "individual_count": 0,
-                "total_count": 0,
-                "plan_limit": 0
+                "can_create_individual": can_create_individual,
+                "can_create_collaborative": can_create_collaborative,
+                "has_individual_workspace": has_individual,
+                "current_workspaces": current_workspaces,
+                "max_workspaces": subscription.plan.max_workspaces,
+                "user_username": user.username or user.email,
+                "plan_name": subscription.plan.name,
+                "plan_type": subscription.plan.type.value
             }
-
-        # Contar workspaces
-        individual_count = db.query(Workspace).filter(
-            Workspace.owner_id == user_id,
-            Workspace.type == WorkspaceType.INDIVIDUAL
-        ).count()
-        
-        total_count = db.query(Workspace).filter(
-            Workspace.owner_id == user_id
-        ).count()
-        
-        plan = subscription.plan
-
-        # Aplicar regra de negócio: 1 individual obrigatório + demais colaborativos
-        can_create = total_count < plan.max_workspaces
-        
-        if individual_count == 0:
-            # Primeiro workspace deve ser individual
-            forced_type = WorkspaceType.INDIVIDUAL
-            reason = "Primeiro workspace deve ser individual"
-        elif individual_count >= 1:
-            # Workspaces subsequentes devem ser colaborativos
-            forced_type = WorkspaceType.COLLABORATIVE
-            reason = "Workspaces adicionais devem ser colaborativos"
-        else:
-            forced_type = None
-            reason = "Tipo livre"
-
-        return {
-            "can_create": can_create,
-            "forced_type": forced_type,
-            "reason": reason,
-            "individual_count": individual_count,
-            "total_count": total_count,
-            "plan_limit": plan.max_workspaces,
-            "plan_name": plan.name,
-            "allows_collaborative": plan.allow_collaborative_workspaces
-        }
+            
+        except Exception as e:
+            logger.error(f"Erro ao obter regras de criação para usuário {user_id}: {str(e)}")
+            # Retornar valores padrão seguros
+            return {
+                "can_create_individual": False,
+                "can_create_collaborative": False,
+                "has_individual_workspace": False,
+                "current_workspaces": 0,
+                "max_workspaces": 0,
+                "user_username": "unknown",
+                "error": str(e)
+            }
 
     # ==================== MEMBROS ====================
     
@@ -888,12 +946,33 @@ class WorkspaceService:
             logger.error(f"Erro ao atualizar role do membro {member_id}: {str(e)}")
             return None
 
-    def get_workspace_members(self, workspace_id: str) -> list[WorkspaceMember]:
-        """Lista membros do workspace"""
-        return self.db.query(WorkspaceMember).filter(
+    def get_workspace_members(self, workspace_id: str) -> list[dict]:
+        """Lista membros do workspace com informações do usuário"""
+        from synapse.models.user import User
+        
+        members = self.db.query(WorkspaceMember, User).join(
+            User, WorkspaceMember.user_id == User.id
+        ).filter(
             WorkspaceMember.workspace_id == workspace_id,
             WorkspaceMember.status == "active"
         ).all()
+        
+        result = []
+        for member, user in members:
+            result.append({
+                "id": member.id,
+                "workspace_id": str(member.workspace_id),
+                "user_id": str(member.user_id),
+                "user_name": user.full_name or user.username,
+                "user_email": user.email,
+                "user_avatar": getattr(user, 'avatar_url', None),
+                "role": member.role.value.lower(),  # Converter para lowercase
+                "status": member.status,
+                "joined_at": member.joined_at,
+                "last_active_at": member.last_seen_at
+            })
+        
+        return result
 
     # ==================== PROJETOS ====================
 

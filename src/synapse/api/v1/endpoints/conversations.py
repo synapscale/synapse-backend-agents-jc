@@ -37,7 +37,7 @@ router = APIRouter()
     "/",
     response_model=ConversationListResponse,
     summary="Listar conversas",
-    tags=["conversations"],
+    tags=["ai"],
 )
 async def list_conversations(
     page: int = Query(1, ge=1, description="Número da página"),
@@ -94,7 +94,7 @@ async def list_conversations(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/", response_model=ConversationResponse, summary="Criar conversação", tags=["conversations"])
+@router.post("/", response_model=ConversationResponse, summary="Criar conversação", tags=["ai"])
 async def create_conversation(
     conversation_data: ConversationCreate,
     db: Session = Depends(get_db),
@@ -153,7 +153,7 @@ async def create_conversation(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{conversation_id}", response_model=ConversationResponse, summary="Obter conversação", tags=["conversations"])
+@router.get("/{conversation_id}", response_model=ConversationResponse, summary="Obter conversação", tags=["ai"])
 async def get_conversation(
     conversation_id: str,
     db: Session = Depends(get_db),
@@ -206,7 +206,7 @@ async def get_conversation(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{conversation_id}", summary="Deletar conversação", tags=["conversations"])
+@router.delete("/{conversation_id}", summary="Deletar conversação", tags=["ai"])
 async def delete_conversation(
     conversation_id: str,
     db: Session = Depends(get_db),
@@ -269,7 +269,7 @@ async def delete_conversation(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{conversation_id}/messages", response_model=MessageListResponse, summary="Listar mensagens", tags=["conversations", "messages"])
+@router.get("/{conversation_id}/messages", response_model=MessageListResponse, summary="Listar mensagens", tags=["ai"])
 async def list_messages(
     conversation_id: str,
     page: int = Query(1, ge=1, description="Número da página"),
@@ -368,7 +368,7 @@ async def list_messages(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{conversation_id}/messages", response_model=MessageResponse, summary="Enviar mensagem", tags=["conversations", "messages"])
+@router.post("/{conversation_id}/messages", response_model=MessageResponse, summary="Enviar mensagem", tags=["ai"])
 async def send_message(
     conversation_id: str,
     message_data: MessageCreate,
@@ -518,7 +518,7 @@ async def send_message(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/{conversation_id}/title", summary="Atualizar título", tags=["conversations"])
+@router.put("/{conversation_id}/title", summary="Atualizar título", tags=["ai"])
 async def update_conversation_title(
     conversation_id: str,
     title: str = Query(..., description="Novo título da conversação"),
@@ -585,7 +585,7 @@ async def update_conversation_title(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{conversation_id}/archive", summary="Arquivar conversação", tags=["conversations"])
+@router.post("/{conversation_id}/archive", summary="Arquivar conversação", tags=["ai"])
 async def archive_conversation(
     conversation_id: str,
     db: Session = Depends(get_db),
@@ -650,7 +650,7 @@ async def archive_conversation(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{conversation_id}/unarchive", summary="Desarquivar conversação", tags=["conversations"])
+@router.post("/{conversation_id}/unarchive", summary="Desarquivar conversação", tags=["ai"])
 async def unarchive_conversation(
     conversation_id: str,
     db: Session = Depends(get_db),
