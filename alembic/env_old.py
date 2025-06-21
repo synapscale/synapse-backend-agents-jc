@@ -101,15 +101,23 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         # Criar o schema se não existir
-        schema_sql = f"CREATE SCHEMA IF NOT EXISTS {settings.DATABASE_SCHEMA}"
+        schema_sql = f"CREATE SCHEMA IF NOT EXISTS {DATABASE_SCHEMA}"
         connection.execute(text(schema_sql))
         connection.commit()
+        
+        # Garantir que só trabalhamos com o schema synapscale_db
+        connection.execute(text(f"SET search_path TO {DATABASE_SCHEMA}"))
 
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            version_table_schema=settings.DATABASE_SCHEMA,
-            include_schemas=True
+            version_table_schema=DATABASE_SCHEMA,
+            include_schemas=False,  # CRÍTICO: Só trabalhar com o schema definido
+            include_object=lambda obj, name, type_, reflected, compare_to: (
+                # Só incluir objetos do schema synapscale_db
+                getattr(obj, 'schema', None) == DATABASE_SCHEMA or 
+                (hasattr(obj, 'table') and getattr(obj.table, 'schema', None) == DATABASE_SCHEMA)
+            )
         )
 
         with context.begin_transaction():
