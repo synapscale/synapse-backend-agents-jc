@@ -251,7 +251,7 @@ async def add_process_time_header(request: Request, call_next):
 @app.middleware('http')
 async def log_auth_requests(request: Request, call_next):
     """Log de requisições de autenticação para debugging"""
-    if request.url.path.startswith(f"{settings.API_V1_STR}/auth"):
+    if request.url.path.startswith(f"{getattr(settings, 'API_V1_STR', None) or '/api/v1'}/auth"):
         logger.info(f"🔐 Auth request: {request.method} {request.url.path}")
     response = await call_next(request)
     return response
@@ -264,7 +264,7 @@ async def log_requests(request: Request, call_next):
     process_time = time.time() - start_time
     
     # Log apenas para endpoints importantes ou erros
-    if response.status_code >= 400 or request.url.path.startswith(f"{settings.API_V1_STR}"):
+    if response.status_code >= 400 or request.url.path.startswith(f"{getattr(settings, 'API_V1_STR', None) or '/api/v1'}"):
         logger.info(
             f"{request.method} {request.url.path} - "
             f"Status: {response.status_code} - "
@@ -294,10 +294,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 # Include API routers
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix=getattr(settings, 'API_V1_STR', None) or "/api/v1")
 
 # Static files (apenas em debug)
-if settings.DEBUG:
+if getattr(settings, 'DEBUG', None):
     static_dir = _PathHelper(__file__).resolve().parent / "static"
     static_dir.mkdir(exist_ok=True)
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
@@ -359,8 +359,8 @@ async def health_check(db: Session = Depends(get_db)):
     
     return {
         "status": "healthy" if db_status == "healthy" else "degraded",
-        "environment": settings.ENVIRONMENT,
-        "version": settings.VERSION,
+        "environment": getattr(settings, 'ENVIRONMENT', None) or "production",
+        "version": getattr(settings, 'VERSION', None) or "2.0.0",
         "database": db_status,
         "timestamp": time.time()
     }
@@ -376,7 +376,7 @@ async def detailed_health_check(db: Session = Depends(get_db)):
         # Contar tabelas usando SQLAlchemy text() com parâmetros seguros
         result = db.execute(
             text("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = :schema"),
-            {"schema": settings.DATABASE_SCHEMA}
+            {"schema": getattr(settings, 'DATABASE_SCHEMA', None) or "synapscale_db"}
         )
         table_count = result.scalar() if result else 0
         
@@ -387,11 +387,11 @@ async def detailed_health_check(db: Session = Depends(get_db)):
 
     return {
         "status": "healthy",
-        "environment": settings.ENVIRONMENT,
-        "version": settings.VERSION,
+        "environment": getattr(settings, 'ENVIRONMENT', None) or "production",
+        "version": getattr(settings, 'VERSION', None) or "2.0.0",
         "database": {
             "connected": db_connected,
-            "schema": settings.DATABASE_SCHEMA,
+            "schema": getattr(settings, 'DATABASE_SCHEMA', None) or "synapscale_db",
             "tables": table_count,
         },
         "llm_providers": {
@@ -412,23 +412,23 @@ async def detailed_health_check(db: Session = Depends(get_db)):
 async def root():
     """Endpoint raiz"""
     return {
-        "message": f"🚀 {settings.PROJECT_NAME}",
-        "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT,
+        "message": f"🚀 {getattr(settings, 'PROJECT_NAME', None) or 'SynapScale Backend API'}",
+        "version": getattr(settings, 'VERSION', None) or "2.0.0",
+        "environment": getattr(settings, 'ENVIRONMENT', None) or "production",
         "docs": "/docs",
         "health": "/health",
-        "api": settings.API_V1_STR
+        "api": getattr(settings, 'API_V1_STR', None) or "/api/v1"
     }
 
 @app.get("/info", tags=["system"])
 async def api_info():
     """Informações da API"""
     return {
-        "name": settings.PROJECT_NAME,
-        "version": settings.VERSION,
+        "name": getattr(settings, 'PROJECT_NAME', None) or "SynapScale Backend API",
+        "version": getattr(settings, 'VERSION', None) or "2.0.0",
         "description": "Plataforma de Automação com IA",
-        "environment": settings.ENVIRONMENT,
-        "debug": settings.DEBUG,
+        "environment": getattr(settings, 'ENVIRONMENT', None) or "production",
+        "debug": getattr(settings, 'DEBUG', None) or False,
         "features": {
             "authentication": True,
             "workflows": True,
@@ -445,17 +445,22 @@ async def api_info():
     }
 
 if __name__ == "__main__":
+    host = getattr(settings, 'HOST', None) or "0.0.0.0"
+    port = getattr(settings, 'PORT', None) or 8000
+    environment = getattr(settings, 'ENVIRONMENT', None) or "development"
+    debug = getattr(settings, 'DEBUG', None) or False
+    
     logger.info(f"🚀 Iniciando servidor em modo desenvolvimento...")
-    logger.info(f"📍 Host: {settings.HOST}:{settings.PORT}")
-    logger.info(f"🌍 Ambiente: {settings.ENVIRONMENT}")
-    logger.info(f"🔍 Debug: {settings.DEBUG}")
-    logger.info(f"📚 Docs: http://{settings.HOST}:{settings.PORT}/docs")
+    logger.info(f"📍 Host: {host}:{port}")
+    logger.info(f"🌍 Ambiente: {environment}")
+    logger.info(f"🔍 Debug: {debug}")
+    logger.info(f"📚 Docs: http://{host}:{port}/docs")
     
     uvicorn.run(
         "synapse.main_optimized:app",
-        host=settings.HOST or "0.0.0.0",
-        port=settings.PORT or 8000,
-        reload=settings.DEBUG,
+        host=host,
+        port=port,
+        reload=debug,
         log_level=log_level_name.lower(),
         access_log=True,
         server_header=False,
