@@ -338,13 +338,435 @@ app.openapi = custom_openapi
 # Endpoints customizados
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
-    """Documentação Swagger customizada com CSS"""
-    return get_swagger_ui_html(
-        openapi_url=app.openapi_url,
-        title=app.title + " - API Documentation",
-        swagger_ui_parameters=app.swagger_ui_parameters,
-        swagger_css_url="/static/unified-docs-styles.css?v=10.0",  # CSS customizado
-    )
+    """
+    Endpoint personalizado para Swagger UI com design moderno e refinado
+    """
+    return HTMLResponse(content=f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+        <link type="text/css" rel="stylesheet" href="/static/unified-docs-styles.css?v=10.0">
+        <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+        <title>{getattr(settings, 'PROJECT_NAME', None) or 'SynapScale Backend API'} - API Documentation</title>
+        <style>
+            /* Design System - Cores e Variáveis */
+            :root {{
+                --primary-color: #3b82f6;
+                --primary-hover: #2563eb;
+                --secondary-color: #10b981;
+                --background: #f8fafc;
+                --card-background: #ffffff;
+                --text-primary: #1e293b;
+                --text-secondary: #64748b;
+                --border-color: #e2e8f0;
+                --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+                --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+                --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+                --radius-md: 8px;
+                --radius-lg: 12px;
+                --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }}
+
+            /* Base Styles */
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background-color: var(--background);
+                color: var(--text-primary);
+                line-height: 1.6;
+                margin: 0;
+                padding: 0;
+            }}
+
+            /* Swagger UI Container */
+            .swagger-ui {{
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 2rem;
+            }}
+
+            /* Info Section - Header */
+            .swagger-ui .info {{
+                background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                color: white;
+                padding: 3rem 2rem;
+                border-radius: var(--radius-lg);
+                margin-bottom: 2rem;
+                box-shadow: var(--shadow-lg);
+            }}
+
+            .swagger-ui .info .title {{
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 1rem;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }}
+
+            .swagger-ui .info .title small.version-stamp {{
+                background: rgba(255,255,255,0.2);
+                padding: 0.25rem 0.75rem;
+                border-radius: 1rem;
+                font-size: 0.9rem;
+                margin-left: 1rem;
+                backdrop-filter: blur(10px);
+            }}
+
+            .swagger-ui .info .markdown p {{
+                font-size: 1.1rem;
+                opacity: 0.95;
+                max-width: 800px;
+            }}
+
+            /* Category Sections - Blocos Pais */
+            .swagger-ui .opblock-tag-section {{
+                background: var(--card-background);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-md);
+                margin: 2rem 0;
+                padding: 1.5rem;
+                border: 1px solid var(--border-color);
+                transition: var(--transition);
+                position: relative;
+                overflow: hidden;
+            }}
+
+            .swagger-ui .opblock-tag-section::before {{
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+                border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            }}
+
+            .swagger-ui .opblock-tag-section:hover {{
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+            }}
+
+            /* Category Headers */
+            .swagger-ui .opblock-tag {{
+                background: transparent !important;
+                border: none !important;
+                padding: 1rem 0 !important;
+                margin-bottom: 1rem !important;
+                border-bottom: 1px solid var(--border-color) !important;
+            }}
+
+            .swagger-ui .opblock-tag h3 {{
+                color: var(--text-primary) !important;
+                font-size: 1.5rem !important;
+                font-weight: 600 !important;
+                margin: 0 !important;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }}
+
+            /* Category Icons */
+            .swagger-ui .opblock-tag[data-tag="system"] h3::before {{
+                content: '🏠';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            .swagger-ui .opblock-tag[data-tag="authentication"] h3::before {{
+                content: '🔐';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #f97316, #fb923c);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            .swagger-ui .opblock-tag[data-tag="workspaces"] h3::before {{
+                content: '🏢';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #10b981, #34d399);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            .swagger-ui .opblock-tag[data-tag="workflows"] h3::before {{
+                content: '⚙️';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #3b82f6, #60a5fa);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            .swagger-ui .opblock-tag[data-tag="ai"] h3::before {{
+                content: '🤖';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #ec4899, #f472b6);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            .swagger-ui .opblock-tag[data-tag="marketplace"] h3::before {{
+                content: '🛒';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            .swagger-ui .opblock-tag[data-tag="analytics"] h3::before {{
+                content: '📊';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #06b6d4, #22d3ee);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            .swagger-ui .opblock-tag[data-tag="data"] h3::before {{
+                content: '📁';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #f59e0b, #fbbf24);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            .swagger-ui .opblock-tag[data-tag="advanced"] h3::before {{
+                content: '🔌';
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #ef4444, #f87171);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                box-shadow: var(--shadow-sm);
+            }}
+
+            /* Endpoints dentro das categorias */
+            .swagger-ui .opblock {{
+                margin: 0.75rem 0;
+                border-radius: var(--radius-md);
+                border: 1px solid var(--border-color);
+                box-shadow: var(--shadow-sm);
+                transition: var(--transition);
+                overflow: hidden;
+            }}
+
+            .swagger-ui .opblock:hover {{
+                transform: translateX(4px);
+                box-shadow: var(--shadow-md);
+            }}
+
+            /* HTTP Method Colors */
+            .swagger-ui .opblock.opblock-get {{
+                border-left: 4px solid #3b82f6;
+            }}
+
+            .swagger-ui .opblock.opblock-post {{
+                border-left: 4px solid #10b981;
+            }}
+
+            .swagger-ui .opblock.opblock-put {{
+                border-left: 4px solid #f59e0b;
+            }}
+
+            .swagger-ui .opblock.opblock-delete {{
+                border-left: 4px solid #ef4444;
+            }}
+
+            .swagger-ui .opblock.opblock-patch {{
+                border-left: 4px solid #8b5cf6;
+            }}
+
+            /* Method Badges */
+            .swagger-ui .opblock .opblock-summary-method {{
+                border-radius: var(--radius-md);
+                font-weight: 600;
+                font-size: 0.875rem;
+                min-width: 80px;
+                text-align: center;
+            }}
+
+            /* Buttons */
+            .swagger-ui .btn {{
+                border-radius: var(--radius-md);
+                font-weight: 500;
+                transition: var(--transition);
+                border: none;
+                cursor: pointer;
+            }}
+
+            .swagger-ui .btn.execute {{
+                background: var(--primary-color);
+                color: white;
+                padding: 0.5rem 1rem;
+            }}
+
+            .swagger-ui .btn.execute:hover {{
+                background: var(--primary-hover);
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-md);
+            }}
+
+            /* Authorization */
+            .swagger-ui .auth-wrapper .authorize {{
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: var(--radius-md);
+                padding: 0.5rem 1rem;
+                font-weight: 500;
+                transition: var(--transition);
+            }}
+
+            .swagger-ui .auth-wrapper .authorize:hover {{
+                background: var(--primary-hover);
+                transform: translateY(-1px);
+            }}
+
+            /* Responsive Design */
+            @media (max-width: 768px) {{
+                .swagger-ui {{
+                    padding: 1rem;
+                }}
+
+                .swagger-ui .info {{
+                    padding: 2rem 1rem;
+                }}
+
+                .swagger-ui .info .title {{
+                    font-size: 2rem;
+                }}
+
+                .swagger-ui .opblock-tag-section {{
+                    padding: 1rem;
+                }}
+
+                .swagger-ui .opblock-tag h3 {{
+                    font-size: 1.25rem !important;
+                }}
+
+                .swagger-ui .opblock-tag h3::before {{
+                    width: 32px;
+                    height: 32px;
+                    font-size: 16px;
+                }}
+            }}
+
+            /* Animations */
+            @keyframes fadeInUp {{
+                from {{
+                    opacity: 0;
+                    transform: translateY(20px);
+                }}
+                to {{
+                    opacity: 1;
+                    transform: translateY(0);
+                }}
+            }}
+
+            .swagger-ui .opblock-tag-section {{
+                animation: fadeInUp 0.6s ease-out;
+            }}
+
+            /* Staggered animation for multiple sections */
+            .swagger-ui .opblock-tag-section:nth-child(1) {{ animation-delay: 0.1s; }}
+            .swagger-ui .opblock-tag-section:nth-child(2) {{ animation-delay: 0.2s; }}
+            .swagger-ui .opblock-tag-section:nth-child(3) {{ animation-delay: 0.3s; }}
+            .swagger-ui .opblock-tag-section:nth-child(4) {{ animation-delay: 0.4s; }}
+            .swagger-ui .opblock-tag-section:nth-child(5) {{ animation-delay: 0.5s; }}
+            .swagger-ui .opblock-tag-section:nth-child(6) {{ animation-delay: 0.6s; }}
+            .swagger-ui .opblock-tag-section:nth-child(7) {{ animation-delay: 0.7s; }}
+            .swagger-ui .opblock-tag-section:nth-child(8) {{ animation-delay: 0.8s; }}
+            .swagger-ui .opblock-tag-section:nth-child(9) {{ animation-delay: 0.9s; }}
+
+            /* Dark mode support */
+            @media (prefers-color-scheme: dark) {{
+                :root {{
+                    --background: #0f172a;
+                    --card-background: #1e293b;
+                    --text-primary: #f1f5f9;
+                    --text-secondary: #94a3b8;
+                    --border-color: #334155;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div id="swagger-ui"></div>
+        <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+        <script>
+            const ui = SwaggerUIBundle({{
+                url: '/openapi.json',
+                dom_id: '#swagger-ui',
+                layout: 'BaseLayout',
+                deepLinking: true,
+                showExtensions: true,
+                showCommonExtensions: true,
+                defaultModelsExpandDepth: -1,
+                docExpansion: 'none',
+                displayRequestDuration: true,
+                tryItOutEnabled: true,
+                persistAuthorization: true,
+                oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.presets.standalone
+                ],
+                syntaxHighlight: {{
+                    activate: true,
+                    theme: 'agate'
+                }},
+                tagsSorter: 'alpha',
+                operationsSorter: 'alpha'
+            }});
+        </script>
+    </body>
+    </html>
+    """)
 
 # Health checks
 @app.get("/health", tags=["system"])
