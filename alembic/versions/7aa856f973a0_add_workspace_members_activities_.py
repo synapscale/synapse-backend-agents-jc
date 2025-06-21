@@ -58,9 +58,8 @@ def upgrade() -> None:
     op.drop_index(op.f('ix_public_business_metrics_date'), table_name='business_metrics', schema='synapscale_db')
     op.drop_index(op.f('ix_public_business_metrics_id'), table_name='business_metrics', schema='synapscale_db')
     op.drop_table('business_metrics', schema='synapscale_db')
-    op.drop_index(op.f('idx_pcp_client_address'), table_name='platform_commission_participants', schema='banco_de_dados')
-    op.drop_index(op.f('idx_pcp_platform_id'), table_name='platform_commission_participants', schema='banco_de_dados')
-    op.drop_table('platform_commission_participants', schema='banco_de_dados')
+    # Drop dependent tables first to avoid foreign key constraint errors
+    # platform_commission_participants will be dropped later after its dependencies
     op.drop_index(op.f('idx_ptfeeh_coupon_name'), table_name='platform_transaction_fee_history', schema='banco_de_dados')
     op.drop_index(op.f('idx_ptfeeh_fee_currency'), table_name='platform_transaction_fee_history', schema='banco_de_dados')
     op.drop_index(op.f('idx_ptfeeh_tax_currency'), table_name='platform_transaction_fee_history', schema='banco_de_dados')
@@ -275,6 +274,10 @@ def upgrade() -> None:
     op.drop_index(op.f('idx_pc_participant'), table_name='platform_commission', schema='banco_de_dados')
     op.drop_index(op.f('idx_pc_platform_id'), table_name='platform_commission', schema='banco_de_dados')
     op.drop_table('platform_commission', schema='banco_de_dados')
+    # Now safe to drop platform_commission_participants after its dependencies are gone
+    op.drop_index(op.f('idx_pcp_client_address'), table_name='platform_commission_participants', schema='banco_de_dados')
+    op.drop_index(op.f('idx_pcp_platform_id'), table_name='platform_commission_participants', schema='banco_de_dados')
+    op.drop_table('platform_commission_participants', schema='banco_de_dados')
     op.drop_index(op.f('ix_public_workflow_nodes_node_id'), table_name='workflow_nodes', schema='synapscale_db')
     op.drop_index(op.f('ix_public_workflow_nodes_workflow_id'), table_name='workflow_nodes', schema='synapscale_db')
     op.drop_table('workflow_nodes', schema='synapscale_db')
