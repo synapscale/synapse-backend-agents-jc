@@ -7,7 +7,7 @@ load_dotenv()
 
 class Settings(BaseSettings):
     DATABASE_URL: str = Field(default="postgresql://localhost/defaultdb")
-    DATABASE_SCHEMA: str = Field(default="public")
+    DATABASE_SCHEMA: str = Field(default="synapscale_db")
     DATABASE_POOL_SIZE: int = Field(default=20)
     DATABASE_MAX_OVERFLOW: int = Field(default=30)
     DATABASE_ECHO: bool = Field(default=False)

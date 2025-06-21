@@ -57,7 +57,7 @@ class Settings(BaseSettings):
         description="URL de conexão com o banco de dados"
     )
     DATABASE_SCHEMA: str = Field(
-        default_factory=lambda: os.getenv("DATABASE_SCHEMA"),
+        default_factory=lambda: os.getenv("DATABASE_SCHEMA", "synapscale_db"),
         description="Schema do banco de dados"
     )
 
