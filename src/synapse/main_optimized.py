@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import uvicorn
 
 # --- Garantir que o pacote "synapse" seja encontrado ---
@@ -248,6 +249,31 @@ async def add_process_time_header(request: Request, call_next):
     return response
 
 @app.middleware('http')
+async def log_auth_requests(request: Request, call_next):
+    """Log de requisições de autenticação para debugging"""
+    if request.url.path.startswith(f"{settings.API_V1_STR}/auth"):
+        logger.info(f"🔐 Auth request: {request.method} {request.url.path}")
+    response = await call_next(request)
+    return response
+
+@app.middleware('http')
+async def log_requests(request: Request, call_next):
+    """Log básico de requisições"""
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    # Log apenas para endpoints importantes ou erros
+    if response.status_code >= 400 or request.url.path.startswith(f"{settings.API_V1_STR}"):
+        logger.info(
+            f"{request.method} {request.url.path} - "
+            f"Status: {response.status_code} - "
+            f"Time: {process_time:.3f}s"
+        )
+    
+    return response
+
+@app.middleware('http')
 async def rate_limit_middleware(request: Request, call_next):
     return await rate_limit(max_requests=100, window_seconds=60)(call_next)(request)
 
@@ -297,11 +323,13 @@ def custom_openapi():
         }
     }
     
-    # Aplicar segurança globalmente
+    # Aplicar segurança globalmente (exceto para endpoints públicos)
+    public_paths = ["/", "/health", "/health/detailed", "/docs", "/redoc", "/openapi.json"]
     for path in openapi_schema["paths"]:
-        for method in openapi_schema["paths"][path]:
-            if method != "options":
-                openapi_schema["paths"][path][method]["security"] = [{"HTTPBearer": []}]
+        if path not in public_paths:
+            for method in openapi_schema["paths"][path]:
+                if method != "options":
+                    openapi_schema["paths"][path][method]["security"] = [{"HTTPBearer": []}]
     
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -322,8 +350,8 @@ async def custom_swagger_ui_html():
 async def health_check(db: Session = Depends(get_db)):
     """Health check básico"""
     try:
-        # Teste básico de conectividade
-        db.execute("SELECT 1")
+        # Teste básico de conectividade usando SQLAlchemy text()
+        db.execute(text("SELECT 1"))
         db_status = "healthy"
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
@@ -341,9 +369,17 @@ async def health_check(db: Session = Depends(get_db)):
 async def detailed_health_check(db: Session = Depends(get_db)):
     """Health check detalhado"""
     try:
-        db.execute("SELECT 1")
+        # Teste de conectividade
+        db.execute(text("SELECT 1"))
         db_connected = True
-        table_count = len(db.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = %s", (settings.DATABASE_SCHEMA,)).fetchall())
+        
+        # Contar tabelas usando SQLAlchemy text() com parâmetros seguros
+        result = db.execute(
+            text("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = :schema"),
+            {"schema": settings.DATABASE_SCHEMA}
+        )
+        table_count = result.scalar()
+        
     except Exception as e:
         logger.error(f"Database detailed check failed: {e}")
         db_connected = False
@@ -359,10 +395,10 @@ async def detailed_health_check(db: Session = Depends(get_db)):
             "tables": table_count,
         },
         "llm_providers": {
-            "openai": bool(settings.OPENAI_API_KEY),
-            "anthropic": bool(settings.ANTHROPIC_API_KEY),
-            "google": bool(settings.GOOGLE_API_KEY),
-            "groq": bool(settings.GROQ_API_KEY),
+            "openai": bool(getattr(settings, 'OPENAI_API_KEY', None)),
+            "anthropic": bool(getattr(settings, 'ANTHROPIC_API_KEY', None)),
+            "google": bool(getattr(settings, 'GOOGLE_API_KEY', None)),
+            "groq": bool(getattr(settings, 'GROQ_API_KEY', None)),
         },
         "features": {
             "file_upload": True,
