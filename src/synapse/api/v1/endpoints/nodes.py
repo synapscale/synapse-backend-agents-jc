@@ -183,29 +183,70 @@ async def get_node(
     try:
         logger.info(f"Obtendo node {node_id} para usuário {current_user.id}")
         
-        node = db.query(Node).filter(Node.id == node_id).first()
+        # Validate node_id format (UUID)
+        try:
+            from uuid import UUID
+            node_uuid = UUID(node_id)
+        except (ValueError, TypeError):
+            logger.warning(f"node_id inválido: {node_id}")
+            raise HTTPException(status_code=404, detail="Node não encontrado")
+        
+        try:
+            node = db.query(Node).filter(Node.id == node_uuid).first()
 
-        if not node:
-            logger.warning(f"Node {node_id} não encontrado")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Node não encontrado",
-            )
+            if not node:
+                logger.warning(f"Node {node_id} não encontrado")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Node não encontrado",
+                )
 
-        # Verificar permissão
-        if node.user_id != current_user.id and not node.is_public:
-            logger.warning(f"Usuário {current_user.id} sem permissão para acessar node {node_id}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Sem permissão para acessar este node",
-            )
+            # Verificar permissão
+            if node.user_id != current_user.id and not node.is_public:
+                logger.warning(f"Usuário {current_user.id} sem permissão para acessar node {node_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Sem permissão para acessar este node",
+                )
 
-        logger.info(f"Node {node_id} obtido com sucesso para usuário {current_user.id}")
-        return node
+            logger.info(f"Node {node_id} obtido com sucesso para usuário {current_user.id}")
+            
+            # Convert to proper response model with fallback values
+            try:
+                if hasattr(node, 'to_dict'):
+                    node_dict = node.to_dict()
+                    return NodeResponse(**node_dict)
+                else:
+                    # Fallback manual conversion
+                    return NodeResponse(
+                        id=str(node.id),
+                        name=getattr(node, 'name', ''),
+                        description=getattr(node, 'description', ''),
+                        type=getattr(node, 'type', 'operation'),
+                        category=getattr(node, 'category', ''),
+                        user_id=str(getattr(node, 'user_id', '')),
+                        workspace_id=str(getattr(node, 'workspace_id', '')) if getattr(node, 'workspace_id') else None,
+                        is_public=getattr(node, 'is_public', False),
+                        downloads_count=getattr(node, 'downloads_count', 0),
+                        rating_average=getattr(node, 'rating_average', 0),
+                        rating_count=getattr(node, 'rating_count', 0),
+                        created_at=getattr(node, 'created_at', None),
+                        updated_at=getattr(node, 'updated_at', None)
+                    )
+            except (ValueError, TypeError) as e:
+                logger.error(f"Erro na conversão do modelo Node: {str(e)}")
+                raise HTTPException(status_code=500, detail="Erro na conversão de dados")
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Erro de serviço ao obter node {node_id}: {str(e)}")
+            raise HTTPException(status_code=500, detail="Erro no serviço de nodes")
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao obter node {node_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral ao obter node {node_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
@@ -239,38 +280,79 @@ async def update_node(
     try:
         logger.info(f"Atualizando node {node_id} para usuário {current_user.id}")
         
-        node = (
-            db.query(Node)
-            .filter(Node.id == node_id, Node.user_id == current_user.id)
-            .first()
-        )
-
-        if not node:
-            logger.warning(f"Node {node_id} não encontrado ou sem permissão para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Node não encontrado",
+        # Validate node_id format (UUID)
+        try:
+            from uuid import UUID
+            node_uuid = UUID(node_id)
+        except (ValueError, TypeError):
+            logger.warning(f"node_id inválido: {node_id}")
+            raise HTTPException(status_code=404, detail="Node não encontrado")
+        
+        try:
+            node = (
+                db.query(Node)
+                .filter(Node.id == node_uuid, Node.user_id == current_user.id)
+                .first()
             )
 
-        # Atualizar campos
-        update_count = 0
-        for field, value in node_data.dict(exclude_unset=True).items():
-            if getattr(node, field) != value:
-                setattr(node, field, value)
-                update_count += 1
+            if not node:
+                logger.warning(f"Node {node_id} não encontrado ou sem permissão para usuário {current_user.id}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Node não encontrado",
+                )
 
-        if update_count > 0:
-            db.commit()
-            db.refresh(node)
-            logger.info(f"Node {node_id} atualizado com sucesso - {update_count} campos modificados")
-        else:
-            logger.info(f"Nenhuma alteração necessária no node {node_id}")
+            # Atualizar campos
+            update_count = 0
+            for field, value in node_data.dict(exclude_unset=True).items():
+                if getattr(node, field) != value:
+                    setattr(node, field, value)
+                    update_count += 1
 
-        return node
+            if update_count > 0:
+                db.commit()
+                db.refresh(node)
+                logger.info(f"Node {node_id} atualizado com sucesso - {update_count} campos modificados")
+            else:
+                logger.info(f"Nenhuma alteração necessária no node {node_id}")
+
+            # Convert to proper response model with fallback values
+            try:
+                if hasattr(node, 'to_dict'):
+                    node_dict = node.to_dict()
+                    return NodeResponse(**node_dict)
+                else:
+                    # Fallback manual conversion
+                    return NodeResponse(
+                        id=str(node.id),
+                        name=getattr(node, 'name', ''),
+                        description=getattr(node, 'description', ''),
+                        type=getattr(node, 'type', 'operation'),
+                        category=getattr(node, 'category', ''),
+                        user_id=str(getattr(node, 'user_id', '')),
+                        workspace_id=str(getattr(node, 'workspace_id', '')) if getattr(node, 'workspace_id') else None,
+                        is_public=getattr(node, 'is_public', False),
+                        downloads_count=getattr(node, 'downloads_count', 0),
+                        rating_average=getattr(node, 'rating_average', 0),
+                        rating_count=getattr(node, 'rating_count', 0),
+                        created_at=getattr(node, 'created_at', None),
+                        updated_at=getattr(node, 'updated_at', None)
+                    )
+            except (ValueError, TypeError) as e:
+                logger.error(f"Erro na conversão do modelo Node: {str(e)}")
+                raise HTTPException(status_code=500, detail="Erro na conversão de dados")
+                
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Erro de serviço ao atualizar node {node_id}: {str(e)}")
+            db.rollback()
+            raise HTTPException(status_code=500, detail="Erro no serviço de nodes")
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao atualizar node {node_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral ao atualizar node {node_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
@@ -303,29 +385,46 @@ async def delete_node(
     try:
         logger.info(f"Deletando node {node_id} para usuário {current_user.id}")
         
-        node = (
-            db.query(Node)
-            .filter(Node.id == node_id, Node.user_id == current_user.id)
-            .first()
-        )
-
-        if not node:
-            logger.warning(f"Node {node_id} não encontrado ou sem permissão para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Node não encontrado",
+        # Validate node_id format (UUID)
+        try:
+            from uuid import UUID
+            node_uuid = UUID(node_id)
+        except (ValueError, TypeError):
+            logger.warning(f"node_id inválido: {node_id}")
+            raise HTTPException(status_code=404, detail="Node não encontrado")
+        
+        try:
+            node = (
+                db.query(Node)
+                .filter(Node.id == node_uuid, Node.user_id == current_user.id)
+                .first()
             )
 
-        node_name = node.name
-        db.delete(node)
-        db.commit()
+            if not node:
+                logger.warning(f"Node {node_id} não encontrado ou sem permissão para usuário {current_user.id}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Node não encontrado",
+                )
 
-        logger.info(f"Node '{node_name}' (ID: {node_id}) deletado com sucesso para usuário {current_user.id}")
-        return {"message": "Node deletado com sucesso"}
+            node_name = node.name
+            db.delete(node)
+            db.commit()
+
+            logger.info(f"Node '{node_name}' (ID: {node_id}) deletado com sucesso para usuário {current_user.id}")
+            return {"message": "Node deletado com sucesso"}
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Erro de serviço ao deletar node {node_id}: {str(e)}")
+            db.rollback()
+            raise HTTPException(status_code=500, detail="Erro no serviço de nodes")
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao deletar node {node_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral ao deletar node {node_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
@@ -357,31 +456,48 @@ async def download_node(
     try:
         logger.info(f"Fazendo download do node {node_id} para usuário {current_user.id}")
         
-        node = db.query(Node).filter(Node.id == node_id, Node.is_public == True).first()
-
-        if not node:
-            logger.warning(f"Node {node_id} não encontrado ou não é público")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Node não encontrado ou não público",
-            )
-
-        # Incrementar contador de downloads
-        node.downloads_count += 1
-        db.commit()
-
-        logger.info(f"Download do node '{node.name}' (ID: {node_id}) registrado para usuário {current_user.id} - total downloads: {node.downloads_count}")
+        # Validate node_id format (UUID)
+        try:
+            from uuid import UUID
+            node_uuid = UUID(node_id)
+        except (ValueError, TypeError):
+            logger.warning(f"node_id inválido: {node_id}")
+            raise HTTPException(status_code=404, detail="Node não encontrado ou não público")
         
-        return {
-            "message": "Node baixado com sucesso",
-            "node_id": node_id,
-            "node_name": node.name,
-            "downloads_count": node.downloads_count,
-        }
+        try:
+            node = db.query(Node).filter(Node.id == node_uuid, Node.is_public == True).first()
+
+            if not node:
+                logger.warning(f"Node {node_id} não encontrado ou não é público")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Node não encontrado ou não público",
+                )
+
+            # Incrementar contador de downloads
+            node.downloads_count += 1
+            db.commit()
+
+            logger.info(f"Download do node '{node.name}' (ID: {node_id}) registrado para usuário {current_user.id} - total downloads: {node.downloads_count}")
+            
+            return {
+                "message": "Node baixado com sucesso",
+                "node_id": str(node.id),  # Ensure ID is properly serialized as string
+                "node_name": getattr(node, 'name', ''),
+                "downloads_count": getattr(node, 'downloads_count', 0),
+            }
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Erro de serviço ao fazer download do node {node_id}: {str(e)}")
+            db.rollback()
+            raise HTTPException(status_code=500, detail="Erro no serviço de nodes")
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro no download do node {node_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral no download do node {node_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 

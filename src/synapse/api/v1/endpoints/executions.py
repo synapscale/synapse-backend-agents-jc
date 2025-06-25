@@ -229,11 +229,62 @@ async def get_execution_statistics(
     """
     try:
         logger.info(f"Obtendo estatísticas de execução para usuário {current_user.id}")
-        stats = await service.get_execution_statistics(db, current_user.id)
-        logger.info(f"Estatísticas de execução obtidas para usuário {current_user.id}")
-        return stats
+        
+        try:
+            # Chamada para o serviço
+            stats_data = await service.get_execution_statistics(db, current_user.id)
+            
+            # Verificar se stats_data é um objeto ExecutionStats válido
+            if not isinstance(stats_data, ExecutionStats):
+                logger.error(f"Serviço retornou tipo inválido: {type(stats_data)}")
+                # Converter para dict e depois para ExecutionStats como fallback
+                if hasattr(stats_data, '__dict__'):
+                    stats_dict = stats_data.__dict__
+                else:
+                    stats_dict = stats_data if isinstance(stats_data, dict) else {}
+                
+                # Criar ExecutionStats com valores padrão para campos obrigatórios
+                stats_data = ExecutionStats(
+                    total_executions=stats_dict.get('total_executions', 0),
+                    running_executions=stats_dict.get('running_executions', 0),
+                    completed_executions=stats_dict.get('completed_executions', 0),
+                    failed_executions=stats_dict.get('failed_executions', 0),
+                    cancelled_executions=stats_dict.get('cancelled_executions', 0),
+                    average_duration_seconds=stats_dict.get('average_duration_seconds'),
+                    success_rate_percentage=stats_dict.get('success_rate_percentage', 0.0),
+                    total_nodes_executed=stats_dict.get('total_nodes_executed', 0),
+                    average_nodes_per_execution=stats_dict.get('average_nodes_per_execution', 0.0),
+                    most_used_workflows=stats_dict.get('most_used_workflows', []),
+                    execution_trends=stats_dict.get('execution_trends', {})
+                )
+            
+            logger.info(f"Estatísticas de execução obtidas com sucesso para usuário {current_user.id}")
+            return stats_data
+            
+        except ValueError as e:
+            logger.warning(f"Dados inválidos ao obter estatísticas para usuário {current_user.id}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Dados inválidos: {str(e)}")
+        except Exception as e:
+            logger.error(f"Erro no serviço ao obter estatísticas para usuário {current_user.id}: {str(e)}")
+            # Retornar estatísticas padrão em caso de erro do serviço
+            return ExecutionStats(
+                total_executions=0,
+                running_executions=0,
+                completed_executions=0,
+                failed_executions=0,
+                cancelled_executions=0,
+                average_duration_seconds=None,
+                success_rate_percentage=0.0,
+                total_nodes_executed=0,
+                average_nodes_per_execution=0.0,
+                most_used_workflows=[],
+                execution_trends={}
+            )
+            
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao obter estatísticas para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro inesperado ao obter estatísticas para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
@@ -452,16 +503,63 @@ async def get_execution_nodes(
     """
     try:
         logger.info(f"Obtendo nós da execução {execution_id} para usuário {current_user.id}")
-        nodes = await service.get_execution_nodes(db, execution_id, current_user.id)
-        if nodes is None:
-            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}")
+        
+        # Validate execution_id format
+        if not execution_id or not execution_id.strip():
+            logger.warning(f"ID da execução inválido: '{execution_id}'")
+            raise HTTPException(status_code=400, detail="ID da execução inválido")
+        
+        try:
+            # Call service method using get_node_executions (not get_execution_nodes)
+            nodes = await service.get_node_executions(db, execution_id, current_user.id)
+            
+            # Verify that we have a valid execution by checking if empty list means not found
+            # We need to explicitly check if the execution exists
+            from synapse.models.workflow_execution import WorkflowExecution
+            execution_exists = db.query(WorkflowExecution).filter(
+                WorkflowExecution.execution_id == execution_id,
+                WorkflowExecution.user_id == current_user.id
+            ).first() is not None
+            
+            if not execution_exists:
+                logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}")
+                raise HTTPException(status_code=404, detail="Execução não encontrada")
+            
+            # Convert response data if needed
+            if isinstance(nodes, list):
+                # Ensure each node has the correct structure
+                processed_nodes = []
+                for node in nodes:
+                    try:
+                        if hasattr(node, '__dict__'):
+                            processed_nodes.append(node)
+                        elif isinstance(node, dict):
+                            # Convert dict to NodeExecutionResponse if needed
+                            processed_nodes.append(NodeExecutionResponse(**node))
+                        else:
+                            processed_nodes.append(node)
+                    except Exception as node_error:
+                        logger.warning(f"Erro ao processar nó da execução {execution_id}: {str(node_error)}")
+                        # Skip problematic nodes but continue processing
+                        continue
+                
+                logger.info(f"Retornados {len(processed_nodes)} nós da execução {execution_id} para usuário {current_user.id}")
+                return processed_nodes
+            else:
+                logger.error(f"Serviço retornou tipo inválido para nós: {type(nodes)}")
+                return []
+                
+        except ValueError as e:
+            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}: {str(e)}")
             raise HTTPException(status_code=404, detail="Execução não encontrada")
-        logger.info(f"Retornados {len(nodes)} nós da execução {execution_id} para usuário {current_user.id}")
-        return nodes
+        except Exception as e:
+            logger.error(f"Erro no serviço ao obter nós da execução {execution_id}: {str(e)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao obter nós da execução {execution_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro inesperado ao obter nós da execução {execution_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
@@ -496,14 +594,28 @@ async def get_execution_logs(
     """
     try:
         logger.info(f"Obtendo logs da execução {execution_id} para usuário {current_user.id} - incluir nós: {include_nodes}")
-        logs = await service.get_execution_logs(
-            db, execution_id, current_user.id, include_nodes
-        )
+        
+        # Call service method with correct parameters
+        try:
+            logs = await service.get_execution_logs(db, execution_id, current_user.id)
+        except ValueError as e:
+            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}: {str(e)}")
+            raise HTTPException(status_code=404, detail="Execução não encontrada")
+        except Exception as e:
+            logger.error(f"Erro no serviço ao obter logs da execução {execution_id}: {str(e)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        
         if not logs:
             logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}")
             raise HTTPException(status_code=404, detail="Execução não encontrada")
+        
+        # Ensure proper structure with include_nodes parameter
+        if not include_nodes and 'node_logs' in logs:
+            logs = {k: v for k, v in logs.items() if k != 'node_logs'}
+        
         logger.info(f"Logs da execução {execution_id} obtidos para usuário {current_user.id}")
         return logs
+        
     except HTTPException:
         raise
     except Exception as e:
@@ -544,14 +656,40 @@ async def get_execution_metrics(
     """
     try:
         logger.info(f"Obtendo métricas da execução {execution_id} para usuário {current_user.id} - tipos: {metric_types}")
-        metrics = await service.get_execution_metrics(
-            db, execution_id, current_user.id, metric_types
-        )
-        if not metrics:
+        
+        # Call service method with correct parameters
+        try:
+            metrics_list = await service.get_execution_metrics(db, execution_id, current_user.id)
+        except ValueError as e:
+            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}: {str(e)}")
+            raise HTTPException(status_code=404, detail="Execução não encontrada")
+        except Exception as e:
+            logger.error(f"Erro no serviço ao obter métricas da execução {execution_id}: {str(e)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        
+        if not metrics_list:
             logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}")
             raise HTTPException(status_code=404, detail="Execução não encontrada")
+        
+        # Format metrics properly and apply filters if specified
+        metrics_dict = {
+            "execution_id": execution_id,
+            "metrics": metrics_list,
+            "total_metrics": len(metrics_list)
+        }
+        
+        # Filter by metric types if specified
+        if metric_types:
+            filtered_metrics = [
+                metric for metric in metrics_list 
+                if metric.get("metric_type") in metric_types
+            ]
+            metrics_dict["metrics"] = filtered_metrics
+            metrics_dict["filtered_count"] = len(filtered_metrics)
+            
         logger.info(f"Métricas da execução {execution_id} obtidas para usuário {current_user.id}")
-        return metrics
+        return metrics_dict
+        
     except HTTPException:
         raise
     except Exception as e:
@@ -674,39 +812,35 @@ async def get_queue_status(
         logger.info(f"Obtendo status da fila para usuário {current_user.id}")
         
         # Obtém estatísticas da fila
-        from synapse.models.workflow_execution import ExecutionStatus
+        from synapse.models.workflow_execution import ExecutionStatus, WorkflowExecution
         from sqlalchemy import func
         
         # Execuções pendentes do usuário
-        pending_executions = db.query(func.count()).filter(
-            db.query(WorkflowExecution).filter(
-                WorkflowExecution.user_id == current_user.id,
-                WorkflowExecution.status == ExecutionStatus.PENDING
-            ).subquery()
+        pending_executions = db.query(func.count(WorkflowExecution.id)).filter(
+            WorkflowExecution.user_id == current_user.id,
+            WorkflowExecution.status == ExecutionStatus.PENDING
         ).scalar() or 0
         
         # Execuções em andamento do usuário
-        running_executions = db.query(func.count()).filter(
-            db.query(WorkflowExecution).filter(
-                WorkflowExecution.user_id == current_user.id,
-                WorkflowExecution.status == ExecutionStatus.RUNNING
-            ).subquery()
+        running_executions = db.query(func.count(WorkflowExecution.id)).filter(
+            WorkflowExecution.user_id == current_user.id,
+            WorkflowExecution.status == ExecutionStatus.RUNNING
         ).scalar() or 0
         
         # Execuções em pausa do usuário
-        paused_executions = db.query(func.count()).filter(
-            db.query(WorkflowExecution).filter(
-                WorkflowExecution.user_id == current_user.id,
-                WorkflowExecution.status == ExecutionStatus.PAUSED
-            ).subquery()
+        paused_executions = db.query(func.count(WorkflowExecution.id)).filter(
+            WorkflowExecution.user_id == current_user.id,
+            WorkflowExecution.status == ExecutionStatus.PAUSED
         ).scalar() or 0
         
         # Posição na fila global (aproximada)
-        total_pending = db.query(func.count()).filter(
-            db.query(WorkflowExecution).filter(
-                WorkflowExecution.status == ExecutionStatus.PENDING
-            ).subquery()
+        total_pending = db.query(func.count(WorkflowExecution.id)).filter(
+            WorkflowExecution.status == ExecutionStatus.PENDING
         ).scalar() or 0
+        
+        # Get user limits with safe defaults
+        execution_limit = getattr(current_user, 'execution_limit', None) or 5
+        queue_limit = getattr(current_user, 'queue_limit', None) or 100
         
         queue_status = {
             "user_queue": {
@@ -720,8 +854,8 @@ async def get_queue_status(
                 "estimated_wait_time_minutes": max(total_pending * 2, 1) if total_pending > 0 else 0
             },
             "limits": {
-                "max_concurrent_executions": current_user.execution_limit or 5,
-                "max_queue_size": current_user.queue_limit or 100
+                "max_concurrent_executions": execution_limit,
+                "max_queue_size": queue_limit
             },
             "status": "healthy" if total_pending < 1000 else "congested"
         }

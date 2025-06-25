@@ -119,6 +119,7 @@ class WorkspaceMember(Base):
             role=WorkspaceRole.OWNER,
             status="active",
             is_favorite=True,
+            last_seen_at=datetime.now(timezone.utc),
             notification_preferences={
                 "email_notifications": True,
                 "push_notifications": True,
@@ -135,6 +136,7 @@ class WorkspaceMember(Base):
             role=role,
             status="active",
             is_favorite=False,
+            last_seen_at=datetime.now(timezone.utc),
             notification_preferences={
                 "email_notifications": True,
                 "push_notifications": False,

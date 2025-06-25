@@ -109,11 +109,47 @@ services:
     networks:
       - synapscale-network
 
+  # Loki for Centralized Logging
+  loki:
+    image: grafana/loki:latest
+    container_name: loki-observer
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki:/etc/loki
+      - loki_data:/loki
+    command: -config.file=/etc/loki/config.yml
+    networks:
+      - synapscale-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Promtail for Log Collection
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail-observer
+    restart: unless-stopped
+    volumes:
+      - ./config/promtail:/etc/promtail
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./logs:/var/log/synapscale:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - synapscale-network
+
 volumes:
   postgres_data:
   redis_data:
   prometheus_data:
   grafana_data:
+  loki_data:
 
 networks:
   synapscale-network:

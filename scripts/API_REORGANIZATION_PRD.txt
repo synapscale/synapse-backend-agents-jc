@@ -1,0 +1,398 @@
+# Product Requirements Document (PRD)
+# SynapScale API Structure Reorganization & Optimization Project
+
+## Overview
+
+Este projeto visa reorganizar e otimizar toda a estrutura dos endpoints da API SynapScale para seguir as melhores práticas de desenvolvimento backend, mantendo **ABSOLUTAMENTE** os mesmos caminhos de endpoint existentes. O foco é melhorar performance, manutenibilidade, organização e entendimento do código sem quebrar integrações existentes.
+
+**Problema Principal**: Estrutura atual dos endpoints apresenta problemas de organização, duplicação de código, falta de padrões consistentes e oportunidades de otimização de performance.
+
+**Valor Entregue**: Codebase mais limpo, performático, manutenível e seguindo padrões industry-standard, sem impacto nas integrações existentes.
+
+**Restrição Crítica**: NENHUM caminho de endpoint pode ser alterado (ex: `/api/v1/llm/chat` deve permanecer exatamente igual).
+
+## Core Objectives
+
+### 1. Reorganização Estrutural
+**O que faz**: Reestruturar organização de arquivos e módulos para melhor manutenibilidade
+**Por que é importante**: Código atual mistura responsabilidades e tem arquivos muito grandes
+**Como funciona**: 
+- Separar endpoints por domínio lógico
+- Criar sub-routers para endpoints complexos
+- Implementar padrão de services/repositories
+- Organizar schemas e models de forma consistente
+
+### 2. Otimização de Performance
+**O que faz**: Implementar otimizações de performance sem alterar comportamento externo
+**Por que é importante**: Melhorar latência e throughput da API
+**Como funciona**:
+- Implementar connection pooling otimizado
+- Cache inteligente para operações pesadas
+- Lazy loading e paginação otimizada
+- Query optimization e índices de banco
+
+### 3. Padronização de Código
+**O que faz**: Estabelecer padrões consistentes em toda a codebase
+**Por que é importante**: Facilitar manutenção e onboarding de novos desenvolvedores
+**Como funciona**:
+- Error handling padronizado
+- Response schemas consistentes
+- Logging estruturado
+- Validation patterns uniformes
+
+### 4. Melhoria da Manutenibilidade
+**O que faz**: Refatorar código para facilitar futuras modificações
+**Por que é importante**: Reduzir tempo de desenvolvimento e bugs
+**Como funciona**:
+- Separação clara de responsabilidades
+- Dependency injection
+- Testabilidade melhorada
+- Documentação inline
+
+## Technical Architecture Improvements
+
+### Current Structure Analysis
+```
+src/synapse/api/v1/endpoints/
+├── agents.py (643 lines) - ✅ Bem organizado
+├── analytics.py (1000+ lines) - ❌ Muito grande, precisa quebrar
+├── auth.py (800+ lines) - ❌ Muito grande, precisa quebrar  
+├── billing.py (25 lines) - ✅ Pequeno, OK
+├── conversations.py (800+ lines) - ❌ Muito grande
+├── executions.py (1100+ lines) - ❌ Muito grande
+├── llm/
+│   ├── routes.py (699 lines) - ❌ Pode melhorar organização
+│   └── schemas.py (574 lines) - ✅ Bem organizado
+├── marketplace.py (1000+ lines) - ❌ Muito grande
+├── workflows.py (?) - Precisa análise
+└── ... outros arquivos
+```
+
+### Proposed New Structure
+```
+src/synapse/api/v1/endpoints/
+├── auth/
+│   ├── __init__.py
+│   ├── login.py          # Login/logout endpoints
+│   ├── registration.py   # User registration
+│   ├── password.py       # Password management
+│   └── verification.py   # Email verification
+├── analytics/
+│   ├── __init__.py
+│   ├── events.py         # Event tracking
+│   ├── dashboards.py     # Dashboard management
+│   ├── metrics.py        # Metrics endpoints
+│   ├── reports.py        # Report generation
+│   └── queries.py        # Custom queries
+├── ai/
+│   ├── __init__.py
+│   ├── agents.py         # Agent management
+│   ├── conversations.py  # Conversation handling
+│   └── llm/
+│       ├── __init__.py
+│       ├── generation.py # Text generation
+│       ├── chat.py       # Chat completion
+│       ├── tokens.py     # Token counting
+│       ├── models.py     # Model listing
+│       └── schemas.py    # LLM schemas
+├── workflows/
+│   ├── __init__.py
+│   ├── executions.py     # Execution management
+│   ├── nodes.py          # Node operations
+│   ├── templates.py      # Template management
+│   └── queue.py          # Queue management
+├── marketplace/
+│   ├── __init__.py
+│   ├── components.py     # Component CRUD
+│   ├── ratings.py        # Rating system
+│   ├── purchases.py      # Purchase handling
+│   └── moderation.py     # Admin moderation
+├── data/
+│   ├── __init__.py
+│   ├── files.py          # File operations
+│   ├── user_variables.py # User variables
+│   └── usage_logs.py     # Usage tracking
+└── admin/
+    ├── __init__.py
+    ├── billing.py        # Billing management
+    ├── feedback.py       # Feedback system
+    └── tags.py           # Tag management
+```
+
+### Service Layer Architecture
+```python
+# New service layer structure
+src/synapse/services/
+├── __init__.py
+├── auth/
+│   ├── authentication_service.py
+│   ├── authorization_service.py
+│   └── password_service.py
+├── ai/
+│   ├── agent_service.py
+│   ├── conversation_service.py
+│   └── llm_service.py
+├── analytics/
+│   ├── dashboard_service.py
+│   ├── metrics_service.py
+│   └── query_service.py
+├── workflows/
+│   ├── execution_service.py
+│   ├── node_service.py
+│   └── template_service.py
+└── core/
+    ├── cache_service.py
+    ├── notification_service.py
+    └── file_service.py
+```
+
+## Implementation Strategy
+
+### Phase 1: Foundation & Core Services (1 week)
+**Scope**: Estabelecer base sólida para reorganização
+- Criar estrutura de services
+- Implementar base classes e patterns
+- Configurar dependency injection
+- Estabelecer error handling global
+- **Deliverable**: Infraestrutura base pronta
+
+### Phase 2: Auth Module Reorganization (3 days)
+**Scope**: Reorganizar módulo de autenticação
+- Quebrar auth.py em sub-módulos
+- Implementar AuthService
+- Manter todos os endpoints inalterados
+- Melhorar error handling
+- **Deliverable**: Módulo auth reorganizado e otimizado
+
+### Phase 3: Analytics Module Reorganization (5 days)
+**Scope**: Reorganizar módulo de analytics
+- Quebrar analytics.py em sub-módulos
+- Implementar AnalyticsService
+- Otimizar queries pesadas
+- Implementar cache inteligente
+- **Deliverable**: Módulo analytics reorganizado
+
+### Phase 4: AI/LLM Module Reorganization (4 days)
+**Scope**: Reorganizar módulos de IA
+- Reorganizar estrutura llm/
+- Melhorar agents.py e conversations.py
+- Implementar AIService
+- Otimizar operações LLM
+- **Deliverable**: Módulos AI reorganizados
+
+### Phase 5: Workflows Module Reorganization (5 days)
+**Scope**: Reorganizar módulo de workflows
+- Quebrar executions.py em sub-módulos
+- Implementar WorkflowService
+- Otimizar operações de execução
+- Melhorar logging e monitoring
+- **Deliverable**: Módulo workflows reorganizado
+
+### Phase 6: Marketplace & Data Modules (4 days)
+**Scope**: Reorganizar módulos restantes
+- Quebrar marketplace.py
+- Reorganizar módulos de dados
+- Implementar services correspondentes
+- **Deliverable**: Todos os módulos reorganizados
+
+### Phase 7: Performance Optimization (3 days)
+**Scope**: Otimizações finais de performance
+- Database query optimization
+- Cache implementation
+- Connection pooling
+- Response compression
+- **Deliverable**: Sistema otimizado
+
+### Phase 8: Testing & Validation (2 days)
+**Scope**: Garantir que nada foi quebrado
+- Testes de regressão completos
+- Validação de todos os endpoints
+- Performance benchmarking
+- **Deliverable**: Sistema validado
+
+## Key Patterns & Standards
+
+### 1. Router Organization Pattern
+```python
+# main router file (e.g., auth/__init__.py)
+from fastapi import APIRouter
+from .login import router as login_router
+from .registration import router as registration_router
+from .password import router as password_router
+
+router = APIRouter()
+router.include_router(login_router, tags=["authentication"])
+router.include_router(registration_router, tags=["authentication"])
+router.include_router(password_router, tags=["authentication"])
+```
+
+### 2. Service Dependency Pattern
+```python
+# endpoint file
+from fastapi import APIRouter, Depends
+from synapse.services.auth.authentication_service import AuthenticationService
+
+router = APIRouter()
+
+@router.post("/login")
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    auth_service: AuthenticationService = Depends(),
+    db: Session = Depends(get_db),
+):
+    return await auth_service.authenticate_user(form_data, db)
+```
+
+### 3. Error Handling Pattern
+```python
+# Global error handler
+from synapse.core.exceptions import SynapseException
+
+@app.exception_handler(SynapseException)
+async def synapse_exception_handler(request: Request, exc: SynapseException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "error_code": exc.error_code}
+    )
+```
+
+### 4. Response Schema Pattern
+```python
+# Consistent response schemas
+from synapse.schemas.base import BaseResponse
+
+class AuthResponse(BaseResponse):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+```
+
+## Performance Optimizations
+
+### 1. Database Optimizations
+- Connection pooling configuration
+- Query optimization with proper indexes
+- Lazy loading for related objects
+- Pagination improvements
+
+### 2. Cache Strategy
+- Redis integration for frequent queries
+- Response caching for expensive operations
+- Session caching
+- Query result caching
+
+### 3. Response Optimizations
+- Response compression
+- Minimal data transfer
+- Async operations where possible
+- Background task processing
+
+## Quality Assurance
+
+### 1. Code Quality Standards
+- Type hints em 100% do código
+- Docstrings para todas as funções públicas
+- Consistent naming conventions
+- Maximum function complexity limits
+
+### 2. Testing Strategy
+- Unit tests para todos os services
+- Integration tests para endpoints
+- Performance regression tests
+- API contract tests
+
+### 3. Monitoring & Observability
+- Structured logging
+- Performance metrics
+- Error tracking
+- Health checks
+
+## Success Metrics
+
+### Code Quality Metrics
+- **Lines per file**: < 300 lines (current: some 1000+)
+- **Cyclomatic complexity**: < 10 per function
+- **Test coverage**: > 80%
+- **Type coverage**: 100%
+
+### Performance Metrics
+- **Response time**: < 200ms for 95% of requests
+- **Database queries**: < 3 queries per endpoint average
+- **Memory usage**: < 512MB per worker
+- **CPU usage**: < 70% under normal load
+
+### Maintainability Metrics
+- **File organization**: Clear domain separation
+- **Code duplication**: < 5%
+- **Documentation coverage**: 100% for public APIs
+- **Onboarding time**: < 2 days for new developers
+
+## Risk Mitigation
+
+### Technical Risks
+**Risk**: Quebrar funcionalidade existente durante reorganização
+**Mitigation**: Testes automatizados extensivos, rollback strategy, feature flags
+
+**Risk**: Performance degradation durante refatoração
+**Mitigation**: Benchmarking contínuo, performance tests, gradual rollout
+
+**Risk**: Introduzir bugs durante reorganização
+**Mitigation**: Code review rigoroso, pair programming, staged deployment
+
+### Timeline Risks
+**Risk**: Subestimar complexidade da reorganização
+**Mitigation**: Buffer time em cada phase, priorização clara, MVP approach
+
+**Risk**: Dependências entre módulos causando bloqueios
+**Mitigation**: Dependency mapping claro, trabalho paralelo quando possível
+
+## Appendix
+
+### Current Endpoint Inventory
+```
+Authentication (8 endpoints):
+- POST /api/v1/auth/docs-login
+- POST /api/v1/auth/register  
+- POST /api/v1/auth/login
+- POST /api/v1/auth/refresh
+- POST /api/v1/auth/logout
+- POST /api/v1/auth/logout-all
+- GET /api/v1/auth/me
+- [outros auth endpoints...]
+
+Analytics (15+ endpoints):
+- POST /api/v1/analytics/events
+- POST /api/v1/analytics/events/batch
+- GET /api/v1/analytics/events
+- GET /api/v1/analytics/metrics/user-behavior
+- [outros analytics endpoints...]
+
+AI/LLM (10+ endpoints):
+- POST /api/v1/llm/generate
+- POST /api/v1/llm/chat
+- POST /api/v1/llm/count-tokens
+- GET /api/v1/llm/models
+- [outros llm endpoints...]
+
+[Continuar inventário completo...]
+```
+
+### Migration Checklist
+- [ ] Backup do código atual
+- [ ] Setup de ambiente de teste
+- [ ] Implementação da nova estrutura
+- [ ] Migração gradual dos endpoints
+- [ ] Testes de regressão
+- [ ] Performance benchmarking
+- [ ] Deployment em staging
+- [ ] Validação completa
+- [ ] Deployment em produção
+- [ ] Monitoring pós-deployment
+
+### Rollback Strategy
+- Manter código original em branch separado
+- Feature flags para nova/antiga implementação
+- Database migrations reversíveis
+- Deployment blue-green
+- Monitoring de métricas críticas
+- Rollback automático em caso de degradação 

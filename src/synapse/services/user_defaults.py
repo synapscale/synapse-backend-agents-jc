@@ -7,7 +7,7 @@ from synapse.models.workspace import Workspace, WorkspaceType
 from synapse.models.workspace_member import WorkspaceMember, WorkspaceRole
 from synapse.models.workspace_activity import WorkspaceActivity
 from synapse.models.subscription import Plan, UserSubscription, PlanType, SubscriptionStatus
-from synapse.services.workspace_service import WorkspaceService
+# from synapse.services.workspace_service import WorkspaceService  # Não usado atualmente
 from datetime import datetime, timezone
 import uuid
 import logging
@@ -29,26 +29,49 @@ def create_user_defaults(db: Session, user: User) -> dict:
         
         # 1. Garantir que existe plano FREE
         free_plan = db.query(Plan).filter(Plan.slug == "free").first()
+        
+        # Se não encontrou o plano FREE, tentar buscar pelo ID específico conhecido
+        if not free_plan:
+            logger.info("Plano FREE não encontrado por slug, tentando buscar por ID específico")
+            from uuid import UUID
+            try:
+                known_plan_id = UUID("6f97342b-ab33-469f-bedb-8a73d067588d")
+                free_plan = db.query(Plan).filter(Plan.id == known_plan_id).first()
+                if free_plan:
+                    logger.info(f"Plano encontrado por ID específico: {free_plan.id}")
+            except Exception as e:
+                logger.warning(f"Erro ao buscar plano por ID específico: {e}")
+        
         if not free_plan:
             logger.info("Criando plano FREE padrão")
+            from uuid import UUID
             free_plan = Plan(
+                id=UUID("6f97342b-ab33-469f-bedb-8a73d067588d"),  # Usar ID específico
                 name="Plano Gratuito",
                 slug="free",
                 type=PlanType.FREE,
-                price=0.0,
+                price_monthly=0.0,
+                price_yearly=0.0,
                 max_workspaces=3,
                 max_members_per_workspace=5,
                 max_storage_mb=1024,  # 1GB
                 max_executions_per_month=100,
                 allow_collaborative_workspaces=True,
-                allow_custom_integrations=False,
-                priority_support=False,
-                advanced_analytics=False,
+                allow_custom_domains=False,
+                allow_api_access=False,
+                allow_advanced_analytics=False,
+                allow_priority_support=False,
                 is_active=True
             )
             db.add(free_plan)
-            db.flush()
-            logger.info(f"Plano FREE criado com ID: {free_plan.id}")
+            db.flush()  # Usar flush em vez de commit
+            # Refresh do objeto para garantir que o ID seja populado
+            db.refresh(free_plan)
+            logger.info(f"Plano FREE criado com ID fixo: {free_plan.id}")
+        
+        # Garantir que temos um plano válido
+        if not free_plan or not free_plan.id:
+            raise ValueError(f"Não foi possível obter plano FREE válido. free_plan: {free_plan}, id: {free_plan.id if free_plan else 'N/A'}")
 
         # 2. Criar assinatura FREE para o usuário
         logger.info(f"Criando assinatura FREE para usuário {user.id}")
@@ -68,34 +91,67 @@ def create_user_defaults(db: Session, user: User) -> dict:
 
         # 3. Criar workspace individual automático
         logger.info(f"Criando workspace individual para usuário {user.id}")
-        individual_workspace = Workspace(
-            id=uuid.uuid4(),
-            name=f"Workspace de {user.full_name}",
-            slug=f"workspace-{user.username}-{uuid.uuid4().hex[:8]}",
-            description="Seu workspace pessoal para projetos individuais",
-            type=WorkspaceType.INDIVIDUAL,
-            owner_id=user.id,
-            is_public=False,
-            is_template=False,
-            allow_guest_access=False,
-            require_approval=False,
-            max_members=1,  # Workspace individual = apenas o dono
-            max_projects=10,
-            max_storage_mb=512,  # 512MB para workspace individual
-            enable_real_time_editing=True,
-            enable_comments=True,
-            enable_chat=False,  # Chat desabilitado para workspace individual
-            enable_video_calls=False,  # Video calls desabilitado para workspace individual
-            notification_settings={"email_notifications": True, "push_notifications": False},
-            member_count=1,  # Será o próprio dono
-            project_count=0,
-            activity_count=1,  # Atividade de criação
-            storage_used_mb=0.0,
-            status="active",
-            last_activity_at=datetime.now(timezone.utc)
-        )
+        
+        # Garantir que temos o plan_id válido
+        plan_id = free_plan.id
+        logger.info(f"Plan ID do free_plan: {plan_id}")
+        logger.info(f"Type of plan_id: {type(plan_id)}")
+        
+        if not plan_id:
+            raise ValueError("Plan ID não foi gerado corretamente")
+        
+        # Garantir que o plan_id não seja None antes de criar o workspace
+        if plan_id is None:
+            raise ValueError("plan_id não pode ser None ao criar workspace")
+            
+        logger.info(f"Criando workspace com plan_id: {plan_id}")
+        
+        # Validação extra antes de criar o workspace
+        if plan_id is None:
+            raise ValueError("ERRO CRÍTICO: plan_id é None antes de criar workspace")
+        
+        # Criar workspace com argumentos explícitos
+        workspace_args = {
+            "id": uuid.uuid4(),
+            "name": f"Workspace de {user.full_name}",
+            "slug": f"workspace-{user.username}-{uuid.uuid4().hex[:8]}",
+            "description": "Seu workspace pessoal para projetos individuais",
+            "type": WorkspaceType.INDIVIDUAL,
+            "owner_id": user.id,
+            "plan_id": plan_id,  # Usar a variável explícita
+            "is_public": False,
+            "is_template": False,
+            "allow_guest_access": False,
+            "require_approval": False,
+            "max_members": 1,  # Workspace individual = apenas o dono
+            "max_projects": 10,
+            "max_storage_mb": 512,  # 512MB para workspace individual
+            "enable_real_time_editing": True,
+            "enable_comments": True,
+            "enable_chat": False,  # Chat desabilitado para workspace individual
+            "enable_video_calls": False,  # Video calls desabilitado para workspace individual
+            "notification_settings": {"email_notifications": True, "push_notifications": False},
+            "member_count": 1,  # Será o próprio dono
+            "project_count": 0,
+            "activity_count": 1,  # Atividade de criação
+            "storage_used_mb": 0.0,
+            "status": "active",
+            "last_activity_at": datetime.now(timezone.utc)
+        }
+        
+        # Log dos argumentos antes de criar
+        logger.info(f"Argumentos do workspace - plan_id: {workspace_args['plan_id']}")
+        
+        individual_workspace = Workspace(**workspace_args)
+        
+        # Verificar se o plan_id foi preservado no objeto
+        logger.info(f"Workspace criado - plan_id no objeto: {individual_workspace.plan_id}")
+        
         db.add(individual_workspace)
         db.flush()
+        
+        # Verificar novamente após flush
+        logger.info(f"Após flush - plan_id no objeto: {individual_workspace.plan_id}")
         logger.info(f"Workspace individual criado: {individual_workspace.id}")
 
         # 4. Criar membership automática como OWNER

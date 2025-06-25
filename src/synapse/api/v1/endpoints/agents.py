@@ -125,19 +125,25 @@ async def create_agent(
     try:
         logger.info(f"Criando agente '{agent_data.name}' para usuário {current_user.id}")
         
+        # Validate agent_data before creating
+        if not agent_data.name or len(agent_data.name.strip()) == 0:
+            logger.warning(f"Nome do agente vazio para usuário {current_user.id}")
+            raise HTTPException(status_code=400, detail="Nome do agente é obrigatório")
+        
+        # Create agent object with proper field mapping
         agent = Agent(
-            name=agent_data.name,
+            name=agent_data.name.strip(),
             description=agent_data.description,
             agent_type=agent_data.agent_type,
             personality=agent_data.personality,
             instructions=agent_data.instructions,
             model_provider=agent_data.model_provider,
-            provider=agent_data.model_provider,
+            provider=agent_data.model_provider,  # Map to provider field for compatibility
             model=agent_data.model,
             temperature=agent_data.temperature,
             max_tokens=agent_data.max_tokens,
-            tools=agent_data.tools,
-            knowledge_base=agent_data.knowledge_base,
+            tools=agent_data.tools or [],
+            knowledge_base=agent_data.knowledge_base or {},
             avatar_url=agent_data.avatar_url,
             user_id=current_user.id,
         )
@@ -147,9 +153,20 @@ async def create_agent(
         db.refresh(agent)
 
         logger.info(f"Agente '{agent.name}' criado com sucesso (ID: {agent.id}) para usuário {current_user.id}")
-        return agent.to_dict()
+        
+        # Convert to dict and ensure proper response format
+        response_data = agent.to_dict(include_sensitive=True)
+        return AgentResponse(**response_data)
+        
+    except HTTPException:
+        db.rollback()
+        raise
+    except ValueError as e:
+        logger.error(f"Erro de validação ao criar agente para usuário {current_user.id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Dados inválidos: {str(e)}")
     except Exception as e:
-        logger.error(f"Erro ao criar agente para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro interno ao criar agente para usuário {current_user.id}: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 

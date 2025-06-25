@@ -8,6 +8,7 @@ import sys
 import subprocess
 import time
 import hashlib
+from dotenv import load_dotenv
 
 # Adicionar diretório src ao path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
@@ -24,11 +25,8 @@ def test_final_render_setup():
     print("🚀 TESTE FINAL - Correções para Deploy no Render")
     print("=" * 60)
     
-    # Configurar variáveis mínimas (como no Render)
-    os.environ['DATABASE_URL'] = 'sqlite:///test.db'
-    os.environ['SECRET_KEY'] = generate_test_key('secret', 64)
-    os.environ['ENVIRONMENT'] = 'test'
-    os.environ['PORT'] = '8000'
+    # Apenas leia do .env normalmente usando dotenv
+    load_dotenv()
     
     print("✅ Variáveis de ambiente configuradas")
     

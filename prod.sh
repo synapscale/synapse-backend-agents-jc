@@ -34,7 +34,7 @@ echo "📌 Servidor rodando em: http://0.0.0.0:8000"
 
 # Verificar se gunicorn está instalado
 if python3 -c "import gunicorn" &>/dev/null; then
-    exec gunicorn -k uvicorn.workers.UvicornWorker synapse.main:app --bind 0.0.0.0:8000 --workers 4 --timeout 120
+    exec gunicorn -k uvicorn.workers.UvicornWorker src.synapse.main:app --bind 0.0.0.0:8000 --workers 4 --timeout 120
 else
     echo "⚠️ Gunicorn não encontrado, usando Uvicorn..."
     uvicorn src.synapse.main:app --host 0.0.0.0 --port 8000

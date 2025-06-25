@@ -12,11 +12,12 @@ from synapse.database import Base
 
 
 class Message(Base):
-    __tablename__ = "messages"
+    __tablename__ = "llms_messages"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(String(30), ForeignKey("conversations.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms_conversations.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 
     # Conteúdo
     role = Column(String(20), nullable=False)  # user, assistant, system
@@ -47,8 +48,13 @@ class Message(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    # Relacionamentos
+    # Relacionamentos existentes
     conversation = relationship("Conversation", back_populates="messages")
+    
+    # Novos relacionamentos LLM
+    usage_logs = relationship("UsageLog", back_populates="message", cascade="all, delete-orphan")
+    message_feedbacks = relationship("MessageFeedback", back_populates="message", cascade="all, delete-orphan")
+    billing_events = relationship("BillingEvent", back_populates="message")
 
     def __repr__(self):
         return f"<Message(id={self.id}, role={self.role}, conversation_id={self.conversation_id})>"
@@ -88,8 +94,8 @@ class Message(Base):
     def to_dict(self):
         """Converter para dicionário"""
         return {
-            "id": self.id,
-            "conversation_id": self.conversation_id,
+            "id": str(self.id),
+            "conversation_id": str(self.conversation_id),
             "role": self.role,
             "content": self.content,
             "content_preview": self.content_preview,

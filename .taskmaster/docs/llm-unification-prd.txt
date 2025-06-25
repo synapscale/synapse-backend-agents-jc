@@ -1,0 +1,228 @@
+# Product Requirements Document (PRD)
+# Unificação e Consolidação dos Endpoints LLM
+
+## 1. Resumo Executivo
+
+### Problema Identificado
+Atualmente existem dois sistemas separados de endpoints LLM que atendem propósitos similares mas com implementações diferentes:
+
+**Sistema Legado (api/v1/llm/*)**
+- Localização: `src/synapse/api/v1/endpoints/llm/routes.py`
+- Registrado em: `src/synapse/api/v1/api.py` 
+- Características: Dados hardcoded em enums (`ProviderEnum`, `ModelEnum`)
+- Endpoints: `/generate`, `/chat`, `/models`, `/providers`, `/{provider}/generate`, etc.
+- Funcionalidade: Chamadas diretas aos provedores, métricas, logging completo
+
+**Sistema Novo (api/v1/llms/*)**
+- Localização: `src/synapse/api/v1/endpoints/llm_catalog.py`
+- Registrado em: `src/synapse/api/v1/router.py`
+- Características: Dados dinâmicos do banco (`table llms`)
+- Endpoints: `/` (lista LLMs), `/{llm_id}` (detalhes)
+- Funcionalidade: Catálogo de modelos baseado em banco de dados
+
+### Objetivo
+Integrar os dois sistemas mantendo todas as funcionalidades existentes, usando o banco de dados como fonte única da verdade para informações de modelos e provedores.
+
+## 2. Análise Detalhada
+
+### Funcionalidades do Sistema Legado (preservar)
+- ✅ Geração de texto (`/generate`)
+- ✅ Chat completion (`/chat`) 
+- ✅ Contagem de tokens (`/count-tokens`)
+- ✅ Listagem de modelos (`/models`)
+- ✅ Listagem de provedores (`/providers`)
+- ✅ Endpoints específicos por provedor (`/{provider}/generate`, `/{provider}/models`)
+- ✅ Integração com UsageLog e BillingEvent
+- ✅ Métricas de performance
+- ✅ Suporte a user variables para API keys
+- ✅ Logging completo
+
+### Funcionalidades do Sistema Novo (integrar)
+- ✅ Listagem dinâmica de LLMs do banco (`/llms/`)
+- ✅ Detalhes de LLM específico (`/llms/{llm_id}`)
+- ✅ Filtros por status ativo
+- ✅ Estrutura de dados rica do modelo LLM
+
+## 3. Requisitos Funcionais
+
+### RF01 - Unificação de Endpoints de Listagem
+**Descrição**: Consolidar os endpoints de listagem de modelos e provedores
+**Implementação**:
+- Migrar endpoint `/llm/models` para usar dados da tabela `llms`
+- Migrar endpoint `/llm/providers` para usar dados da tabela `llms` (providers únicos)
+- Manter compatibilidade com filtros por provider
+- Preservar formato de resposta atual
+
+### RF02 - Integração de Dados Dinâmicos
+**Descrição**: Substituir enums hardcoded por dados do banco
+**Implementação**:
+- Criar serviço para validar provider/model contra tabela `llms`
+- Manter enums como fallback para compatibilidade
+- Validar disponibilidade de modelos em tempo real
+- Cache inteligente para performance
+
+### RF03 - Consolidação de Rotas de Catálogo
+**Descrição**: Integrar funcionalidades do `/llms/*` no sistema principal
+**Implementação**:
+- Adicionar endpoints `/llm/catalog` e `/llm/catalog/{llm_id}` 
+- Manter endpoints `/llms/*` como alias durante transição
+- Documentação clara da nova estrutura
+
+### RF04 - Preservação de Funcionalidades Críticas
+**Descrição**: Manter todas as funcionalidades operacionais existentes
+**Implementação**:
+- Preservar endpoints de geração `/generate` e `/chat`
+- Manter logging de UsageLog e BillingEvent
+- Preservar métricas e monitoring
+- Manter integração com user variables
+
+## 4. Requisitos Não-Funcionais
+
+### RNF01 - Compatibilidade com Versões Anteriores
+- Todos os endpoints atuais devem continuar funcionando
+- Formato de resposta mantêm formato e dados consistentes
+- Período de depreciação de 6 meses para mudanças breaking
+
+### RNF02 - Performance
+- Cache de dados de LLMs por 5 minutos
+- Tempo de resposta para listagem < 200ms
+- Fallback automático para enums em caso de falha do banco
+
+### RNF03 - Disponibilidade
+- Graceful degradation se banco indisponível
+- Monitoramento de health dos endpoints
+- Logs detalhados para debugging
+
+## 5. Arquitetura da Solução
+
+### Componentes Principais
+
+#### 5.1 LLM Service Unificado
+```python
+class UnifiedLLMService:
+    def get_available_models(self, provider: Optional[str] = None)
+    def get_available_providers(self)
+    def validate_model_provider(self, model: str, provider: str)
+    def get_model_details(self, llm_id: UUID)
+```
+
+#### 5.2 Migração de Endpoints
+- **Manter**: `/llm/generate`, `/llm/chat`, `/llm/count-tokens`
+- **Migrar**: `/llm/models` → usar banco + cache + fallback
+- **Migrar**: `/llm/providers` → usar banco + cache + fallback  
+- **Adicionar**: `/llm/catalog/*` como nova interface unificada
+- **Deprecar**: `/llms/*` com redirecionamento
+
+#### 5.3 Estratégia de Cache
+- Redis cache para dados de LLMs (TTL: 5min)
+- Cache em memória como backup
+- Invalidação inteligente por webhook/evento
+
+## 6. Plano de Implementação
+
+### Fase 1: Preparação (Semana 1)
+- Criar UnifiedLLMService com interface compatível
+- Implementar cache Redis para dados de LLMs
+- Testes unitários para novo serviço
+- Validação com dados atuais
+
+### Fase 2: Migração Gradual (Semana 2)
+- Migrar `/llm/models` para usar banco de dados
+- Migrar `/llm/providers` para usar banco de dados
+- Implementar fallback para enums existentes
+- Testes de integração completos
+
+### Fase 3: Consolidação (Semana 3)
+- Adicionar endpoints `/llm/catalog/*`
+- Configurar aliases de `/llms/*` para novos endpoints
+- Documentação da API atualizada
+- Testes de aceitação
+
+### Fase 4: Cleanup (Semana 4)
+- Monitoramento de uso dos endpoints antigos
+- Comunicação de depreciação para clientes
+- Logs de migração e métricas
+- Plano de remoção dos endpoints depreciados
+
+## 7. Critérios de Aceitação
+
+### CA01 - Funcionalidade Preservada
+- Todos os endpoints atuais continuam funcionando
+- Respostas mantêm formato e dados consistentes
+- Performance igual ou melhor que sistema atual
+
+### CA02 - Dados Unificados
+- Listagem de modelos vem do banco de dados
+- Informações de provedores são dinâmicas
+- Cache funciona corretamente com TTL apropriado
+
+### CA03 - Compatibilidade
+- Clientes existentes não precisam alterar código
+- Documentação clara das mudanças
+- Período de transição bem comunicado
+
+## 8. Riscos e Mitigações
+
+### Risco 1: Breaking Changes Não Intencionais
+**Mitigação**: Testes automatizados extensivos e período de rollback
+
+### Risco 2: Performance Degradation
+**Mitigação**: Cache inteligente e monitoramento em tempo real
+
+### Risco 3: Inconsistência de Dados
+**Mitigação**: Validação rigorosa e sincronização de dados
+
+## 9. Definição de Pronto
+
+- Todos os testes automatizados passando
+- Performance benchmarks atingidos
+- Documentação da API atualizada
+- Code review aprovado por tech lead
+- Testes de aceitação validados
+- Monitoramento configurado para novos endpoints
+- Plano de rollback documentado e testado
+
+## 10. Considerações Técnicas
+
+### Modificações de Arquivos
+- **Preservar**: `src/synapse/api/v1/endpoints/llm/routes.py` (funcionalidades principais)
+- **Modificar**: Serviços internos para usar banco de dados
+- **Adicionar**: Novos endpoints de catálogo
+- **Deprecar**: `src/synapse/api/v1/endpoints/llm_catalog.py` (mover funcionalidades)
+
+### Integração com Banco
+- Usar modelo `LLM` existente da tabela `llms`
+- Manter relacionamentos com `UsageLog` e `BillingEvent`
+- Sincronização com dados de `llms_conversations_turns`
+
+## 11. Entregáveis Específicos
+
+### Entregável 1: UnifiedLLMService
+- Classe de serviço que unifica acesso aos dados de LLMs
+- Interface compatível com sistema atual
+- Cache inteligente com Redis
+- Fallback para enums existentes
+
+### Entregável 2: Endpoints Migrados
+- `/llm/models` usando banco de dados
+- `/llm/providers` usando banco de dados
+- Preservação de formato de resposta
+- Testes de compatibilidade
+
+### Entregável 3: Novos Endpoints de Catálogo
+- `/llm/catalog/` para listagem completa
+- `/llm/catalog/{llm_id}` para detalhes
+- Documentação OpenAPI atualizada
+- Testes de integração
+
+### Entregável 4: Sistema de Transição
+- Aliases para endpoints antigos
+- Logs de depreciação
+- Comunicação para clientes
+- Plano de remoção gradual
+
+### Entregável 5: Monitoramento e Observabilidade
+- Métricas de uso dos endpoints
+- Logs estruturados
+- Health checks
+- Alertas para falhas 

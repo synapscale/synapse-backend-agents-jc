@@ -222,15 +222,52 @@ class Settings(BaseSettings):
         ]
         return extensions
 
+    @property
+    def ALLOWED_FILE_EXTENSIONS(self) -> list[str]:
+        """Alias para ALLOWED_EXTENSIONS para compatibilidade"""
+        return self.ALLOWED_EXTENSIONS
+
     # Configurações de LLM
     LLM_DEFAULT_PROVIDER: str | None = Field(
         default_factory=lambda: os.getenv("LLM_DEFAULT_PROVIDER", "openai"),
         description="Provedor LLM padrão"
     )
+    
+    # Enhanced OpenAI Configuration
     OPENAI_API_KEY: str | None = Field(
         default_factory=lambda: os.getenv("OPENAI_API_KEY"),
         description="Chave da API OpenAI"
     )
+    OPENAI_ORG_ID: str | None = Field(
+        default_factory=lambda: os.getenv("OPENAI_ORG_ID"),
+        description="ID da organização OpenAI"
+    )
+    OPENAI_API_BASE: str = Field(
+        default_factory=lambda: os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1"),
+        description="URL base da API OpenAI"
+    )
+    OPENAI_API_VERSION: str | None = Field(
+        default_factory=lambda: os.getenv("OPENAI_API_VERSION"),
+        description="Versão da API OpenAI (para Azure OpenAI)"
+    )
+    OPENAI_API_TYPE: str = Field(
+        default_factory=lambda: os.getenv("OPENAI_API_TYPE", "openai"),
+        description="Tipo da API OpenAI (openai ou azure)"
+    )
+    OPENAI_TIMEOUT: int = Field(
+        default_factory=lambda: int(os.getenv("OPENAI_TIMEOUT", "60")),
+        description="Timeout em segundos para requisições OpenAI"
+    )
+    OPENAI_MAX_RETRIES: int = Field(
+        default_factory=lambda: int(os.getenv("OPENAI_MAX_RETRIES", "3")),
+        description="Número máximo de tentativas para requisições OpenAI"
+    )
+    OPENAI_DEFAULT_MODEL: str = Field(
+        default_factory=lambda: os.getenv("OPENAI_DEFAULT_MODEL", "gpt-4o"),
+        description="Modelo OpenAI padrão"
+    )
+    
+    # Other LLM Providers
     ANTHROPIC_API_KEY: str | None = Field(
         default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"),
         description="Chave da API Anthropic"
@@ -261,10 +298,6 @@ class Settings(BaseSettings):
     )
     
     # Mais APIs LLM que faltavam
-    OPENAI_ORG_ID: str | None = Field(
-        default_factory=lambda: os.getenv("OPENAI_ORG_ID"),
-        description="ID da organização OpenAI"
-    )
     HUGGINGFACE_API_KEY: str | None = Field(
         default_factory=lambda: os.getenv("HUGGINGFACE_API_KEY"),
         description="Chave da API HuggingFace"
@@ -552,37 +585,144 @@ class Settings(BaseSettings):
 
     def get_llm_providers(self) -> dict[str, Any]:
         """
-        Retorna provedores LLM configurados
+        Retorna configuração consolidada dos provedores LLM
+        
+        Returns:
+            dict: Dicionário com configurações dos provedores
         """
         providers = {}
-
+        
+        # OpenAI
         if self.OPENAI_API_KEY:
             providers["openai"] = {
                 "api_key": self.OPENAI_API_KEY,
-                "models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
+                "organization": self.OPENAI_ORG_ID,
+                "api_base": self.OPENAI_API_BASE,
+                "api_version": self.OPENAI_API_VERSION,
+                "api_type": self.OPENAI_API_TYPE,
+                "timeout": self.OPENAI_TIMEOUT,
+                "max_retries": self.OPENAI_MAX_RETRIES,
+                "default_model": self.OPENAI_DEFAULT_MODEL,
+                "available": True
             }
-
-        if self.ANTHROPIC_API_KEY:
+        
+        # Anthropic/Claude
+        anthropic_key = self.ANTHROPIC_API_KEY or self.CLAUDE_API_KEY
+        if anthropic_key:
             providers["anthropic"] = {
-                "api_key": self.ANTHROPIC_API_KEY,
-                "models": ["claude-3-sonnet", "claude-3-opus"]
+                "api_key": anthropic_key,
+                "available": True
             }
-
-        if self.GOOGLE_API_KEY:
+        
+        # Google/Gemini
+        google_key = self.GOOGLE_API_KEY or self.GEMINI_API_KEY
+        if google_key:
             providers["google"] = {
-                "api_key": self.GOOGLE_API_KEY,
-                "models": ["gemini-pro", "gemini-pro-vision"]
+                "api_key": google_key,
+                "available": True
             }
-
-        # Adicionar provedor mock para desenvolvimento
-        if not providers:
-            providers["mock"] = {
-                "api_key": "mock-key",
-                "models": ["mock-model"]
+        
+        # Outros provedores
+        for provider in ["grok", "deepseek", "llama", "huggingface", "mistral", "cohere"]:
+            key_attr = f"{provider.upper()}_API_KEY"
+            api_key = getattr(self, key_attr, None)
+            if api_key:
+                providers[provider] = {
+                    "api_key": api_key,
+                    "available": True
+                }
+        
+        # Tess
+        if self.TESS_API_KEY:
+            providers["tess"] = {
+                "api_key": self.TESS_API_KEY,
+                "api_base": self.TESS_API_BASE_URL,
+                "available": True
             }
-
+        
         return providers
-    
+
+    def validate_openai_config(self) -> dict[str, Any]:
+        """
+        Valida a configuração do OpenAI
+        
+        Returns:
+            dict: Resultado da validação com status e mensagens
+        """
+        validation_result = {
+            "valid": True,
+            "errors": [],
+            "warnings": []
+        }
+        
+        # Validar API Key
+        if not self.OPENAI_API_KEY:
+            validation_result["valid"] = False
+            validation_result["errors"].append("OPENAI_API_KEY é obrigatório")
+        elif not self.OPENAI_API_KEY.startswith("sk-"):
+            validation_result["warnings"].append("OPENAI_API_KEY deve começar com 'sk-' para APIs padrão do OpenAI")
+        
+        # Validar Organization ID (opcional mas recomendado)
+        if self.OPENAI_ORG_ID and not self.OPENAI_ORG_ID.startswith("org-"):
+            validation_result["warnings"].append("OPENAI_ORG_ID deve começar com 'org-'")
+        
+        # Validar API Base URL
+        if not self.OPENAI_API_BASE.startswith("http"):
+            validation_result["valid"] = False
+            validation_result["errors"].append("OPENAI_API_BASE deve ser uma URL válida")
+        
+        # Validar API Type
+        if self.OPENAI_API_TYPE not in ["openai", "azure"]:
+            validation_result["valid"] = False
+            validation_result["errors"].append("OPENAI_API_TYPE deve ser 'openai' ou 'azure'")
+        
+        # Validar Azure-specific settings
+        if self.OPENAI_API_TYPE == "azure":
+            if not self.OPENAI_API_VERSION:
+                validation_result["valid"] = False
+                validation_result["errors"].append("OPENAI_API_VERSION é obrigatório para Azure OpenAI")
+            if "azure" not in self.OPENAI_API_BASE.lower():
+                validation_result["warnings"].append("OPENAI_API_BASE deveria conter 'azure' para Azure OpenAI")
+        
+        # Validar timeout e retry settings
+        if self.OPENAI_TIMEOUT <= 0:
+            validation_result["valid"] = False
+            validation_result["errors"].append("OPENAI_TIMEOUT deve ser maior que 0")
+        
+        if self.OPENAI_MAX_RETRIES < 0:
+            validation_result["valid"] = False
+            validation_result["errors"].append("OPENAI_MAX_RETRIES deve ser maior ou igual a 0")
+        
+        return validation_result
+
+    def get_openai_client_config(self) -> dict[str, Any]:
+        """
+        Retorna configuração otimizada para cliente OpenAI
+        
+        Returns:
+            dict: Configuração do cliente OpenAI
+        """
+        config = {
+            "api_key": self.OPENAI_API_KEY,
+            "timeout": self.OPENAI_TIMEOUT,
+            "max_retries": self.OPENAI_MAX_RETRIES,
+        }
+        
+        # Adicionar organization se disponível
+        if self.OPENAI_ORG_ID:
+            config["organization"] = self.OPENAI_ORG_ID
+        
+        # Configurações específicas para Azure
+        if self.OPENAI_API_TYPE == "azure":
+            config["azure_endpoint"] = self.OPENAI_API_BASE
+            config["api_version"] = self.OPENAI_API_VERSION
+        else:
+            # Configurações para OpenAI padrão
+            if self.OPENAI_API_BASE != "https://api.openai.com/v1":
+                config["base_url"] = self.OPENAI_API_BASE
+        
+        return config
+
     def get_database_url(self) -> str:
         """Retorna URL do banco de dados formatada"""
         return self.DATABASE_URL

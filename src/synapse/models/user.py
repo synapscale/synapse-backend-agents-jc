@@ -128,6 +128,12 @@ class User(Base):
         "UserSubscription", back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
 
+    # Novos relacionamentos LLM
+    usage_logs = relationship("UsageLog", back_populates="user", cascade="all, delete-orphan")
+    billing_events = relationship("BillingEvent", back_populates="user", cascade="all, delete-orphan") 
+    message_feedbacks = relationship("MessageFeedback", back_populates="user", cascade="all, delete-orphan")
+    created_tags = relationship("Tag", back_populates="created_by_user", cascade="all, delete-orphan")
+
     def verify_password(self, password: str) -> bool:
         """Verifica se a senha fornecida está correta"""
         return pwd_context.verify(password, self.hashed_password)

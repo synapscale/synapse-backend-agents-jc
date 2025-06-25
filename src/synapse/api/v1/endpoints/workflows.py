@@ -8,7 +8,7 @@ import logging
 from typing import Optional, Dict, Any, List
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.orm import Session
 
 from synapse.api.deps import get_current_user
@@ -28,6 +28,11 @@ from synapse.schemas.workflow_execution import (
     ExecutionListResponse,
     ExecutionResponse,
 )
+from synapse.schemas.response import (
+    wrap_data_response,
+    wrap_list_response,
+    wrap_empty_response
+)
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +41,12 @@ router = APIRouter()
 
 @router.get(
     "/",
-    response_model=WorkflowListResponse,
+    response_model=Dict[str, Any],
     summary="Listar workflows",
     tags=["workflows"],
 )
 async def list_workflows(
+    request: Request,
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(20, ge=1, le=100, description="Itens por página"),
     category: Optional[str] = Query(None, description="Filtrar por categoria"),
@@ -48,7 +54,7 @@ async def list_workflows(
     search: Optional[str] = Query(None, description="Termo de busca"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> WorkflowListResponse:
+) -> Dict[str, Any]:
     """
     Lista workflows do usuário com filtros e paginação.
     
@@ -102,24 +108,31 @@ async def list_workflows(
 
         logger.info(f"Retornados {len(workflows)} workflows de {total} total para usuário {current_user.id}")
         
-        return WorkflowListResponse(
+        workflow_list_response = WorkflowListResponse(
             items=[w.to_dict() for w in workflows],
             total=total,
             page=page,
             size=size,
             pages=(total + size - 1) // size,
         )
+        
+        return wrap_list_response(
+            request=request,
+            data=workflow_list_response,
+            message=f"Retornados {len(workflows)} workflows com sucesso"
+        )
     except Exception as e:
         logger.error(f"Erro ao listar workflows para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/", response_model=WorkflowResponse, summary="Criar workflow", tags=["workflows"])
+@router.post("/", response_model=Dict[str, Any], summary="Criar workflow", tags=["workflows"])
 async def create_workflow(
+    request: Request,
     workflow_data: WorkflowCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> WorkflowResponse:
+) -> Dict[str, Any]:
     """
     Cria um novo workflow para o usuário.
     
@@ -148,19 +161,25 @@ async def create_workflow(
         db.refresh(workflow)
 
         logger.info(f"Workflow '{workflow.name}' criado com sucesso (ID: {workflow.id}) para usuário {current_user.id}")
-        return workflow.to_dict()
+        
+        return wrap_data_response(
+            request=request,
+            data=workflow.to_dict(),
+            message=f"Workflow '{workflow.name}' criado com sucesso"
+        )
     except Exception as e:
         logger.error(f"Erro ao criar workflow para usuário {current_user.id}: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/{workflow_id}", response_model=WorkflowResponse, summary="Obter workflow", tags=["workflows"])
+@router.get("/{workflow_id}", response_model=Dict[str, Any], summary="Obter workflow", tags=["workflows"])
 async def get_workflow(
+    request: Request,
     workflow_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> WorkflowResponse:
+) -> Dict[str, Any]:
     """
     Obtém um workflow específico por ID.
     
@@ -206,7 +225,12 @@ async def get_workflow(
             )
 
         logger.info(f"Workflow {workflow_id} obtido com sucesso para usuário {current_user.id}")
-        return workflow.to_dict()
+        
+        return wrap_data_response(
+            request=request,
+            data=workflow.to_dict(),
+            message="Workflow obtido com sucesso"
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -214,13 +238,14 @@ async def get_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/{workflow_id}", response_model=WorkflowResponse, summary="Atualizar workflow", tags=["workflows"])
+@router.put("/{workflow_id}", response_model=Dict[str, Any], summary="Atualizar workflow", tags=["workflows"])
 async def update_workflow(
+    request: Request,
     workflow_id: str,
     workflow_data: WorkflowUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> WorkflowResponse:
+) -> Dict[str, Any]:
     """
     Atualiza um workflow existente do usuário.
     
@@ -243,7 +268,6 @@ async def update_workflow(
     """
     try:
         logger.info(f"Atualizando workflow {workflow_id} para usuário {current_user.id}")
-        
         try:
             workflow_uuid = uuid.UUID(workflow_id)
         except (ValueError, TypeError):
@@ -254,29 +278,28 @@ async def update_workflow(
             .filter(Workflow.id == workflow_uuid, Workflow.user_id == current_user.id)
             .first()
         )
-
         if not workflow:
             logger.warning(f"Workflow {workflow_id} não encontrado ou sem permissão para usuário {current_user.id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Workflow não encontrado",
             )
-
-        # Atualizar campos
         update_count = 0
         for field, value in workflow_data.dict(exclude_unset=True).items():
             if getattr(workflow, field) != value:
                 setattr(workflow, field, value)
                 update_count += 1
-
         if update_count > 0:
             db.commit()
             db.refresh(workflow)
             logger.info(f"Workflow {workflow_id} atualizado com sucesso - {update_count} campos modificados")
         else:
             logger.info(f"Nenhuma alteração necessária no workflow {workflow_id}")
-
-        return workflow.to_dict()
+        return wrap_data_response(
+            request=request,
+            data=workflow.to_dict(),
+            message="Workflow atualizado com sucesso"
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -285,12 +308,13 @@ async def update_workflow(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.delete("/{workflow_id}", summary="Deletar workflow", tags=["workflows"])
+@router.delete("/{workflow_id}", response_model=Dict[str, Any], summary="Deletar workflow", tags=["workflows"])
 async def delete_workflow(
+    request: Request,
     workflow_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, str]:
+) -> Dict[str, Any]:
     """
     Remove um workflow do usuário.
     
@@ -336,7 +360,7 @@ async def delete_workflow(
         db.commit()
 
         logger.info(f"Workflow '{workflow_name}' (ID: {workflow_id}) deletado com sucesso para usuário {current_user.id}")
-        return {"message": "Workflow deletado com sucesso"}
+        return wrap_empty_response(message="Workflow deletado com sucesso")
     except HTTPException:
         raise
     except Exception as e:
@@ -531,12 +555,13 @@ async def list_workflow_executions(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/{workflow_id}/duplicate", response_model=WorkflowResponse, summary="Duplicar workflow", tags=["workflows"])
+@router.post("/{workflow_id}/duplicate", response_model=Dict[str, Any], summary="Duplicar workflow", tags=["workflows"])
 async def duplicate_workflow(
+    request: Request,
     workflow_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> WorkflowResponse:
+) -> Dict[str, Any]:
     """
     Cria uma cópia de um workflow existente.
     
@@ -599,7 +624,11 @@ async def duplicate_workflow(
         db.refresh(duplicate_workflow)
 
         logger.info(f"Workflow '{original_workflow.name}' duplicado com sucesso (novo ID: {duplicate_workflow.id}) para usuário {current_user.id}")
-        return duplicate_workflow.to_dict()
+        return wrap_data_response(
+            request=request,
+            data=duplicate_workflow.to_dict(),
+            message="Workflow duplicado com sucesso"
+        )
     except HTTPException:
         raise
     except Exception as e:

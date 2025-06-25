@@ -198,11 +198,31 @@ async def get_conversation(
             )
 
         logger.info(f"Conversação {conversation_id} obtida com sucesso para usuário {current_user.id}")
-        return conversation
+        
+        # Return properly formatted response
+        return ConversationResponse(
+            id=str(conversation.id),
+            user_id=str(conversation.user_id),
+            agent_id=str(conversation.agent_id) if conversation.agent_id else None,
+            workspace_id=str(conversation.workspace_id) if conversation.workspace_id else None,
+            title=conversation.title or "",
+            status=conversation.status or "active",
+            message_count=conversation.message_count or 0,
+            total_tokens_used=conversation.total_tokens_used or 0,
+            context=conversation.context or {},
+            settings=conversation.settings or {},
+            last_message_at=conversation.last_message_at,
+            created_at=conversation.created_at,
+            updated_at=conversation.updated_at,
+        )
+        
     except HTTPException:
         raise
+    except ValueError as e:
+        logger.error(f"Erro de validação ao obter conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"ID de conversação inválido: {str(e)}")
     except Exception as e:
-        logger.error(f"Erro ao obter conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro interno ao obter conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
@@ -234,6 +254,11 @@ async def delete_conversation(
     try:
         logger.info(f"Deletando conversação {conversation_id} para usuário {current_user.id}")
         
+        # Validate conversation_id
+        if not conversation_id or len(conversation_id.strip()) == 0:
+            logger.warning(f"ID de conversação vazio fornecido por usuário {current_user.id}")
+            raise HTTPException(status_code=400, detail="ID da conversação é obrigatório")
+        
         conversation = (
             db.query(Conversation)
             .filter(
@@ -250,21 +275,33 @@ async def delete_conversation(
                 detail="Conversação não encontrada",
             )
 
-        # Deletar mensagens associadas
-        message_count = db.query(Message).filter(Message.conversation_id == conversation_id).count()
-        db.query(Message).filter(Message.conversation_id == conversation_id).delete()
+        # Deletar mensagens associadas em uma transação
+        try:
+            message_count = db.query(Message).filter(Message.conversation_id == conversation_id).count()
+            db.query(Message).filter(Message.conversation_id == conversation_id).delete()
 
-        # Deletar conversação
-        conversation_title = conversation.title
-        db.delete(conversation)
-        db.commit()
+            # Deletar conversação
+            conversation_title = conversation.title or "Sem título"
+            db.delete(conversation)
+            db.commit()
 
-        logger.info(f"Conversação '{conversation_title}' (ID: {conversation_id}) e {message_count} mensagens deletadas com sucesso para usuário {current_user.id}")
-        return {"message": "Conversação deletada com sucesso"}
+            logger.info(f"Conversação '{conversation_title}' (ID: {conversation_id}) e {message_count} mensagens deletadas com sucesso para usuário {current_user.id}")
+            return {"message": "Conversação deletada com sucesso"}
+            
+        except Exception as delete_error:
+            logger.error(f"Erro ao deletar dados da conversação {conversation_id}: {str(delete_error)}")
+            db.rollback()
+            raise HTTPException(status_code=500, detail="Erro ao deletar conversação")
+            
     except HTTPException:
+        db.rollback()
         raise
+    except ValueError as e:
+        logger.error(f"Erro de validação ao deletar conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"ID de conversação inválido: {str(e)}")
     except Exception as e:
-        logger.error(f"Erro ao deletar conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro interno ao deletar conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
@@ -301,6 +338,11 @@ async def list_messages(
     try:
         logger.info(f"Listando mensagens da conversação {conversation_id} para usuário {current_user.id} - página: {page}")
         
+        # Validate conversation_id
+        if not conversation_id or len(conversation_id.strip()) == 0:
+            logger.warning(f"ID de conversação vazio fornecido por usuário {current_user.id}")
+            raise HTTPException(status_code=400, detail="ID da conversação é obrigatório")
+        
         # Verificar se conversação existe e pertence ao usuário
         conversation = (
             db.query(Conversation)
@@ -318,53 +360,67 @@ async def list_messages(
                 detail="Conversação não encontrada",
             )
 
-        # Buscar mensagens
-        messages = (
-            db.query(Message)
-            .filter(Message.conversation_id == conversation_id)
-            .order_by(Message.created_at.asc())
-            .offset((page - 1) * size)
-            .limit(size)
-            .all()
-        )
-        total = db.query(Message).filter(Message.conversation_id == conversation_id).count()
+        # Buscar mensagens com contagem total
+        try:
+            messages_query = (
+                db.query(Message)
+                .filter(Message.conversation_id == conversation_id)
+                .order_by(Message.created_at.asc())
+            )
+            
+            total = messages_query.count()
+            messages = messages_query.offset((page - 1) * size).limit(size).all()
 
-        items = [
-            {
-                "id": str(msg.id),
-                "conversation_id": str(msg.conversation_id),
-                "role": msg.role,
-                "content": msg.content,
-                "attachments": msg.attachments,
-                "model_used": msg.model_used,
-                "model_provider": msg.model_provider,
-                "tokens_used": msg.tokens_used,
-                "processing_time_ms": msg.processing_time_ms,
-                "temperature": msg.temperature,
-                "max_tokens": msg.max_tokens,
-                "status": msg.status,
-                "error_message": msg.error_message,
-                "rating": msg.rating,
-                "feedback": msg.feedback,
-                "created_at": msg.created_at,
-                "updated_at": msg.updated_at,
-            }
-            for msg in messages
-        ]
+            # Convert messages to proper response format with fallback values
+            items = []
+            for msg in messages:
+                try:
+                    message_data = {
+                        "id": str(msg.id),
+                        "conversation_id": str(msg.conversation_id),
+                        "role": msg.role or "user",
+                        "content": msg.content or "",
+                        "attachments": msg.attachments if msg.attachments is not None else [],
+                        "model_used": msg.model_used,
+                        "model_provider": msg.model_provider,
+                        "tokens_used": msg.tokens_used or 0,
+                        "processing_time_ms": msg.processing_time_ms or 0,
+                        "temperature": msg.temperature,
+                        "max_tokens": msg.max_tokens,
+                        "status": msg.status or "sent",
+                        "error_message": msg.error_message,
+                        "rating": msg.rating,
+                        "feedback": msg.feedback,
+                        "created_at": msg.created_at,
+                        "updated_at": msg.updated_at,
+                    }
+                    items.append(message_data)
+                except Exception as msg_error:
+                    logger.warning(f"Erro ao converter mensagem {msg.id}: {str(msg_error)}")
+                    # Skip problematic message but continue processing others
+                    continue
 
-        logger.info(f"Retornadas {len(items)} mensagens de {total} total da conversação {conversation_id}")
-        
-        return MessageListResponse(
-            items=items,
-            total=total,
-            page=page,
-            size=size,
-            pages=(total + size - 1) // size,
-        )
+            logger.info(f"Retornadas {len(items)} mensagens de {total} total da conversação {conversation_id}")
+            
+            return MessageListResponse(
+                items=items,
+                total=total,
+                page=page,
+                size=size,
+                pages=(total + size - 1) // size if total > 0 else 1,
+            )
+            
+        except Exception as query_error:
+            logger.error(f"Erro na consulta de mensagens da conversação {conversation_id}: {str(query_error)}")
+            raise HTTPException(status_code=500, detail="Erro ao buscar mensagens")
+            
     except HTTPException:
         raise
+    except ValueError as e:
+        logger.error(f"Erro de validação ao listar mensagens da conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Parâmetros inválidos: {str(e)}")
     except Exception as e:
-        logger.error(f"Erro ao listar mensagens da conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro interno ao listar mensagens da conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 

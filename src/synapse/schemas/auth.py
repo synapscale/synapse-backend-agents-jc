@@ -8,6 +8,19 @@ from datetime import datetime
 import re
 
 
+class UserLogin(BaseModel):
+    """Schema para login de usuário"""
+    username: str = Field(..., description="Email ou username do usuário")
+    password: str = Field(..., min_length=1, description="Senha do usuário")
+
+    @validator("username")
+    def validate_username(cls, v):
+        """Valida username ou email"""
+        if not v or len(v.strip()) == 0:
+            raise ValueError("Username/email é obrigatório")
+        return v.strip()
+
+
 class UserBase(BaseModel):
     email: EmailStr
     username: str = Field(..., min_length=3, max_length=50)
@@ -29,27 +42,36 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8, max_length=100)
+    """
+    Schema para criação de novos usuários.
+    Inclui validações específicas para registro.
+    """
+    password: str = Field(..., min_length=8, description="Senha do usuário (mínimo 8 caracteres)")
+    confirm_password: Optional[str] = Field(None, description="Confirmação da senha")
+    terms_accepted: Optional[bool] = Field(False, description="Aceite dos termos de uso")
+    marketing_consent: Optional[bool] = Field(False, description="Consentimento para marketing")
 
     @validator("password")
     def validate_password(cls, v):
-        """Valida força da senha"""
+        """Valida a força da senha"""
         if len(v) < 8:
             raise ValueError("Senha deve ter pelo menos 8 caracteres")
-
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Senha deve conter pelo menos uma letra maiúscula")
-
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Senha deve conter pelo menos uma letra minúscula")
-
+        if not re.search(r"[A-Za-z]", v):
+            raise ValueError("Senha deve conter pelo menos uma letra")
         if not re.search(r"\d", v):
             raise ValueError("Senha deve conter pelo menos um número")
-
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
-            raise ValueError("Senha deve conter pelo menos um caractere especial")
-
         return v
+
+    @validator("confirm_password")
+    def passwords_match(cls, v, values):
+        """Valida se as senhas coincidem"""
+        if 'password' in values and v != values['password']:
+            raise ValueError("Senhas não coincidem")
+        return v
+
+
+# Alias para compatibilidade
+UserRegister = UserCreate
 
 
 class UserUpdate(BaseModel):
@@ -95,10 +117,19 @@ class UserResponse(BaseModel):
 
 
 class Token(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-    user: UserResponse
+    """Schema para tokens de autenticação"""
+    access_token: str = Field(..., description="Token de acesso JWT")
+    token_type: str = Field(default="bearer", description="Tipo do token")
+    expires_in: Optional[int] = Field(None, description="Tempo de expiração em segundos")
+
+
+class TokenResponse(BaseModel):
+    """Schema completo para resposta de autenticação"""
+    access_token: str = Field(..., description="Token de acesso JWT")
+    token_type: str = Field(default="bearer", description="Tipo do token")
+    expires_in: Optional[int] = Field(None, description="Tempo de expiração em segundos")
+    refresh_token: Optional[str] = Field(None, description="Token de refresh (opcional)")
+    user: Optional[UserResponse] = Field(None, description="Dados do usuário autenticado")
 
 
 class RefreshTokenRequest(BaseModel):
@@ -139,28 +170,100 @@ class EmailVerificationRequest(BaseModel):
 
 
 class PasswordChangeRequest(BaseModel):
-    current_password: str
-    new_password: str = Field(..., min_length=8, max_length=100)
+    """Schema para solicitação de mudança de senha"""
+    current_password: str = Field(..., description="Senha atual")
+    new_password: str = Field(..., min_length=8, description="Nova senha")
+    confirm_password: str = Field(..., description="Confirmação da nova senha")
 
     @validator("new_password")
-    def validate_password(cls, v):
-        """Valida força da senha"""
+    def validate_new_password(cls, v):
+        """Valida a nova senha"""
         if len(v) < 8:
-            raise ValueError("Senha deve ter pelo menos 8 caracteres")
-
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Senha deve conter pelo menos uma letra maiúscula")
-
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Senha deve conter pelo menos uma letra minúscula")
-
+            raise ValueError("Nova senha deve ter pelo menos 8 caracteres")
+        if not re.search(r"[A-Za-z]", v):
+            raise ValueError("Nova senha deve conter pelo menos uma letra")
         if not re.search(r"\d", v):
-            raise ValueError("Senha deve conter pelo menos um número")
-
-        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
-            raise ValueError("Senha deve conter pelo menos um caractere especial")
-
+            raise ValueError("Nova senha deve conter pelo menos um número")
         return v
+
+    @validator("confirm_password")
+    def passwords_match(cls, v, values):
+        """Valida se as senhas coincidem"""
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError("Senhas não coincidem")
+        return v
+
+
+class TwoFactorSetup(BaseModel):
+    """Schema para configuração de autenticação de dois fatores"""
+    secret: Optional[str] = Field(None, description="Chave secreta do 2FA")
+    qr_code: Optional[str] = Field(None, description="QR code para configuração")
+    backup_codes: Optional[List[str]] = Field(None, description="Códigos de backup")
+
+
+class TwoFactorVerify(BaseModel):
+    """Schema para verificação de código 2FA"""
+    code: str = Field(..., description="Código de verificação 2FA")
+    remember_device: Optional[bool] = Field(False, description="Lembrar dispositivo")
+
+
+class TwoFactorDisable(BaseModel):
+    """Schema para desabilitação de 2FA"""
+    password: str = Field(..., description="Senha atual para confirmação")
+    code: Optional[str] = Field(None, description="Código 2FA (se habilitado)")
+
+
+class UserPreferences(BaseModel):
+    """Schema para preferências do usuário"""
+    language: Optional[str] = Field("pt-BR", description="Idioma preferido")
+    timezone: Optional[str] = Field("America/Sao_Paulo", description="Fuso horário")
+    email_notifications: Optional[bool] = Field(True, description="Receber notificações por email")
+    push_notifications: Optional[bool] = Field(True, description="Receber notificações push")
+    newsletter: Optional[bool] = Field(False, description="Receber newsletter")
+
+
+class UserProfile(BaseModel):
+    """Schema para perfil completo do usuário"""
+    bio: Optional[str] = Field(None, description="Biografia do usuário")
+    avatar_url: Optional[str] = Field(None, description="URL do avatar")
+    website: Optional[str] = Field(None, description="Website pessoal")
+    location: Optional[str] = Field(None, description="Localização")
+    company: Optional[str] = Field(None, description="Empresa")
+    job_title: Optional[str] = Field(None, description="Cargo")
+
+
+class UserStats(BaseModel):
+    """Schema para estatísticas do usuário"""
+    workflows_created: Optional[int] = Field(0, description="Workflows criados")
+    workflows_executed: Optional[int] = Field(0, description="Workflows executados")
+    last_login: Optional[datetime] = Field(None, description="Último login")
+    account_created: Optional[datetime] = Field(None, description="Data de criação da conta")
+    total_executions: Optional[int] = Field(0, description="Total de execuções")
+
+
+class SessionInfo(BaseModel):
+    """Schema para informações da sessão"""
+    session_id: str = Field(..., description="ID da sessão")
+    user_id: str = Field(..., description="ID do usuário")
+    ip_address: Optional[str] = Field(None, description="Endereço IP")
+    user_agent: Optional[str] = Field(None, description="User agent")
+    created_at: datetime = Field(..., description="Data de criação da sessão")
+    expires_at: datetime = Field(..., description="Data de expiração da sessão")
+    is_active: bool = Field(True, description="Sessão ativa")
+
+
+class AuthProvider(BaseModel):
+    """Schema para provedores de autenticação"""
+    provider_id: str = Field(..., description="ID do provedor")
+    provider_name: str = Field(..., description="Nome do provedor")
+    client_id: Optional[str] = Field(None, description="Client ID")
+    is_enabled: bool = Field(True, description="Provedor habilitado")
+    scopes: Optional[List[str]] = Field(None, description="Escopos de permissão")
+
+
+# ==================== WORKFLOW SCHEMAS ====================
+# Note: Estas classes provavelmente deveriam estar em workflow.py
+# mas estão aqui para manter compatibilidade
 
 
 # Schemas para Workflow

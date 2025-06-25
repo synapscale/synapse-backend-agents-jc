@@ -345,9 +345,30 @@ async def get_real_time_metrics(
     try:
         logger.info(f"Obtendo métricas em tempo real para usuário {current_user.id}")
         service = AnalyticsService(db)
-        stats = service.get_real_time_metrics(current_user.id)
+        
+        # Obtenha as métricas e converta para o modelo de resposta
+        stats_data = service.get_real_time_stats()
+
+        real_time_stats = RealTimeStats(
+            active_users=stats_data.get("active_users", 0),
+            active_sessions=stats_data.get("current_sessions", 0),
+            requests_per_minute=stats_data.get("requests_per_minute", 0),
+            average_response_time=stats_data.get("average_response_time", 0),
+            error_rate=stats_data.get("error_rate", 0.0),
+            cpu_usage=stats_data.get("system_load", 0.0),
+            memory_usage=stats_data.get("memory_usage", 0.0),
+            active_agents=stats_data.get("active_agents", 0),
+            completed_workflows=stats_data.get("completed_workflows", 0),
+            pending_workflows=stats_data.get("pending_workflows", 0)
+        )
+
         logger.info(f"Métricas em tempo real obtidas para usuário {current_user.id}")
-        return stats
+        return real_time_stats
+    except ValueError as ve:
+        logger.warning(f"Erro de validação ao obter métricas em tempo real: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erro ao obter métricas em tempo real para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -383,12 +404,30 @@ async def execute_analytics_query(
     try:
         logger.info(f"Executando consulta customizada para usuário {current_user.id}")
         service = AnalyticsService(db)
-        result = service.execute_query(query, current_user.id)
+        
+        # Executa a consulta e prepara o modelo de resposta
+        result_data = service.execute_analytics_query(query, current_user.id)
+
+        query_response = QueryResponse(
+            query_id=result_data.get("query_id"),
+            status=result_data.get("status", "completed"),
+            results=result_data.get("results", []),
+            metadata={
+                "execution_time_ms": result_data.get("execution_time", 0),
+                "rows_returned": result_data.get("rows_returned", 0),
+                "columns": result_data.get("columns", [])
+            },
+            execution_time_ms=result_data.get("execution_time", 0),
+            created_at=datetime.utcnow()
+        )
+
         logger.info(f"Consulta customizada executada com sucesso para usuário {current_user.id}")
-        return result
-    except ValueError as e:
-        logger.warning(f"Consulta inválida para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        return query_response
+    except ValueError as ve:
+        logger.warning(f"Consulta inválida para usuário {current_user.id}: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erro ao executar consulta para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
@@ -611,12 +650,29 @@ async def get_dashboard(
     try:
         logger.info(f"Obtendo dashboard {dashboard_id} para usuário {current_user.id}")
         service = AnalyticsService(db)
-        dashboard = service.get_dashboard(dashboard_id, current_user.id)
-        if not dashboard:
+        
+        dashboard_data = service.get_dashboard(dashboard_id, current_user.id)
+        if not dashboard_data:
             logger.warning(f"Dashboard {dashboard_id} não encontrado para usuário {current_user.id}")
             raise HTTPException(status_code=404, detail="Dashboard não encontrado")
+
+        dashboard_response = DashboardResponse(
+            id=dashboard_data.get("id", dashboard_id),
+            name=dashboard_data.get("name", "Dashboard Padrão"),
+            description=dashboard_data.get("description", ""),
+            is_public=dashboard_data.get("is_public", False),
+            owner_id=current_user.id,
+            widgets=dashboard_data.get("widgets", []),
+            layout=dashboard_data.get("layout", {}),
+            created_at=dashboard_data.get("created_at", datetime.utcnow().isoformat()),
+            updated_at=dashboard_data.get("updated_at", datetime.utcnow().isoformat())
+        )
+        
         logger.info(f"Dashboard {dashboard_id} obtido com sucesso para usuário {current_user.id}")
-        return dashboard
+        return dashboard_response
+    except ValueError as e:
+        logger.warning(f"Dados inválidos ao obter dashboard {dashboard_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Dados inválidos: {str(e)}")
     except HTTPException:
         raise
     except Exception as e:
@@ -655,242 +711,170 @@ async def update_dashboard(
     try:
         logger.info(f"Atualizando dashboard {dashboard_id} para usuário {current_user.id}")
         service = AnalyticsService(db)
-        dashboard = service.update_dashboard(dashboard_id, dashboard_data, current_user.id)
-        if not dashboard:
-            logger.warning(f"Dashboard {dashboard_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Dashboard não encontrado")
-        logger.info(f"Dashboard {dashboard_id} atualizado com sucesso para usuário {current_user.id}")
-        return dashboard
-    except HTTPException:
-        raise
-    except ValueError as e:
-        logger.warning(f"Dados inválidos ao atualizar dashboard {dashboard_id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro ao atualizar dashboard {dashboard_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.delete("/dashboards/{dashboard_id}", summary="Deletar dashboard", tags=["analytics"])
-async def delete_dashboard(
-    dashboard_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str]:
-    """
-    Remove um dashboard do usuário.
-    
-    Exclui permanentemente um dashboard e todos os seus dados
-    associados (widgets, configurações, etc.).
-    
-    Args:
-        dashboard_id: ID do dashboard
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
         
-    Returns:
-        dict: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se dashboard não encontrado
-        HTTPException: 403 se sem permissão de exclusão
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Deletando dashboard {dashboard_id} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        success = service.delete_dashboard(dashboard_id, current_user.id)
-        if not success:
-            logger.warning(f"Dashboard {dashboard_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Dashboard não encontrado")
-        logger.info(f"Dashboard {dashboard_id} deletado com sucesso para usuário {current_user.id}")
-        return {"message": "Dashboard deletado com sucesso"}
+        try:
+            updated_data = service.update_dashboard(dashboard_id, dashboard_data, current_user.id)
+            if not updated_data:
+                logger.warning(f"Dashboard {dashboard_id} não encontrado para usuário {current_user.id}")
+                raise HTTPException(status_code=404, detail="Dashboard não encontrado")
+            
+            # Convert dictionary response to DashboardResponse model
+            dashboard_response = DashboardResponse(
+                id=updated_data.get("id", dashboard_id),
+                name=updated_data.get("name", dashboard_data.name if hasattr(dashboard_data, 'name') else "Dashboard Atualizado"),
+                description=updated_data.get("description", dashboard_data.description if hasattr(dashboard_data, 'description') else ""),
+                is_public=updated_data.get("is_public", False),
+                owner_id=current_user.id,
+                widgets=updated_data.get("widgets", []),
+                layout=updated_data.get("layout", {}),
+                created_at=updated_data.get("created_at", datetime.utcnow().isoformat()),
+                updated_at=updated_data.get("updated_at", datetime.utcnow().isoformat())
+            )
+            
+            logger.info(f"Dashboard {dashboard_id} atualizado com sucesso para usuário {current_user.id}")
+            return dashboard_response
+            
+        except ValueError as e:
+            logger.warning(f"Dados inválidos ao atualizar dashboard {dashboard_id}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Dados inválidos: {str(e)}")
+        except Exception as service_error:
+            logger.error(f"Erro no serviço ao atualizar dashboard {dashboard_id}: {str(service_error)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao deletar dashboard {dashboard_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral ao atualizar dashboard {dashboard_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/dashboards/{dashboard_id}/data", response_model=DashboardData, summary="Obter dados do dashboard", tags=["analytics"])
+@router.get("/dashboards/{dashboard_id}/data", summary="Obter dados do dashboard", tags=["analytics"])
 async def get_dashboard_data(
     dashboard_id: int,
-    refresh: bool = Query(False, description="Forçar atualização dos dados"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> DashboardData:
-    """
-    Obtém dados atualizados de um dashboard.
-    
-    Retorna os dados processados de todos os widgets do dashboard,
-    com opção de forçar atualização do cache.
-    
-    Args:
-        dashboard_id: ID do dashboard
-        refresh: Se deve forçar atualização dos dados
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        DashboardData: Dados do dashboard
-        
-    Raises:
-        HTTPException: 404 se dashboard não encontrado
-        HTTPException: 403 se sem permissão de acesso
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo dados do dashboard {dashboard_id} para usuário {current_user.id} - refresh: {refresh}")
-        service = AnalyticsService(db)
-        data = service.get_dashboard_data(dashboard_id, current_user.id, refresh)
-        if not data:
-            logger.warning(f"Dashboard {dashboard_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Dashboard não encontrado")
-        logger.info(f"Dados do dashboard {dashboard_id} obtidos com sucesso para usuário {current_user.id}")
-        return data
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao obter dados do dashboard {dashboard_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/dashboards/{dashboard_id}/share", summary="Compartilhar dashboard", tags=["analytics"])
-async def share_dashboard(
-    dashboard_id: int,
-    public: bool = Query(True, description="Tornar público"),
+    start_date: Optional[datetime] = Query(None, description="Data de início"),
+    end_date: Optional[datetime] = Query(None, description="Data de fim"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     """
-    Configura compartilhamento de um dashboard.
+    Obtém dados atualizados para um dashboard específico.
     
-    Permite tornar um dashboard público ou privado,
-    gerando links de compartilhamento quando necessário.
+    Retorna dados para populat widgets e visualizações
+    do dashboard com informações atualizadas.
     
     Args:
         dashboard_id: ID do dashboard
-        public: Se deve tornar o dashboard público
+        start_date: Data de início para filtrar dados (opcional)
+        end_date: Data de fim para filtrar dados (opcional)
         current_user: Usuário autenticado
         db: Sessão do banco de dados
         
     Returns:
-        dict: Status do compartilhamento e link público (se aplicável)
+        dict: Dados do dashboard
         
     Raises:
         HTTPException: 404 se dashboard não encontrado
-        HTTPException: 403 se sem permissão de compartilhamento
+        HTTPException: 403 se sem permissão de acesso
+        HTTPException: 400 se parâmetros inválidos
         HTTPException: 500 se erro interno do servidor
     """
     try:
-        action = "público" if public else "privado"
-        logger.info(f"Configurando dashboard {dashboard_id} como {action} para usuário {current_user.id}")
+        logger.info(f"Obtendo dados do dashboard {dashboard_id} para usuário {current_user.id}")
+        
+        # Validate date parameters
+        if start_date and end_date and start_date > end_date:
+            raise HTTPException(status_code=400, detail="Data de início deve ser anterior à data de fim")
+        
         service = AnalyticsService(db)
-        result = service.share_dashboard(dashboard_id, current_user.id, public)
-        if not result:
-            logger.warning(f"Dashboard {dashboard_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Dashboard não encontrado")
-        logger.info(f"Dashboard {dashboard_id} configurado como {action} para usuário {current_user.id}")
-        return result
+        
+        try:
+            dashboard_data = service.get_dashboard_data(dashboard_id, current_user.id, start_date, end_date)
+            if not dashboard_data:
+                logger.warning(f"Dashboard {dashboard_id} não encontrado para usuário {current_user.id}")
+                raise HTTPException(status_code=404, detail="Dashboard não encontrado")
+            
+            logger.info(f"Dados do dashboard {dashboard_id} obtidos com sucesso para usuário {current_user.id}")
+            return dashboard_data
+            
+        except ValueError as e:
+            logger.warning(f"Parâmetros inválidos para dashboard {dashboard_id}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Parâmetros inválidos: {str(e)}")
+        except Exception as service_error:
+            logger.error(f"Erro no serviço ao obter dados do dashboard {dashboard_id}: {str(service_error)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao compartilhar dashboard {dashboard_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral ao obter dados do dashboard {dashboard_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-# ==================== RELATÓRIOS ====================
+# ==================== INSIGHTS ====================
 
 
-@router.post("/reports", response_model=ReportResponse, summary="Criar relatório", tags=["analytics"])
-async def create_report(
-    report_data: ReportCreate,
+@router.get("/insights/user", summary="Insights do usuário", tags=["analytics"])
+async def get_user_insights(
+    period: str = Query("7d", pattern="^(1d|7d|30d|90d)$", description="Período de análise"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> ReportResponse:
+) -> dict[str, Any]:
     """
-    Cria um novo relatório personalizado.
+    Obtém insights personalizados sobre o comportamento e performance do usuário.
     
-    Permite criar relatórios automatizados com agendamento
-    e configurações específicas de análise.
+    Analisa padrões de uso, tendências e métricas personalizadas
+    para fornecer insights valiosos sobre a atividade do usuário.
     
     Args:
-        report_data: Dados do relatório a ser criado
+        period: Período de análise (1d, 7d, 30d, 90d)
         current_user: Usuário autenticado
         db: Sessão do banco de dados
         
     Returns:
-        ReportResponse: Relatório criado
+        dict: Insights do usuário
         
     Raises:
-        HTTPException: 400 se dados são inválidos
+        HTTPException: 400 se período inválido
         HTTPException: 500 se erro interno do servidor
     """
     try:
-        logger.info(f"Criando relatório '{report_data.name}' para usuário {current_user.id}")
+        logger.info(f"Gerando insights para usuário {current_user.id} - período: {period}")
         service = AnalyticsService(db)
-        report = service.create_report(report_data, current_user.id)
-        logger.info(f"Relatório '{report_data.name}' criado com sucesso para usuário {current_user.id}")
-        return report
-    except ValueError as e:
-        logger.warning(f"Dados inválidos para relatório '{report_data.name}': {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        
+        try:
+            insights_data = service.get_user_insights(current_user.id, period)
+            
+            logger.info(f"Insights gerados com sucesso para usuário {current_user.id}")
+            return insights_data
+            
+        except ValueError as e:
+            logger.warning(f"Período inválido para insights do usuário {current_user.id}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Período inválido: {str(e)}")
+        except Exception as service_error:
+            logger.error(f"Erro no serviço ao gerar insights do usuário {current_user.id}: {str(service_error)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+            
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao criar relatório '{report_data.name}' para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral ao gerar insights para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.get("/reports", response_model=List[ReportResponse], summary="Listar relatórios do usuário", tags=["analytics"])
-async def get_user_reports(
-    status: Optional[str] = Query(
-        None, pattern="^(draft|scheduled|running|completed|failed)$", description="Filtrar por status"
-    ),
-    limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
-    offset: int = Query(0, ge=0, description="Offset para paginação"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> List[ReportResponse]:
-    """
-    Obtém relatórios do usuário com filtros.
-    
-    Lista relatórios criados pelo usuário com opção de
-    filtrar por status e aplicar paginação.
-    
-    Args:
-        status: Filtro por status do relatório (opcional)
-        limit: Limite de resultados por página
-        offset: Offset para paginação
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        List[ReportResponse]: Lista de relatórios
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Listando relatórios para usuário {current_user.id} - status: {status}, limite: {limit}")
-        service = AnalyticsService(db)
-        reports = service.get_user_reports(current_user.id, status, limit, offset)
-        logger.info(f"Retornados {len(reports)} relatórios para usuário {current_user.id}")
-        return reports
-    except Exception as e:
-        logger.error(f"Erro ao listar relatórios para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+# ==================== REPORTS ====================
 
 
-@router.get("/reports/{report_id}", response_model=ReportResponse, summary="Obter relatório específico", tags=["analytics"])
+@router.get("/reports/{report_id}", summary="Obter relatório", tags=["analytics"])
 async def get_report(
     report_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> ReportResponse:
+) -> dict[str, Any]:
     """
     Obtém detalhes de um relatório específico.
     
-    Retorna informações completas sobre um relatório,
-    incluindo configurações, status e histórico.
+    Retorna informações completas de um relatório,
+    incluindo configurações e últimos resultados.
     
     Args:
         report_id: ID do relatório
@@ -898,7 +882,7 @@ async def get_report(
         db: Sessão do banco de dados
         
     Returns:
-        ReportResponse: Dados do relatório
+        dict: Dados do relatório
         
     Raises:
         HTTPException: 404 se relatório não encontrado
@@ -908,31 +892,42 @@ async def get_report(
     try:
         logger.info(f"Obtendo relatório {report_id} para usuário {current_user.id}")
         service = AnalyticsService(db)
-        report = service.get_report(report_id, current_user.id)
-        if not report:
-            logger.warning(f"Relatório {report_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Relatório não encontrado")
-        logger.info(f"Relatório {report_id} obtido com sucesso para usuário {current_user.id}")
-        return report
+        
+        try:
+            report_data = service.get_report(report_id, current_user.id)
+            if not report_data:
+                logger.warning(f"Relatório {report_id} não encontrado para usuário {current_user.id}")
+                raise HTTPException(status_code=404, detail="Relatório não encontrado")
+            
+            logger.info(f"Relatório {report_id} obtido com sucesso para usuário {current_user.id}")
+            return report_data
+            
+        except ValueError as e:
+            logger.warning(f"Dados inválidos ao obter relatório {report_id}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Dados inválidos: {str(e)}")
+        except Exception as service_error:
+            logger.error(f"Erro no serviço ao obter relatório {report_id}: {str(service_error)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+            
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao obter relatório {report_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral ao obter relatório {report_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.put("/reports/{report_id}", response_model=ReportResponse, summary="Atualizar relatório", tags=["analytics"])
+@router.put("/reports/{report_id}", summary="Atualizar relatório", tags=["analytics"])
 async def update_report(
     report_id: int,
-    report_data: ReportUpdate,
+    report_data: dict[str, Any],
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> ReportResponse:
+) -> dict[str, Any]:
     """
     Atualiza um relatório existente.
     
-    Permite modificar configurações, agendamento e
-    parâmetros de um relatório existente.
+    Permite modificar configurações, filtros e parâmetros
+    de um relatório existente do usuário.
     
     Args:
         report_id: ID do relatório
@@ -941,7 +936,7 @@ async def update_report(
         db: Sessão do banco de dados
         
     Returns:
-        ReportResponse: Relatório atualizado
+        dict: Relatório atualizado
         
     Raises:
         HTTPException: 404 se relatório não encontrado
@@ -952,1032 +947,80 @@ async def update_report(
     try:
         logger.info(f"Atualizando relatório {report_id} para usuário {current_user.id}")
         service = AnalyticsService(db)
-        report = service.update_report(report_id, report_data, current_user.id)
-        if not report:
-            logger.warning(f"Relatório {report_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Relatório não encontrado")
-        logger.info(f"Relatório {report_id} atualizado com sucesso para usuário {current_user.id}")
-        return report
-    except HTTPException:
-        raise
-    except ValueError as e:
-        logger.warning(f"Dados inválidos ao atualizar relatório {report_id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro ao atualizar relatório {report_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.delete("/reports/{report_id}", summary="Deletar relatório", tags=["analytics"])
-async def delete_report(
-    report_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str]:
-    """
-    Remove um relatório do usuário.
-    
-    Exclui permanentemente um relatório e seu histórico
-    de execuções, cancelando agendamentos futuros.
-    
-    Args:
-        report_id: ID do relatório
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
         
-    Returns:
-        dict: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se relatório não encontrado
-        HTTPException: 403 se sem permissão de exclusão
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Deletando relatório {report_id} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        success = service.delete_report(report_id, current_user.id)
-        if not success:
-            logger.warning(f"Relatório {report_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Relatório não encontrado")
-        logger.info(f"Relatório {report_id} deletado com sucesso para usuário {current_user.id}")
-        return {"message": "Relatório deletado com sucesso"}
+        try:
+            updated_data = service.update_report(report_id, report_data, current_user.id)
+            if not updated_data:
+                logger.warning(f"Relatório {report_id} não encontrado para usuário {current_user.id}")
+                raise HTTPException(status_code=404, detail="Relatório não encontrado")
+            
+            logger.info(f"Relatório {report_id} atualizado com sucesso para usuário {current_user.id}")
+            return updated_data
+            
+        except ValueError as e:
+            logger.warning(f"Dados inválidos ao atualizar relatório {report_id}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Dados inválidos: {str(e)}")
+        except Exception as service_error:
+            logger.error(f"Erro no serviço ao atualizar relatório {report_id}: {str(service_error)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao deletar relatório {report_id} para usuário {current_user.id}: {str(e)}")
+        logger.error(f"Erro geral ao atualizar relatório {report_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 
-@router.post("/reports/{report_id}/execute", response_model=ReportExecutionResponse, summary="Executar relatório", tags=["analytics"])
+@router.post("/reports/{report_id}/execute", summary="Executar relatório", tags=["analytics"])
 async def execute_report(
     report_id: int,
-    background_tasks: BackgroundTasks,
+    parameters: Optional[dict[str, Any]] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> ReportExecutionResponse:
+) -> dict[str, Any]:
     """
-    Executa um relatório em background.
+    Executa um relatório e retorna os resultados.
     
-    Inicia a execução de um relatório configurado, processando
-    em background para não bloquear a resposta da API.
+    Processa um relatório com os parâmetros fornecidos
+    e retorna os dados resultantes.
     
     Args:
         report_id: ID do relatório
-        background_tasks: Tarefas em background do FastAPI
+        parameters: Parâmetros opcionais para a execução
         current_user: Usuário autenticado
         db: Sessão do banco de dados
         
     Returns:
-        ReportExecutionResponse: Dados da execução iniciada
+        dict: Resultados da execução do relatório
         
     Raises:
         HTTPException: 404 se relatório não encontrado
         HTTPException: 403 se sem permissão de execução
+        HTTPException: 400 se parâmetros inválidos
         HTTPException: 500 se erro interno do servidor
     """
     try:
         logger.info(f"Executando relatório {report_id} para usuário {current_user.id}")
         service = AnalyticsService(db)
-        execution = service.execute_report(report_id, current_user.id)
-        if not execution:
-            logger.warning(f"Relatório {report_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Relatório não encontrado")
         
-        # Executar relatório em background
-        background_tasks.add_task(service.process_report_execution, execution.id)
-        logger.info(f"Execução {execution.id} do relatório {report_id} iniciada em background para usuário {current_user.id}")
-        return execution
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao executar relatório {report_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/reports/{report_id}/executions", response_model=List[ReportExecutionResponse], summary="Histórico de execuções", tags=["analytics"])
-async def get_report_executions(
-    report_id: int,
-    limit: int = Query(10, ge=1, le=50, description="Limite de resultados"),
-    offset: int = Query(0, ge=0, description="Offset para paginação"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> List[ReportExecutionResponse]:
-    """
-    Obtém histórico de execuções de um relatório.
-    
-    Lista todas as execuções passadas de um relatório específico
-    com informações de status, duração e resultados.
-    
-    Args:
-        report_id: ID do relatório
-        limit: Limite de resultados por página
-        offset: Offset para paginação
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        List[ReportExecutionResponse]: Lista de execuções
-        
-    Raises:
-        HTTPException: 404 se relatório não encontrado
-        HTTPException: 403 se sem permissão de acesso
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo execuções do relatório {report_id} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        executions = service.get_report_executions(report_id, current_user.id, limit, offset)
-        if executions is None:
-            logger.warning(f"Relatório {report_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Relatório não encontrado")
-        logger.info(f"Retornadas {len(executions)} execuções do relatório {report_id} para usuário {current_user.id}")
-        return executions
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao obter execuções do relatório {report_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-# ==================== INSIGHTS ====================
-
-
-@router.post("/insights", response_model=InsightResponse, summary="Gerar insights personalizados", tags=["analytics"])
-async def generate_insights(
-    insight_request: InsightRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> InsightResponse:
-    """
-    Gera insights personalizados baseados em dados do usuário.
-    
-    Analisa dados do usuário para gerar insights inteligentes
-    e recomendações baseadas em padrões identificados.
-    
-    Args:
-        insight_request: Configuração do insight a ser gerado
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        InsightResponse: Insights gerados
-        
-    Raises:
-        HTTPException: 400 se configuração inválida
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Gerando insights personalizados para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        insights = service.generate_insights(insight_request, current_user.id)
-        logger.info(f"Insights gerados com sucesso para usuário {current_user.id}")
-        return insights
-    except ValueError as e:
-        logger.warning(f"Configuração inválida para insights do usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro ao gerar insights para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/insights/system", response_model=SystemInsights, summary="Insights do sistema", tags=["analytics", "advanced"])
-async def get_system_insights(
-    days: int = Query(7, ge=1, le=90, description="Período em dias"),
-    current_admin: User = Depends(get_admin_user),
-    db: Session = Depends(get_db),
-) -> SystemInsights:
-    """
-    Obtém insights do sistema (apenas para administradores).
-    
-    Analisa métricas globais do sistema para identificar
-    tendências, problemas e oportunidades de melhoria.
-    
-    Args:
-        days: Período de análise em dias
-        current_admin: Usuário administrador autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        SystemInsights: Insights do sistema
-        
-    Raises:
-        HTTPException: 403 se usuário não é admin
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Gerando insights do sistema para {days} dias por admin {current_admin.id}")
-        service = AnalyticsService(db)
-        insights = service.get_system_insights(days)
-        logger.info(f"Insights do sistema gerados por admin {current_admin.id}")
-        return insights
-    except Exception as e:
-        logger.error(f"Erro ao gerar insights do sistema por admin {current_admin.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/insights/user", summary="Insights do usuário", tags=["analytics"])
-async def get_user_insights(
-    days: int = Query(30, ge=1, le=365, description="Período em dias"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """
-    Obtém insights personalizados do usuário.
-    
-    Analisa comportamento e padrões específicos do usuário
-    para gerar insights e recomendações personalizadas.
-    
-    Args:
-        days: Período de análise em dias
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Insights do usuário
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Gerando insights pessoais para {days} dias do usuário {current_user.id}")
-        service = AnalyticsService(db)
-        insights = service.get_user_insights(current_user.id, days)
-        logger.info(f"Insights pessoais gerados para usuário {current_user.id}")
-        return insights
-    except Exception as e:
-        logger.error(f"Erro ao gerar insights pessoais para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/insights/trends", summary="Insights de tendências", tags=["analytics"])
-async def get_trending_insights(
-    category: Optional[str] = Query(None, description="Categoria de insights"),
-    limit: int = Query(10, ge=1, le=50, description="Limite de resultados"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """
-    Obtém insights sobre tendências e padrões emergentes.
-    
-    Identifica tendências e padrões interessantes nos dados
-    que podem ser relevantes para o usuário.
-    
-    Args:
-        category: Categoria específica de insights (opcional)
-        limit: Limite de insights retornados
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Insights de tendências
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo insights de tendências para usuário {current_user.id} - categoria: {category}")
-        service = AnalyticsService(db)
-        insights = service.get_trending_insights(current_user.id, category, limit)
-        logger.info(f"Insights de tendências obtidos para usuário {current_user.id}")
-        return insights
-    except Exception as e:
-        logger.error(f"Erro ao obter insights de tendências para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-# ==================== ANÁLISES AVANÇADAS ====================
-
-
-@router.post("/analysis/funnel", response_model=FunnelResult, summary="Análise de funil", tags=["analytics"])
-async def analyze_funnel(
-    funnel_config: FunnelAnalysis,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> FunnelResult:
-    """
-    Executa análise de funil de conversão.
-    
-    Analisa a jornada do usuário através de diferentes etapas
-    para identificar pontos de conversão e abandono.
-    
-    Args:
-        funnel_config: Configuração da análise de funil
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        FunnelResult: Resultados da análise de funil
-        
-    Raises:
-        HTTPException: 400 se configuração inválida
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Executando análise de funil para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        result = service.analyze_funnel(funnel_config, current_user.id)
-        logger.info(f"Análise de funil concluída para usuário {current_user.id}")
-        return result
-    except ValueError as e:
-        logger.warning(f"Configuração inválida para análise de funil do usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro na análise de funil para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/analysis/cohort", response_model=CohortResult, summary="Análise de coorte", tags=["analytics"])
-async def analyze_cohort(
-    cohort_config: CohortAnalysis,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> CohortResult:
-    """
-    Executa análise de coorte para retenção de usuários.
-    
-    Analisa grupos de usuários baseados em períodos específicos
-    para entender padrões de retenção e comportamento.
-    
-    Args:
-        cohort_config: Configuração da análise de coorte
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        CohortResult: Resultados da análise de coorte
-        
-    Raises:
-        HTTPException: 400 se configuração inválida
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Executando análise de coorte para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        result = service.analyze_cohort(cohort_config, current_user.id)
-        logger.info(f"Análise de coorte concluída para usuário {current_user.id}")
-        return result
-    except ValueError as e:
-        logger.warning(f"Configuração inválida para análise de coorte do usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro na análise de coorte para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/analysis/ab-test", response_model=ABTestResult, summary="Análise de teste A/B", tags=["analytics"])
-async def analyze_ab_test(
-    test_config: ABTestConfig,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> ABTestResult:
-    """
-    Executa análise de teste A/B.
-    
-    Analisa resultados de testes A/B para determinar
-    significância estatística e performance de variantes.
-    
-    Args:
-        test_config: Configuração do teste A/B
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        ABTestResult: Resultados da análise A/B
-        
-    Raises:
-        HTTPException: 400 se configuração inválida
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Executando análise A/B para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        result = service.analyze_ab_test(test_config, current_user.id)
-        logger.info(f"Análise A/B concluída para usuário {current_user.id}")
-        return result
-    except ValueError as e:
-        logger.warning(f"Configuração inválida para análise A/B do usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro na análise A/B para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/analysis/correlation", summary="Análise de correlação", tags=["analytics"])
-async def analyze_correlation(
-    metric1: str = Query(..., description="Primeira métrica"),
-    metric2: str = Query(..., description="Segunda métrica"),
-    start_date: datetime = Query(..., description="Data de início"),
-    end_date: datetime = Query(..., description="Data de fim"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """
-    Executa análise de correlação entre duas métricas.
-    
-    Calcula a correlação estatística entre duas métricas
-    no período especificado para identificar relacionamentos.
-    
-    Args:
-        metric1: Nome da primeira métrica
-        metric2: Nome da segunda métrica
-        start_date: Data de início da análise
-        end_date: Data de fim da análise
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Resultados da análise de correlação
-        
-    Raises:
-        HTTPException: 400 se parâmetros inválidos
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        if start_date > end_date:
-            raise HTTPException(status_code=400, detail="Data de início deve ser anterior à data de fim")
+        try:
+            execution_data = service.execute_report(report_id, current_user.id, parameters or {})
+            if not execution_data:
+                logger.warning(f"Relatório {report_id} não encontrado para usuário {current_user.id}")
+                raise HTTPException(status_code=404, detail="Relatório não encontrado")
             
-        logger.info(f"Analisando correlação entre {metric1} e {metric2} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        result = service.analyze_correlation(metric1, metric2, start_date, end_date, current_user.id)
-        logger.info(f"Análise de correlação concluída para usuário {current_user.id}")
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro na análise de correlação para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/analysis/anomalies", summary="Detecção de anomalias", tags=["analytics"])
-async def detect_anomalies(
-    metric: str = Query(..., description="Métrica para análise"),
-    days: int = Query(30, ge=7, le=365, description="Período em dias"),
-    sensitivity: float = Query(0.95, ge=0.8, le=0.99, description="Sensibilidade"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """
-    Detecta anomalias em uma métrica específica.
-    
-    Utiliza algoritmos de detecção de anomalias para identificar
-    pontos de dados incomuns que podem indicar problemas ou oportunidades.
-    
-    Args:
-        metric: Nome da métrica para análise
-        days: Período de análise em dias
-        sensitivity: Sensibilidade da detecção (0.8-0.99)
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Anomalias detectadas
-        
-    Raises:
-        HTTPException: 400 se parâmetros inválidos
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Detectando anomalias na métrica {metric} para usuário {current_user.id} - {days} dias, sensibilidade {sensitivity}")
-        service = AnalyticsService(db)
-        anomalies = service.detect_anomalies(metric, days, sensitivity, current_user.id)
-        logger.info(f"Detecção de anomalias concluída para usuário {current_user.id}")
-        return anomalies
-    except ValueError as e:
-        logger.warning(f"Parâmetros inválidos para detecção de anomalias do usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro na detecção de anomalias para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-# ==================== EXPORTAÇÕES ====================
-
-
-@router.post("/export", response_model=ExportResponse, summary="Exportar dados", tags=["analytics"])
-async def export_data(
-    export_request: ExportRequest,
-    background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> ExportResponse:
-    """
-    Inicia exportação de dados em background.
-    
-    Cria uma tarefa de exportação que será processada em background,
-    permitindo gerar arquivos grandes sem bloquear a API.
-    
-    Args:
-        export_request: Configuração da exportação
-        background_tasks: Tarefas em background do FastAPI
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        ExportResponse: Dados da exportação iniciada
-        
-    Raises:
-        HTTPException: 400 se configuração inválida
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Iniciando exportação de dados para usuário {current_user.id} - formato: {export_request.format}")
-        service = AnalyticsService(db)
-        export_task = service.create_export_task(export_request, current_user.id)
-        
-        # Processar exportação em background
-        background_tasks.add_task(service.process_export, export_task.id)
-        logger.info(f"Exportação {export_task.id} iniciada em background para usuário {current_user.id}")
-        return export_task
-    except ValueError as e:
-        logger.warning(f"Configuração inválida para exportação do usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro ao iniciar exportação para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/exports", response_model=List[ExportResponse], summary="Listar exportações do usuário", tags=["analytics"])
-async def get_user_exports(
-    status: Optional[str] = Query(None, pattern="^(pending|processing|completed|failed)$", description="Filtrar por status"),
-    limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
-    offset: int = Query(0, ge=0, description="Offset para paginação"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> List[ExportResponse]:
-    """
-    Obtém histórico de exportações do usuário.
-    
-    Lista todas as exportações criadas pelo usuário com opção
-    de filtrar por status e aplicar paginação.
-    
-    Args:
-        status: Filtro por status da exportação (opcional)
-        limit: Limite de resultados por página
-        offset: Offset para paginação
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        List[ExportResponse]: Lista de exportações
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Listando exportações para usuário {current_user.id} - status: {status}")
-        service = AnalyticsService(db)
-        exports = service.get_user_exports(current_user.id, status, limit, offset)
-        logger.info(f"Retornadas {len(exports)} exportações para usuário {current_user.id}")
-        return exports
-    except Exception as e:
-        logger.error(f"Erro ao listar exportações para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/exports/{export_id}/download", summary="Download de exportação", tags=["analytics"])
-async def download_export(
-    export_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """
-    Faz download de uma exportação concluída.
-    
-    Permite baixar o arquivo gerado por uma exportação,
-    verificando permissões e disponibilidade do arquivo.
-    
-    Args:
-        export_id: ID da exportação
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        FileResponse: Arquivo da exportação
-        
-    Raises:
-        HTTPException: 404 se exportação não encontrada
-        HTTPException: 403 se sem permissão de download
-        HTTPException: 400 se exportação não concluída
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Iniciando download da exportação {export_id} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        file_response = service.download_export(export_id, current_user.id)
-        if not file_response:
-            logger.warning(f"Exportação {export_id} não encontrada ou não disponível para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Exportação não encontrada ou não disponível")
-        logger.info(f"Download da exportação {export_id} concluído para usuário {current_user.id}")
-        return file_response
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro no download da exportação {export_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-# ==================== ALERTAS ====================
-
-
-@router.post("/alerts", response_model=AlertResponse, summary="Criar alerta", tags=["analytics"])
-async def create_alert(
-    alert_rule: AlertRule,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> AlertResponse:
-    """
-    Cria um novo alerta personalizado.
-    
-    Configura alertas automáticos baseados em métricas específicas
-    para notificar quando condições são atingidas.
-    
-    Args:
-        alert_rule: Configuração da regra de alerta
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        AlertResponse: Alerta criado
-        
-    Raises:
-        HTTPException: 400 se configuração inválida
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Criando alerta '{alert_rule.name}' para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        alert = service.create_alert(alert_rule, current_user.id)
-        logger.info(f"Alerta '{alert_rule.name}' criado com sucesso para usuário {current_user.id}")
-        return alert
-    except ValueError as e:
-        logger.warning(f"Configuração inválida para alerta '{alert_rule.name}': {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro ao criar alerta '{alert_rule.name}' para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/alerts", response_model=List[AlertResponse], summary="Listar alertas do usuário", tags=["analytics"])
-async def get_user_alerts(
-    status: Optional[str] = Query(None, pattern="^(active|paused|triggered)$", description="Filtrar por status"),
-    limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
-    offset: int = Query(0, ge=0, description="Offset para paginação"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> List[AlertResponse]:
-    """
-    Obtém alertas do usuário com filtros.
-    
-    Lista alertas criados pelo usuário com opção de filtrar
-    por status e aplicar paginação.
-    
-    Args:
-        status: Filtro por status do alerta (opcional)
-        limit: Limite de resultados por página
-        offset: Offset para paginação
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        List[AlertResponse]: Lista de alertas
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Listando alertas para usuário {current_user.id} - status: {status}")
-        service = AnalyticsService(db)
-        alerts = service.get_user_alerts(current_user.id, status, limit, offset)
-        logger.info(f"Retornados {len(alerts)} alertas para usuário {current_user.id}")
-        return alerts
-    except Exception as e:
-        logger.error(f"Erro ao listar alertas para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.put("/alerts/{alert_id}", response_model=AlertResponse, summary="Atualizar alerta", tags=["analytics"])
-async def update_alert(
-    alert_id: int,
-    alert_rule: AlertRule,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> AlertResponse:
-    """
-    Atualiza configuração de um alerta existente.
-    
-    Permite modificar regras, condições e configurações
-    de notificação de um alerta existente.
-    
-    Args:
-        alert_id: ID do alerta
-        alert_rule: Nova configuração do alerta
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        AlertResponse: Alerta atualizado
-        
-    Raises:
-        HTTPException: 404 se alerta não encontrado
-        HTTPException: 403 se sem permissão de edição
-        HTTPException: 400 se configuração inválida
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Atualizando alerta {alert_id} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        alert = service.update_alert(alert_id, alert_rule, current_user.id)
-        if not alert:
-            logger.warning(f"Alerta {alert_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Alerta não encontrado")
-        logger.info(f"Alerta {alert_id} atualizado com sucesso para usuário {current_user.id}")
-        return alert
-    except HTTPException:
-        raise
-    except ValueError as e:
-        logger.warning(f"Configuração inválida ao atualizar alerta {alert_id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro ao atualizar alerta {alert_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.delete("/alerts/{alert_id}", summary="Deletar alerta", tags=["analytics"])
-async def delete_alert(
-    alert_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str]:
-    """
-    Remove um alerta do usuário.
-    
-    Exclui permanentemente um alerta e para todas as
-    notificações associadas a ele.
-    
-    Args:
-        alert_id: ID do alerta
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se alerta não encontrado
-        HTTPException: 403 se sem permissão de exclusão
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Deletando alerta {alert_id} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        success = service.delete_alert(alert_id, current_user.id)
-        if not success:
-            logger.warning(f"Alerta {alert_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Alerta não encontrado")
-        logger.info(f"Alerta {alert_id} deletado com sucesso para usuário {current_user.id}")
-        return {"message": "Alerta removido com sucesso"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao deletar alerta {alert_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/alerts/{alert_id}/pause", summary="Pausar alerta", tags=["analytics"])
-async def pause_alert(
-    alert_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str]:
-    """
-    Pausa temporariamente um alerta.
-    
-    Desativa as notificações de um alerta sem removê-lo,
-    permitindo reativação posterior.
-    
-    Args:
-        alert_id: ID do alerta
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se alerta não encontrado
-        HTTPException: 403 se sem permissão de controle
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Pausando alerta {alert_id} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        success = service.pause_alert(alert_id, current_user.id)
-        if not success:
-            logger.warning(f"Alerta {alert_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Alerta não encontrado")
-        logger.info(f"Alerta {alert_id} pausado com sucesso para usuário {current_user.id}")
-        return {"message": "Alerta pausado"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao pausar alerta {alert_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/alerts/{alert_id}/resume", summary="Reativar alerta", tags=["analytics"])
-async def resume_alert(
-    alert_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str]:
-    """
-    Reativa um alerta pausado.
-    
-    Retoma as notificações de um alerta que estava pausado,
-    voltando ao monitoramento normal.
-    
-    Args:
-        alert_id: ID do alerta
-        current_user: Usuário autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se alerta não encontrado
-        HTTPException: 403 se sem permissão de controle
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Reativando alerta {alert_id} para usuário {current_user.id}")
-        service = AnalyticsService(db)
-        success = service.resume_alert(alert_id, current_user.id)
-        if not success:
-            logger.warning(f"Alerta {alert_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Alerta não encontrado")
-        logger.info(f"Alerta {alert_id} reativado com sucesso para usuário {current_user.id}")
-        return {"message": "Alerta retomado"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao reativar alerta {alert_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-# ==================== ADMINISTRAÇÃO ====================
-
-
-@router.get("/admin/stats", summary="Estatísticas administrativas", tags=["analytics", "advanced"])
-async def get_admin_analytics_stats(
-    current_admin: User = Depends(get_admin_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """
-    Obtém estatísticas administrativas do sistema analytics.
-    
-    Retorna métricas globais sobre uso, performance e recursos
-    do sistema analytics para administradores.
-    
-    Args:
-        current_admin: Usuário administrador autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Estatísticas administrativas
-        
-    Raises:
-        HTTPException: 403 se usuário não é admin
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo estatísticas administrativas por admin {current_admin.id}")
-        service = AnalyticsService(db)
-        stats = service.get_admin_stats()
-        logger.info(f"Estatísticas administrativas obtidas por admin {current_admin.id}")
-        return stats
-    except Exception as e:
-        logger.error(f"Erro ao obter estatísticas administrativas por admin {current_admin.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/admin/cleanup", summary="Limpeza de dados antigos", tags=["analytics", "advanced"])
-async def cleanup_old_data(
-    days: int = Query(90, ge=30, le=365, description="Manter dados dos últimos N dias"),
-    current_admin: User = Depends(get_admin_user),
-    db: Session = Depends(get_db),
-) -> dict[str, Any]:
-    """
-    Remove dados antigos do sistema analytics.
-    
-    Executa limpeza de dados antigos baseado no período especificado
-    para manter performance e controlar uso de armazenamento.
-    
-    Args:
-        days: Manter dados dos últimos N dias
-        current_admin: Usuário administrador autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Resultado da limpeza (registros removidos)
-        
-    Raises:
-        HTTPException: 403 se usuário não é admin
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Iniciando limpeza de dados antigos (>{days} dias) por admin {current_admin.id}")
-        service = AnalyticsService(db)
-        result = service.cleanup_old_data(days)
-        logger.info(f"Limpeza concluída por admin {current_admin.id}: {result['removed']} registros removidos")
-        return result
-    except Exception as e:
-        logger.error(f"Erro na limpeza de dados por admin {current_admin.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/admin/recompute-metrics", summary="Recomputar métricas", tags=["analytics", "advanced"])
-async def recompute_metrics(
-    background_tasks: BackgroundTasks,
-    start_date: datetime = Query(..., description="Data de início"),
-    end_date: datetime = Query(..., description="Data de fim"),
-    current_admin: User = Depends(get_admin_user),
-    db: Session = Depends(get_db),
-) -> dict[str, str]:
-    """
-    Força recomputação de métricas para um período.
-    
-    Recalcula todas as métricas agregadas para o período especificado,
-    útil para correção de dados ou após mudanças na lógica de cálculo.
-    
-    Args:
-        background_tasks: Tarefas em background do FastAPI
-        start_date: Data de início do reprocessamento
-        end_date: Data de fim do reprocessamento
-        current_admin: Usuário administrador autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        dict: Confirmação de início do reprocessamento
-        
-    Raises:
-        HTTPException: 400 se datas inválidas
-        HTTPException: 403 se usuário não é admin
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        if start_date > end_date:
-            raise HTTPException(status_code=400, detail="Data de início deve ser anterior à data de fim")
+            logger.info(f"Relatório {report_id} executado com sucesso para usuário {current_user.id}")
+            return execution_data
             
-        logger.info(f"Iniciando recomputação de métricas ({start_date} a {end_date}) por admin {current_admin.id}")
-        service = AnalyticsService(db)
-        
-        # Executar recomputação em background
-        background_tasks.add_task(service.recompute_metrics, start_date, end_date)
-        logger.info(f"Recomputação de métricas iniciada em background por admin {current_admin.id}")
-        
-        return {"message": "Recomputação iniciada em background"}
+        except ValueError as e:
+            logger.warning(f"Parâmetros inválidos ao executar relatório {report_id}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Parâmetros inválidos: {str(e)}")
+        except Exception as service_error:
+            logger.error(f"Erro no serviço ao executar relatório {report_id}: {str(service_error)}")
+            raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao iniciar recomputação por admin {current_admin.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get(
-    "/overview",
-    response_model=AnalyticsOverview,
-    summary="Visão geral de analytics",
-    tags=["analytics"],
-)
-async def get_analytics_overview(
-    current_admin: User = Depends(get_admin_user),
-    db: Session = Depends(get_db),
-) -> AnalyticsOverview:
-    """
-    Obtém uma visão geral de analytics para o sistema.
-    
-    Retorna informações sobre o uso, performance e recursos
-    do sistema analytics para administradores.
-    
-    Args:
-        current_admin: Usuário administrador autenticado
-        db: Sessão do banco de dados
-        
-    Returns:
-        AnalyticsOverview: Visão geral de analytics
-        
-    Raises:
-        HTTPException: 403 se usuário não é admin
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Gerando visão geral de analytics para admin {current_admin.id}")
-        service = AnalyticsService(db)
-        overview = service.get_analytics_overview()
-        logger.info(f"Visão geral de analytics obtida por admin {current_admin.id}")
-        return overview
-    except Exception as e:
-        logger.error(f"Erro ao obter visão geral de analytics por admin {current_admin.id}: {str(e)}")
+        logger.error(f"Erro geral ao executar relatório {report_id} para usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")

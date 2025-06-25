@@ -268,7 +268,7 @@ class ExecutionQueue(Base):
     Gerencia a ordem e prioridade de execução
     """
 
-    __tablename__ = "execution_queue"
+    __tablename__ = "workflow_execution_queue"
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -326,7 +326,7 @@ class ExecutionMetrics(Base):
     Armazena estatísticas e métricas de performance
     """
 
-    __tablename__ = "execution_metrics"
+    __tablename__ = "workflow_execution_metrics"
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)

@@ -28,12 +28,25 @@ from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from sqlalchemy.orm import Session
 from pathlib import Path
 from fastapi.openapi.utils import get_openapi
+from sqlalchemy import text  # 🆕 necessário para consultas SQL diretas no health detailed
 
 # Importar do sistema centralizado
 from synapse.core.config_new import settings
-from synapse.database import init_db, get_db, health_check
-from synapse.api.v1.router import api_router
+from synapse.database import init_db, get_db
+from synapse.api.v1.api import api_router
 from synapse.middlewares.rate_limiting import rate_limit
+from synapse.middlewares.metrics import setup_metrics_middleware
+from synapse.middlewares.error_middleware import setup_error_middleware
+from synapse.error_handlers import setup_error_handlers, add_request_id_middleware
+
+# Sistema de tracing distribuído
+from synapse.core.tracing import (
+    setup_tracing,
+    instrument_fastapi,
+    instrument_libraries,
+    TracingMiddleware,
+    get_trace_context
+)
 
 # Configuração de logging otimizada com sistema centralizado
 log_level_name = settings.LOG_LEVEL or "INFO"
@@ -85,15 +98,33 @@ async def lifespan(app: FastAPI):
         os.makedirs(upload_dir, exist_ok=True)
         logger.info(f'📁 Diretório de uploads criado: {upload_dir}')
         
+        # Configurar sistema de tracing distribuído
+        if settings.ENABLE_TRACING:
+            setup_tracing()
+            instrument_libraries()
+            logger.info('✅ Sistema de tracing distribuído configurado')
+        
         # Inicializar banco de dados
         init_db()
         logger.info('✅ Banco de dados inicializado via SQLAlchemy')
         
+        # Configurar serviços de dependency injection
+        try:
+            from synapse.core.services import configure_services
+            configure_services()
+            logger.info('✅ Sistema de serviços configurado')
+        except Exception as e:
+            logger.warning(f'⚠️  Sistema de serviços não disponível: {e}')
+        
         # Verificar conectividade
-        if health_check():
+        try:
+            # Simple health check using SQLAlchemy
+            from synapse.database import AsyncSessionLocal
+            async with AsyncSessionLocal() as session:
+                await session.execute(text("SELECT 1"))
             logger.info('✅ Conectividade com banco de dados verificada')
-        else:
-            logger.error('❌ Falha na verificação de conectividade com o banco')
+        except Exception as e:
+            logger.error(f'❌ Falha na verificação de conectividade com o banco: {e}')
             # Em ambiente de produção (como Render), permitir inicialização mesmo sem banco
             # O banco pode estar ainda sendo provisionado
             if settings.ENVIRONMENT == "production":
@@ -128,6 +159,20 @@ async def lifespan(app: FastAPI):
     else:
         logger.info('⚠️  Engine de Execução desabilitada (EXECUTION_ENGINE_ENABLED=false)')
     
+    # Alert System and Background Tasks (always enabled if database is available)
+    background_task_manager = None
+    alert_system_enabled = os.getenv('ALERT_SYSTEM_ENABLED', 'true').lower() == 'true'
+    if alert_system_enabled:
+        try:
+            from synapse.core.alerts.background_tasks import background_task_manager as bg_manager
+            background_task_manager = bg_manager
+            await background_task_manager.start_all_tasks()
+            logger.info('✅ Sistema de Alertas e Tarefas em Background inicializado')
+        except Exception as e:
+            logger.warning(f'⚠️  Sistema de Alertas não disponível: {e}')
+    else:
+        logger.info('⚠️  Sistema de Alertas desabilitado (ALERT_SYSTEM_ENABLED=false)')
+    
     logger.info('🎉 SynapScale Backend iniciado com sucesso!')
     
     yield
@@ -144,6 +189,16 @@ async def lifespan(app: FastAPI):
             logger.warning(f'⚠️  Erro ao finalizar Engine de Execução: {e}')
     else:
         logger.info('ℹ️  Engine de Execução não estava habilitada')
+    
+    # Shutdown Alert System and Background Tasks
+    if 'background_task_manager' in locals() and background_task_manager:
+        try:
+            await background_task_manager.stop_all_tasks()
+            logger.info('✅ Sistema de Alertas e Tarefas em Background finalizado')
+        except Exception as e:
+            logger.warning(f'⚠️  Erro ao finalizar Sistema de Alertas: {e}')
+    else:
+        logger.info('ℹ️  Sistema de Alertas não estava habilitado')
     
     logger.info('✅ SynapScale Backend finalizado com sucesso')
 
@@ -162,7 +217,7 @@ openapi_tags = [
     {"name": "workflows", "description": "⚙️ Workflows completos: criação, nós, execuções e automação"},
     
     # 🤖 INTELIGÊNCIA ARTIFICIAL
-    {"name": "ai", "description": "🤖 IA completa: LLM, agentes, conversas e integrações"},
+    {"name": "ai", "description": "🤖 IA completa: LLM unificado, agentes, conversas e integrações. Endpoints centralizados em /llm/* com suporte a OpenAI, Anthropic, Google e mais."},
     
     # 🛒 MARKETPLACE
     {"name": "marketplace", "description": "🛒 Marketplace completo: componentes, templates, avaliações e compras"},
@@ -174,7 +229,10 @@ openapi_tags = [
     {"name": "data", "description": "📁 Gestão de dados: arquivos, uploads e variáveis do usuário"},
     
     # 🔌 SISTEMA AVANÇADO
-    {"name": "advanced", "description": "🔌 Recursos avançados: WebSockets, administração e integrações"}
+    {"name": "advanced", "description": "🔌 Recursos avançados: WebSockets, administração e integrações"},
+    
+    # ⚠️ DEPRECATED (CASOS ESPECIAIS)
+    {"name": "deprecated", "description": "⚠️ Endpoints descontinuados: endpoints legados mantidos para compatibilidade. Migre para as versões unificadas em /llm/*."}
 ]
 
 # Criar aplicação FastAPI com configurações centralizadas
@@ -184,16 +242,25 @@ app = FastAPI(
     🚀 **SynapScale Backend API** - Plataforma de Automação com IA
     
     API robusta e escalável para gerenciamento de workflows, agentes AI e automações.
-    **VERSÃO OTIMIZADA COM CONFIGURAÇÃO CENTRALIZADA**
+    **VERSÃO OTIMIZADA COM CONFIGURAÇÃO CENTRALIZADA E LLM UNIFICADO**
     
     ## Funcionalidades Principais
     
     * **🔐 Autenticação**: Sistema completo de autenticação e autorização
     * **⚡ Workflows**: Criação e execução de workflows de automação
-    * **🤖 Agentes AI**: Integração com múltiplos provedores de IA
+    * **🤖 LLM Unificado**: Integração centralizada com OpenAI, Anthropic, Google e outros provedores
+    * **🤖 Agentes AI**: Automação inteligente com múltiplos provedores
     * **🔗 Nodes**: Componentes reutilizáveis para workflows
     * **💬 Conversas**: Histórico e gerenciamento de conversas
     * **📁 Arquivos**: Upload e gerenciamento de arquivos
+    
+    ## Sistema LLM Unificado
+    
+    * **Endpoints Centralizados**: Todos em `/llm/*` para facilitar integração
+    * **Multi-Provider**: OpenAI, Anthropic, Google, Meta e mais
+    * **Cache Inteligente**: Redis para otimização de performance
+    * **Gestão de Tokens**: Controle preciso de uso e custos
+    * **Validação de DB**: Validação em tempo real dos modelos disponíveis
     
     ## Segurança
     
@@ -362,36 +429,25 @@ async def rate_limit_middleware(request: Request, call_next):
     # Limite padrão: 100 requisições por 60 segundos
     return await rate_limit(max_requests=100, window_seconds=60)(call_next)(request)
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Handler global para exceções não tratadas"""
-    logger.error(f"Erro não tratado: {exc}", exc_info=True)
-    
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Erro interno do servidor",
-            "detail": "Um erro inesperado ocorreu. Nossa equipe foi notificada.",
-            "request_id": request.headers.get("X-Request-ID", "unknown"),
-            "timestamp": time.time()
-        }
-    )
+# Configurar middleware de métricas para monitoramento
+setup_metrics_middleware(app)
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    """Handler para exceções HTTP"""
-    logger.warning(f"HTTP Exception: {exc.status_code} - {exc.detail}")
-    
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "error": "Erro na requisição",
-            "detail": exc.detail,
-            "status_code": exc.status_code,
-            "request_id": request.headers.get("X-Request-ID", "unknown"),
-            "timestamp": time.time()
-        }
-    )
+# Configurar middleware para adicionar request ID
+app.middleware("http")(add_request_id_middleware)
+
+# Configurar middleware de interceptação de erros
+setup_error_middleware(app)
+
+# Configurar handlers de erro globais
+setup_error_handlers(app)
+
+# Configurar tracing distribuído
+if settings.ENABLE_TRACING:
+    # Adicionar middleware de tracing
+    app.add_middleware(TracingMiddleware)
+    # Instrumentar FastAPI
+    instrument_fastapi(app)
+    logger.info('✅ FastAPI instrumentado com OpenTelemetry')
 
 @app.get('/health', tags=['system'])
 async def health_check_endpoint(db: Session = Depends(get_db)):
@@ -400,7 +456,11 @@ async def health_check_endpoint(db: Session = Depends(get_db)):
     """
     try:
         # Verificar banco de dados
-        db_healthy = health_check()
+        try:
+            db.execute(text("SELECT 1"))
+            db_healthy = True
+        except Exception:
+            db_healthy = False
         
         # Informações básicas
         health_info = {
@@ -430,6 +490,13 @@ async def health_check_endpoint(db: Session = Depends(get_db)):
         except ImportError:
             health_info["services"]["websockets"] = "not_available"
         
+        # Adicionar estatísticas de erro
+        try:
+            from synapse.middlewares.error_middleware import get_error_stats
+            health_info["error_stats"] = get_error_stats()
+        except ImportError:
+            health_info["error_stats"] = "not_available"
+        
         return health_info
         
     except Exception as e:
@@ -442,6 +509,56 @@ async def health_check_endpoint(db: Session = Depends(get_db)):
                 "timestamp": time.time()
             }
         )
+
+@app.get('/health/detailed', tags=['system'])
+async def detailed_health_check(db: Session = Depends(get_db)):
+    """Health check detalhado com estatísticas de banco e provedores"""
+    try:
+        # Testar conectividade básica ao banco
+        db.execute(text("SELECT 1"))
+        db_connected = True
+
+        # Contar tabelas no schema informado (fallback para default)
+        schema_name = getattr(settings, "DATABASE_SCHEMA", None) or "public"
+        try:
+            result = db.execute(
+                text(
+                    "SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = :schema"
+                ),
+                {"schema": schema_name},
+            )
+            table_count = result.scalar() if result else 0
+        except Exception as e:
+            logger.warning(f"Não foi possível contar tabelas: {e}")
+            table_count = 0
+
+    except Exception as e:
+        logger.error(f"Database detailed check failed: {e}")
+        db_connected = False
+        table_count = 0
+
+    return {
+        "status": "healthy" if db_connected else "degraded",
+        "environment": settings.ENVIRONMENT,
+        "version": settings.VERSION,
+        "database": {
+            "connected": db_connected,
+            "schema": schema_name,
+            "tables": table_count,
+        },
+        "llm_providers": {
+            "openai": bool(getattr(settings, "OPENAI_API_KEY", None)),
+            "anthropic": bool(getattr(settings, "ANTHROPIC_API_KEY", None)),
+            "google": bool(getattr(settings, "GOOGLE_API_KEY", None)),
+            "groq": bool(getattr(settings, "GROQ_API_KEY", None)),
+        },
+        "features": {
+            "file_upload": True,
+            "websocket": True,
+            "analytics": True,
+        },
+        "timestamp": time.time(),
+    }
 
 @app.get('/', tags=['system'])
 async def root():

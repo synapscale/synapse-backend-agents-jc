@@ -1,0 +1,377 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 🚀 PRE-IMPLEMENTATION POWER WORKFLOW
+
+**⚠️ ABSOLUTE REQUIREMENT: This workflow is MANDATORY before ANY code changes. Zero exceptions.**
+
+## 🎯 WORKFLOW OVERVIEW
+
+This workflow transforms chaotic development into systematic success through:
+- **Crystal-clear scope** before touching code
+- **Right-sized tasks** that eliminate overwhelm
+- **Research-backed decisions** using latest best practices
+- **Trackable progress** with zero ambiguity
+
+---
+
+## 🔍 PRE-FLIGHT CHECKLIST
+
+**Before starting ANY workflow, verify:**
+- [ ] Taskmaster is initialized (`task-master init` or `initialize_project`)
+- [ ] `.taskmaster/` directory exists with proper structure
+- [ ] Required API keys configured (check `task-master models`)
+- [ ] Git repository initialized (recommended)
+- [ ] Current working directory is project root
+
+**⚠️ Missing setup? Run initialization first:**
+```bash
+# Initialize Taskmaster
+task-master init --yes
+
+# Configure AI models
+task-master models --setup
+```
+
+---
+
+## 📋 PHASE 1: STRATEGIC PREPARATION
+
+### Step 1: PRD Creation/Update (`scripts/PRD.txt`)
+**🎯 Goal**: Create authoritative project specification
+
+```bash
+# Start with template
+cp scripts/example_prd.txt scripts/PRD.txt
+# Edit thoroughly with ALL requirements
+```
+
+**✅ Quality Checklist - PRD MUST contain:**
+- [ ] Clear problem statement & context
+- [ ] Detailed functional requirements
+- [ ] Technical specifications & constraints
+- [ ] Success criteria & acceptance tests
+- [ ] Dependencies & integration points
+- [ ] Non-functional requirements (performance, security, etc.)
+- [ ] **User personas & use cases**
+- [ ] **Data models & API specifications**
+- [ ] **Error handling & edge cases**
+- [ ] **Deployment & infrastructure requirements**
+
+**💡 Pro Tip**: Spend extra time here - a perfect PRD saves 10x time later
+
+**🔧 PRD Validation Commands:**
+```bash
+# Validate PRD exists and is recent
+ls -la scripts/PRD.txt
+# Check PRD content quality
+wc -l scripts/PRD.txt  # Should be substantial (50+ lines)
+```
+
+### Step 2: AI-Powered Task Generation
+**🎯 Goal**: Convert PRD into actionable task structure
+
+```bash
+# MCP (Preferred - Better error handling)
+parse_prd --input="scripts/PRD.txt" --force --research --numTasks=15
+
+# CLI Fallback
+task-master parse-prd scripts/PRD.txt --force --research --num-tasks=15
+```
+
+**Why these flags matter:**
+- `--force`: Overwrites stale tasks ensuring fresh start
+- `--research`: Leverages latest best practices & current tech trends
+- `--numTasks=15`: Optimal granularity for most projects
+
+**✅ Post-Generation Validation:**
+```bash
+# Verify tasks were created
+get_tasks  # Should show 10-20 well-structured tasks
+```
+
+### Step 3: Intelligent Complexity Analysis
+**🎯 Goal**: Identify which tasks need breakdown
+
+```bash
+# MCP (Preferred)
+analyze_project_complexity --research --threshold=5
+
+# CLI Fallback  
+task-master analyze-complexity --research --threshold=5
+```
+
+**Smart defaults:**
+- `--threshold=5`: Flags medium-high complexity (sweet spot for expansion)
+- `--research`: Uses current industry standards for complexity assessment
+
+**✅ Analysis Validation:**
+```bash
+# Review complexity report
+complexity_report  # Should identify 3-7 tasks needing expansion
+```
+
+### Step 4: Comprehensive Task Expansion
+**🎯 Goal**: Break complex tasks into 1-2 hour actionable chunks
+
+```bash
+# MCP (Preferred)
+expand_all --research --force --prompt="Create implementation-ready subtasks with clear acceptance criteria, estimated 1-2 hours each. Include testing steps and validation criteria."
+
+# CLI Fallback
+task-master expand --all --research --force --prompt="Create implementation-ready subtasks with clear acceptance criteria, estimated 1-2 hours each. Include testing steps and validation criteria."
+```
+
+**Result**: Every task becomes a clear, actionable roadmap
+
+**✅ Expansion Validation:**
+```bash
+# Verify subtasks created
+get_tasks --withSubtasks  # Should show detailed subtask breakdown
+```
+
+---
+
+## 🔧 PHASE 2: EXECUTION READINESS
+
+### Step 5: Documentation Generation (Highly Recommended)
+```bash
+generate
+```
+**Benefits**: Creates individual .md files for each task - perfect for documentation & review
+
+### Step 6: Dependencies Validation
+```bash
+# Check for dependency issues
+validate_dependencies
+
+# Fix any issues found
+fix_dependencies
+```
+
+### Step 7: Readiness Validation
+```bash
+next_task
+```
+**Expected result**: Should return a clear, actionable task with:
+- All dependencies satisfied
+- Clear implementation steps
+- Obvious acceptance criteria
+
+**🚨 If no task returned**: Fix dependencies or expand more tasks
+
+---
+
+## ⚡ PHASE 3: HIGH-VELOCITY IMPLEMENTATION
+
+### Step 7: Begin Strategic Implementation
+```bash
+next_task  # Get the optimal next task
+```
+**Implementation approach:**
+1. **Read task details thoroughly**
+2. **Research current best practices** (use `research` tool)
+3. **Follow subtask sequence**
+4. **Implement with focus on acceptance criteria**
+5. **Test incrementally**
+6. **Document findings in real-time**
+
+### Step 8: Continuous Optimization
+**Dynamic task management:**
+- **New discoveries**: `add_task --research --prompt="[detailed requirement]"`
+- **Progress tracking**: `set_task_status --id=X.Y --status=done`
+- **Scope changes**: `update --from=ID --research --prompt="[context change explanation]"`
+- **Implementation notes**: `update_subtask --id=X.Y --prompt="[findings & decisions]"`
+- **Research integration**: `research "[query]" --save-to=X.Y`
+
+**🔄 Mid-Implementation Checkpoints:**
+```bash
+# Every 2-3 completed tasks, validate progress
+get_tasks --status=done  # Review completed work
+next_task               # Confirm next steps are clear
+```
+
+### Step 9: Quality Gates
+**Before marking complete:**
+- [ ] All tasks/subtasks marked `done`
+- [ ] All tests passing (unit, integration, e2e)
+- [ ] Documentation updated
+- [ ] Code reviewed & approved
+- [ ] Performance benchmarks met
+- [ ] **Security scan completed**
+- [ ] **Accessibility requirements met**
+- [ ] **Error handling tested**
+
+---
+
+## 🛡️ ENFORCEMENT & VALIDATION
+
+### 🚫 HARD STOPS - Code changes FORBIDDEN if:
+1. `scripts/PRD.txt` missing or outdated vs current request
+2. Tasks not parsed from current PRD
+3. Complexity analysis not completed
+4. High-complexity tasks lack subtasks
+5. `next_task` returns no actionable items
+6. Dependencies not properly mapped
+7. **Taskmaster not initialized properly**
+8. **Required API keys missing for AI operations**
+
+### 🔄 MANDATORY REGENERATION when:
+- Requirements change > 20% → Update PRD → Rerun steps 2-4
+- New technical constraints discovered → Update PRD → Rerun steps 2-4  
+- Scope creep detected → Update PRD → Add/update tasks
+- Implementation approach pivots → Update affected tasks
+- **Performance requirements change** → Update PRD → Reassess tasks
+- **Security requirements change** → Update PRD → Add security tasks
+
+### 🎯 WORKFLOW RECOVERY PROCEDURES
+
+**If workflow is interrupted:**
+```bash
+# 1. Assess current state
+get_tasks --status=pending,in-progress
+
+# 2. Validate dependencies
+validate_dependencies
+
+# 3. Resume from optimal point
+next_task
+```
+
+**If major scope change occurs:**
+```bash
+# 1. Update PRD with changes
+# 2. Re-parse with append flag
+parse_prd --input="scripts/PRD.txt" --append --research
+
+# 3. Re-analyze and expand new tasks
+analyze_project_complexity --research
+expand_all --research
+```
+
+---
+
+## 🚀 POWER MULTIPLIERS
+
+### Research-Driven Development
+**Always use `--research` for:**
+- Latest best practices & patterns
+- Optimal implementation approaches
+- Early pitfall identification
+- Better architectural decisions
+- Current security standards
+- **Performance optimization techniques**
+- **Accessibility best practices**
+- **Testing strategies**
+
+### Perfect Task Granularity
+**Each subtask should be:**
+- 1-2 hours maximum duration
+- Single, clear objective
+- Obvious acceptance criteria
+- Independent & testable
+- Clear next steps
+- **Includes testing approach**
+- **Defines success metrics**
+
+### Version Control Integration
+**Track everything:**
+- PRD changes in git history
+- Task updates with timestamps
+- Implementation decisions preserved
+- Progress visible to team
+- **Branch strategy aligned with tasks**
+- **Commit messages reference task IDs**
+
+### AI-Powered Research Integration
+**Leverage research tool throughout:**
+```bash
+# Before implementing any task
+research "latest best practices for [technology/pattern]" --save-to=X.Y
+
+# When encountering challenges
+research "common issues with [specific problem]" --save-to=X.Y
+
+# For optimization
+research "performance optimization for [component]" --save-to=X.Y
+```
+
+---
+
+## 📊 SUCCESS METRICS & ROI
+
+### Before This Workflow:
+- ❌ Unclear scope leading to scope creep
+- ❌ Frequent rework & technical debt
+- ❌ Missed requirements & edge cases
+- ❌ Team confusion & context switching
+- ❌ Unpredictable delivery timelines
+- ❌ **Security vulnerabilities discovered late**
+- ❌ **Performance issues in production**
+- ❌ **Poor test coverage**
+
+### After This Workflow:
+- ✅ Crystal clear scope & boundaries
+- ✅ Minimal rework, clean implementation
+- ✅ All requirements captured & met
+- ✅ Team alignment & clear progress
+- ✅ Predictable, faster delivery
+- ✅ **Security-first development**
+- ✅ **Performance-optimized from start**
+- ✅ **Comprehensive test coverage**
+
+**ROI**: 15 minutes setup saves 5+ hours of confusion & rework
+
+---
+
+## ⚡ QUICK START REFERENCE
+
+```bash
+# 🚀 NEW FEATURE/FIX REQUEST WORKFLOW
+
+# 0. VERIFY SETUP (30 sec)
+task-master models  # Ensure AI is configured
+
+# 1. PREPARE (5 min)
+cp scripts/example_prd.txt scripts/PRD.txt
+# Edit PRD thoroughly with ALL requirements
+
+# 2. GENERATE & ANALYZE (5-10 min)
+task-master parse-prd scripts/PRD.txt --force --research --num-tasks=15
+task-master analyze-complexity --research --threshold=5
+task-master expand --all --research --force
+
+# 3. VALIDATE & START (1 min)
+task-master validate-dependencies  # Ensure clean dependencies
+task-master generate              # Optional: create .md files
+task-master next                  # Begin implementation with clarity
+
+# 4. IMPLEMENT WITH CONFIDENCE 🎯
+# Follow subtasks, use research tool, update progress, ship quality code
+```
+
+---
+
+## 🎯 REMEMBER THE GOLDEN RULE
+
+**"15 minutes of disciplined preparation eliminates hours of chaotic rework"**
+
+This workflow is your implementation superpower - use it religiously for maximum effectiveness.
+
+---
+
+## 📚 ADDITIONAL RESOURCES
+
+**Workflow Troubleshooting:**
+- Empty `next_task` result → Check dependencies with `validate_dependencies`
+- Tasks too complex → Lower threshold: `analyze-complexity --threshold=3`
+- Missing context → Use research tool: `research "[your question]"`
+- Scope changes → Update PRD and re-parse with `--append`
+
+**Advanced Techniques:**
+- **Multi-tag workflows** for feature branches
+- **Research-first development** for unfamiliar technologies
+- **Incremental PRD updates** for agile workflows
+- **Automated testing integration** with task validation

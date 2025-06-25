@@ -1,0 +1,25 @@
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    uid: loki_uid
+    isDefault: false
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceUid: prometheus_uid
+          matcherRegex: "request_id=(\\w+)"
+          name: "Request ID"
+          url: "/explore?left=%5B%22now-1h%22,%22now%22,%22Prometheus%22,%7B%22expr%22:%22%7Brequest_id%3D%5C%22$${__value.raw}%5C%22%7D%22%7D%5D"
+        - datasourceUid: loki_uid
+          matcherRegex: "user_id=(\\w+)"
+          name: "User Logs"
+          url: "/explore?left=%5B%22now-1h%22,%22now%22,%22Loki%22,%7B%22expr%22:%22%7Buser_id%3D%5C%22$${__value.raw}%5C%22%7D%22%7D%5D"
+        - datasourceUid: loki_uid
+          matcherRegex: "error_type=(\\w+)"
+          name: "Similar Errors"
+          url: "/explore?left=%5B%22now-1h%22,%22now%22,%22Loki%22,%7B%22expr%22:%22%7Berror_type%3D%5C%22$${__value.raw}%5C%22%7D%22%7D%5D" 

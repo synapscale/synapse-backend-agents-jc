@@ -12,13 +12,14 @@ from synapse.database import Base
 
 
 class Conversation(Base):
-    __tablename__ = "conversations"
+    __tablename__ = "llms_conversations"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    agent_id = Column(UUID(as_uuid=True), ForeignKey("agents.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
-    workspace_id = Column(String, nullable=True)
+    agent_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.agents.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id", ondelete="SET NULL"), nullable=True)
 
     # Informações básicas
     title = Column(String(255))
@@ -37,12 +38,17 @@ class Conversation(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    # Relacionamentos
+    # Relacionamentos existentes
     user = relationship("User", back_populates="conversations")
     agent = relationship("Agent", back_populates="conversations")
+    workspace = relationship("Workspace", back_populates="conversations")
     messages = relationship(
         "Message", back_populates="conversation", cascade="all, delete-orphan"
     )
+    
+    # Novos relacionamentos LLM
+    llms_conversations_turns = relationship("ConversationLLM", back_populates="conversation", cascade="all, delete-orphan")
+    usage_logs = relationship("UsageLog", back_populates="conversation", cascade="all, delete-orphan")
 
     def __repr__(self):
         return (
@@ -64,10 +70,10 @@ class Conversation(Base):
     def to_dict(self):
         """Converter para dicionário"""
         return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "agent_id": self.agent_id,
-            "workspace_id": self.workspace_id,
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "agent_id": str(self.agent_id) if self.agent_id else None,
+            "workspace_id": str(self.workspace_id) if self.workspace_id else None,
             "title": self.title,
             "display_title": self.display_title,
             "status": self.status,

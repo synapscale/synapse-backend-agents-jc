@@ -1,0 +1,1588 @@
+# 🚀 SynapScale Backend - Cursor Rules v2.0
+# Plataforma de Automação com IA - Regras completas e otimizadas para desenvolvimento
+
+## 📋 CONTEXTO DO PROJETO
+
+Você está trabalhando no **SynapScale Backend**, uma plataforma empresarial de automação com IA de nível production. Sistema robusto e escalável com:
+
+- **Backend**: FastAPI 0.110+ + SQLAlchemy 2.0+ + PostgreSQL + Redis + Alembic
+- **IA**: Integração multi-provedor (OpenAI, Anthropic, Google, Grok, DeepSeek, Llama, Tess)
+- **Arquitetura**: API REST + WebSockets + Workflows + Marketplace + Analytics + Billing
+- **Produção**: Sistema estável com 242 endpoints, 70.7% de taxa de sucesso, cobertura de testes
+- **Ferramentas**: Taskmaster (task management), Cursor MCP, sistema de tags, rate limiting
+- **Infraestrutura**: Docker, Render, S3/GCS storage, Sentry monitoring
+
+## 🎯 PRINCÍPIOS FUNDAMENTAIS
+
+### 1. **Configuração Centralizada**
+- SEMPRE use `settings` de `synapse.core.config_new` para configurações
+- NUNCA hardcode valores - use variáveis de ambiente
+- Mantenha compatibilidade com o sistema de configuração existente
+
+### 2. **Estrutura do Projeto**
+- Siga a estrutura modular: `src/synapse/api/v1/endpoints/`
+- Models em `src/synapse/models/`
+- Schemas em `src/synapse/schemas/`
+- Services em `src/synapse/services/`
+
+### 3. **Padrões de Código**
+- Use type hints em TUDO (Python 3.11+)
+- Siga convenções PEP 8 com Black (line-length=88)
+- Docstrings obrigatórias para classes e funções públicas
+- Use async/await para operações I/O
+- SEMPRE use f-strings para formatação de strings
+- Prefira comprehensions sobre loops quando possível
+- Use context managers para recursos (conexões, arquivos)
+
+### 4. **Taskmaster Integration**
+- Use Taskmaster MCP tools para gerenciamento de tarefas
+- SEMPRE documente progresso com `update_subtask`
+- Use tags para organizar contextos de desenvolvimento
+- Mantenha tasks atualizadas durante implementação
+
+### 5. **Workflow de Desenvolvimento com Taskmaster**
+```python
+# ✅ Padrão de desenvolvimento com documentação automática
+
+# 1. Inicializar projeto (uma vez)
+# task-master init --name="SynapScale Backend" --description="Plataforma de automação com IA"
+
+# 2. Durante implementação, SEMPRE documentar progresso
+async def implement_feature_with_logging():
+    """Implementa feature documentando cada passo."""
+    
+    # ✅ Atualizar subtask com descobertas técnicas
+    await update_subtask(
+        task_id="2.3",
+        notes="""
+        ⚡ Implementação do sistema de cache Redis:
+        
+        DESCOBERTAS:
+        - Redis configurado na URL: {settings.REDIS_URL}
+        - TTL padrão: 300s (configurável via CACHE_DEFAULT_TTL)
+        - Decorator @cached() funcionando perfeitamente
+        
+        IMPLEMENTADO:
+        ✅ CacheService com get/set/delete
+        ✅ Decorator para cache automático
+        ✅ Integração com analytics (cache de 10min)
+        ✅ Testes unitários passando
+        
+        PRÓXIMOS PASSOS:
+        - Implementar cache para consultas de LLM
+        - Adicionar métricas de hit/miss ratio
+        - Configurar eviction policies
+        
+        PERFORMANCE:
+        - Consultas de analytics: 2.3s → 0.05s 🚀
+        - Redução de 95% no tempo de resposta
+        """
+    )
+    
+    # ✅ Marcar como completa quando finalizada
+    await set_task_status(task_id="2.3", status="done")
+
+# 3. Usar research para decisões técnicas
+# task-master research "Como otimizar queries SQLAlchemy com relacionamentos?" 
+#   --files=src/synapse/models/,src/synapse/services/ 
+#   --save-to=3.1
+
+# 4. Organizar com tags para diferentes contextos
+# task-master use-tag feature-cache-redis    # Para nova feature
+# task-master use-tag hotfix-performance     # Para otimizações
+# task-master use-tag refactor-llm-service   # Para refatorações
+# task-master use-tag master                 # Para desenvolvimento principal
+
+# 5. Expandir tasks complexas com research
+# task-master expand --id=4 --research --force
+```
+
+### 6. **Padrões de Commits com Taskmaster**
+```bash
+# ✅ Commits estruturados com referência às tasks
+
+# Feature completa
+git commit -m "feat(cache): Implement Redis caching system
+
+- Add CacheService with TTL support
+- Create @cached decorator for automatic caching
+- Integrate with analytics endpoints (95% perf improvement)
+- Add comprehensive unit tests
+
+Closes task: 2.3
+Related: 2.1, 2.2"
+
+# Hotfix
+git commit -m "fix(auth): Fix JWT token expiration handling
+
+- Update token refresh logic
+- Add proper error handling for expired tokens  
+- Improve user experience on token expiry
+
+Fixes task: 5.2 (hotfix-security tag)"
+
+# Refactor
+git commit -m "refactor(llm): Unify LLM service providers
+
+- Consolidate OpenAI, Claude, Gemini into UnifiedLLMService
+- Add automatic fallback mechanism
+- Improve error handling and logging
+- Reduce code duplication by 60%
+
+Task: 1.4 (refactor-llm-service tag)"
+```
+
+## 🔧 REGRAS TÉCNICAS ESPECÍFICAS
+
+### **FastAPI & Endpoints**
+```python
+# ✅ Estrutura padrão de endpoint
+@router.post("/endpoint", response_model=ResponseSchema, tags=["category"])
+async def create_something(
+    request: CreateSchema,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> ResponseSchema:
+    """
+    Descrição clara do endpoint.
+    
+    Args:
+        request: Dados da requisição
+        db: Sessão do banco de dados
+        current_user: Usuário autenticado
+        
+    Returns:
+        ResponseSchema: Dados da resposta
+        
+    Raises:
+        HTTPException: Quando ocorre erro específico
+    """
+```
+
+### **Models (SQLAlchemy 2.0+)**
+```python
+# ✅ Padrão de model completo
+from sqlalchemy import String, Integer, DateTime, Boolean, Text, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
+from synapse.database import Base
+
+class MyModel(Base):
+    __tablename__ = "my_models"
+    __table_args__ = {"schema": "synapscale_db"}
+    
+    # ✅ Campos obrigatórios
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    
+    # ✅ Timestamps automáticos
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now(),
+        nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now(), 
+        onupdate=func.now(),
+        nullable=False
+    )
+    
+    # ✅ Campos opcionais
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    
+    # ✅ Foreign Keys com relacionamentos
+    user_id: Mapped[int] = mapped_column(ForeignKey("synapscale_db.users.id"), nullable=False)
+    user: Mapped["User"] = relationship("User", back_populates="my_models")
+    
+    # ✅ Métodos úteis
+    def to_dict(self) -> dict:
+        """Converte model para dicionário."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
+        }
+    
+    def __repr__(self) -> str:
+        return f"<MyModel(id={self.id}, name='{self.name}')>"
+```
+
+### **Schemas (Pydantic v2)**
+```python
+# ✅ Padrão de schema completo
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+from typing import Optional, List
+from datetime import datetime
+from enum import Enum
+
+class StatusEnum(str, Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    PENDING = "pending"
+
+class BaseSchema(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+        use_enum_values=True,
+        validate_assignment=True,
+        arbitrary_types_allowed=False
+    )
+
+class CreateSchema(BaseSchema):
+    name: str = Field(..., min_length=1, max_length=255, description="Nome do item")
+    description: Optional[str] = Field(None, max_length=1000, description="Descrição opcional")
+    is_active: bool = Field(True, description="Status ativo/inativo")
+    
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Nome não pode estar vazio")
+        return v.strip()
+
+class UpdateSchema(BaseSchema):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = Field(None, max_length=1000)
+    is_active: Optional[bool] = None
+
+class ResponseSchema(BaseSchema):
+    id: int
+    name: str
+    description: Optional[str] = None
+    is_active: bool
+    status: StatusEnum
+    created_at: datetime
+    updated_at: datetime
+    
+    # ✅ Campos computados
+    display_name: str = Field(..., description="Nome formatado para exibição")
+    
+    @field_validator('display_name', mode='before')
+    @classmethod
+    def set_display_name(cls, v, info):
+        if info.data.get('name'):
+            return info.data['name'].title()
+        return v
+
+class ListResponseSchema(BaseSchema):
+    items: List[ResponseSchema]
+    total: int
+    page: int = Field(ge=1)
+    per_page: int = Field(ge=1, le=100)
+    pages: int
+```
+
+### **Services**
+```python
+# ✅ Padrão de service
+class MyService:
+    @staticmethod
+    async def create_something(
+        db: Session,
+        data: CreateSchema,
+        user_id: int
+    ) -> MyModel:
+        """
+        Cria um novo item.
+        """
+        try:
+            # Lógica do serviço
+            return new_item
+        except Exception as e:
+            logger.error(f"Erro ao criar item: {e}")
+            raise HTTPException(status_code=500, detail="Erro interno")
+```
+
+## 🔒 SEGURANÇA & VALIDAÇÃO
+
+### **Autenticação & Autorização**
+```python
+# ✅ Estrutura completa de autenticação
+from synapse.api.deps import get_current_user, check_workspace_permission, rate_limit
+from synapse.core.auth.jwt import verify_token
+from synapse.middlewares.rate_limiting import RateLimiter
+
+@router.post("/secure-endpoint")
+@rate_limit("10/minute")  # Rate limiting específico
+async def secure_endpoint(
+    request: CreateSchema,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    workspace_id: int = Path(..., description="ID do workspace")
+):
+    # ✅ Verificar permissão no workspace
+    await check_workspace_permission(db, current_user.id, workspace_id, "read")
+    
+    # ✅ Log de auditoria
+    logger.info(f"User {current_user.id} accessed workspace {workspace_id}")
+```
+
+### **Validação de Dados & Sanitização**
+```python
+# ✅ Validação robusta
+import bleach
+from pydantic import field_validator
+from typing import Any
+
+class SecureSchema(BaseModel):
+    content: str = Field(..., max_length=10000)
+    email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    
+    @field_validator('content')
+    @classmethod
+    def sanitize_content(cls, v: str) -> str:
+        """Remove HTML tags maliciosos."""
+        return bleach.clean(v, tags=['p', 'br', 'strong', 'em'])
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email_domain(cls, v: str) -> str:
+        """Validar domínios permitidos."""
+        allowed_domains = ['company.com', 'trusted.org']
+        domain = v.split('@')[1]
+        if domain not in allowed_domains:
+            raise ValueError(f"Domínio {domain} não permitido")
+        return v.lower()
+```
+
+### **Rate Limiting Avançado**
+```python
+# ✅ Rate limiting por tipo de operação
+from synapse.middlewares.rate_limiting import RateLimiter
+
+@router.post("/upload")
+@rate_limit("5/minute", key_func=lambda request: f"upload:{request.client.host}")
+async def upload_file(file: UploadFile):
+    pass
+
+@router.post("/llm/generate")
+@rate_limit("20/hour", key_func=lambda request: f"llm:{request.user.id}")
+async def generate_response():
+    pass
+```
+
+### **Tratamento de Erros**
+```python
+# ✅ Padrão de tratamento de erro
+try:
+    result = await some_operation()
+except SpecificException as e:
+    logger.error(f"Erro específico: {e}")
+    raise HTTPException(status_code=400, detail="Mensagem clara para o usuário")
+except Exception as e:
+    logger.error(f"Erro inesperado: {e}")
+    raise HTTPException(status_code=500, detail="Erro interno do servidor")
+```
+
+## 🗄️ BANCO DE DADOS & MIGRAÇÕES
+
+### **Consultas Otimizadas**
+```python
+# ✅ Padrões de consulta eficientes
+from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy import select, and_, or_, func
+
+# Busca simples por ID
+user = await session.get(User, user_id)
+
+# Consulta com relacionamentos (N+1 problem solved)
+stmt = select(User).options(
+    joinedload(User.workspaces),
+    selectinload(User.files)
+).where(User.is_active == True)
+users = await session.execute(stmt)
+
+# Consulta com filtros complexos
+stmt = select(Workflow).where(
+    and_(
+        Workflow.user_id == user_id,
+        or_(
+            Workflow.status == "active",
+            Workflow.status == "pending"
+        ),
+        Workflow.created_at >= datetime.now() - timedelta(days=30)
+    )
+).order_by(Workflow.created_at.desc()).limit(10)
+
+# Agregações
+stmt = select(
+    func.count(Workflow.id).label('total'),
+    func.avg(Workflow.execution_time).label('avg_time')
+).where(Workflow.user_id == user_id)
+```
+
+### **Transações & Context Managers**
+```python
+# ✅ Transações seguras
+from sqlalchemy.exc import SQLAlchemyError
+
+async def complex_operation(db: Session, data: dict):
+    try:
+        async with db.begin():
+            # Operação 1
+            user = User(**data['user'])
+            db.add(user)
+            await db.flush()  # Para obter o ID
+            
+            # Operação 2 dependente
+            workspace = Workspace(user_id=user.id, **data['workspace'])
+            db.add(workspace)
+            
+            # Operação 3
+            await create_default_settings(db, user.id)
+            
+            # Commit automático se tudo der certo
+            return user
+    except SQLAlchemyError as e:
+        logger.error(f"Database error: {e}")
+        # Rollback automático
+        raise HTTPException(status_code=500, detail="Database operation failed")
+```
+
+### **Migrações Alembic**
+```python
+# ✅ Estrutura de migração padrão
+"""add_user_preferences_table
+
+Revision ID: 2024_01_15_user_preferences
+Revises: 2024_01_10_workspace_settings
+Create Date: 2024-01-15 10:30:00.000000
+
+"""
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
+
+# revision identifiers
+revision = '2024_01_15_user_preferences'
+down_revision = '2024_01_10_workspace_settings'
+branch_labels = None
+depends_on = None
+
+def upgrade():
+    # ✅ Criar tabela com todos os indexes necessários
+    op.create_table(
+        'user_preferences',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('theme', sa.String(20), nullable=False, default='light'),
+        sa.Column('language', sa.String(10), nullable=False, default='pt-BR'),
+        sa.Column('notifications', postgresql.JSONB(), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
+        sa.PrimaryKeyConstraint('id'),
+        sa.ForeignKeyConstraint(['user_id'], ['synapscale_db.users.id'], ondelete='CASCADE'),
+        schema='synapscale_db'
+    )
+    
+    # ✅ Indexes para performance
+    op.create_index('ix_user_preferences_user_id', 'user_preferences', ['user_id'], schema='synapscale_db')
+    op.create_index('ix_user_preferences_theme', 'user_preferences', ['theme'], schema='synapscale_db')
+
+def downgrade():
+    op.drop_table('user_preferences', schema='synapscale_db')
+```
+
+### **Schema Management**
+- SEMPRE usar schema `synapscale_db` em production
+- Testar migrações em development primeiro
+- Fazer backup antes de migrations em production
+- Usar `--dry-run` para validar migrações complexas
+- Documentar breaking changes no commit message
+
+## 🤖 INTEGRAÇÃO COM LLM UNIFICADA
+
+### **Provedores Suportados**
+- **OpenAI**: GPT-3.5, GPT-4, GPT-4-turbo, GPT-4o
+- **Anthropic**: Claude 3 (Haiku, Sonnet, Opus), Claude 3.5
+- **Google**: Gemini Pro, Gemini Pro Vision
+- **Grok**: XAI Grok models
+- **DeepSeek**: DeepSeek Coder, DeepSeek Chat
+- **Llama**: Meta Llama 2, Llama 3
+- **Tess**: Pareto Tess (modelo nacional)
+
+### **Unified LLM Service**
+```python
+# ✅ Serviço unificado com tratamento de erros
+from synapse.core.llm.unified_service import UnifiedLLMService
+from synapse.models.conversation_llm import ConversationLLM
+from synapse.models.usage_log import UsageLog
+
+async def generate_ai_response(
+    user_id: int,
+    messages: List[dict],
+    provider: str = "claude",
+    model: str = "claude-3-sonnet",
+    temperature: float = 0.7,
+    max_tokens: int = 2000
+) -> dict:
+    """
+    Gera resposta usando o serviço unificado de LLM.
+    """
+    llm_service = UnifiedLLMService()
+    
+    try:
+        # ✅ Log de início da operação
+        logger.info(f"Generating LLM response for user {user_id} with {provider}/{model}")
+        
+        # ✅ Verificar cota do usuário
+        usage_today = await check_daily_usage(user_id)
+        if usage_today > settings.MAX_DAILY_LLM_REQUESTS:
+            raise HTTPException(status_code=429, detail="Daily LLM quota exceeded")
+        
+        # ✅ Gerar resposta
+        response = await llm_service.generate_response(
+            provider=provider,
+            model=model,
+            messages=messages,
+            user_id=user_id,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=False
+        )
+        
+        # ✅ Salvar conversa no banco
+        conversation = ConversationLLM(
+            user_id=user_id,
+            provider=provider,
+            model=model,
+            input_tokens=response.get("usage", {}).get("prompt_tokens", 0),
+            output_tokens=response.get("usage", {}).get("completion_tokens", 0),
+            total_tokens=response.get("usage", {}).get("total_tokens", 0),
+            cost=calculate_cost(provider, model, response.get("usage", {})),
+            response_time=response.get("response_time", 0)
+        )
+        await db.add(conversation)
+        
+        # ✅ Log de uso para analytics
+        await log_usage(
+            user_id=user_id,
+            action="llm_generation",
+            provider=provider,
+            model=model,
+            tokens_used=response.get("usage", {}).get("total_tokens", 0)
+        )
+        
+        return {
+            "content": response["content"],
+            "model": model,
+            "provider": provider,
+            "usage": response.get("usage"),
+            "conversation_id": conversation.id
+        }
+        
+    except Exception as e:
+        logger.error(f"LLM generation failed for user {user_id}: {e}")
+        
+        # ✅ Tentar fallback provider
+        if provider != "claude":  # Fallback padrão
+            logger.info(f"Attempting fallback to Claude for user {user_id}")
+            return await generate_ai_response(
+                user_id=user_id,
+                messages=messages,
+                provider="claude",
+                model="claude-3-sonnet",
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+        
+        raise HTTPException(
+            status_code=500, 
+            detail=f"LLM service unavailable: {str(e)}"
+        )
+
+# ✅ Streaming responses
+async def stream_ai_response(
+    user_id: int,
+    messages: List[dict],
+    provider: str = "openai",
+    model: str = "gpt-4"
+):
+    """Stream de resposta LLM em tempo real."""
+    llm_service = UnifiedLLMService()
+    
+    async for chunk in llm_service.generate_response_stream(
+        provider=provider,
+        model=model,
+        messages=messages,
+        user_id=user_id
+    ):
+        yield f"data: {json.dumps(chunk)}\n\n"
+```
+
+### **Gerenciamento de API Keys por Usuário**
+```python
+# ✅ Sistema de chaves personalizadas
+from synapse.models.user_variable import UserVariable
+from synapse.core.security import encrypt_value, decrypt_value
+
+async def get_user_api_key(
+    db: Session, 
+    user_id: int, 
+    provider: str
+) -> Optional[str]:
+    """Busca chave API específica do usuário ou usa a padrão."""
+    
+    # Tentar chave do usuário primeiro
+    user_key = await db.execute(
+        select(UserVariable).where(
+            and_(
+                UserVariable.user_id == user_id,
+                UserVariable.key == f"{provider.upper()}_API_KEY",
+                UserVariable.is_active == True
+            )
+        )
+    )
+    
+    if user_key.scalar_one_or_none():
+        return decrypt_value(user_key.value)
+    
+    # Fallback para chave padrão do sistema
+    return settings.get(f"{provider.upper()}_API_KEY")
+
+async def save_user_api_key(
+    db: Session,
+    user_id: int,
+    provider: str,
+    api_key: str
+) -> UserVariable:
+    """Salva chave API criptografada do usuário."""
+    
+    encrypted_key = encrypt_value(api_key)
+    
+    user_var = UserVariable(
+        user_id=user_id,
+        key=f"{provider.upper()}_API_KEY",
+        value=encrypted_key,
+        category="llm_config",
+        is_encrypted=True,
+        description=f"Chave API pessoal para {provider.title()}"
+    )
+    
+    db.add(user_var)
+    await db.commit()
+    
+    logger.info(f"API key saved for user {user_id}, provider {provider}")
+    return user_var
+```
+
+## 🔌 WEBSOCKETS & TEMPO REAL
+
+### **Connection Manager**
+```python
+# ✅ Gerenciador de conexões WebSocket
+from synapse.core.websockets.manager import ConnectionManager
+from synapse.core.websockets.execution_manager import ExecutionManager
+
+class WorkspaceConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[int, List[WebSocket]] = {}
+        self.user_connections: Dict[int, List[WebSocket]] = {}
+    
+    async def connect(self, websocket: WebSocket, user_id: int, workspace_id: int):
+        await websocket.accept()
+        
+        # ✅ Limitar conexões por usuário
+        if user_id not in self.user_connections:
+            self.user_connections[user_id] = []
+        
+        if len(self.user_connections[user_id]) >= settings.WS_MAX_CONNECTIONS_PER_USER:
+            await websocket.close(code=1013, reason="Too many connections")
+            return
+        
+        # ✅ Adicionar à lista de conexões
+        if workspace_id not in self.active_connections:
+            self.active_connections[workspace_id] = []
+        
+        self.active_connections[workspace_id].append(websocket)
+        self.user_connections[user_id].append(websocket)
+        
+        logger.info(f"WebSocket connected: user={user_id}, workspace={workspace_id}")
+    
+    async def disconnect(self, websocket: WebSocket, user_id: int, workspace_id: int):
+        # ✅ Remover das listas
+        if workspace_id in self.active_connections:
+            self.active_connections[workspace_id].remove(websocket)
+        
+        if user_id in self.user_connections:
+            self.user_connections[user_id].remove(websocket)
+        
+        logger.info(f"WebSocket disconnected: user={user_id}, workspace={workspace_id}")
+    
+    async def broadcast_to_workspace(self, workspace_id: int, message: dict):
+        """Envia mensagem para todos os conectados no workspace."""
+        if workspace_id not in self.active_connections:
+            return
+        
+        dead_connections = []
+        for connection in self.active_connections[workspace_id]:
+            try:
+                await connection.send_json(message)
+            except ConnectionClosedError:
+                dead_connections.append(connection)
+        
+        # ✅ Limpar conexões mortas
+        for dead_conn in dead_connections:
+            self.active_connections[workspace_id].remove(dead_conn)
+
+# ✅ Instância global
+connection_manager = WorkspaceConnectionManager()
+```
+
+### **WebSocket Endpoints**
+```python
+# ✅ Endpoint WebSocket para execução de workflows
+@router.websocket("/ws/execution/{execution_id}")
+async def websocket_execution(
+    websocket: WebSocket,
+    execution_id: str,
+    token: str = Query(...),
+    db: Session = Depends(get_db)
+):
+    # ✅ Validar token
+    try:
+        payload = verify_token(token)
+        user_id = payload.get("sub")
+        current_user = await get_user_by_id(db, user_id)
+    except JWTError:
+        await websocket.close(code=1008, reason="Invalid token")
+        return
+    
+    # ✅ Verificar permissão na execução
+    execution = await get_execution_by_id(db, execution_id)
+    if not execution or execution.user_id != current_user.id:
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
+    
+    await connection_manager.connect(websocket, current_user.id, execution.workspace_id)
+    
+    try:
+        while True:
+            # ✅ Heartbeat para manter conexão viva
+            await websocket.send_json({
+                "type": "heartbeat",
+                "timestamp": datetime.now().isoformat()
+            })
+            await asyncio.sleep(30)
+            
+    except WebSocketDisconnect:
+        await connection_manager.disconnect(websocket, current_user.id, execution.workspace_id)
+```
+
+## 📊 ANALYTICS & MÉTRICAS
+
+### **Sistema de Analytics**
+```python
+# ✅ Service de analytics completo
+from synapse.services.analytics_service import AnalyticsService
+from synapse.models.usage_log import UsageLog
+
+class AnalyticsService:
+    @staticmethod
+    async def track_event(
+        db: Session,
+        user_id: int,
+        event_type: str,
+        metadata: dict = None,
+        workspace_id: int = None
+    ):
+        """Registra evento para analytics."""
+        usage_log = UsageLog(
+            user_id=user_id,
+            action=event_type,
+            resource_type="analytics",
+            metadata=metadata or {},
+            workspace_id=workspace_id
+        )
+        
+        db.add(usage_log)
+        await db.commit()
+        
+        # ✅ Cache para analytics em tempo real
+        await cache_analytics_event(event_type, metadata)
+    
+    @staticmethod
+    async def get_dashboard_metrics(
+        db: Session,
+        user_id: int,
+        workspace_id: int,
+        period: str = "30d"
+    ) -> dict:
+        """Métricas para dashboard."""
+        
+        # ✅ Calcular período
+        end_date = datetime.now()
+        if period == "7d":
+            start_date = end_date - timedelta(days=7)
+        elif period == "30d":
+            start_date = end_date - timedelta(days=30)
+        else:
+            start_date = end_date - timedelta(days=90)
+        
+        # ✅ Métricas de workflows
+        workflow_stats = await db.execute(
+            select(
+                func.count(Workflow.id).label('total_workflows'),
+                func.count(case((Workflow.status == 'completed', 1))).label('completed'),
+                func.count(case((Workflow.status == 'failed', 1))).label('failed'),
+                func.avg(Workflow.execution_time).label('avg_execution_time')
+            ).where(
+                and_(
+                    Workflow.workspace_id == workspace_id,
+                    Workflow.created_at >= start_date
+                )
+            )
+        )
+        
+        # ✅ Métricas de LLM
+        llm_stats = await db.execute(
+            select(
+                func.count(ConversationLLM.id).label('total_llm_calls'),
+                func.sum(ConversationLLM.total_tokens).label('total_tokens'),
+                func.sum(ConversationLLM.cost).label('total_cost')
+            ).where(
+                and_(
+                    ConversationLLM.user_id == user_id,
+                    ConversationLLM.created_at >= start_date
+                )
+            )
+        )
+        
+        return {
+            "period": period,
+            "workflows": workflow_stats.first()._asdict(),
+            "llm_usage": llm_stats.first()._asdict(),
+            "generated_at": datetime.now().isoformat()
+        }
+
+# ✅ Middleware de métricas
+from synapse.middlewares.metrics import MetricsMiddleware
+
+@router.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    start_time = time.time()
+    
+    response = await call_next(request)
+    
+    duration = time.time() - start_time
+    
+    # ✅ Log métricas de performance
+    await log_request_metrics(
+        method=request.method,
+        url=str(request.url),
+        status_code=response.status_code,
+        duration=duration,
+        user_id=getattr(request.state, 'user_id', None)
+    )
+    
+    return response
+```
+
+## 🏷️ SISTEMA DE TAGS
+
+### **Tag Management**
+```python
+# ✅ Sistema completo de tags
+from synapse.models.tag import Tag
+from synapse.services.tag_service import TagService
+
+class TagService:
+    @staticmethod
+    async def create_tag(
+        db: Session,
+        user_id: int,
+        workspace_id: int,
+        name: str,
+        color: str = "#3B82F6",
+        description: str = None
+    ) -> Tag:
+        """Cria nova tag com validações."""
+        
+        # ✅ Validar se tag já existe
+        existing = await db.execute(
+            select(Tag).where(
+                and_(
+                    Tag.workspace_id == workspace_id,
+                    func.lower(Tag.name) == name.lower()
+                )
+            )
+        )
+        
+        if existing.scalar_one_or_none():
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Tag '{name}' já existe neste workspace"
+            )
+        
+        # ✅ Validar limite de tags por workspace
+        tag_count = await db.execute(
+            select(func.count(Tag.id)).where(Tag.workspace_id == workspace_id)
+        )
+        
+        if tag_count.scalar() >= settings.MAX_TAGS_PER_WORKSPACE:
+            raise HTTPException(
+                status_code=400,
+                detail="Limite de tags por workspace atingido"
+            )
+        
+        tag = Tag(
+            name=name.strip(),
+            color=color,
+            description=description,
+            workspace_id=workspace_id,
+            created_by=user_id
+        )
+        
+        db.add(tag)
+        await db.commit()
+        
+        logger.info(f"Tag created: {name} in workspace {workspace_id}")
+        return tag
+    
+    @staticmethod
+    async def apply_tags(
+        db: Session,
+        resource_type: str,  # 'workflow', 'file', 'conversation'
+        resource_id: int,
+        tag_ids: List[int],
+        workspace_id: int
+    ):
+        """Aplica tags a um recurso."""
+        
+        # ✅ Validar que todas as tags pertencem ao workspace
+        tags = await db.execute(
+            select(Tag).where(
+                and_(
+                    Tag.id.in_(tag_ids),
+                    Tag.workspace_id == workspace_id
+                )
+            )
+        )
+        
+        valid_tags = tags.scalars().all()
+        if len(valid_tags) != len(tag_ids):
+            raise HTTPException(
+                status_code=400,
+                detail="Algumas tags não pertencem ao workspace"
+            )
+        
+        # ✅ Aplicar tags (usando tabela de associação)
+        for tag in valid_tags:
+            association = ResourceTag(
+                resource_type=resource_type,
+                resource_id=resource_id,
+                tag_id=tag.id
+            )
+            db.add(association)
+        
+        await db.commit()
+
+# ✅ Endpoint para busca por tags
+@router.get("/search/by-tags")
+async def search_by_tags(
+    tag_ids: List[int] = Query(...),
+    resource_type: str = Query(...),
+    workspace_id: int = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Busca recursos por tags."""
+    
+    # ✅ Query complexa com tags
+    resources = await db.execute(
+        select(ResourceTag.resource_id)
+        .where(
+            and_(
+                ResourceTag.tag_id.in_(tag_ids),
+                ResourceTag.resource_type == resource_type
+            )
+        )
+        .group_by(ResourceTag.resource_id)
+        .having(func.count(ResourceTag.tag_id) == len(tag_ids))  # AND logic
+    )
+    
+    return {"resource_ids": [r[0] for r in resources.fetchall()]}
+```
+
+## 📁 FILE UPLOAD & STORAGE
+
+### **Storage Manager**
+```python
+# ✅ Sistema unificado de storage
+from synapse.core.storage.storage_manager import StorageManager
+from synapse.models.file import File
+
+class StorageManager:
+    def __init__(self):
+        self.storage_type = settings.STORAGE_TYPE
+        self.base_path = settings.STORAGE_BASE_PATH
+    
+    async def upload_file(
+        self,
+        file: UploadFile,
+        user_id: int,
+        workspace_id: int,
+        category: str = "general"
+    ) -> File:
+        """Upload com validações completas."""
+        
+        # ✅ Validações de segurança
+        await self._validate_file(file)
+        
+        # ✅ Gerar caminho único
+        file_id = str(uuid.uuid4())
+        file_extension = Path(file.filename).suffix
+        filename = f"{file_id}{file_extension}"
+        
+        # ✅ Organizar por categoria e data
+        today = datetime.now()
+        file_path = f"{category}/{today.year}/{today.month:02d}/{filename}"
+        
+        try:
+            # ✅ Salvar arquivo
+            if self.storage_type == "local":
+                await self._save_local(file, file_path)
+            elif self.storage_type == "s3":
+                await self._save_s3(file, file_path)
+            elif self.storage_type == "gcs":
+                await self._save_gcs(file, file_path)
+            
+            # ✅ Criar registro no banco
+            file_record = File(
+                id=file_id,
+                filename=file.filename,
+                original_filename=file.filename,
+                file_path=file_path,
+                file_size=file.size,
+                mime_type=file.content_type,
+                category=category,
+                user_id=user_id,
+                workspace_id=workspace_id,
+                storage_type=self.storage_type
+            )
+            
+            return file_record
+            
+        except Exception as e:
+            logger.error(f"File upload failed: {e}")
+            raise HTTPException(status_code=500, detail="Upload failed")
+    
+    async def _validate_file(self, file: UploadFile):
+        """Validações de segurança do arquivo."""
+        
+        # ✅ Validar tamanho
+        if file.size > settings.MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Max size: {settings.MAX_FILE_SIZE} bytes"
+            )
+        
+        # ✅ Validar extensão
+        file_extension = Path(file.filename).suffix.lower()
+        if file_extension not in settings.ALLOWED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File type not allowed: {file_extension}"
+            )
+        
+        # ✅ Validar MIME type
+        if file.content_type not in settings.ALLOWED_MIME_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"MIME type not allowed: {file.content_type}"
+            )
+        
+        # ✅ Scan básico de malware (se configurado)
+        if settings.ENABLE_MALWARE_SCAN:
+            await self._scan_malware(file)
+
+# ✅ Endpoint de upload com múltiplos arquivos
+@router.post("/upload/multiple")
+async def upload_multiple_files(
+    files: List[UploadFile] = File(...),
+    workspace_id: int = Form(...),
+    category: str = Form("general"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload de múltiplos arquivos."""
+    
+    if len(files) > settings.MAX_FILES_PER_UPLOAD:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many files. Max: {settings.MAX_FILES_PER_UPLOAD}"
+        )
+    
+    storage_manager = StorageManager()
+    uploaded_files = []
+    
+    for file in files:
+        try:
+            file_record = await storage_manager.upload_file(
+                file=file,
+                user_id=current_user.id,
+                workspace_id=workspace_id,
+                category=category
+            )
+            
+            db.add(file_record)
+            uploaded_files.append(file_record)
+            
+        except HTTPException:
+            # ✅ Se um arquivo falhar, continuar com os outros
+            logger.warning(f"Failed to upload file: {file.filename}")
+            continue
+    
+    await db.commit()
+    
+    return {
+        "uploaded_files": len(uploaded_files),
+        "total_files": len(files),
+        "files": [f.to_dict() for f in uploaded_files]
+    }
+```
+
+## 📊 LOGGING & MONITORAMENTO AVANÇADO
+
+### **Logging Estruturado**
+```python
+# ✅ Logger configurado com contexto
+import logging
+import structlog
+from synapse.logger_config import get_logger
+
+logger = get_logger(__name__)
+
+# ✅ Logging com contexto estruturado
+logger.info(
+    "User action performed",
+    user_id=user.id,
+    workspace_id=workspace.id,
+    action="create_workflow",
+    execution_time=0.245,
+    ip_address=request.client.host,
+    user_agent=request.headers.get("user-agent")
+)
+
+# ✅ Log de erro com stack trace
+try:
+    result = await complex_operation()
+except Exception as e:
+    logger.error(
+        "Operation failed",
+        user_id=user.id,
+        operation="complex_operation",
+        error=str(e),
+        error_type=type(e).__name__,
+        traceback=traceback.format_exc()
+    )
+    raise
+
+# ✅ Logging de performance
+@contextmanager
+async def log_performance(operation: str, user_id: int = None):
+    start_time = time.time()
+    try:
+        yield
+    finally:
+        duration = time.time() - start_time
+        logger.info(
+            "Performance metric",
+            operation=operation,
+            duration=duration,
+            user_id=user_id,
+            slow=duration > 1.0  # Flag para operações lentas
+        )
+
+# ✅ Uso do context manager
+async def slow_operation():
+    async with log_performance("database_migration", user_id=123):
+        await run_migration()
+```
+
+### **Métricas**
+- Use middleware de métricas para endpoints importantes
+- Monitor performance de queries lentas
+- Rastrear uso de LLM por usuário
+
+## ⚡ CACHE REDIS & BACKGROUND TASKS
+
+### **Cache Redis**
+```python
+# ✅ Cache service com TTL configurável
+from synapse.core.cache import cache_service
+import json
+from typing import Any, Optional
+
+class CacheService:
+    def __init__(self):
+        self.redis = redis.Redis.from_url(settings.REDIS_URL)
+        self.default_ttl = settings.CACHE_DEFAULT_TTL
+    
+    async def get_or_set(
+        self,
+        key: str,
+        func: callable,
+        ttl: int = None,
+        *args,
+        **kwargs
+    ) -> Any:
+        """Cache pattern: busca ou calcula e armazena."""
+        cached = await self.get(key)
+        if cached is not None:
+            return cached
+        
+        value = await func(*args, **kwargs) if asyncio.iscoroutinefunction(func) else func(*args, **kwargs)
+        await self.set(key, value, ttl)
+        return value
+
+# ✅ Decorator para cache automático
+def cached(ttl: int = 300, key_prefix: str = ""):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            cache_key = f"{key_prefix}:{func.__name__}:{hash(str(args) + str(kwargs))}"
+            return await cache_service.get_or_set(cache_key, func, ttl, *args, **kwargs)
+        return wrapper
+    return decorator
+```
+
+### **Background Tasks com Celery**
+```python
+# ✅ Tasks em background
+from celery import Celery
+from synapse.core.celery_app import celery_app
+
+@celery_app.task(bind=True, max_retries=3)
+def process_file_upload(self, file_id: str, user_id: int):
+    """Processa upload de arquivo em background."""
+    try:
+        update_file_status(file_id, "processing")
+        file_info = process_file_content(file_id)
+        notify_user_file_ready(user_id, file_id, file_info)
+        update_file_status(file_id, "ready")
+    except Exception as e:
+        logger.error(f"File processing failed: {file_id}, error: {e}")
+        self.retry(countdown=2 ** self.request.retries)
+
+# ✅ Trigger em endpoints
+@router.post("/files/upload")
+async def upload_file_endpoint():
+    # ... upload logic ...
+    process_file_upload.delay(file.id, current_user.id)
+    return {"message": "File uploaded, processing in background"}
+```
+
+## 🧪 TESTES AVANÇADOS
+
+### **Estrutura Completa de Testes**
+```python
+# ✅ Configuração com fixtures
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+@pytest.fixture
+async def client():
+    """Cliente HTTP para testes."""
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
+
+@pytest.fixture
+async def test_user(db_session):
+    """Usuário de teste."""
+    user = User(email="test@example.com", full_name="Test User", is_active=True)
+    db_session.add(user)
+    await db_session.commit()
+    return user
+
+@pytest.fixture
+async def auth_headers(test_user):
+    """Headers de autenticação."""
+    token = create_access_token(data={"sub": str(test_user.id)})
+    return {"Authorization": f"Bearer {token}"}
+
+# ✅ Testes de integração completos
+@pytest.mark.asyncio
+async def test_create_workflow_complete_flow(
+    client: AsyncClient,
+    auth_headers: dict,
+    test_user: User
+):
+    """Testa fluxo completo de criação de workflow."""
+    
+    # Criar workspace
+    workspace_response = await client.post(
+        "/api/v1/workspaces/",
+        json={"name": "Test Workspace"},
+        headers=auth_headers
+    )
+    assert workspace_response.status_code == 201
+    workspace = workspace_response.json()
+    
+    # Criar workflow
+    workflow_response = await client.post(
+        "/api/v1/workflows/",
+        json={
+            "name": "Test Workflow",
+            "workspace_id": workspace["id"],
+            "steps": [{"name": "Step 1", "type": "llm_generation"}]
+        },
+        headers=auth_headers
+    )
+    
+    assert workflow_response.status_code == 201
+    assert workflow_response.json()["name"] == "Test Workflow"
+
+# ✅ Testes de performance
+@pytest.mark.performance
+async def test_endpoint_performance(client: AsyncClient, auth_headers: dict):
+    """Testa performance de endpoints críticos."""
+    start_time = time.time()
+    response = await client.get("/api/v1/analytics/dashboard", headers=auth_headers)
+    duration = time.time() - start_time
+    
+    assert response.status_code == 200
+    assert duration < 2.0  # Deve responder em menos de 2 segundos
+
+# ✅ Factories para dados de teste
+class UserFactory(SQLAlchemyModelFactory):
+    class Meta:
+        model = User
+        sqlalchemy_session_persistence = "commit"
+    
+    email = factory.Sequence(lambda n: f"user{n}@example.com")
+    full_name = factory.Faker("name")
+    is_active = True
+```
+
+### **Cobertura & Qualidade**
+- Manter cobertura > 85%
+- Testes unitários, integração e e2e
+- Mock serviços externos (LLM, email, etc.)
+- Testes de casos extremos e erros
+
+## 🚀 PERFORMANCE
+
+### **Otimizações**
+- Use conexões assíncronas (asyncpg para PostgreSQL)
+- Implemente cache Redis para dados frequentemente acessados
+- Pagine resultados grandes (limit/offset)
+- Use background tasks para operações demoradas
+
+### **WebSockets**
+- Use ConnectionManager para gerenciar conexões
+- Implemente heartbeat para detectar conexões mortas
+- Limite número de conexões por usuário
+
+## 📱 VERSIONAMENTO & DEPLOY
+
+### **API Versioning**
+- Mantenha compatibilidade com versões anteriores
+- Use deprecation warnings antes de remover features
+- Documente breaking changes no CHANGELOG.md
+
+### **Deploy**
+- SEMPRE testar em ambiente de staging
+- Usar variáveis de ambiente para configuração
+- Configurar health checks apropriados
+
+## 🔄 WORKFLOWS & EXECUÇÃO
+
+### **Engine de Execução**
+- Use sistema de filas para execuções longas
+- Implemente retry com backoff exponencial
+- Monitor timeouts e recursos utilizados
+
+### **Nodes**
+- Valide entradas antes da execução
+- Mantenha estado consistente
+- Log detalhado para debugging
+
+## 📁 ARQUIVOS & STORAGE
+
+### **Upload**
+- Valide tipo e tamanho de arquivo
+- Use storage configurável (local/S3/GCS)
+- Implementar scan de malware em produção
+
+### **Processamento**
+- Use workers assíncronos para processamento
+- Mantenha referências consistentes no banco
+- Cleanup de arquivos temporários
+
+## 🛠️ DEBUGGING & TROUBLESHOOTING
+
+### **Logs Estruturados**
+- Include user_id, request_id nos logs
+- Use structured logging (JSON) em produção
+- Correlacione logs com métricas
+
+### **Health Checks**
+- `/health` para status básico
+- `/health/detailed` para diagnóstico completo
+- Monitor dependências externas
+
+## 🎨 CÓDIGO LIMPO
+
+### **Naming Conventions**
+- Funções: `verbo_objeto()` (ex: `create_user()`)
+- Classes: `PascalCase` (ex: `UserService`)
+- Constantes: `UPPER_CASE` (ex: `MAX_FILE_SIZE`)
+- Variáveis: `snake_case` (ex: `user_data`)
+
+### **Documentação**
+- README.md atualizado
+- Docstrings em inglês
+- Comentários explicativos para lógica complexa
+- OpenAPI documentation completa
+
+## ⚡ COMANDOS ÚTEIS & PRODUÇÃO
+
+### **Desenvolvimento Local**
+```bash
+# Servidor de desenvolvimento
+./dev.sh                            # Iniciar com hot-reload
+./prod.sh                           # Simular ambiente de produção
+
+# Banco de dados
+python -m alembic upgrade head      # Aplicar migrações
+python -m alembic revision --autogenerate -m "descrição"  # Nova migração
+python -m alembic downgrade -1      # Rollback última migração
+
+# Testes & Qualidade
+python -m pytest                   # Todos os testes
+python -m pytest --cov=src --cov-report=html  # Com cobertura HTML
+python scripts/run_tests.py        # Teste completo de endpoints
+black src/ && isort src/           # Formatação + imports
+mypy src/                          # Verificação de tipos
+```
+
+### **Produção & Deploy**
+```bash
+# Health checks
+curl https://api.synapscale.com/health
+curl https://api.synapscale.com/health/detailed
+
+# Monitoring
+docker logs synapscale-backend --tail=100 -f
+docker stats synapscale-backend
+
+# Database backup (Render PostgreSQL)
+pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Deploy checklist
+git tag v1.0.1                     # Tag da versão
+git push origin v1.0.1            # Push da tag
+# Verificar CI/CD pipeline no Render
+# Confirmar deploy através dos logs
+# Executar smoke tests básicos
+```
+
+### **Debug & Troubleshooting**
+```bash
+# Logs estruturados
+tail -f logs/app.log | grep ERROR
+tail -f logs/app.log | grep "user_id=123"
+
+# Database queries em desenvolvimento  
+export SQLALCHEMY_ECHO=True        # Mostrar queries SQL
+
+# Performance profiling
+python -m cProfile -o profile.stats main.py
+python -c "import pstats; pstats.Stats('profile.stats').sort_stats('cumulative').print_stats(20)"
+
+# Memory debugging
+python -m memory_profiler src/synapse/main.py
+
+# Redis debugging
+redis-cli ping                     # Verificar conexão
+redis-cli info memory            # Status de memória
+redis-cli --scan --pattern "synapscale:*" | head -10  # Listar chaves
+```
+
+## 🚨 NUNCA FAÇA
+
+❌ Hardcoding de valores sensíveis
+❌ Commit de credenciais ou .env
+❌ Queries SQL diretas sem validação
+❌ Operações síncronas em endpoints assíncronos
+❌ Ignorar tratamento de erros
+❌ Deixar TODO comments no código de produção
+❌ Usar `import *`
+❌ Modificar banco diretamente sem migração
+
+## ✅ SEMPRE FAÇA
+
+✅ Validar inputs do usuário
+✅ Usar transações para operações críticas
+✅ Logs informativos mas não verbosos demais
+✅ Testes para novas funcionalidades
+✅ Documentar APIs com exemplos
+✅ Revisar código antes do commit
+✅ Considerar impacto de performance
+✅ Pensar em segurança primeiro
+
+## 🎯 RESUMO DAS MELHORES PRÁTICAS
+
+### **🚀 Prioridades de Desenvolvimento**
+1. **Segurança Primeiro**: Validação, autenticação, rate limiting
+2. **Performance**: Cache Redis, queries otimizadas, background tasks
+3. **Monitoramento**: Logs estruturados, métricas, health checks
+4. **Qualidade**: Testes > 85%, code review, type hints
+5. **Documentação**: Taskmaster logs, API docs, commits claros
+
+### **⚡ Quick Wins para Performance**
+- Use `@cached()` decorator para dados repetitivos
+- Implemente `joinedload`/`selectinload` para relacionamentos
+- Background tasks para operações > 2 segundos
+- Rate limiting em endpoints sensíveis
+- Pagination para listas grandes
+
+### **🔒 Checklist de Segurança**
+- [ ] Input validation com Pydantic
+- [ ] Sanitização de HTML com bleach
+- [ ] Rate limiting configurado
+- [ ] Logs de auditoria para ações críticas
+- [ ] API keys criptografadas no banco
+- [ ] HTTPS em produção
+- [ ] Backup automático do banco
+
+### **📊 Monitoring Essencial**
+- Logs estruturados com user_id/request_id
+- Métricas de performance por endpoint
+- Usage tracking para LLM (tokens/cost)
+- Health checks para dependências
+- Alertas para erros críticos
+
+### **🔄 Workflow Diário Recomendado**
+```bash
+# 1. Começar sessão
+task-master list                    # Ver tasks pendentes
+task-master next                    # Próxima task a trabalhar
+
+# 2. Durante desenvolvimento
+task-master research "pergunta técnica" --files=src/relevante/
+# Implementar feature
+task-master update-subtask --id=X.Y --prompt="Progresso detalhado..."
+
+# 3. Finalizar
+task-master set-status --id=X.Y --status=done
+git commit -m "feat: descrição\n\nTask: X.Y"
+```
+
+### **🧠 Mindset SynapScale**
+- **Think Production First**: Todo código deve estar pronto para produção
+- **Document Everything**: Use Taskmaster para manter histórico de decisões
+- **Performance Matters**: Sistema serve milhares de usuários
+- **Security is Critical**: Dados sensíveis de empresas
+- **Quality Over Speed**: Melhor fazer certo na primeira vez
+
+---
+
+**🎯 OBJETIVO: Construir a melhor plataforma de automação com IA do mercado - cada linha de código conta!**
+
+*Última atualização: Janeiro 2024 | SynapScale Backend v2.0* 

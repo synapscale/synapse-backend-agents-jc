@@ -812,7 +812,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_synapscale_db_analytics_events_project_id'), 'analytics_events', ['project_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_analytics_events_workflow_id'), 'analytics_events', ['workflow_id'], unique=False, schema='synapscale_db')
     op.create_index(op.f('ix_synapscale_db_analytics_events_workspace_id'), 'analytics_events', ['workspace_id'], unique=False, schema='synapscale_db')
-    op.create_table('execution_queue', sa.Column('id', sa.Integer(), nullable=False),
+    op.create_table('workflow_execution_queue', sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('queue_id', sa.String(length=36), nullable=True),
     sa.Column('workflow_execution_id', sa.UUID(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
@@ -833,14 +833,14 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_execution_queue_id'), 'execution_queue', ['id'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_queue_priority'), 'execution_queue', ['priority'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_queue_queue_id'), 'execution_queue', ['queue_id'], unique=True, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_queue_scheduled_at'), 'execution_queue', ['scheduled_at'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_queue_status'), 'execution_queue', ['status'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_queue_user_id'), 'execution_queue', ['user_id'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_queue_worker_id'), 'execution_queue', ['worker_id'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_queue_workflow_execution_id'), 'execution_queue', ['workflow_execution_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_queue_id'), 'workflow_execution_queue', ['id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_queue_priority'), 'workflow_execution_queue', ['priority'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_queue_queue_id'), 'workflow_execution_queue', ['queue_id'], unique=True, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_queue_scheduled_at'), 'workflow_execution_queue', ['scheduled_at'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_queue_status'), 'workflow_execution_queue', ['status'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_queue_user_id'), 'workflow_execution_queue', ['user_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_queue_worker_id'), 'workflow_execution_queue', ['worker_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_queue_workflow_execution_id'), 'workflow_execution_queue', ['workflow_execution_id'], unique=False, schema='synapscale_db')
     op.create_table('node_executions', sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('execution_id', sa.String(length=36), nullable=True),
     sa.Column('workflow_execution_id', sa.UUID(), nullable=False),
@@ -1036,7 +1036,7 @@ def upgrade() -> None:
     schema='synapscale_db'
     )
     op.create_index(op.f('ix_synapscale_db_workflow_connections_workflow_id'), 'workflow_connections', ['workflow_id'], unique=False, schema='synapscale_db')
-    op.create_table('execution_metrics', sa.Column('id', sa.Integer(), nullable=False),
+    op.create_table('workflow_execution_metrics', sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('workflow_execution_id', sa.UUID(), nullable=False),
     sa.Column('node_execution_id', sa.Integer(), nullable=True),
     sa.Column('metric_type', sa.String(length=100), nullable=False),
@@ -1054,27 +1054,27 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     schema='synapscale_db'
     )
-    op.create_index(op.f('ix_synapscale_db_execution_metrics_context'), 'execution_metrics', ['context'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_metrics_id'), 'execution_metrics', ['id'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_metrics_measured_at'), 'execution_metrics', ['measured_at'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_metrics_metric_name'), 'execution_metrics', ['metric_name'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_metrics_metric_type'), 'execution_metrics', ['metric_type'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_metrics_node_execution_id'), 'execution_metrics', ['node_execution_id'], unique=False, schema='synapscale_db')
-    op.create_index(op.f('ix_synapscale_db_execution_metrics_workflow_execution_id'), 'execution_metrics', ['workflow_execution_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_metrics_context'), 'workflow_execution_metrics', ['context'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_metrics_id'), 'workflow_execution_metrics', ['id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_metrics_measured_at'), 'workflow_execution_metrics', ['measured_at'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_metrics_metric_name'), 'workflow_execution_metrics', ['metric_name'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_metrics_metric_type'), 'workflow_execution_metrics', ['metric_type'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_metrics_node_execution_id'), 'workflow_execution_metrics', ['node_execution_id'], unique=False, schema='synapscale_db')
+    op.create_index(op.f('ix_synapscale_db_workflow_execution_metrics_workflow_execution_id'), 'workflow_execution_metrics', ['workflow_execution_id'], unique=False, schema='synapscale_db')
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
-    op.drop_index(op.f('ix_synapscale_db_execution_metrics_workflow_execution_id'), table_name='execution_metrics', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_metrics_node_execution_id'), table_name='execution_metrics', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_metrics_metric_type'), table_name='execution_metrics', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_metrics_metric_name'), table_name='execution_metrics', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_metrics_measured_at'), table_name='execution_metrics', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_metrics_id'), table_name='execution_metrics', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_metrics_context'), table_name='execution_metrics', schema='synapscale_db')
-    op.drop_table('execution_metrics', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_metrics_workflow_execution_id'), table_name='workflow_execution_metrics', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_metrics_node_execution_id'), table_name='workflow_execution_metrics', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_metrics_metric_type'), table_name='workflow_execution_metrics', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_metrics_metric_name'), table_name='workflow_execution_metrics', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_metrics_measured_at'), table_name='workflow_execution_metrics', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_metrics_id'), table_name='workflow_execution_metrics', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_metrics_context'), table_name='workflow_execution_metrics', schema='synapscale_db')
+    op.drop_table('workflow_execution_metrics', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_workflow_connections_workflow_id'), table_name='workflow_connections', schema='synapscale_db')
     op.drop_table('workflow_connections', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_template_usage_workflow_id'), table_name='template_usage', schema='synapscale_db')
@@ -1115,16 +1115,16 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_synapscale_db_node_executions_execution_order'), table_name='node_executions', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_node_executions_execution_id'), table_name='node_executions', schema='synapscale_db')
     op.drop_table('node_executions', schema='synapscale_db')
-    op.drop_table('messages', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_queue_workflow_execution_id'), table_name='execution_queue', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_queue_worker_id'), table_name='execution_queue', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_queue_user_id'), table_name='execution_queue', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_queue_status'), table_name='execution_queue', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_queue_scheduled_at'), table_name='execution_queue', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_queue_queue_id'), table_name='execution_queue', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_queue_priority'), table_name='execution_queue', schema='synapscale_db')
-    op.drop_index(op.f('ix_synapscale_db_execution_queue_id'), table_name='execution_queue', schema='synapscale_db')
-    op.drop_table('execution_queue', schema='synapscale_db')
+    op.drop_table('llms_messages', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_queue_workflow_execution_id'), table_name='workflow_execution_queue', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_queue_worker_id'), table_name='workflow_execution_queue', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_queue_user_id'), table_name='workflow_execution_queue', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_queue_status'), table_name='workflow_execution_queue', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_queue_scheduled_at'), table_name='workflow_execution_queue', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_queue_queue_id'), table_name='workflow_execution_queue', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_queue_priority'), table_name='workflow_execution_queue', schema='synapscale_db')
+    op.drop_index(op.f('ix_synapscale_db_workflow_execution_queue_id'), table_name='workflow_execution_queue', schema='synapscale_db')
+    op.drop_table('workflow_execution_queue', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_analytics_events_workspace_id'), table_name='analytics_events', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_analytics_events_workflow_id'), table_name='analytics_events', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_analytics_events_project_id'), table_name='analytics_events', schema='synapscale_db')
@@ -1154,7 +1154,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_synapscale_db_report_executions_user_id'), table_name='report_executions', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_report_executions_report_id'), table_name='report_executions', schema='synapscale_db')
     op.drop_table('report_executions', schema='synapscale_db')
-    op.drop_table('conversations', schema='synapscale_db')
+    op.drop_table('llms_conversations', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_workspace_members_workspace_id'), table_name='workspace_members', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_workspace_members_user_id'), table_name='workspace_members', schema='synapscale_db')
     op.drop_index(op.f('ix_synapscale_db_workspace_members_id'), table_name='workspace_members', schema='synapscale_db')

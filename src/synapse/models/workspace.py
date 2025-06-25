@@ -71,7 +71,7 @@ class Workspace(Base):
     owner_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
 
     # Plano do workspace (NOVO CAMPO)
-    plan_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.plans.id"), nullable=False)
+    plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=False)
 
     # Configurações
     is_public = Column(Boolean, nullable=False, server_default=text("false"))
@@ -133,6 +133,13 @@ class Workspace(Base):
     agents = relationship(
         "Agent", back_populates="workspace", cascade="all, delete-orphan"
     )
+    conversations = relationship(
+        "Conversation", back_populates="workspace", cascade="all, delete-orphan"
+    )
+    
+    # Novos relacionamentos LLM
+    usage_logs = relationship("UsageLog", back_populates="workspace", cascade="all, delete-orphan")
+    billing_events = relationship("BillingEvent", back_populates="workspace", cascade="all, delete-orphan")
 
     def __repr__(self):
         return (

@@ -26,6 +26,14 @@
 - ✅ **Criptografia Segura**: Todas as chaves são criptografadas
 - ✅ **[Documentação das API Keys](./docs/api/user_variables_api_keys_guide.md)**
 
+### 🧪 **Sistema de Testes Unificado**
+- ✅ **242 Endpoints Testados**: Descoberta automática via OpenAPI
+- ✅ **Taxa de Sucesso 70.7%**: Monitoramento contínuo da qualidade
+- 🚀 **Sistema LLM: 77.8%**: Performance superior do core LLM
+- ✅ **Testes Automatizados**: Execução completa em ~2 minutos
+- ✅ **[Documentação dos Testes](./DOCUMENTACAO_TESTES_ENDPOINTS.md)**
+- 🤖 **[Teste LLM Detalhado](./TESTE_LLM_RESULTADO_DETALHADO.md)**
+
 ---
 
 ## ⚡ **Início Ultra-Rápido**

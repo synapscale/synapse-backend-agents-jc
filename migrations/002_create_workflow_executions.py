@@ -119,9 +119,9 @@ def run_migration(db_path: str = "synapse.db"):
         
         logger.info("✅ Tabela node_executions criada com sucesso")
         
-        # 5. Criar tabela execution_queue
+        # 5. Criar tabela workflow_execution_queue
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS execution_queue (
+            CREATE TABLE IF NOT EXISTS workflow_execution_queue (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 queue_id VARCHAR(36) UNIQUE NOT NULL,
                 workflow_execution_id INTEGER NOT NULL,
@@ -143,20 +143,20 @@ def run_migration(db_path: str = "synapse.db"):
             )
         """)
         
-        # 6. Criar índices para execution_queue
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_queue_queue_id ON execution_queue(queue_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_queue_workflow_execution_id ON execution_queue(workflow_execution_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_queue_user_id ON execution_queue(user_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_queue_priority ON execution_queue(priority)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_queue_scheduled_at ON execution_queue(scheduled_at)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_queue_status ON execution_queue(status)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_queue_worker_id ON execution_queue(worker_id)")
+        # 6. Criar índices para workflow_execution_queue
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_queue_queue_id ON workflow_execution_queue(queue_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_queue_workflow_execution_id ON workflow_execution_queue(workflow_execution_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_queue_user_id ON workflow_execution_queue(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_queue_priority ON workflow_execution_queue(priority)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_queue_scheduled_at ON workflow_execution_queue(scheduled_at)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_queue_status ON workflow_execution_queue(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_queue_worker_id ON workflow_execution_queue(worker_id)")
         
-        logger.info("✅ Tabela execution_queue criada com sucesso")
+        logger.info("✅ Tabela workflow_execution_queue criada com sucesso")
         
-        # 7. Criar tabela execution_metrics
+        # 7. Criar tabela workflow_execution_metrics
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS execution_metrics (
+            CREATE TABLE IF NOT EXISTS workflow_execution_metrics (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 workflow_execution_id INTEGER NOT NULL,
                 node_execution_id INTEGER,
@@ -175,15 +175,15 @@ def run_migration(db_path: str = "synapse.db"):
             )
         """)
         
-        # 8. Criar índices para execution_metrics
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_metrics_workflow_execution_id ON execution_metrics(workflow_execution_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_metrics_node_execution_id ON execution_metrics(node_execution_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_metrics_metric_type ON execution_metrics(metric_type)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_metrics_metric_name ON execution_metrics(metric_name)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_metrics_context ON execution_metrics(context)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_execution_metrics_measured_at ON execution_metrics(measured_at)")
+        # 8. Criar índices para workflow_execution_metrics
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_metrics_workflow_execution_id ON workflow_execution_metrics(workflow_execution_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_metrics_node_execution_id ON workflow_execution_metrics(node_execution_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_metrics_metric_type ON workflow_execution_metrics(metric_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_metrics_metric_name ON workflow_execution_metrics(metric_name)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_metrics_context ON workflow_execution_metrics(context)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflow_execution_metrics_measured_at ON workflow_execution_metrics(measured_at)")
         
-        logger.info("✅ Tabela execution_metrics criada com sucesso")
+        logger.info("✅ Tabela workflow_execution_metrics criada com sucesso")
         
         # 9. Adicionar relacionamentos nas tabelas existentes (se necessário)
         # Verificar se a coluna workflow_executions existe na tabela users
@@ -213,10 +213,10 @@ def run_migration(db_path: str = "synapse.db"):
         """)
         
         cursor.execute("""
-            CREATE TRIGGER IF NOT EXISTS update_execution_queue_updated_at
-            AFTER UPDATE ON execution_queue
+            CREATE TRIGGER IF NOT EXISTS update_workflow_execution_queue_updated_at
+            AFTER UPDATE ON workflow_execution_queue
             BEGIN
-                UPDATE execution_queue SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+                UPDATE workflow_execution_queue SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
             END
         """)
         
@@ -232,8 +232,8 @@ def run_migration(db_path: str = "synapse.db"):
         logger.info("📊 Tabelas criadas:")
         logger.info("   - workflow_executions (execuções de workflows)")
         logger.info("   - node_executions (execuções de nós)")
-        logger.info("   - execution_queue (fila de execução)")
-        logger.info("   - execution_metrics (métricas de performance)")
+        logger.info("   - workflow_execution_queue (fila de execução)")
+        logger.info("   - workflow_execution_metrics (métricas de performance)")
         logger.info("🔗 Índices e triggers configurados para performance otimizada")
         
         return True
@@ -263,11 +263,11 @@ def rollback_migration(db_path: str = "synapse.db"):
         # Remover triggers
         cursor.execute("DROP TRIGGER IF EXISTS update_workflow_executions_updated_at")
         cursor.execute("DROP TRIGGER IF EXISTS update_node_executions_updated_at")
-        cursor.execute("DROP TRIGGER IF EXISTS update_execution_queue_updated_at")
+        cursor.execute("DROP TRIGGER IF EXISTS update_workflow_execution_queue_updated_at")
         
         # Remover tabelas (ordem inversa devido às foreign keys)
-        cursor.execute("DROP TABLE IF EXISTS execution_metrics")
-        cursor.execute("DROP TABLE IF EXISTS execution_queue")
+        cursor.execute("DROP TABLE IF EXISTS workflow_execution_metrics")
+        cursor.execute("DROP TABLE IF EXISTS workflow_execution_queue")
         cursor.execute("DROP TABLE IF EXISTS node_executions")
         cursor.execute("DROP TABLE IF EXISTS workflow_executions")
         

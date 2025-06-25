@@ -67,6 +67,13 @@ from .analytics import (
     EventType,
     MetricType,
 )
+# Novos modelos de otimização LLM
+from .llm import LLM
+from .usage_log import UsageLog
+from .billing_event import BillingEvent
+from .conversation_llm import ConversationLLM
+from .message_feedback import MessageFeedback
+from .tag import Tag
 
 __all__ = [
     "User",
@@ -122,4 +129,11 @@ __all__ = [
     "AnalyticsDashboard",
     "EventType",
     "MetricType",
+    # Novos modelos de otimização LLM
+    "LLM",
+    "UsageLog",
+    "BillingEvent",
+    "ConversationLLM",
+    "MessageFeedback",
+    "Tag",
 ]
