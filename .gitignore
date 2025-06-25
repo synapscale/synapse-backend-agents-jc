@@ -7,6 +7,17 @@
 !.env.example
 !setup/templates/.env.template
 
+# Arquivos de configuração com chaves de API (SEGURANÇA)
+.cursor/mcp.json
+*.api_keys
+*_secrets.json
+*_credentials.json
+*_keys.json
+# Manter apenas arquivos de exemplo
+!.cursor/mcp.json.example
+!*_example.json
+!*_template.json
+
 # Ambientes virtuais
 venv/
 venv*/
