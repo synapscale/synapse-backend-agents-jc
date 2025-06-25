@@ -12,7 +12,7 @@ import logging
 from typing import AsyncGenerator
 
 # Import from the centralized config
-from synapse.core.config_new import settings
+from synapse.core.config import settings
 
 logger = logging.getLogger(__name__)
 

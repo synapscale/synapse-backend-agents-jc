@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 import uuid
 from typing import Union, Optional
 
-from synapse.core.config_new import settings
+from synapse.core.config import settings
 from synapse.database import get_db
 from synapse.models.user import User
 from synapse.core.auth.jwt import verify_token

@@ -51,6 +51,8 @@ python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ./dev.sh
+
+uvicorn src.synapse.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Acesse**: [http://localhost:8000/docs](http://localhost:8000/docs)

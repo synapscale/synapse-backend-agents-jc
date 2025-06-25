@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
 from synapse.api.deps import get_current_user
-from synapse.core.llm import unified_service
+from synapse.services.llm_service import get_llm_service, UnifiedLLMService
 from synapse.database import get_db
 from synapse.models.agent import Agent
 from synapse.models.conversation import Conversation
@@ -430,6 +430,7 @@ async def send_message(
     message_data: MessageCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    llm_service: UnifiedLLMService = Depends(get_llm_service),
 ) -> MessageResponse:
     """
     Envia uma mensagem em uma conversação.
@@ -509,8 +510,8 @@ async def send_message(
                     llm_cfg = agent.get_llm_config()
                     
                     # Fazer chamada para LLM
-                    llm_response = await unified_service.chat_completion(
-                        chat_history,
+                    llm_response = await llm_service.chat_completion(
+                        messages=chat_history,
                         provider=llm_cfg["provider"],
                         model=llm_cfg["model"],
                         temperature=llm_cfg["temperature"],

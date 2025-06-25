@@ -13,9 +13,9 @@ from fastapi import Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
-from synapse.core.config_new import settings
+from synapse.core.config import settings
 from synapse.core.auth.jwt import jwt_manager
-from synapse.core.llm import unified_service
+from synapse.services.llm_service import get_llm_service_direct, UnifiedLLMService
 from synapse.database import get_db
 from synapse.models.agent import Agent
 from synapse.models.conversation import Conversation
@@ -318,8 +318,11 @@ class WebSocketHandler:
                 llm_cfg = agent.get_llm_config()
 
                 try:
-                    llm_response = await unified_service.chat_completion(
-                        chat_history,
+                    llm_service = get_llm_service_direct()
+                    llm_response = await llm_service.chat_completion_for_user(
+                        messages=chat_history,
+                        user_id=self.user.id,
+                        db=self.db,
                         provider=llm_cfg["provider"],
                         model=llm_cfg["model"],
                         temperature=llm_cfg["temperature"],
@@ -441,8 +444,11 @@ class WebSocketHandler:
             return
 
         llm_cfg = agent.get_llm_config()
-        response = await unified_service.chat_completion(
-            [{"role": "user", "content": message}],
+        llm_service = get_llm_service_direct()
+        response = await llm_service.chat_completion_for_user(
+            messages=[{"role": "user", "content": message}],
+            user_id=self.user.id,
+            db=self.db,
             provider=llm_cfg["provider"],
             model=llm_cfg["model"],
             temperature=llm_cfg["temperature"],

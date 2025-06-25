@@ -48,6 +48,7 @@ class NodeStatus(enum.Enum):
 class Node(Base):
     """Modelo principal para nodes do sistema."""
     __tablename__ = "nodes"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
@@ -68,7 +69,7 @@ class Node(Base):
 
     workspace_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("workspaces.id"),
+        ForeignKey("synapscale_db.workspaces.id"),
         nullable=True,
         index=True,
     )
@@ -189,6 +190,7 @@ class Node(Base):
 class NodeTemplate(Base):
     """Template para criação de nodes baseados em padrões predefinidos."""
     __tablename__ = "node_templates"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False)
@@ -271,9 +273,10 @@ class NodeTemplate(Base):
 
 class NodeRating(Base):
     __tablename__ = "node_ratings"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    node_id = Column(UUID(as_uuid=True), ForeignKey("nodes.id", ondelete="CASCADE"), nullable=False, index=True)
+    node_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.nodes.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE"), nullable=False, index=True)
     rating = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))

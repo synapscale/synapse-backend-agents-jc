@@ -17,7 +17,7 @@ from synapse.core.email.service import EmailService
 from synapse.core.websockets.manager import ConnectionManager
 from synapse.models.analytics import AnalyticsAlert, AnalyticsEvent, AnalyticsMetric
 from synapse.models.user import User
-from synapse.database import get_db
+
 
 logger = logging.getLogger(__name__)
 
@@ -96,27 +96,25 @@ class AlertEvaluationEngine:
 
     async def _evaluate_all_alerts(self):
         """Evaluate all active alerts"""
+        from synapse.database import get_db_session
+        
         try:
-            db = next(get_db())
-            
-            # Get all active alerts
-            active_alerts = db.query(AnalyticsAlert).filter(
-                AnalyticsAlert.is_active == True
-            ).all()
+            with get_db_session() as db:
+                # Get all active alerts
+                active_alerts = db.query(AnalyticsAlert).filter(
+                    AnalyticsAlert.is_active == True
+                ).all()
 
-            logger.debug(f"Evaluating {len(active_alerts)} active alerts")
+                logger.debug(f"Evaluating {len(active_alerts)} active alerts")
 
-            for alert in active_alerts:
-                try:
-                    await self._evaluate_alert(db, alert)
-                except Exception as e:
-                    logger.error(f"Error evaluating alert {alert.id}: {e}")
+                for alert in active_alerts:
+                    try:
+                        await self._evaluate_alert(db, alert)
+                    except Exception as e:
+                        logger.error(f"Error evaluating alert {alert.id}: {e}")
 
         except Exception as e:
             logger.error(f"Error getting active alerts: {e}")
-        finally:
-            if 'db' in locals():
-                db.close()
 
     async def _evaluate_alert(self, db: Session, alert: AnalyticsAlert):
         """Evaluate a single alert"""
@@ -438,49 +436,48 @@ class AlertEvaluationEngine:
 
     async def test_alert_evaluation(self, alert_id: str) -> Dict[str, Any]:
         """Test alert evaluation for a specific alert (for debugging)"""
+        from synapse.database import get_db_session
+        
         try:
-            db = next(get_db())
-            alert = db.query(AnalyticsAlert).filter(AnalyticsAlert.id == alert_id).first()
-            
-            if not alert:
-                return {"error": "Alert not found"}
+            with get_db_session() as db:
+                alert = db.query(AnalyticsAlert).filter(AnalyticsAlert.id == alert_id).first()
+                
+                if not alert:
+                    return {"error": "Alert not found"}
 
-            condition = alert.condition
-            metric_name = condition.get("metric_name")
-            threshold = condition.get("threshold")
-            time_window = condition.get("time_window_minutes", 5)
+                condition = alert.condition
+                metric_name = condition.get("metric_name")
+                threshold = condition.get("threshold")
+                time_window = condition.get("time_window_minutes", 5)
 
-            end_time = datetime.utcnow()
-            start_time = end_time - timedelta(minutes=time_window)
+                end_time = datetime.utcnow()
+                start_time = end_time - timedelta(minutes=time_window)
 
-            current_value = await self._get_metric_value(
-                db, metric_name, start_time, end_time, condition.get("aggregation", "avg")
-            )
-
-            should_trigger = False
-            if current_value is not None:
-                should_trigger = self._evaluate_condition(
-                    current_value, threshold, condition.get("condition")
+                current_value = await self._get_metric_value(
+                    db, metric_name, start_time, end_time, condition.get("aggregation", "avg")
                 )
 
-            return {
-                "alert_id": alert_id,
-                "alert_name": alert.name,
-                "metric_name": metric_name,
-                "current_value": current_value,
-                "threshold": threshold,
-                "condition": condition.get("condition"),
-                "should_trigger": should_trigger,
-                "time_window": time_window,
-                "evaluation_time": datetime.utcnow().isoformat()
-            }
+                should_trigger = False
+                if current_value is not None:
+                    should_trigger = self._evaluate_condition(
+                        current_value, threshold, condition.get("condition")
+                    )
+
+                return {
+                    "alert_id": alert_id,
+                    "alert_name": alert.name,
+                    "metric_name": metric_name,
+                    "current_value": current_value,
+                    "threshold": threshold,
+                    "condition": condition.get("condition"),
+                    "should_trigger": should_trigger,
+                    "time_window": time_window,
+                    "evaluation_time": datetime.utcnow().isoformat()
+                }
 
         except Exception as e:
             logger.error(f"Error testing alert evaluation: {e}")
             return {"error": str(e)}
-        finally:
-            if 'db' in locals():
-                db.close()
 
 
 # Global instance

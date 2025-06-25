@@ -40,6 +40,7 @@ class AgentType(enum.Enum):
 
 class Agent(Base):
     __tablename__ = "agents"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
@@ -50,7 +51,7 @@ class Agent(Base):
     temperature = Column(DECIMAL(3,2), server_default=text("0.7"))
     max_tokens = Column(Integer, server_default=text("1000"))
     is_active = Column(Boolean, nullable=False, server_default=text("true"))
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -93,7 +94,7 @@ class Agent(Base):
         "Conversation", back_populates="agent", cascade="all, delete-orphan"
     )
 
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=True, index=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=True, index=True)
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Converte agente para dicionário"""

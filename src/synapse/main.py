@@ -31,9 +31,11 @@ from fastapi.openapi.utils import get_openapi
 from sqlalchemy import text  # 🆕 necessário para consultas SQL diretas no health detailed
 
 # Importar do sistema centralizado
-from synapse.core.config_new import settings
+from synapse.core.config import settings
 from synapse.database import init_db, get_db
 from synapse.api.v1.api import api_router
+from synapse.api.deps import get_current_user
+from synapse.models.user import User
 from synapse.middlewares.rate_limiting import rate_limit
 from synapse.middlewares.metrics import setup_metrics_middleware
 from synapse.middlewares.error_middleware import setup_error_middleware
@@ -511,7 +513,10 @@ async def health_check_endpoint(db: Session = Depends(get_db)):
         )
 
 @app.get('/health/detailed', tags=['system'])
-async def detailed_health_check(db: Session = Depends(get_db)):
+async def detailed_health_check(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Health check detalhado com estatísticas de banco e provedores"""
     try:
         # Testar conectividade básica ao banco

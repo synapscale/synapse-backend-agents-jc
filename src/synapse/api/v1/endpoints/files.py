@@ -22,7 +22,7 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from synapse.core.config.constants import FILE_CATEGORIES
+from synapse.constants import FILE_CATEGORIES
 from synapse.api.deps import get_current_user
 from synapse.database import get_db
 from synapse.middlewares.rate_limiting import rate_limit
@@ -107,11 +107,11 @@ async def upload_file(
     try:
         logger.info(f"Iniciando upload de arquivo '{file.filename}' categoria '{category}' para usuário {current_user.id}")
         
-        if category not in FILE_CATEGORIES:
+        if category not in FILE_CATEGORIES.keys():
             logger.warning(f"Categoria inválida '{category}' fornecida por usuário {current_user.id}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Categoria inválida. Categorias válidas: {', '.join(FILE_CATEGORIES)}",
+                detail=f"Categoria inválida. Categorias válidas: {', '.join(FILE_CATEGORIES.keys())}",
             )
 
         # Validações de segurança do arquivo
@@ -219,11 +219,11 @@ async def list_files(
         logger.info(f"Listando arquivos para usuário {current_user.id} - página: {page}, categoria: {category}")
         
         # Validar categoria se fornecida
-        if category and category not in FILE_CATEGORIES:
+        if category and category not in FILE_CATEGORIES.keys():
             logger.warning(f"Categoria inválida '{category}' fornecida por usuário {current_user.id}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Categoria inválida. Categorias válidas: {', '.join(FILE_CATEGORIES)}",
+                detail=f"Categoria inválida. Categorias válidas: {', '.join(FILE_CATEGORIES.keys())}",
             )
 
         file_service = FileService()

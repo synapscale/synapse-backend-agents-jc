@@ -25,7 +25,7 @@ from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import Status, StatusCode
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
-from synapse.core.config_new import settings
+from synapse.core.config import settings
 
 logger = logging.getLogger(__name__)
 

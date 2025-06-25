@@ -315,7 +315,7 @@ async def create_user_api_key(
     Usa a tabela user_variables existente com categoria 'api_keys'
     """
     try:
-        from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+        from synapse.services.llm_service import get_llm_service_direct
         
         # Validar provedor
         valid_providers = ["openai", "anthropic", "google", "grok", "deepseek", "llama"]
@@ -326,8 +326,9 @@ async def create_user_api_key(
             )
         
         # Criar/atualizar API key usando user_variables
-        success = user_variables_llm_service.create_or_update_user_api_key(
-            db=db,
+        llm_service = get_llm_service_direct()
+        success = llm_service.create_or_update_user_api_key(
+            db_sync=db,
             user_id=current_user.id,  # Manter como UUID
             provider=provider.lower(),
             api_key=request.value
@@ -360,11 +361,12 @@ async def list_user_api_keys(
     Retorna valores completos sem mascaramento
     """
     try:
-        from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+        from synapse.services.llm_service import get_llm_service_direct
         
-        api_keys = user_variables_llm_service.list_user_api_keys(
-            db=db,
-            user_id=current_user.id  # Manter como UUID
+        llm_service = get_llm_service_direct()
+        api_keys = llm_service.list_user_api_keys(
+            db_sync=db,
+            user_id=current_user.id
         )
         
         return api_keys
@@ -384,11 +386,12 @@ async def delete_user_api_key(
     Remove uma API key específica do usuário
     """
     try:
-        from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+        from synapse.services.llm_service import get_llm_service_direct
         
-        success = user_variables_llm_service.delete_user_api_key(
-            db=db,
-            user_id=current_user.id,  # Manter como UUID
+        llm_service = get_llm_service_direct()
+        success = llm_service.delete_user_api_key(
+            db_sync=db,
+            user_id=current_user.id,
             provider=provider.lower()
         )
         
@@ -412,7 +415,9 @@ async def delete_user_api_key(
 
 
 @router.get("/api-keys/providers", response_model=List[dict], tags=["data"])
-async def get_supported_providers():
+async def get_supported_providers(
+    current_user: User = Depends(get_current_user),
+):
     """
     Lista todos os provedores LLM suportados
     """

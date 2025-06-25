@@ -17,8 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 os.environ.setdefault("ENVIRONMENT", "development")
 os.environ.setdefault("DEBUG", "true")
 
-from synapse.core.llm import llm_service
-from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+from synapse.services.llm_service import get_llm_service
 from synapse.logger_config import get_logger
 
 logger = get_logger(__name__)
@@ -56,6 +55,8 @@ async def demonstrate_fixed_features():
     print_header("DEMONSTRAÇÃO DAS CORREÇÕES APLICADAS")
     
     print_info("Testando sistema LLM corrigido...")
+    
+    llm_service = get_llm_service()
     
     # 1. Listagem de Modelos (CORRIGIDO)
     print(f"\n{Colors.BOLD}1. LISTAGEM DE MODELOS{Colors.END}")
@@ -145,6 +146,7 @@ async def demonstrate_user_variables_system():
     print_info("Fallback automático para API keys globais quando usuário não tem configuradas")
     
     # Demonstrar que o serviço correto está sendo usado
+    llm_service = get_llm_service()
     service_type = type(llm_service).__name__
     print_success(f"Serviço ativo: {service_type}")
     
@@ -159,6 +161,8 @@ async def demonstrate_user_variables_system():
 async def demonstrate_error_handling():
     """Demonstra o tratamento de erros melhorado"""
     print_header("TRATAMENTO DE ERROS MELHORADO")
+    
+    llm_service = get_llm_service()
     
     test_cases = [
         {

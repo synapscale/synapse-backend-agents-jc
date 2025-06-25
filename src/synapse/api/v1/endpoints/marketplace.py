@@ -69,6 +69,7 @@ async def search_components(
     sort_by: Optional[str] = Query("popularity", description="Ordenação"),
     limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ComponentSearchResponse:
     """Busca componentes no marketplace"""
@@ -100,6 +101,7 @@ async def search_components(
 @router.get("/components/{component_id}", response_model=ComponentResponse, summary="Obter componente", tags=["marketplace"])
 async def get_component(
     component_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ComponentResponse:
     """Obtém detalhes de um componente"""
@@ -377,6 +379,7 @@ async def get_component_ratings(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     sort_by: str = Query("newest", pattern="^(newest|oldest|highest|lowest|helpful)$"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> List[RatingResponse]:
     """Obtém avaliações de um componente"""
@@ -394,6 +397,7 @@ async def get_component_ratings(
 @router.get("/components/{component_id}/ratings/stats", response_model=RatingStats, summary="Obter estatísticas de avaliações", tags=["marketplace", "workflows"])
 async def get_rating_stats(
     component_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Obtém estatísticas de avaliações"""
@@ -408,10 +412,16 @@ async def get_rating_stats(
                 logger.warning(f"Estatísticas não encontradas para componente {component_id}")
                 # Return default stats instead of error
                 stats_data = {
-                    "component_id": component_id,
                     "total_ratings": 0,
                     "average_rating": 0.0,
-                    "rating_distribution": {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
+                    "rating_distribution": {1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+                    "aspects": {
+                        "ease_of_use": 0.0,
+                        "documentation_quality": 0.0,
+                        "performance": 0.0,
+                        "reliability": 0.0,
+                        "support_quality": 0.0
+                    }
                 }
             
             # Convert to response model safely
@@ -423,10 +433,16 @@ async def get_rating_stats(
                 else:
                     # Fallback response creation with safe attribute access
                     response_data = RatingStats(
-                        component_id=getattr(stats_data, 'component_id', component_id),
                         total_ratings=getattr(stats_data, 'total_ratings', 0),
                         average_rating=getattr(stats_data, 'average_rating', 0.0),
-                        rating_distribution=getattr(stats_data, 'rating_distribution', {"1": 0, "2": 0, "3": 0, "4": 0, "5": 0})
+                        rating_distribution=getattr(stats_data, 'rating_distribution', {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}),
+                        aspects=getattr(stats_data, 'aspects', {
+                            "ease_of_use": 0.0,
+                            "documentation_quality": 0.0,
+                            "performance": 0.0,
+                            "reliability": 0.0,
+                            "support_quality": 0.0
+                        })
                     )
                 
                 logger.info(f"Estatísticas de avaliações obtidas com sucesso para componente {component_id}")
@@ -436,20 +452,32 @@ async def get_rating_stats(
                 logger.error(f"Erro ao converter resposta das estatísticas {component_id}: {str(response_error)}")
                 # Return fallback response
                 return RatingStats(
-                    component_id=component_id,
                     total_ratings=0,
                     average_rating=0.0,
-                    rating_distribution={"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
+                    rating_distribution={1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+                    aspects={
+                        "ease_of_use": 0.0,
+                        "documentation_quality": 0.0,
+                        "performance": 0.0,
+                        "reliability": 0.0,
+                        "support_quality": 0.0
+                    }
                 )
                 
         except Exception as service_error:
             logger.error(f"Erro no serviço ao obter estatísticas {component_id}: {str(service_error)}")
             # Return fallback response for service errors
             return RatingStats(
-                component_id=component_id,
                 total_ratings=0,
                 average_rating=0.0,
-                rating_distribution={"1": 0, "2": 0, "3": 0, "4": 0, "5": 0}
+                rating_distribution={1: 0, 2: 0, 3: 0, 4: 0, 5: 0},
+                aspects={
+                    "ease_of_use": 0.0,
+                    "documentation_quality": 0.0,
+                    "performance": 0.0,
+                    "reliability": 0.0,
+                    "support_quality": 0.0
+                }
             )
             
     except Exception as e:
@@ -610,6 +638,7 @@ async def get_purchase(
 )
 async def get_component_versions(
     component_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Obtém versões de um componente"""
@@ -693,6 +722,7 @@ async def get_user_favorites(
 
 @router.get("/stats", response_model=MarketplaceStats, summary="Estatísticas marketplace", tags=["marketplace", "workflows"])
 async def get_marketplace_stats(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MarketplaceStats:
     """Obtém estatísticas gerais do marketplace"""
@@ -777,6 +807,7 @@ async def get_marketplace_stats(
 async def get_component_stats(
     component_id: int,
     days: int = Query(30, ge=1, le=365),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Obtém estatísticas de um componente"""
@@ -802,6 +833,7 @@ async def get_author_stats(
 
 @router.get("/categories", summary="Obter categorias", tags=["marketplace"])
 async def get_categories(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Obtém categorias disponíveis"""
@@ -812,6 +844,7 @@ async def get_categories(
 @router.get("/tags", summary="Obter tags populares", tags=["marketplace"])
 async def get_popular_tags(
     limit: int = Query(50, ge=1, le=200),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Obtém tags populares"""
@@ -846,6 +879,7 @@ async def get_recommendations(
 async def get_similar_components(
     component_id: int,
     limit: int = Query(5, ge=1, le=20),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Obtém componentes similares"""

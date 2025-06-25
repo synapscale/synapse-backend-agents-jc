@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from sqlalchemy.orm import Session
 from synapse.database import get_db_session
-from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+from synapse.services.llm_service import get_llm_service
 from synapse.models.user import User
 from synapse.models.user_variable import UserVariable
 from synapse.logger_config import get_logger
@@ -67,11 +67,12 @@ def setup_user_api_keys(db: Session, user: User):
     try:
         print(f"\n🔧 Configurando API keys para usuário {user.email}...")
         
+        llm_service = get_llm_service()
         success_count = 0
         
         for provider, api_key in TEST_API_KEYS.items():
             try:
-                success = user_variables_llm_service.create_or_update_user_api_key(
+                success = llm_service.create_or_update_user_api_key(
                     db=db,
                     user_id=user.id,  # UUID direto
                     provider=provider,
@@ -99,7 +100,8 @@ def list_user_api_keys(db: Session, user: User):
     try:
         print(f"\n📋 API keys configuradas para {user.email}:")
         
-        api_keys = user_variables_llm_service.list_user_api_keys(db, user.id)
+        llm_service = get_llm_service()
+        api_keys = llm_service.list_user_api_keys(db, user.id)
         
         if not api_keys:
             print("   Nenhuma API key configurada")
@@ -127,6 +129,7 @@ async def test_user_llm_generation(db: Session, user: User):
     try:
         print(f"\n🧪 Testando geração de texto com API keys do usuário {user.email}...")
         
+        llm_service = get_llm_service()
         test_cases = [
             ("openai", "gpt-3.5-turbo", "Responda apenas 'OpenAI OK'"),
             ("anthropic", "claude-3-haiku-20240307", "Responda apenas 'Anthropic OK'"),
@@ -139,7 +142,7 @@ async def test_user_llm_generation(db: Session, user: User):
             try:
                 print(f"   Testando {provider}...")
                 
-                response = await user_variables_llm_service.generate_text_for_user(
+                response = await llm_service.generate_text_for_user(
                     prompt=prompt,
                     user_id=user.id,
                     db=db,

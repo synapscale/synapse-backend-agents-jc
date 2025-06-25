@@ -15,7 +15,7 @@
 						<line number="7" hits="1"/>
 					</lines>
 				</class>
-				<class name="app.py" filename="app.py" complexity="0" line-rate="0" branch-rate="0">
+				<class name="main.py" filename="main.py" complexity="0" line-rate="0" branch-rate="0">
 					<methods/>
 					<lines>
 						<line number="1" hits="0"/>

@@ -1,0 +1,235 @@
+Metadata-Version: 2.4
+Name: synapse-backend
+Version: 2.0.0
+Summary: Backend para a plataforma SynapScale de integração com LLMs
+Author-email: SynapScale Team <team@synapscale.com>
+License: MIT
+Project-URL: Homepage, https://github.com/synapscale/synapse-backend
+Project-URL: Repository, https://github.com/synapscale/synapse-backend.git
+Project-URL: Documentation, https://docs.synapscale.com
+Project-URL: Bug Tracker, https://github.com/synapscale/synapse-backend/issues
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Framework :: FastAPI
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: fastapi<0.115.0,>=0.110.0
+Requires-Dist: uvicorn[standard]<0.30.0,>=0.27.0
+Requires-Dist: pydantic<3.0.0,>=2.6.0
+Requires-Dist: pydantic-settings<3.0.0,>=2.2.0
+Requires-Dist: gunicorn<22.0.0,>=21.2.0
+Requires-Dist: sqlalchemy<3.0.0,>=2.0.25
+Requires-Dist: psycopg2-binary<3.0.0,>=2.9.9
+Requires-Dist: asyncpg>=0.30.0
+Requires-Dist: alembic<2.0.0,>=1.13.0
+Requires-Dist: redis<6.0.0,>=5.0.1
+Requires-Dist: aioredis<3.0.0,>=2.0.1
+Requires-Dist: pyjwt<3.0.0,>=2.8.0
+Requires-Dist: python-jose[cryptography]<4.0.0,>=3.3.0
+Requires-Dist: passlib[bcrypt]<2.0.0,>=1.7.4
+Requires-Dist: python-multipart<0.1.0,>=0.0.6
+Requires-Dist: cryptography<43.0.0,>=42.0.0
+Requires-Dist: bcrypt<5.0.0,>=4.1.2
+Requires-Dist: httpx<0.28.0,>=0.26.0
+Requires-Dist: aiohttp<4.0.0,>=3.9.3
+Requires-Dist: requests<3.0.0,>=2.31.0
+Requires-Dist: pandas<3.0.0,>=2.2.0
+Requires-Dist: numpy<2.0.0,>=1.26.0
+Requires-Dist: python-dateutil<3.0.0,>=2.8.2
+Requires-Dist: email-validator<3.0.0,>=2.1.0
+Requires-Dist: python-slugify<9.0.0,>=8.0.2
+Requires-Dist: pydantic-extra-types<3.0.0,>=2.5.0
+Requires-Dist: loguru<0.8.0,>=0.7.2
+Requires-Dist: sentry-sdk[fastapi]<2.0.0,>=1.40.0
+Requires-Dist: prometheus-client<0.21.0,>=0.19.0
+Requires-Dist: python-dotenv<2.0.0,>=1.0.1
+Requires-Dist: click<9.0.0,>=8.1.7
+Requires-Dist: rich<14.0.0,>=13.7.0
+Requires-Dist: typer<0.13.0,>=0.9.0
+Requires-Dist: slowapi<0.2.0,>=0.1.9
+Requires-Dist: websockets<13.0,>=12.0
+Requires-Dist: python-magic<0.5.0,>=0.4.27
+Requires-Dist: pillow<11.0.0,>=10.2.0
+Requires-Dist: aiofiles<24.0.0,>=23.2.1
+Requires-Dist: jinja2<4.0.0,>=3.1.3
+Requires-Dist: aiosmtplib<4.0.0,>=3.0.1
+Requires-Dist: pytz>=2024.1
+Requires-Dist: openai<2.0.0,>=1.12.0
+Requires-Dist: anthropic<1.0.0,>=0.15.0
+Requires-Dist: google-generativeai<1.0.0,>=0.4.0
+Requires-Dist: groq<1.0.0,>=0.4.2
+Requires-Dist: cohere<5.0.0,>=4.47.0
+Requires-Dist: together<1.0.0,>=0.2.7
+Requires-Dist: replicate<1.0.0,>=0.25.0
+Requires-Dist: transformers<5.0.0,>=4.38.0
+Requires-Dist: accelerate<1.0.0,>=0.27.0
+Provides-Extra: dev
+Requires-Dist: pytest<9.0.0,>=8.0.0; extra == "dev"
+Requires-Dist: pytest-asyncio<0.24.0,>=0.23.5; extra == "dev"
+Requires-Dist: pytest-cov<5.0.0,>=4.1.0; extra == "dev"
+Requires-Dist: pytest-mock<4.0.0,>=3.12.0; extra == "dev"
+Requires-Dist: factory-boy<4.0.0,>=3.3.0; extra == "dev"
+Requires-Dist: httpx<0.28.0,>=0.26.0; extra == "dev"
+Requires-Dist: black<25.0.0,>=24.2.0; extra == "dev"
+Requires-Dist: isort<6.0.0,>=5.13.2; extra == "dev"
+Requires-Dist: mypy<2.0.0,>=1.8.0; extra == "dev"
+Requires-Dist: flake8<8.0.0,>=7.0.0; extra == "dev"
+Requires-Dist: pre-commit<4.0.0,>=3.6.0; extra == "dev"
+Provides-Extra: ai-minimal
+Requires-Dist: openai<2.0.0,>=1.12.0; extra == "ai-minimal"
+Requires-Dist: anthropic<1.0.0,>=0.15.0; extra == "ai-minimal"
+Provides-Extra: ai-full
+Requires-Dist: openai<2.0.0,>=1.12.0; extra == "ai-full"
+Requires-Dist: anthropic<1.0.0,>=0.15.0; extra == "ai-full"
+Requires-Dist: google-generativeai<1.0.0,>=0.4.0; extra == "ai-full"
+Requires-Dist: groq<1.0.0,>=0.4.2; extra == "ai-full"
+Requires-Dist: cohere<5.0.0,>=4.47.0; extra == "ai-full"
+Requires-Dist: together<1.0.0,>=0.2.7; extra == "ai-full"
+Requires-Dist: replicate<1.0.0,>=0.25.0; extra == "ai-full"
+Requires-Dist: transformers<5.0.0,>=4.38.0; extra == "ai-full"
+Requires-Dist: accelerate<1.0.0,>=0.27.0; extra == "ai-full"
+Dynamic: license-file
+
+# 🚀 SynapScale Backend API
+
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13+-blue.svg)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-6+-red.svg)](https://redis.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> Plataforma de Automação com IA - Backend completo e otimizado para gerenciamento de workflows, agentes AI e automações empresariais.
+
+## 🎯 **COMEÇAR AQUI**
+
+### 🚀 **[📋 GUIA DE INSTALAÇÃO](./docs/SETUP_GUIDE.md)**
+**→ COMECE AQUI!** Guia completo para instalar e configurar o sistema.
+
+### 📚 **[📖 DOCUMENTAÇÃO COMPLETA](./docs/README.md)**
+**→ Navegue** por toda a documentação organizada.
+
+---
+
+## 🆕 **Novidades v1.1.0**
+
+### 🔑 **Sistema de API Keys Específicas por Usuário**
+- ✅ **6 Provedores Suportados**: OpenAI, Anthropic, Google, Grok, DeepSeek, Llama
+- ✅ **Fallback Automático**: Usa chaves globais se usuário não configurou
+- ✅ **Criptografia Segura**: Todas as chaves são criptografadas
+- ✅ **[Documentação das API Keys](./docs/api/user_variables_api_keys_guide.md)**
+
+### 🧪 **Sistema de Testes Unificado**
+- ✅ **242 Endpoints Testados**: Descoberta automática via OpenAPI
+- ✅ **Taxa de Sucesso 70.7%**: Monitoramento contínuo da qualidade
+- 🚀 **Sistema LLM: 77.8%**: Performance superior do core LLM
+- ✅ **Testes Automatizados**: Execução completa em ~2 minutos
+- ✅ **[Documentação dos Testes](./DOCUMENTACAO_TESTES_ENDPOINTS.md)**
+- 🤖 **[Teste LLM Detalhado](./TESTE_LLM_RESULTADO_DETALHADO.md)**
+
+---
+
+## ⚡ **Início Ultra-Rápido**
+
+```bash
+# 1. Clone e configure
+git clone <URL_DO_REPOSITORIO>
+cd synapse-backend-agents-jc
+cp .env.example .env
+
+# 2. Configure DATABASE_URL no .env
+
+# 3. Instale e execute
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+./dev.sh
+
+uvicorn src.synapse.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Acesse**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+## 📋 **Documentação Principal**
+
+### 🏗️ **Setup e Configuração**
+- **[📋 Guia de Instalação](./docs/SETUP_GUIDE.md)** - Instalação completa
+- **[🔧 Configuração Avançada](./docs/guides/development.md)** - Para desenvolvedores
+
+### 📡 **API e Integração**
+- **[📖 Guia da API](./docs/api/API_GUIDE.md)** - API completa
+- **[⚡ Guia Rápido](./docs/api/quick_guide.md)** - Primeiros passos
+- **[🤖 Integração LLM](./docs/llm_integration/integracao_multi_llm.md)** - IA
+
+### 🛠️ **Desenvolvimento**
+- **[💻 Guia de Desenvolvimento](./docs/guides/development.md)** - Para desenvolvedores
+- **[🚀 Deploy](./docs/guides/DEPLOY-RENDER.md)** - Como fazer deploy
+- **[🤝 Contribuição](./docs/CONTRIBUTING.md)** - Como contribuir
+
+### 📊 **Recursos**
+- **[🔄 Changelog](./docs/CHANGELOG.md)** - Histórico de mudanças
+- **[🔒 Segurança](./docs/SECURITY.md)** - Diretrizes de segurança
+- **[🏛️ Arquitetura](./docs/architecture/overview.md)** - Visão geral
+
+---
+
+## 🚀 **Características Principais**
+
+- **🤖 IA Multi-Provedor**: OpenAI, Anthropic, Google, Grok, DeepSeek, Llama
+- **⚡ FastAPI**: Performance otimizada e documentação automática
+- **🔐 Segurança**: JWT, rate limiting, validação robusta
+- **📊 Analytics**: Monitoramento e métricas integradas
+- **🌐 WebSocket**: Comunicação em tempo real
+- **📁 Gerenciamento de Arquivos**: Upload e processamento
+- **🔄 Workflows**: Automação de processos
+- **🏪 Marketplace**: Templates e componentes
+- **👥 Multi-usuário**: Workspaces e permissões
+
+---
+
+## 🛠️ **Tecnologias**
+
+- **Backend**: Python 3.11, FastAPI, SQLAlchemy
+- **Banco de Dados**: PostgreSQL, Redis
+- **IA**: OpenAI, Anthropic, Google AI
+- **Deploy**: Docker, Render, Nginx
+- **Testes**: Pytest, Coverage
+- **Docs**: Swagger/OpenAPI
+
+---
+
+## 📈 **Status do Projeto**
+
+- ✅ **Produção**: Estável e testado
+- ✅ **API**: Documentação completa
+- ✅ **Testes**: Cobertura abrangente
+- ✅ **Deploy**: Pronto para produção
+- ✅ **Segurança**: Implementada
+- ✅ **Monitoramento**: Configurado
+
+---
+
+## 🆘 **Ajuda Rápida**
+
+- **🚨 Problema na instalação?** → [SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)
+- **❓ Dúvida sobre a API?** → [API_GUIDE.md](./docs/api/API_GUIDE.md)
+- **🐛 Encontrou um bug?** → [Issues](https://github.com/seu-usuario/synapse-backend/issues)
+- **💡 Quer contribuir?** → [CONTRIBUTING.md](./docs/CONTRIBUTING.md)
+
+---
+
+## 📜 **Licença**
+
+Este projeto está licenciado sob a [Licença MIT](./LICENSE).
+
+---
+
+**Última atualização**: Dezembro 2024  
+**Versão**: 1.1.0  
+**Desenvolvido com** ❤️ **pela equipe SynapScale**

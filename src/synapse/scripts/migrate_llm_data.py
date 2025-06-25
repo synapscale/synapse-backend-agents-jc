@@ -36,7 +36,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from synapse.database import get_db
 from synapse.models.llm import LLM
-from synapse.core.config_new import settings
+from synapse.core.config import settings
 from synapse.api.v1.endpoints.llm.schemas import ModelEnum, ProviderEnum
 
 

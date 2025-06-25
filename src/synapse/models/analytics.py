@@ -56,6 +56,7 @@ class AnalyticsEvent(Base):
     """
 
     __tablename__ = "analytics_events"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -83,9 +84,9 @@ class AnalyticsEvent(Base):
     value = Column(Float)  # Valor numérico (opcional)
 
     # Contexto da aplicação
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), index=True)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("workspace_projects.id"), nullable=False, index=True)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=True, index=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspace_projects.id"), nullable=False, index=True)
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id"), nullable=True, index=True)
 
     # Geolocalização
     country = Column(String(2))  # Código ISO do país
@@ -118,6 +119,7 @@ class UserBehaviorMetric(Base):
     """
 
     __tablename__ = "user_behavior_metrics"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(
@@ -175,6 +177,7 @@ class SystemPerformanceMetric(Base):
     """
 
     __tablename__ = "system_performance_metrics"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(Integer, primary_key=True, index=True)
 
@@ -209,6 +212,7 @@ class BusinessMetric(Base):
     """
 
     __tablename__ = "business_metrics"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(Integer, primary_key=True, index=True)
 
@@ -269,10 +273,11 @@ class CustomReport(Base):
     """
 
     __tablename__ = "custom_reports"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), index=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), index=True)
 
     # Informações do relatório
     name = Column(String(200), nullable=False)
@@ -328,9 +333,10 @@ class ReportExecution(Base):
     """
 
     __tablename__ = "report_executions"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    report_id = Column(UUID(as_uuid=True), ForeignKey("custom_reports.id"), nullable=False, index=True)
+    report_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.custom_reports.id"), nullable=False, index=True)
     user_id = Column(
         UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), index=True
     )  # Quem executou (pode ser automático)
@@ -370,6 +376,7 @@ class UserInsight(Base):
     """
 
     __tablename__ = "user_insights"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
@@ -427,6 +434,7 @@ class AnalyticsDashboard(Base):
     """
 
     __tablename__ = "analytics_dashboards"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
@@ -462,7 +470,7 @@ class AnalyticsDashboard(Base):
     # Relacionamentos
     user = relationship("User", back_populates="analytics_dashboards")
     workspace = relationship("Workspace")
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=True, index=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=True, index=True)
 
     def __repr__(self):
         return f"<AnalyticsDashboard(id={self.id}, name='{self.name}', user_id={self.user_id})>"
@@ -470,6 +478,7 @@ class AnalyticsDashboard(Base):
 
 class AnalyticsAlert(Base):
     __tablename__ = "analytics_alerts"
+    __table_args__ = {"schema": "synapscale_db"}
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
     description = Column(Text)
@@ -484,6 +493,7 @@ class AnalyticsAlert(Base):
 
 class AnalyticsExport(Base):
     __tablename__ = "analytics_exports"
+    __table_args__ = {"schema": "synapscale_db"}
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
     export_type = Column(String(50), nullable=False)
@@ -497,6 +507,7 @@ class AnalyticsExport(Base):
 
 class AnalyticsMetric(Base):
     __tablename__ = "analytics_metrics"
+    __table_args__ = {"schema": "synapscale_db"}
     id = Column(UUID(as_uuid=True), primary_key=True)
     metric_name = Column(String(100), nullable=False)
     metric_value = Column(DECIMAL(15,4), nullable=False)
@@ -507,6 +518,7 @@ class AnalyticsMetric(Base):
 
 class AnalyticsReport(Base):
     __tablename__ = "analytics_reports"
+    __table_args__ = {"schema": "synapscale_db"}
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
     description = Column(Text)

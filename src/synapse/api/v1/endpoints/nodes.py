@@ -574,6 +574,7 @@ async def rate_node(
 
 @router.get("/categories/", response_model=List[str], summary="Listar categorias", tags=["workflows"])
 async def list_node_categories(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> List[str]:
     """
@@ -612,6 +613,7 @@ async def list_node_categories(
 
 @router.get("/types/", response_model=List[str], summary="Listar tipos", tags=["workflows"])
 async def list_node_types(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> List[str]:
     """

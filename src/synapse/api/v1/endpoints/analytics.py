@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from datetime import datetime
 
-from synapse.database import get_db
+from synapse.database import get_db_sync
 from synapse.models.user import User
 from synapse.services.analytics_service import AnalyticsService
 from synapse.schemas.analytics import (
@@ -54,7 +54,7 @@ router = APIRouter()
 async def track_event(
     event_data: EventCreate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> EventResponse:
     """
     Registra um evento de analytics no sistema.
@@ -92,7 +92,7 @@ async def track_event(
 async def track_events_batch(
     events: List[EventCreate],
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict[str, int]:
     """
     Registra múltiplos eventos em lote para melhor performance.
@@ -131,7 +131,7 @@ async def get_events(
     limit: int = Query(100, ge=1, le=1000, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> List[EventResponse]:
     """
     Obtém eventos do usuário com filtros opcionais.
@@ -188,7 +188,7 @@ async def get_user_behavior_metrics(
     end_date: datetime = Query(..., description="Data de fim"),
     granularity: str = Query("day", pattern="^(hour|day|week|month)$", description="Granularidade dos dados"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict:
     """
     Obtém métricas de comportamento do usuário no período especificado.
@@ -237,7 +237,7 @@ async def get_system_performance_metrics(
     end_date: datetime = Query(..., description="Data de fim"),
     granularity: str = Query("hour", pattern="^(minute|hour|day)$", description="Granularidade dos dados"),
     current_admin: User = Depends(get_admin_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict:
     """
     Obtém métricas de performance do sistema (apenas para administradores).
@@ -282,7 +282,7 @@ async def get_business_metrics(
     end_date: datetime = Query(..., description="Data de fim"),
     granularity: str = Query("day", pattern="^(day|week|month)$", description="Granularidade dos dados"),
     current_admin: User = Depends(get_admin_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict:
     """
     Obtém métricas de negócio (apenas para administradores).
@@ -324,7 +324,7 @@ async def get_business_metrics(
 @router.get("/metrics/real-time", response_model=RealTimeStats, summary="Métricas em tempo real", tags=["analytics"])
 async def get_real_time_metrics(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> RealTimeStats:
     """
     Obtém métricas em tempo real do usuário.
@@ -381,7 +381,7 @@ async def get_real_time_metrics(
 async def execute_analytics_query(
     query: AnalyticsQuery,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> QueryResponse:
     """
     Executa uma consulta customizada de analytics.
@@ -437,7 +437,7 @@ async def execute_analytics_query(
 async def validate_analytics_query(
     query: AnalyticsQuery,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict[str, Any]:
     """
     Valida uma consulta de analytics sem executá-la.
@@ -472,7 +472,7 @@ async def get_saved_queries(
     limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict:
     """
     Obtém consultas salvas do usuário.
@@ -509,7 +509,7 @@ async def save_query(
     name: str = Query(..., description="Nome da consulta"),
     description: Optional[str] = Query(None, description="Descrição"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict:
     """
     Salva uma consulta para reutilização.
@@ -552,7 +552,7 @@ async def save_query(
 async def create_dashboard(
     dashboard_data: DashboardCreate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> DashboardResponse:
     """
     Cria um novo dashboard personalizado.
@@ -591,7 +591,7 @@ async def get_user_dashboards(
     limit: int = Query(20, ge=1, le=100, description="Limite de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginação"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> List[DashboardResponse]:
     """
     Obtém dashboards do usuário com paginação.
@@ -626,7 +626,7 @@ async def get_user_dashboards(
 async def get_dashboard(
     dashboard_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> DashboardResponse:
     """
     Obtém detalhes de um dashboard específico.
@@ -685,7 +685,7 @@ async def update_dashboard(
     dashboard_id: int,
     dashboard_data: DashboardUpdate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> DashboardResponse:
     """
     Atualiza um dashboard existente.
@@ -754,7 +754,7 @@ async def get_dashboard_data(
     start_date: Optional[datetime] = Query(None, description="Data de início"),
     end_date: Optional[datetime] = Query(None, description="Data de fim"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict[str, Any]:
     """
     Obtém dados atualizados para um dashboard específico.
@@ -817,7 +817,7 @@ async def get_dashboard_data(
 async def get_user_insights(
     period: str = Query("7d", pattern="^(1d|7d|30d|90d)$", description="Período de análise"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict[str, Any]:
     """
     Obtém insights personalizados sobre o comportamento e performance do usuário.
@@ -868,7 +868,7 @@ async def get_user_insights(
 async def get_report(
     report_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict[str, Any]:
     """
     Obtém detalhes de um relatório específico.
@@ -921,7 +921,7 @@ async def update_report(
     report_id: int,
     report_data: dict[str, Any],
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict[str, Any]:
     """
     Atualiza um relatório existente.
@@ -976,7 +976,7 @@ async def execute_report(
     report_id: int,
     parameters: Optional[dict[str, Any]] = None,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ) -> dict[str, Any]:
     """
     Executa um relatório e retorna os resultados.

@@ -15,7 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.orm import Session
 from synapse.database import get_db
 from synapse.logger_config import get_logger
-from synapse.core.config_new import settings
+from synapse.core.config import settings
 
 logger = get_logger(__name__)
 import random

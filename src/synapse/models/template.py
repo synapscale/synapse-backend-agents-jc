@@ -71,6 +71,7 @@ class WorkflowTemplate(Base):
     """
 
     __tablename__ = "workflow_templates"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -98,7 +99,7 @@ class WorkflowTemplate(Base):
     short_description = Column(String(500), nullable=True)
 
     # Relacionamentos
-    original_workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=True, index=True)
+    original_workflow_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id"), nullable=True, index=True)
 
     # Categorização
     tags = Column(JSON, nullable=True)  # Lista de tags
@@ -192,13 +193,14 @@ class TemplateReview(Base):
     """
 
     __tablename__ = "template_reviews"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        Integer, ForeignKey("workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
 
@@ -241,13 +243,14 @@ class TemplateDownload(Base):
     """
 
     __tablename__ = "template_downloads"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        Integer, ForeignKey("workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
 
@@ -278,13 +281,14 @@ class TemplateFavorite(Base):
     """
 
     __tablename__ = "template_favorites"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        Integer, ForeignKey("workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
 
@@ -312,6 +316,7 @@ class TemplateCollection(Base):
     """
 
     __tablename__ = "template_collections"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -349,7 +354,7 @@ class TemplateCollection(Base):
     creator = relationship("User", back_populates="template_collections")
 
     def __repr__(self):
-        return f"<TemplateCollection(id={self.id}, name='{self.name}')>"
+        return f"<TemplateCollection(id={self.id}, name='{self.name}', creator_id={self.creator_id})>"
 
 
 class TemplateUsage(Base):
@@ -359,16 +364,17 @@ class TemplateUsage(Base):
     """
 
     __tablename__ = "template_usage"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        Integer, ForeignKey("workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
-    workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable=True, index=True)
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id"), nullable=True, index=True)
 
     # Informações de uso
     usage_type = Column(String(20), nullable=False)  # create, clone, execute, modify

@@ -97,8 +97,8 @@ def check_llm_service_integration() -> bool:
     print("\n🎯 Verificando Integração dos Serviços LLM...")
     
     try:
-        from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
-        from synapse.core.llm.unified_service import UnifiedLLMService
+        from synapse.services.llm_service import get_llm_service
+        from synapse.services.llm_service import UnifiedLLMService
         from synapse.database import SessionLocal
         from synapse.models.user import User
         
@@ -109,7 +109,8 @@ def check_llm_service_integration() -> bool:
         # 1. User Variables LLM Service
         user = db.query(User).first()
         if user:
-            api_keys = user_variables_llm_service.list_user_api_keys(db, user.id)
+            llm_service = get_llm_service_direct()
+            api_keys = llm_service.list_user_api_keys(db, user.id)
             checks.append(("UserVariables LLM Service", True))
             checks.append(("API Keys Listing", len(api_keys) >= 0))
         

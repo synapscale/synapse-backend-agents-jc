@@ -1,0 +1,88 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 📋 Configuração Unificada do SynapScale
+
+**IMPORTANTE:** O SynapScale Backend tem **UM ÚNICO** arquivo de configuração principal.
+
+## ✅ **Arquivo Principal de Configuração**
+
+- **`src/synapse/core/config.py`** - ÚNICO arquivo de configuração válido
+  - Contém todas as configurações do sistema
+  - Usa Pydantic v2 para validação robusta
+  - Inclui constantes como `FILE_CATEGORIES`
+  - Implementa helpers e métodos de validação
+  - Suporta todos os providers LLM
+
+## ❌ **Arquivos PROIBIDOS (Nunca Criar)**
+
+- `src/synapse/config.py` - DELETADO - era órfão sem uso
+- `src/synapse/core/config_new.py` - DELETADO - foi renomeado para config.py
+- `src/synapse/core/config/config.py` - NUNCA CRIAR
+- `src/synapse/core/config/constants.py` - DELETADO - constantes estão no config.py principal
+- `src/synapse/core/unified_config.py` - DELETADO - foi um erro temporário
+
+## 🔧 **Como Usar a Configuração**
+
+### Importação Correta
+```python
+# ✅ SEMPRE use esta importação
+from synapse.core.config import settings, FILE_CATEGORIES
+
+# ✅ Ou para funções específicas
+from synapse.core.config import setup_logging, validate_settings, get_settings
+```
+
+### Importações PROIBIDAS
+```python
+# ❌ NUNCA use estas importações
+from synapse.core.config_new import settings  # ❌ PROIBIDO - arquivo removido
+from synapse.core.config.constants import FILE_CATEGORIES  # diretório deletado
+from synapse.core.unified_config import settings  # arquivo temporário deletado
+from synapse.config import settings  # arquivo órfão deletado
+```
+
+## 📁 **Estrutura de Diretórios**
+
+```
+src/synapse/core/
+├── config.py              # ✅ ÚNICO arquivo de configuração
+├── database/               # ✅ Módulos de banco
+├── auth/                   # ✅ Módulos de autenticação
+├── llm/                    # ✅ Módulos LLM
+└── [outros módulos]        # ✅ Outros serviços
+```
+
+## 🚫 **O que NÃO Fazer**
+
+- **Nunca** criar novos arquivos de configuração
+- **Nunca** duplicar constantes ou settings
+- **Nunca** criar diretório `src/synapse/core/config/`
+- **Nunca** importar de config_new, config antigo ou unified_config
+
+## ✅ **O que Fazer**
+
+- **Sempre** usar `src/synapse/core/config.py` como fonte única
+- **Sempre** adicionar novas configurações no arquivo principal
+- **Sempre** usar as importações padronizadas
+- **Sempre** manter a validação Pydantic
+
+## 🔍 **Funcionalidades Incluídas**
+
+- **Database:** PostgreSQL, Redis, connection pooling
+- **LLM Providers:** OpenAI, Anthropic, Google, Grok, DeepSeek, etc.
+- **Security:** JWT, CORS, encryption, CSRF protection
+- **Storage:** Local, AWS S3, Google Cloud Storage
+- **Monitoring:** Sentry, tracing, metrics
+- **Email:** SMTP, templates, validation
+- **Cache:** Redis, memory, TTL
+- **Development:** Hot reload, profiling, debugging
+
+## 📝 **Regra de Ouro**
+
+> **"Um repositório, uma configuração, uma fonte de verdade."**
+> 
+> Se você está pensando em criar outro arquivo de configuração,
+> **PARE** e adicione ao `src/synapse/core/config.py` existente.

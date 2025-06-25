@@ -16,7 +16,7 @@ def test_imports():
     
     try:
         print("📦 Testando importação da configuração...")
-        from synapse.core.config_new import settings
+        from synapse.core.config import settings
         print(f"✅ Configuração importada - Projeto: {settings.PROJECT_NAME}")
     except Exception as e:
         print(f"❌ Erro na configuração: {e}")

@@ -20,7 +20,7 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from synapse.core.logging_system import get_logger
+from synapse.logger_config import get_logger
 
 
 async def test_centralized_logging():

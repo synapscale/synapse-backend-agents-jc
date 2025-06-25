@@ -20,9 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 os.environ.setdefault("ENVIRONMENT", "development")
 os.environ.setdefault("DEBUG", "true")
 
-from synapse.core.llm import llm_service, unified_service
-from synapse.core.llm.real_llm_service import real_llm_service
-from synapse.core.llm.user_variables_llm_service import user_variables_llm_service
+from synapse.services.llm_service import get_llm_service
 from synapse.logger_config import get_logger
 
 logger = get_logger(__name__)
@@ -62,13 +60,14 @@ async def test_service_initialization():
     services_tested = 0
     services_working = 0
     
-    # Teste 1: Unified Service (Mock)
+    # Teste 1: Unified Service
     try:
-        print_info("Testando Unified Service (Mock)...")
-        if hasattr(unified_service, 'get_available_providers'):
-            providers = unified_service.get_available_providers()
+        print_info("Testando Unified Service...")
+        llm_service = get_llm_service()
+        if hasattr(llm_service, 'get_available_providers'):
+            providers = llm_service.get_available_providers()
             if providers and 'count' in providers:
-                print_success(f"Unified Service OK - {providers['count']} provedores mock")
+                print_success(f"Unified Service OK - {providers['count']} provedores")
                 services_working += 1
             else:
                 print_error("Unified Service retornou dados inválidos")
@@ -77,16 +76,17 @@ async def test_service_initialization():
         print_error(f"Unified Service falhou: {e}")
         services_tested += 1
     
-    # Teste 2: Real LLM Service
+    # Teste 2: Main LLM Service
     try:
-        print_info("Testando Real LLM Service...")
-        if hasattr(real_llm_service, 'providers'):
-            available_providers = len([p for p in real_llm_service.providers.values() if p.get('available')])
-            total_providers = len(real_llm_service.providers)
-            print_success(f"Real LLM Service OK - {available_providers}/{total_providers} provedores disponíveis")
+        print_info("Testando Main LLM Service...")
+        llm_service = get_llm_service()
+        if hasattr(llm_service, 'providers'):
+            available_providers = len([p for p in llm_service.providers.values() if p.get('available')])
+            total_providers = len(llm_service.providers)
+            print_success(f"Main LLM Service OK - {available_providers}/{total_providers} provedores disponíveis")
             
             # Mostrar detalhes dos provedores
-            for provider_id, info in real_llm_service.providers.items():
+            for provider_id, info in llm_service.providers.items():
                 status = "✅" if info.get("available") else "❌"
                 models_count = len(info.get("models", []))
                 print(f"      {provider_id}: {status} ({models_count} modelos)")
@@ -94,25 +94,13 @@ async def test_service_initialization():
             services_working += 1
         services_tested += 1
     except Exception as e:
-        print_error(f"Real LLM Service falhou: {e}")
+        print_error(f"Main LLM Service falhou: {e}")
         services_tested += 1
     
-    # Teste 3: User Variables LLM Service
-    try:
-        print_info("Testando User Variables LLM Service...")
-        if hasattr(user_variables_llm_service, 'providers'):
-            available_providers = len([p for p in user_variables_llm_service.providers.values() if p.get('available')])
-            total_providers = len(user_variables_llm_service.providers)
-            print_success(f"User Variables LLM Service OK - {available_providers}/{total_providers} provedores")
-            services_working += 1
-        services_tested += 1
-    except Exception as e:
-        print_error(f"User Variables LLM Service falhou: {e}")
-        services_tested += 1
-    
-    # Teste 4: Serviço padrão atual
+    # Teste 3: Serviço padrão atual
     try:
         print_info("Testando serviço padrão atual...")
+        llm_service = get_llm_service()
         current_service_type = type(llm_service).__name__
         print_success(f"Serviço padrão: {current_service_type}")
         services_working += 1
@@ -140,6 +128,7 @@ async def test_individual_providers():
         print_info(f"Testando {provider} com modelo {model}")
         
         try:
+            llm_service = get_llm_service()
             response = await llm_service.generate_text(
                 prompt="Responda apenas 'OK'",
                 provider=provider,
@@ -164,6 +153,7 @@ async def test_model_listing():
     
     try:
         print_info("Listando todos os modelos...")
+        llm_service = get_llm_service()
         models_response = await llm_service.list_models()
         
         # Verificar se é um objeto com atributo models ou um dict
@@ -223,6 +213,7 @@ async def test_token_counting():
         print_info(f"Teste {i}: '{text[:50]}...'")
         
         try:
+            llm_service = get_llm_service()
             result = await llm_service.count_tokens(text=text)
             
             if isinstance(result, dict) and 'token_count' in result:
@@ -257,6 +248,7 @@ async def test_chat_completion():
         print_info(f"Teste de chat {i} com {len(messages)} mensagens")
         
         try:
+            llm_service = get_llm_service()
             response = await llm_service.chat_completion(
                 messages=messages,
                 max_tokens=100
@@ -307,6 +299,7 @@ async def test_error_handling():
         print_info(f"Teste: {test['name']}")
         
         try:
+            llm_service = get_llm_service()
             response = await llm_service.generate_text(**test['params'])
             
             if test['should_fail']:
@@ -333,6 +326,7 @@ async def test_performance():
     start_time = time.time()
     
     try:
+        llm_service = get_llm_service()
         response = await llm_service.generate_text(
             prompt="Respond with just 'OK'",
             max_tokens=5
@@ -359,6 +353,7 @@ async def test_provider_health():
     print_header("TESTE DE HEALTH CHECK")
     
     try:
+        llm_service = get_llm_service()
         health = await llm_service.health_check()
         
         if isinstance(health, dict):

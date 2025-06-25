@@ -14,8 +14,8 @@ from pathlib import Path
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from synapse.core.config_new import get_settings
-from synapse.core.llm import llm_service, real_llm_service
+from synapse.core.config import get_settings
+from synapse.services.llm_service import get_llm_service
 from synapse.logger_config import get_logger
 
 logger = get_logger(__name__)
@@ -39,10 +39,11 @@ async def test_service_initialization():
     print("\n🚀 Testing Service Initialization...")
     
     try:
-        # Test real service initialization
-        if hasattr(real_llm_service, 'providers'):
-            providers = real_llm_service.providers
-            print(f"   Real LLM Service: ✅ Initialized")
+        # Test service initialization
+        llm_service = get_llm_service()
+        if hasattr(llm_service, 'providers'):
+            providers = llm_service.providers
+            print(f"   LLM Service: ✅ Initialized")
             print(f"   Available Providers: {len(providers)}")
             
             for provider_id, info in providers.items():
@@ -50,7 +51,7 @@ async def test_service_initialization():
                 models_count = len(info.get("models", []))
                 print(f"     - {provider_id}: {status} ({models_count} models)")
         else:
-            print("   Real LLM Service: ❌ Not available")
+            print("   LLM Service: ❌ Not available")
             
         return True
     except Exception as e:
@@ -62,6 +63,7 @@ async def test_provider_health():
     print("\n💊 Testing Provider Health...")
     
     try:
+        llm_service = get_llm_service()
         health = await llm_service.health_check()
         print(f"   Overall Status: {health['status']}")
         
@@ -83,6 +85,7 @@ async def test_token_counting():
     test_text = "This is a test message to count tokens. It should work with all providers."
     
     try:
+        llm_service = get_llm_service()
         result = await llm_service.count_tokens(test_text)
         print(f"   Token Count: {result['token_count']}")
         print(f"   Character Count: {result['character_count']}")
@@ -99,6 +102,7 @@ async def test_model_listing():
     print("\n📋 Testing Model Listing...")
     
     try:
+        llm_service = get_llm_service()
         result = await llm_service.list_models()
         print(f"   Total Models: {result.count}")
         
@@ -117,6 +121,7 @@ async def test_provider_listing():
     print("\n🏭 Testing Provider Listing...")
     
     try:
+        llm_service = get_llm_service()
         result = llm_service.get_available_providers()
         print(f"   Total Providers: {result['count']}")
         
@@ -152,6 +157,7 @@ async def test_text_generation():
     if not providers_to_test:
         print("   ⚠️  No real API keys configured. Testing with mock response...")
         try:
+            llm_service = get_llm_service()
             result = await llm_service.generate_text(
                 prompt=test_prompt,
                 provider="openai",
@@ -165,6 +171,7 @@ async def test_text_generation():
             return False
     
     # Test real providers
+    llm_service = get_llm_service()
     for provider, model in providers_to_test:
         try:
             print(f"   Testing {provider} ({model})...")
@@ -190,6 +197,7 @@ async def test_chat_completion():
     ]
     
     try:
+        llm_service = get_llm_service()
         result = await llm_service.chat_completion(
             messages=messages,
             max_tokens=100

@@ -589,14 +589,13 @@ class ExecutionEngine:
         """
         while self.is_running:
             try:
-                # Usa o generator get_db corretamente
-                db_gen = get_db()
-                db = next(db_gen)
-
+                from synapse.database import get_db_session
+                
                 execution_id = None
                 user_id = None
 
-                try:
+                # Usa context manager para gerenciar a sessão
+                with get_db_session() as db:
                     # Busca próxima execução na fila
                     queue_item = (
                         db.query(ExecutionQueue)
@@ -625,30 +624,16 @@ class ExecutionEngine:
                         execution_id = queue_item.workflow_execution.execution_id
                         user_id = queue_item.workflow_execution.user_id
 
-                finally:
-                    # Garante que a sessão seja fechada
-                    try:
-                        next(db_gen, None)  # Finaliza o generator
-                    except StopIteration:
-                        pass
-
                 # Se encontrou uma execução para processar,
                 # inicia com nova sessão
                 if execution_id is not None and user_id is not None:
                     # Usa nova sessão para a execução
-                    db_gen_exec = get_db()
-                    db_exec = next(db_gen_exec)
-                    try:
+                    with get_db_session() as db_exec:
                         await self.start_execution(
                             db_exec,
                             execution_id,
                             user_id,
                         )
-                    finally:
-                        try:
-                            next(db_gen_exec, None)
-                        except StopIteration:
-                            pass
 
                 await asyncio.sleep(5)  # Verifica a fila a cada 5 segundos
 

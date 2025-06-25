@@ -9,8 +9,9 @@ import json
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_, or_, desc, asc, func, text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy import and_, or_, desc, asc, func, text, select
 from sqlalchemy.exc import IntegrityError
 
 from synapse.models.template import (
@@ -43,7 +44,7 @@ class TemplateService:
         
     async def create_template(
         self, 
-        db: Session, 
+        db: AsyncSession, 
         template_data: TemplateCreate, 
         author_id: int,
         workflow_id: Optional[int] = None
@@ -58,10 +59,10 @@ class TemplateService:
             # Valida se o workflow existe (se fornecido)
             original_workflow = None
             if workflow_id:
-                original_workflow = db.query(Workflow).filter(
+                original_workflow = await db.execute(select(Workflow)).filter(
                     Workflow.id == workflow_id,
                     Workflow.user_id == author_id
-                ).first()
+                ).scalar_one_or_none()
                 if not original_workflow:
                     raise ValueError("Workflow não encontrado ou não pertence ao usuário")
             
@@ -95,20 +96,20 @@ class TemplateService:
             )
             
             db.add(template)
-            db.commit()
-            db.refresh(template)
+            await db.commit()
+            await db.refresh(template)
             
             self.logger.info(f"✅ Template {template.id} criado com sucesso")
             return TemplateResponse.from_orm(template)
             
         except Exception as e:
             self.logger.error(f"❌ Erro ao criar template: {str(e)}")
-            db.rollback()
+            await db.rollback()
             raise
             
     async def update_template(
         self, 
-        db: Session, 
+        db: AsyncSession, 
         template_id: str, 
         template_data: TemplateUpdate, 
         user_id: int
@@ -117,10 +118,10 @@ class TemplateService:
         Atualiza um template existente
         """
         try:
-            template = db.query(WorkflowTemplate).filter(
+            template = await db.execute(select(WorkflowTemplate)).filter(
                 WorkflowTemplate.id == template_id,
                 WorkflowTemplate.author_id == user_id
-            ).first()
+            ).scalar_one_or_none()
             
             if not template:
                 return None
@@ -134,20 +135,20 @@ class TemplateService:
             # Atualiza timestamp
             template.updated_at = datetime.utcnow()
             
-            db.commit()
-            db.refresh(template)
+            await db.commit()
+            await db.refresh(template)
             
             self.logger.info(f"✅ Template {template_id} atualizado com sucesso")
             return TemplateResponse.from_orm(template)
             
         except Exception as e:
             self.logger.error(f"❌ Erro ao atualizar template {template_id}: {str(e)}")
-            db.rollback()
+            await db.rollback()
             raise
             
     async def publish_template(
         self, 
-        db: Session, 
+        db: AsyncSession, 
         template_id: str, 
         user_id: int
     ) -> bool:
@@ -155,10 +156,10 @@ class TemplateService:
         Publica um template (torna público)
         """
         try:
-            template = db.query(WorkflowTemplate).filter(
+            template = await db.execute(select(WorkflowTemplate)).filter(
                 WorkflowTemplate.id == template_id,
                 WorkflowTemplate.author_id == user_id
-            ).first()
+            ).scalar_one_or_none()
             
             if not template:
                 return False
@@ -171,19 +172,19 @@ class TemplateService:
             template.is_public = True
             template.published_at = datetime.utcnow()
             
-            db.commit()
+            await db.commit()
             
             self.logger.info(f"✅ Template {template_id} publicado com sucesso")
             return True
             
         except Exception as e:
             self.logger.error(f"❌ Erro ao publicar template {template_id}: {str(e)}")
-            db.rollback()
+            await db.rollback()
             raise
             
     async def get_template(
         self, 
-        db: Session, 
+        db: AsyncSession, 
         template_id: str, 
         user_id: Optional[int] = None,
         include_private: bool = False
@@ -192,7 +193,7 @@ class TemplateService:
         Obtém detalhes de um template
         """
         try:
-            query = db.query(WorkflowTemplate).options(
+            query = await db.execute(select(WorkflowTemplate)).options(
                 joinedload(WorkflowTemplate.author),
                 joinedload(WorkflowTemplate.reviews),
                 joinedload(WorkflowTemplate.favorites)
@@ -207,46 +208,46 @@ class TemplateService:
                     ),
                 )
 
-            template = query.first()
+            template = query.scalar_one_or_none()
 
             if not template:
                 return None
 
             # Incrementa contador de visualizações
             template.view_count += 1
-            db.commit()
+            await db.commit()
 
             # Verifica se o usuário favoritou
             is_favorited = False
             if user_id:
                 favorite = (
-                    db.query(TemplateFavorite)
+                    await db.execute(select(TemplateFavorite))
                     .filter(
                         TemplateFavorite.template_id == template.id,
                         TemplateFavorite.user_id == user_id,
                     )
-                    .first()
+                    .scalar_one_or_none()
                 )
                 is_favorited = favorite is not None
 
             # Calcula estatísticas recentes (últimos 30 dias)
             thirty_days_ago = datetime.utcnow() - timedelta(days=30)
             recent_downloads = (
-                db.query(TemplateDownload)
+                await db.execute(select(TemplateDownload))
                 .filter(
                     TemplateDownload.template_id == template.id,
                     TemplateDownload.downloaded_at >= thirty_days_ago,
                 )
-                .count()
+                .scalar()
             )
 
             recent_usage = (
-                db.query(TemplateUsage)
+                await db.execute(select(TemplateUsage))
                 .filter(
                     TemplateUsage.template_id == template.id,
                     TemplateUsage.used_at >= thirty_days_ago,
                 )
-                .count()
+                .scalar()
             )
 
             # Monta resposta detalhada
@@ -282,7 +283,7 @@ class TemplateService:
 
     async def search_templates(
         self,
-        db: Session,
+        db: AsyncSession,
         filters: TemplateFilter,
         user_id: int | None = None,
     ) -> TemplateListResponse:
@@ -290,7 +291,7 @@ class TemplateService:
         Busca templates com filtros avançados
         """
         try:
-            query = db.query(WorkflowTemplate).options(
+            query = await db.execute(select(WorkflowTemplate)).options(
                 joinedload(WorkflowTemplate.author),
             )
 
@@ -400,11 +401,11 @@ class TemplateService:
                 query = query.order_by(asc(order_col))
 
             # Contagem total
-            total = query.count()
+            total = query.scalar()
 
             # Paginação
             offset = (filters.page - 1) * filters.per_page
-            templates = query.offset(offset).limit(filters.per_page).all()
+            templates = query.offset(offset).limit(filters.per_page).scalars().all()
 
             # Calcula informações de paginação
             pages = (total + filters.per_page - 1) // filters.per_page
@@ -427,7 +428,7 @@ class TemplateService:
 
     async def download_template(
         self,
-        db: Session,
+        db: AsyncSession,
         template_id: str,
         user_id: int,
         download_type: str = "full",
@@ -437,12 +438,12 @@ class TemplateService:
         """
         try:
             template = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.id == template_id,
                     WorkflowTemplate.is_public == True,
                 )
-                .first()
+                .scalar_one_or_none()
             )
 
             if not template:
@@ -462,7 +463,7 @@ class TemplateService:
             template.download_count += 1
             template.last_used_at = datetime.utcnow()
 
-            db.commit()
+            await db.commit()
 
             self.logger.info(
                 f"✅ Download do template {template_id} registrado para usuário {user_id}"
@@ -471,12 +472,12 @@ class TemplateService:
 
         except Exception as e:
             self.logger.error(f"❌ Erro ao registrar download: {str(e)}")
-            db.rollback()
+            await db.rollback()
             raise
 
     async def install_template(
         self,
-        db: Session,
+        db: AsyncSession,
         install_data: TemplateInstall,
         user_id: int,
     ) -> TemplateInstallResponse:
@@ -485,12 +486,12 @@ class TemplateService:
         """
         try:
             template = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.id == install_data.template_id,
                     WorkflowTemplate.is_public == True,
                 )
-                .first()
+                .scalar_one_or_none()
             )
 
             if not template:
@@ -564,7 +565,7 @@ class TemplateService:
             template.usage_count += 1
             template.last_used_at = datetime.utcnow()
 
-            db.commit()
+            await db.commit()
 
             self.logger.info(
                 f"✅ Template {template.id} instalado como workflow {new_workflow.id}"
@@ -583,12 +584,12 @@ class TemplateService:
 
         except Exception as e:
             self.logger.error(f"❌ Erro ao instalar template: {str(e)}")
-            db.rollback()
+            await db.rollback()
             raise
 
     async def add_to_favorites(
         self,
-        db: Session,
+        db: AsyncSession,
         favorite_data: FavoriteCreate,
         user_id: int,
     ) -> FavoriteResponse | None:
@@ -598,12 +599,12 @@ class TemplateService:
         try:
             # Verifica se já está nos favoritos
             existing = (
-                db.query(TemplateFavorite)
+                await db.execute(select(TemplateFavorite))
                 .filter(
                     TemplateFavorite.template_id == favorite_data.template_id,
                     TemplateFavorite.user_id == user_id,
                 )
-                .first()
+                .scalar_one_or_none()
             )
 
             if existing:
@@ -611,12 +612,12 @@ class TemplateService:
 
             # Verifica se o template existe
             template = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.id == favorite_data.template_id,
                     WorkflowTemplate.is_public == True,
                 )
-                .first()
+                .scalar_one_or_none()
             )
 
             if not template:
@@ -629,8 +630,8 @@ class TemplateService:
             )
 
             db.add(favorite)
-            db.commit()
-            db.refresh(favorite)
+            await db.commit()
+            await db.refresh(favorite)
 
             # Monta resposta
             response_data = {
@@ -648,12 +649,12 @@ class TemplateService:
 
         except Exception as e:
             self.logger.error(f"❌ Erro ao adicionar favorito: {str(e)}")
-            db.rollback()
+            await db.rollback()
             raise
 
     async def get_user_favorites(
         self,
-        db: Session,
+        db: AsyncSession,
         user_id: int,
         page: int = 1,
         per_page: int = 20,
@@ -665,7 +666,7 @@ class TemplateService:
             offset = (page - 1) * per_page
 
             favorites = (
-                db.query(TemplateFavorite)
+                await db.execute(select(TemplateFavorite))
                 .options(
                     joinedload(TemplateFavorite.template),
                 )
@@ -677,7 +678,7 @@ class TemplateService:
                 )
                 .offset(offset)
                 .limit(per_page)
-                .all()
+                .scalars().all()
             )
 
             return [
@@ -698,43 +699,43 @@ class TemplateService:
             self.logger.error(f"❌ Erro ao obter favoritos: {str(e)}")
             raise
 
-    async def get_template_stats(self, db: Session) -> TemplateStats:
+    async def get_template_stats(self, db: AsyncSession) -> TemplateStats:
         """
         Obtém estatísticas gerais de templates
         """
         try:
             # Contadores básicos
-            total = db.query(WorkflowTemplate).count()
+            total = await db.execute(select(WorkflowTemplate)).scalar()
             published = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.status == TemplateStatus.PUBLISHED.value,
                 )
-                .count()
+                .scalar()
             )
             featured = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.is_featured == True,
                 )
-                .count()
+                .scalar()
             )
             verified = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.is_verified == True,
                 )
-                .count()
+                .scalar()
             )
             free = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.license_type == TemplateLicense.FREE.value,
                 )
-                .count()
+                .scalar()
             )
             premium = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.license_type.in_(
                         [
@@ -743,36 +744,36 @@ class TemplateService:
                         ]
                     ),
                 )
-                .count()
+                .scalar()
             )
 
             # Estatísticas agregadas
             total_downloads = (
-                db.query(func.sum(WorkflowTemplate.download_count)).scalar() or 0
+                await db.execute(select(func.sum(WorkflowTemplate.download_count))).scalar() or 0
             )
-            total_reviews = db.query(TemplateReview).count()
+            total_reviews = await db.execute(select(TemplateReview)).scalar()
             avg_rating = (
-                db.query(func.avg(WorkflowTemplate.rating_average)).scalar() or 0.0
+                await db.execute(select(func.avg(WorkflowTemplate.rating_average))).scalar() or 0.0
             )
 
             # Distribuição por categorias
             categories = (
-                db.query(
+                await db.execute(select(
                     WorkflowTemplate.category,
-                    func.count(WorkflowTemplate.id).label("count"),
+                    func.count(WorkflowTemplate.id)).label("count"),
                 )
                 .filter(
                     WorkflowTemplate.status == TemplateStatus.PUBLISHED.value,
                 )
                 .group_by(WorkflowTemplate.category)
-                .all()
+                .scalars().all()
             )
 
             categories_distribution = {cat[0]: cat[1] for cat in categories}
 
             # Top templates (mais baixados)
             top_templates = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.is_public == True,
                 )
@@ -780,12 +781,12 @@ class TemplateService:
                     desc(WorkflowTemplate.download_count),
                 )
                 .limit(10)
-                .all()
+                .scalars().all()
             )
 
             # Templates recentes
             recent_templates = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.is_public == True,
                 )
@@ -793,7 +794,7 @@ class TemplateService:
                     desc(WorkflowTemplate.created_at),
                 )
                 .limit(10)
-                .all()
+                .scalars().all()
             )
 
             return TemplateStats(
@@ -818,32 +819,32 @@ class TemplateService:
             raise
 
     async def get_user_template_stats(
-        self, db: Session, user_id: int
+        self, db: AsyncSession, user_id: int
     ) -> UserTemplateStats:
         """
         Obtém estatísticas de templates do usuário
         """
         try:
             created = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.author_id == user_id,
                 )
-                .count()
+                .scalar()
             )
 
             published = (
-                db.query(WorkflowTemplate)
+                await db.execute(select(WorkflowTemplate))
                 .filter(
                     WorkflowTemplate.author_id == user_id,
                     WorkflowTemplate.status == TemplateStatus.PUBLISHED.value,
                 )
-                .count()
+                .scalar()
             )
 
             # Downloads dos templates do usuário
             total_downloads = (
-                db.query(func.sum(WorkflowTemplate.download_count))
+                await db.execute(select(func.sum(WorkflowTemplate.download_count)))
                 .filter(
                     WorkflowTemplate.author_id == user_id,
                 )
@@ -853,17 +854,17 @@ class TemplateService:
 
             # Reviews dos templates do usuário
             total_reviews = (
-                db.query(TemplateReview)
+                await db.execute(select(TemplateReview))
                 .join(WorkflowTemplate)
                 .filter(
                     WorkflowTemplate.author_id == user_id,
                 )
-                .count()
+                .scalar()
             )
 
             # Rating médio
             avg_rating = (
-                db.query(func.avg(WorkflowTemplate.rating_average))
+                await db.execute(select(func.avg(WorkflowTemplate.rating_average)))
                 .filter(
                     WorkflowTemplate.author_id == user_id,
                 )
@@ -873,28 +874,28 @@ class TemplateService:
 
             # Favoritos do usuário
             favorites = (
-                db.query(TemplateFavorite)
+                await db.execute(select(TemplateFavorite))
                 .filter(
                     TemplateFavorite.user_id == user_id,
                 )
-                .count()
+                .scalar()
             )
 
             # Coleções do usuário
             collections = (
-                db.query(TemplateCollection)
+                await db.execute(select(TemplateCollection))
                 .filter(
                     TemplateCollection.creator_id == user_id,
                 )
-                .count()
+                .scalar()
             )
 
             # Ganhos (templates premium)
             earnings = (
-                db.query(
+                await db.execute(select(
                     func.sum(
                         WorkflowTemplate.price * WorkflowTemplate.download_count,
-                    ),
+                    )),
                 )
                 .filter(
                     WorkflowTemplate.author_id == user_id,
@@ -923,3 +924,112 @@ class TemplateService:
         except Exception as e:
             self.logger.error(f"❌ Erro ao obter estatísticas do usuário: {str(e)}")
             raise
+
+    async def count_authors(self, db: AsyncSession) -> int:
+        """
+        Conta o número total de autores únicos
+        """
+        try:
+            result = await db.execute(
+                select(func.count(func.distinct(WorkflowTemplate.author_id)))
+                .where(WorkflowTemplate.status == TemplateStatus.PUBLISHED.value)
+            )
+            return result.scalar() or 0
+        except Exception as e:
+            self.logger.error(f"❌ Erro ao contar autores: {str(e)}")
+            return 0
+    
+    async def get_trending_templates(self, db: AsyncSession, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Obtém templates em tendência baseado em downloads recentes
+        """
+        try:
+            # Últimos 7 dias
+            recent_date = datetime.utcnow() - timedelta(days=7)
+            
+            result = await db.execute(
+                select(WorkflowTemplate)
+                .where(
+                    and_(
+                        WorkflowTemplate.status == TemplateStatus.PUBLISHED.value,
+                        WorkflowTemplate.created_at >= recent_date
+                    )
+                )
+                .order_by(desc(WorkflowTemplate.downloads), desc(WorkflowTemplate.rating))
+                .limit(limit)
+            )
+            templates = result.scalars().all()
+            
+            return [
+                {
+                    "id": template.id,
+                    "name": template.name,
+                    "downloads": template.downloads,
+                    "rating": template.rating
+                }
+                for template in templates
+            ]
+        except Exception as e:
+            self.logger.error(f"❌ Erro ao obter templates em tendência: {str(e)}")
+            return []
+    
+    async def get_top_categories(self, db: AsyncSession, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Obtém as principais categorias por número de templates
+        """
+        try:
+            result = await db.execute(
+                select(
+                    WorkflowTemplate.category,
+                    func.count(WorkflowTemplate.id).label('count')
+                )
+                .where(WorkflowTemplate.status == TemplateStatus.PUBLISHED.value)
+                .group_by(WorkflowTemplate.category)
+                .order_by(desc('count'))
+                .limit(limit)
+            )
+            rows = result.all()
+            
+            return [
+                {
+                    "category": row.category,
+                    "count": row.count
+                }
+                for row in rows
+            ]
+        except Exception as e:
+            self.logger.error(f"❌ Erro ao obter principais categorias: {str(e)}")
+            return []
+    
+    async def get_top_authors(self, db: AsyncSession, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Obtém os principais autores por número de templates publicados
+        """
+        try:
+            result = await db.execute(
+                select(
+                    WorkflowTemplate.author_id,
+                    User.username,
+                    func.count(WorkflowTemplate.id).label('template_count'),
+                    func.sum(WorkflowTemplate.downloads).label('total_downloads')
+                )
+                .join(User, WorkflowTemplate.author_id == User.id)
+                .where(WorkflowTemplate.status == TemplateStatus.PUBLISHED.value)
+                .group_by(WorkflowTemplate.author_id, User.username)
+                .order_by(desc('template_count'))
+                .limit(limit)
+            )
+            rows = result.all()
+            
+            return [
+                {
+                    "author_id": row.author_id,
+                    "username": row.username,
+                    "template_count": row.template_count,
+                    "total_downloads": row.total_downloads or 0
+                }
+                for row in rows
+            ]
+        except Exception as e:
+            self.logger.error(f"❌ Erro ao obter principais autores: {str(e)}")
+            return []

@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, status, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from synapse.database import get_db
+from synapse.database import get_async_db
 from synapse.api.deps import get_current_user
 from synapse.models.user import User
 
@@ -74,7 +74,7 @@ def is_memory_bank_available() -> bool:
 @router.post("/memories", response_model=Dict[str, Any])
 async def add_memory(
     data: Dict[str, Any],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -144,7 +144,7 @@ async def add_memory(
 @router.post("/search", response_model=List[Dict[str, Any]])
 async def search_memories(
     data: Dict[str, Any],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user)
 ):
     """

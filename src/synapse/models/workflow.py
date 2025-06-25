@@ -31,6 +31,7 @@ class WorkflowStatus(enum.Enum):
 
 class Workflow(Base):
     __tablename__ = "workflows"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
@@ -38,7 +39,7 @@ class Workflow(Base):
     definition = Column(JSONB, nullable=False)
     is_active = Column(Boolean, nullable=False, server_default=text("true"))
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=True, index=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=True, index=True)
     is_public = Column(Boolean, default=False)
     category = Column(String(100))
     tags = Column(JSON, default=list)
@@ -146,13 +147,14 @@ class Workflow(Base):
 
 class WorkflowNode(Base):
     __tablename__ = "workflow_nodes"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     workflow_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id"), nullable=False, index=True
     )
     node_id = Column(
-        UUID(as_uuid=True), ForeignKey("nodes.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.nodes.id"), nullable=False, index=True
     )
     instance_name = Column(String(200))
     position_x = Column(Integer, nullable=False)
@@ -180,16 +182,17 @@ class WorkflowNode(Base):
 
 class WorkflowConnection(Base):
     __tablename__ = "workflow_connections"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     workflow_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id"), nullable=False, index=True
     )
     source_node_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflow_nodes.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_nodes.id"), nullable=False
     )
     target_node_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflow_nodes.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_nodes.id"), nullable=False
     )
     source_port = Column(String(100))
     target_port = Column(String(100))

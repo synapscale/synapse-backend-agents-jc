@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, validator
 
-from synapse.core.config.constants import FILE_CATEGORIES
+from synapse.constants import FILE_CATEGORIES
 
 
 class FileBase(BaseModel):
@@ -35,9 +35,9 @@ class FileBase(BaseModel):
         Raises:
             ValueError: Se a categoria não for permitida
         """
-        if v not in FILE_CATEGORIES:
+        if v not in FILE_CATEGORIES.keys():
             raise ValueError(
-                f"Categoria inválida. Deve ser uma das: {', '.join(FILE_CATEGORIES)}",
+                f"Categoria inválida. Deve ser uma das: {', '.join(FILE_CATEGORIES.keys())}",
             )
         return v
 

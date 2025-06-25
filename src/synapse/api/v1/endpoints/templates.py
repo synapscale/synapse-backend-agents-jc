@@ -6,11 +6,11 @@ Sistema completo de marketplace de templates
 
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional, Dict, Any
 import uuid
 
-from synapse.database import get_db
+from synapse.database import get_async_db
 from synapse.models.user import User
 from synapse.services.template_service import TemplateService
 from synapse.schemas.template import (
@@ -44,7 +44,7 @@ template_service = TemplateService()
 async def create_template(
     template_data: TemplateCreate,
     workflow_id: Optional[int] = Query(None, description="ID do workflow base"),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> TemplateResponse:
     """
@@ -111,8 +111,8 @@ async def search_templates(
     per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
     sort_by: str = Query("created_at", description="Campo de ordenação"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Ordem"),
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user),
 ) -> TemplateListResponse:
     """
     Busca templates no marketplace com filtros avançados.
@@ -183,7 +183,7 @@ async def search_templates(
         result = await template_service.search_templates(
             db=db,
             filters=filters,
-            user_id=current_user.id if current_user else None,
+            user_id=current_user.id,
         )
         
         logger.info(f"Busca de templates concluída - {result.total} templates encontrados, página {page}")
@@ -197,7 +197,8 @@ async def search_templates(
 
 @router.get("/stats", response_model=TemplateStats, summary="Estatísticas de templates", tags=["marketplace"])
 async def get_template_stats(
-    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
 ) -> TemplateStats:
     """
     Obtém estatísticas gerais de templates do marketplace.
@@ -226,7 +227,8 @@ async def get_template_stats(
 
 @router.get("/marketplace", response_model=MarketplaceStats, summary="Estatísticas do marketplace", tags=["marketplace"])
 async def get_marketplace_stats(
-    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
 ) -> MarketplaceStats:
     """
     Obtém estatísticas específicas do marketplace de templates.
@@ -271,7 +273,7 @@ async def get_marketplace_stats(
 
 @router.get("/my-stats", response_model=UserTemplateStats, summary="Minhas estatísticas", tags=["marketplace"])
 async def get_user_template_stats(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> UserTemplateStats:
     """
@@ -306,8 +308,8 @@ async def get_user_template_stats(
 @router.get("/{template_id}", response_model=TemplateDetailResponse, summary="Obter template", tags=["marketplace"])
 async def get_template(
     template_id: str,
-    db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user),
 ) -> TemplateDetailResponse:
     """
     Obtém detalhes completos de um template específico.
@@ -355,7 +357,7 @@ async def get_template(
 async def update_template(
     template_id: str,
     template_data: TemplateUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> TemplateResponse:
     """
@@ -410,7 +412,7 @@ async def update_template(
 @router.post("/{template_id}/publish", response_model=Dict[str, Any], summary="Publicar template", tags=["marketplace"])
 async def publish_template(
     template_id: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
@@ -468,7 +470,7 @@ async def publish_template(
 async def download_template(
     template_id: str,
     download_type: str = Query("full", pattern="^(full|preview|demo)$", description="Tipo de download"),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
@@ -520,7 +522,7 @@ async def download_template(
 @router.post("/install", response_model=TemplateInstallResponse, summary="Instalar template", tags=["marketplace"])
 async def install_template(
     install_data: TemplateInstall,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> TemplateInstallResponse:
     """
@@ -572,7 +574,7 @@ async def install_template(
 @router.post("/favorites", response_model=FavoriteResponse, status_code=status.HTTP_201_CREATED, summary="Adicionar favorito", tags=["marketplace"])
 async def add_to_favorites(
     favorite_data: FavoriteCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> FavoriteResponse:
     """
@@ -622,7 +624,7 @@ async def add_to_favorites(
 async def get_my_favorites(
     page: int = Query(1, ge=1, description="Página"),
     per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> List[FavoriteResponse]:
     """
@@ -664,7 +666,7 @@ async def get_my_favorites(
 async def create_review(
     template_id: str,
     review_data: ReviewCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
@@ -726,7 +728,8 @@ async def get_template_reviews(
     template_id: str,
     page: int = Query(1, ge=1, description="Página"),
     per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
 ) -> List[ReviewResponse]:
     """
     Obtém avaliações de um template específico.
@@ -775,7 +778,7 @@ async def get_template_reviews(
 @router.post("/collections", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED, summary="Criar coleção", tags=["marketplace"])
 async def create_collection(
     collection_data: CollectionCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
@@ -830,7 +833,8 @@ async def create_collection(
 async def get_collections(
     page: int = Query(1, ge=1, description="Página"),
     per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_db),
 ) -> List[CollectionResponse]:
     """
     Obtém lista de coleções públicas de templates.
@@ -866,7 +870,7 @@ async def get_collections(
 
 
 @router.delete("/{template_id}", summary="Deletar template", tags=["marketplace"])
-def delete_template(template_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def delete_template(template_id: str, db: AsyncSession = Depends(get_async_db), current_user: User = Depends(get_current_user)):
     try:
         template_uuid = uuid.UUID(template_id)
     except (ValueError, TypeError):

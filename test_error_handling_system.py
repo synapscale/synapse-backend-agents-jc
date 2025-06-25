@@ -29,10 +29,15 @@ from synapse.exceptions import (
     ValidationError,
     WorkspaceError,
 )
-from synapse.core.logging_system import get_logger, get_error_stats
+from synapse.logger_config import get_logger, get_error_stats
 from synapse.error_handlers import create_error_response, synapse_exception_handler
 from synapse.middlewares.error_middleware import ErrorInterceptionMiddleware
 
+
+class MockClient:
+    """Mock client para testes."""
+    def __init__(self):
+        self.host = "127.0.0.1"
 
 class MockRequest:
     """Mock request para testes."""
@@ -41,6 +46,9 @@ class MockRequest:
         self.url = MockURL(url)
         self.method = method
         self.state = MockState()
+        self.query_params = {}  # Mock query params
+        self.headers = {}  # Mock headers
+        self.client = MockClient()  # Mock client
 
 
 class MockURL:
@@ -48,6 +56,10 @@ class MockURL:
     
     def __init__(self, url):
         self._url = url
+        # Extrair path da URL
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        self.path = parsed.path if parsed.path else url
     
     def __str__(self):
         return self._url
@@ -95,15 +107,17 @@ async def test_error_response_creation():
         status_code=404,
         error_type="NotFoundError",
         message="Recurso não encontrado",
-        details={"resource": "user", "id": "123"},
-        request_id="test-request-123"
+        details={"resource": "user", "id": "123"}
     )
     
     assert response.status_code == 404
     content = response.body.decode()
     assert "NotFoundError" in content
     assert "Recurso não encontrado" in content
-    assert "test-request-123" in content
+    # request_id é gerado automaticamente pela função
+    import json
+    response_data = json.loads(content)
+    assert "request_id" in response_data.get("error", {})
     
     print("  ✅ Resposta de erro criada com sucesso")
     print("✅ Criação de respostas de erro funciona corretamente!")
@@ -123,7 +137,10 @@ async def test_exception_handler():
     content = response.body.decode()
     assert "NotFoundError" in content
     assert "Recurso de teste não encontrado" in content
-    assert "test-request-123" in content
+    # request_id é gerado automaticamente pelo handler
+    import json
+    response_data = json.loads(content)
+    assert "request_id" in response_data.get("error", {})
     
     print("  ✅ Handler de exceções funcionou corretamente")
     print("✅ Handler de exceções globais funciona corretamente!")
@@ -136,7 +153,7 @@ async def test_structured_logging():
     
     logger = get_logger("test_module")
     
-    # Testar diferentes níveis de log
+    # Testar diferentes níveis de log com sistema unificado
     logger.logger.info("Teste de log INFO", extra={
         "request_id": "test-123",
         "user_id": "user-456",
@@ -158,7 +175,10 @@ async def test_structured_logging():
     try:
         raise ValueError("Erro de teste para logging")
     except Exception as e:
-        logger.log_error(e, context={"test_context": "error_logging"})
+        logger.logger.error(f"Exception caught: {e}", extra={
+            "error_type": type(e).__name__,
+            "test_context": "error_logging"
+        })
     
     print("  ✅ Logging estruturado funcionou sem erros")
     print("✅ Sistema de logging estruturado funciona corretamente!")
@@ -177,13 +197,13 @@ async def test_error_tracking():
         try:
             raise DatabaseError(f"Erro de teste {i}")
         except Exception as e:
-            logger.log_error(e)
+            logger.logger.error(f"Database error: {e}", extra={"error_type": "DatabaseError"})
     
     for i in range(2):
         try:
             raise ValidationError(f"Erro de validação {i}")
         except Exception as e:
-            logger.log_error(e)
+            logger.logger.error(f"Validation error: {e}", extra={"error_type": "ValidationError"})
     
     # Obter estatísticas de erro
     stats = get_error_stats()

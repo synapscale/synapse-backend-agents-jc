@@ -12,7 +12,7 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from synapse.database import get_db
+from synapse.database import get_async_db
 from synapse.models.user import User
 from synapse.schemas.user import UserProfileUpdate, UserProfileResponse
 from synapse.core.services import BaseService, BaseRepository, get_service
@@ -33,7 +33,7 @@ class UserService(BaseService[User, dict, UserProfileUpdate]):
     - Async operations
     """
     
-    def __init__(self, db: AsyncSession = Depends(get_db)):
+    def __init__(self, db: AsyncSession = Depends(get_async_db)):
         """
         Initialize User Service.
         
@@ -331,7 +331,7 @@ class UserService(BaseService[User, dict, UserProfileUpdate]):
 
 
 # Dependency injection function
-async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
+async def get_user_service(db: AsyncSession = Depends(get_async_db)) -> UserService:
     """
     Dependency injection function for UserService.
     

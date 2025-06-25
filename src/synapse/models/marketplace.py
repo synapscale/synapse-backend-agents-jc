@@ -33,6 +33,7 @@ class MarketplaceComponent(Base):
     """
 
     __tablename__ = "marketplace_components"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -171,10 +172,11 @@ class ComponentRating(Base):
     """
 
     __tablename__ = "component_ratings"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
-        UUID(as_uuid=True), ForeignKey("marketplace_components.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.marketplace_components.id"), nullable=False, index=True
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
 
@@ -226,10 +228,11 @@ class ComponentDownload(Base):
     """
 
     __tablename__ = "component_downloads"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
-        UUID(as_uuid=True), ForeignKey("marketplace_components.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.marketplace_components.id"), nullable=False, index=True
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
 
@@ -268,10 +271,11 @@ class ComponentPurchase(Base):
     """
 
     __tablename__ = "component_purchases"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
-        UUID(as_uuid=True), ForeignKey("marketplace_components.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.marketplace_components.id"), nullable=False, index=True
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
 
@@ -313,10 +317,11 @@ class ComponentVersion(Base):
     """
 
     __tablename__ = "component_versions"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
-        UUID(as_uuid=True), ForeignKey("marketplace_components.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.marketplace_components.id"), nullable=False, index=True
     )
 
     # Versão

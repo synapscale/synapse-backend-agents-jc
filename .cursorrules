@@ -12,10 +12,34 @@ Você está trabalhando no **SynapScale Backend**, uma plataforma empresarial de
 - **Ferramentas**: Taskmaster (task management), Cursor MCP, sistema de tags, rate limiting
 - **Infraestrutura**: Docker, Render, S3/GCS storage, Sentry monitoring
 
+## ⚠️ REGRA CRÍTICA - ARQUIVO PRINCIPAL DA APLICAÇÃO
+
+### **🚨 ÚNICA FONTE DE VERDADE: `src/synapse/main.py`**
+
+**CONTEXTO**: Este projeto teve conflitos entre `app.py` e `main.py` causando duplicação de código e confusão. Foi estabelecido `main.py` como arquivo principal único.
+
+**❌ PROIBIDO:**
+- Criar `src/synapse/app.py` ou recriar esse arquivo
+- Criar outros arquivos que instanciem o FastAPI app (ex: `server.py`, `application.py`)
+- Duplicar as funções de inicialização do FastAPI que estão em `main.py`
+- Modificar referências de deploy para apontar para qualquer arquivo que não seja `main.py`
+
+**✅ OBRIGATÓRIO:**
+- TODA inicialização do FastAPI deve estar APENAS em `src/synapse/main.py`
+- Deploy, scripts e documentação devem referenciar APENAS `src.synapse.main:app`
+- Qualquer alteração na aplicação principal deve ser feita SOMENTE em `main.py`
+
+**🎯 VERIFICAÇÃO PRÉ-COMMIT:**
+- [ ] `src/synapse/app.py` não existe
+- [ ] Referências de deploy apontam para `src.synapse.main:app`
+- [ ] Não há duplicação de instância FastAPI em outros arquivos
+
+---
+
 ## 🎯 PRINCÍPIOS FUNDAMENTAIS
 
 ### 1. **Configuração Centralizada**
-- SEMPRE use `settings` de `synapse.core.config_new` para configurações
+- SEMPRE use `settings` de `synapse.core.config` para configurações
 - NUNCA hardcode valores - use variáveis de ambiente
 - Mantenha compatibilidade com o sistema de configuração existente
 
@@ -158,6 +182,58 @@ async def create_something(
         HTTPException: Quando ocorre erro específico
     """
 ```
+
+### **🚨 REGRA CRÍTICA - AUTENTICAÇÃO OBRIGATÓRIA**
+
+**CONTEXTO**: Como todo SaaS profissional, pouquíssimos endpoints funcionam sem autenticação. A grande maioria requer usuário logado.
+
+**✅ ENDPOINTS PÚBLICOS PERMITIDOS (Exceções muito limitadas):**
+```python
+# ✅ Autenticação & Configuração do SDK
+POST /auth/login          # Inicia sessão com credenciais
+POST /auth/signup         # Cria nova conta de usuário  
+POST /auth/refresh        # Gera novo token a partir do refresh
+POST /auth/forgot-password # Recuperação de senha
+POST /auth/reset-password  # Reset de senha com token
+
+# ✅ Status & Configuração Pública
+GET  /                    # Root endpoint
+GET  /health              # Health check básico
+GET  /api/v1/health       # Health check da API
+GET  /info                # Informações da API
+GET  /public/config       # Configs mínimas da API (chaves públicas, limites, branding)
+```
+
+**❌ TODOS OS OUTROS ENDPOINTS REQUEREM AUTENTICAÇÃO:**
+```python
+# ❌ PROIBIDO: Endpoint sem autenticação (exceto os listados acima)
+@router.get("/some-endpoint")
+async def endpoint_without_auth(db: Session = Depends(get_db)):
+    pass
+
+# ✅ OBRIGATÓRIO: Sempre incluir current_user dependency
+@router.get("/some-endpoint")
+async def endpoint_with_auth(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ✅ OBRIGATÓRIO
+):
+    pass
+```
+
+**🔒 PROTEÇÕES ADICIONAIS:**
+- Mesmo endpoints "públicos" têm rate limiting agressivo
+- Endpoints de auth podem ter reCAPTCHA ou signatures temporárias
+- Logs de auditoria para todos os acessos
+- Rate limiting específico por IP para endpoints públicos
+
+**⚠️ VERIFICAÇÃO PRÉ-COMMIT:**
+- [ ] Novo endpoint tem `current_user: User = Depends(get_current_user)`?
+- [ ] Endpoint está na lista de exceções públicas aprovadas?
+- [ ] Rate limiting configurado adequadamente?
+- [ ] Logs de auditoria implementados?
+
+**🎯 REGRA DE OURO:**
+> "Se não está na lista de exceções públicas, DEVE ter autenticação obrigatória."
 
 ### **Models (SQLAlchemy 2.0+)**
 ```python
@@ -1145,57 +1221,154 @@ async def upload_multiple_files(
     }
 ```
 
-## 📊 LOGGING & MONITORAMENTO AVANÇADO
+## 📊 SISTEMA DE LOGGING UNIFICADO - REGRAS CRÍTICAS
 
-### **Logging Estruturado**
+### **🚨 ÚNICA FONTE DE VERDADE: `src/synapse/logger_config.py`**
+
+**CONTEXTO**: O SynapScale possui um sistema de logging unificado que integra as melhores funcionalidades de logging estruturado, mantendo compatibilidade total com código existente.
+
+**❌ ARQUIVOS REMOVIDOS (NUNCA RECRIAR):**
+- `src/synapse/core/logging_system.py` - DELETADO (era sistema avançado órfão)
+- `src/synapse/middlewares/logging.py` - DELETADO (funcionalidade duplicada)
+
+**✅ ÚNICO ARQUIVO VÁLIDO:**
+- `src/synapse/logger_config.py` - Sistema unificado principal
+
+### **Importação Obrigatória**
 ```python
-# ✅ Logger configurado com contexto
-import logging
-import structlog
+# ✅ SEMPRE use esta importação única
+from synapse.logger_config import get_logger, get_error_stats
+
+# ✅ Instanciar logger
+logger = get_logger(__name__)  # Retorna UnifiedLogger com todas as funcionalidades
+
+# ❌ NUNCA use estas importações (arquivos deletados)
+from synapse.core.logging_system import get_logger  # ❌ PROIBIDO
+from synapse.middlewares.logging import LoggingMiddleware  # ❌ PROIBIDO
+```
+
+### **Sistema Unificado - Funcionalidades Integradas**
+
+**🔧 CARACTERÍSTICAS TÉCNICAS:**
+- **UnifiedLogger**: Combina funcionalidades básicas + avançadas
+- **ErrorTracker**: Rastreamento automático de erros com estatísticas
+- **UnifiedJSONFormatter**: Formatação JSON estruturada para produção
+- **Handlers Rotativos**: 10MB principal, 5MB erros (automático em produção)
+- **Compatibilidade Total**: Interface `get_logger()` inalterada
+
+### **Padrões de Uso Corretos**
+
+```python
+# ✅ Logging básico (interface compatível)
 from synapse.logger_config import get_logger
 
 logger = get_logger(__name__)
 
-# ✅ Logging com contexto estruturado
-logger.info(
-    "User action performed",
-    user_id=user.id,
-    workspace_id=workspace.id,
-    action="create_workflow",
-    execution_time=0.245,
-    ip_address=request.client.host,
-    user_agent=request.headers.get("user-agent")
-)
+# Funciona exatamente como antes
+logger.logger.info("Operação realizada com sucesso")
+logger.logger.error("Erro encontrado", extra={"user_id": 123})
 
-# ✅ Log de erro com stack trace
+# ✅ Logging estruturado avançado (JSON automático em produção)
+logger.logger.info("User action performed", extra={
+    "user_id": user.id,
+    "workspace_id": workspace.id,
+    "action": "create_workflow",
+    "execution_time": 0.245,
+    "ip_address": request.client.host,
+    "endpoint_category": "workflows"
+})
+
+# ✅ Logging de erro com rastreamento automático
 try:
     result = await complex_operation()
 except Exception as e:
-    logger.error(
-        "Operation failed",
-        user_id=user.id,
-        operation="complex_operation",
-        error=str(e),
-        error_type=type(e).__name__,
-        traceback=traceback.format_exc()
-    )
+    logger.logger.error("Operation failed", extra={
+        "user_id": user.id,
+        "operation": "complex_operation",
+        "error_type": type(e).__name__,
+        "error_count": 1,
+        "url": "/api/v1/operation",
+        "method": "POST"
+    })
     raise
 
-# ✅ Logging de performance
-@contextmanager
+# ✅ Acessar estatísticas de erro
+from synapse.logger_config import get_error_stats
+
+stats = get_error_stats()
+# Retorna: uptime, total_errors, error_rate, error_counts_by_type, etc.
+```
+
+### **Context Fields Suportados**
+
+O sistema reconhece automaticamente estes campos no `extra`:
+```python
+context_fields = [
+    "request_id",        # ID único da requisição
+    "user_id",          # ID do usuário
+    "endpoint_category", # Categoria do endpoint (workflows, llm, etc.)
+    "url",              # URL da requisição
+    "method",           # Método HTTP
+    "status_code",      # Código de status HTTP
+    "process_time",     # Tempo de processamento
+    "error_type",       # Tipo do erro (ValidationError, DatabaseError)
+    "error_count"       # Contador de erros
+]
+
+# ✅ Exemplo completo
+logger.logger.warning("Rate limit approached", extra={
+    "request_id": "req-123",
+    "user_id": user.id,
+    "endpoint_category": "llm",
+    "url": "/api/v1/llm/generate",
+    "method": "POST",
+    "error_type": "RateLimitWarning",
+    "remaining_requests": 5
+})
+```
+
+### **Ambientes e Formatação**
+
+```python
+# 🏗️ DESENVOLVIMENTO: Formato legível
+# 2024-01-15 10:30:00,123 - INFO - synapse.api.endpoints - User action performed
+
+# 🚀 PRODUÇÃO: JSON estruturado automático
+{
+    "timestamp": "2024-01-15T10:30:00.123Z",
+    "level": "INFO",
+    "logger": "synapse.api.endpoints",
+    "message": "User action performed",
+    "module": "endpoints",
+    "function": "create_workflow",
+    "line": 45,
+    "user_id": 123,
+    "workspace_id": 456,
+    "action": "create_workflow",
+    "execution_time": 0.245
+}
+```
+
+### **Performance Logging Pattern**
+
+```python
+# ✅ Context manager para performance
+import time
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
 async def log_performance(operation: str, user_id: int = None):
     start_time = time.time()
     try:
         yield
     finally:
         duration = time.time() - start_time
-        logger.info(
-            "Performance metric",
-            operation=operation,
-            duration=duration,
-            user_id=user_id,
-            slow=duration > 1.0  # Flag para operações lentas
-        )
+        logger.logger.info("Performance metric", extra={
+            "operation": operation,
+            "duration": duration,
+            "user_id": user_id,
+            "slow": duration > 1.0  # Flag para operações lentas
+        })
 
 # ✅ Uso do context manager
 async def slow_operation():
@@ -1203,10 +1376,835 @@ async def slow_operation():
         await run_migration()
 ```
 
-### **Métricas**
-- Use middleware de métricas para endpoints importantes
-- Monitor performance de queries lentas
-- Rastrear uso de LLM por usuário
+### **Error Tracking Automático**
+
+```python
+# ✅ O ErrorTracker funciona automaticamente
+# Cada erro logado é automaticamente rastreado
+
+# Exemplo: Endpoint com erro
+@router.post("/api/v1/workflows")
+async def create_workflow(request: CreateWorkflowRequest):
+    try:
+        # ... lógica ...
+        pass
+    except ValidationError as e:
+        # ✅ Erro é automaticamente rastreado pelo sistema
+        logger.logger.error("Validation failed", extra={
+            "error_type": "ValidationError",
+            "endpoint_category": "workflows",
+            "url": "/api/v1/workflows",
+            "user_id": request.user_id
+        })
+        raise HTTPException(status_code=400, detail=str(e))
+
+# ✅ Acessar estatísticas
+stats = get_error_stats()
+print(f"Taxa de erro: {stats['error_rate']:.2f} erros/segundo")
+print(f"Total de erros: {stats['total_errors']}")
+print(f"Erros por tipo: {stats['error_counts_by_type']}")
+```
+
+### **Handlers de Arquivo (Produção)**
+
+```python
+# ✅ Configuração automática em produção
+# - logs/synapse.log (10MB, 5 rotações)
+# - logs/synapse_errors.log (5MB, 3 rotações)
+
+# Ativação manual em desenvolvimento:
+# export ENABLE_FILE_LOGGING=true
+
+# ✅ Estrutura de logs
+logs/
+├── synapse.log              # Logs principais
+├── synapse.log.1           # Rotação 1
+├── synapse.log.2           # Rotação 2
+├── synapse_errors.log      # Apenas erros (ERROR+)
+└── synapse_errors.log.1    # Rotação de erros
+```
+
+### **Middleware Integration**
+
+```python
+# ✅ Integração com middleware de requisições
+from synapse.logger_config import RequestContextFilter
+
+# O sistema automaticamente captura:
+# - request_id de headers X-Request-ID
+# - user_id de token JWT
+# - timing de requisições
+# - status codes
+# - URLs e métodos HTTP
+
+# ✅ Exemplo de log automático de middleware
+# INFO: Request completed {"request_id": "req-123", "user_id": 456, "method": "POST", 
+#       "url": "/api/v1/workflows", "status_code": 201, "process_time": 0.245}
+```
+
+### **Regras de Migração (Para Desenvolvedores)**
+
+```python
+# ✅ ANTES (código antigo compatível)
+from synapse.logger_config import get_logger
+logger = get_logger("my_module")
+logger.logger.info("Message")
+
+# ✅ DEPOIS (mesmo código, funcionalidades extras automáticas)
+from synapse.logger_config import get_logger
+logger = get_logger("my_module")  # Agora retorna UnifiedLogger
+logger.logger.info("Message", extra={"user_id": 123})  # JSON em produção
+
+# ❌ NUNCA FAZER
+from synapse.core.logging_system import get_logger  # Arquivo deletado
+from synapse.middlewares.logging import LoggingMiddleware  # Arquivo deletado
+```
+
+### **Métricas & Monitoramento**
+- ErrorTracker integrado com estatísticas em tempo real
+- Logs rotativos automáticos em produção
+- JSON estruturado para integração com Loki/Grafana
+- Context fields padronizados para correlação
+- Performance tracking com flags automáticas
+
+### **Testes do Sistema Unificado**
+
+```python
+# ✅ Executar testes do sistema unificado
+python test_error_handling_system.py       # Teste completo de error handling + logging
+python scripts/test_centralized_logging.py # Teste específico de logging centralizado
+
+# ✅ Ambos devem passar com sucesso (exit code 0)
+# ✅ Logs devem aparecer no formato correto (desenvolvimento vs produção)
+# ✅ ErrorTracker deve funcionar automaticamente
+# ✅ Arquivos de log devem ser criados em logs/ (se ENABLE_FILE_LOGGING=true)
+```
+
+### **Estrutura Final Consolidada**
+
+```
+src/synapse/
+├── logger_config.py          # ✅ SISTEMA UNIFICADO ÚNICO
+├── error_handlers.py         # ✅ Handlers de erro integrados
+└── exceptions.py             # ✅ Exceções customizadas
+
+❌ ARQUIVOS REMOVIDOS:
+├── core/logging_system.py    # ❌ DELETADO (redundante)
+└── middlewares/logging.py    # ❌ DELETADO (integrado)
+
+logs/                         # ✅ Logs automáticos em produção
+├── synapse.log              # Logs principais (10MB rotativo)
+├── synapse_errors.log       # Apenas erros (5MB rotativo)
+└── *.log.1, *.log.2        # Rotações automáticas
+```
+
+### **Regra de Ouro: NUNCA RECRIAR**
+Se você encontrar código tentando importar dos arquivos deletados, **SEMPRE** migre para o sistema unificado. **NUNCA** recrie os arquivos antigos. Use apenas:
+
+```python
+from synapse.logger_config import get_logger, get_error_stats
+```
+
+---
+
+## 🗄️ SISTEMA DE DATABASE UNIFICADO - REGRAS CRÍTICAS
+
+### **🚨 ÚNICA FONTE DE VERDADE: `src/synapse/database.py`**
+
+**CONTEXTO**: O SynapScale possui um sistema de database unificado que centraliza toda a configuração de conexão, sessões e engine SQLAlchemy, mantendo compatibilidade total e performance otimizada.
+
+**❌ ARQUIVOS PROIBIDOS (NUNCA CRIAR):**
+- `src/synapse/core/database.py` - PROIBIDO (duplicação)
+- `src/synapse/core/database/` - PROIBIDO (diretório desnecessário)
+- `src/synapse/db.py` - PROIBIDO (nome não padronizado)
+- `src/synapse/core/db/` - PROIBIDO (estrutura antiga)
+- `src/synapse/database/database.py` - PROIBIDO (duplicação aninhada)
+
+**✅ ÚNICO ARQUIVO VÁLIDO:**
+- `src/synapse/database.py` - Sistema unificado de database
+
+### **Importação Obrigatória**
+```python
+# ✅ SEMPRE use estas importações únicas
+from synapse.database import (
+    get_db,           # Dependency para FastAPI endpoints
+    get_async_db,     # Sessão async para operações complexas
+    engine,           # Engine SQLAlchemy para operações diretas
+    Base,             # Base class para todos os models
+    SessionLocal      # Classe de sessão local
+)
+
+# ❌ NUNCA use estas importações (localizações proibidas)
+from synapse.core.database import get_db  # ❌ PROIBIDO
+from synapse.core.database.connection import engine  # ❌ PROIBIDO
+from synapse.db import Base  # ❌ PROIBIDO
+from synapse.core.db.session import SessionLocal  # ❌ PROIBIDO
+```
+
+### **Sistema Unificado - Funcionalidades Integradas**
+
+**🔧 CARACTERÍSTICAS TÉCNICAS:**
+- **Engine Unificado**: PostgreSQL com asyncpg + psycopg2 para compatibilidade
+- **Connection Pooling**: Pool otimizado com configurações de produção
+- **Session Management**: Async/sync sessions com context managers
+- **Base Declarativa**: Base única para todos os models
+- **Transaction Support**: Transações automáticas e manuais
+- **Health Checks**: Verificação de conectividade integrada
+
+### **Padrões de Uso Corretos**
+
+```python
+# ✅ Dependency para endpoints FastAPI
+from synapse.database import get_db
+from sqlalchemy.orm import Session
+
+@router.get("/users/{user_id}")
+async def get_user(
+    user_id: int,
+    db: Session = Depends(get_db)  # ✅ Padrão correto
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    return user
+
+# ✅ Sessão async para operações complexas
+from synapse.database import get_async_db
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def complex_operation():
+    async with get_async_db() as db:
+        # Operações async complexas
+        result = await db.execute(select(User).where(User.is_active == True))
+        users = result.scalars().all()
+        return users
+
+# ✅ Transações manuais
+from synapse.database import SessionLocal
+from sqlalchemy.exc import SQLAlchemyError
+
+async def transaction_example():
+    db = SessionLocal()
+    try:
+        async with db.begin():
+            # Operações transacionais
+            user = User(email="test@example.com")
+            db.add(user)
+            await db.flush()  # Para obter ID
+            
+            profile = UserProfile(user_id=user.id, name="Test")
+            db.add(profile)
+            # Commit automático se não houver exceção
+    except SQLAlchemyError as e:
+        logger.error(f"Transaction failed: {e}")
+        # Rollback automático
+        raise
+    finally:
+        await db.close()
+
+# ✅ Models com Base unificada
+from synapse.database import Base
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.sql import func
+
+class MyModel(Base):
+    __tablename__ = "my_models"
+    __table_args__ = {"schema": "synapscale_db"}
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+```
+
+### **Configurações de Conexão**
+
+```python
+# ✅ Pool de conexões otimizado (configurado automaticamente)
+# - pool_size: 20 conexões base
+# - max_overflow: 30 conexões extras
+# - pool_timeout: 30 segundos
+# - pool_recycle: 3600 segundos (1 hora)
+# - pool_pre_ping: True (verificação de conexão)
+
+# ✅ Engines configurados
+# - engine: Sync engine para FastAPI dependencies
+# - async_engine: Async engine para operações complexas
+# - Ambos conectam na mesma DATABASE_URL
+
+# ✅ Health check automático
+from synapse.database import check_db_health
+
+async def verify_database():
+    is_healthy = await check_db_health()
+    if not is_healthy:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+```
+
+### **Padrões de Query Otimizados**
+
+```python
+# ✅ Queries eficientes com relacionamentos
+from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy import select, and_, or_
+
+# Evitar N+1 queries
+async def get_users_with_workspaces():
+    async with get_async_db() as db:
+        stmt = select(User).options(
+            joinedload(User.workspaces),      # 1:N relationship
+            selectinload(User.files)          # 1:N relationship com muitos itens
+        ).where(User.is_active == True)
+        
+        result = await db.execute(stmt)
+        return result.unique().scalars().all()
+
+# ✅ Queries complexas com filtros
+async def search_workflows(user_id: int, status: List[str], date_from: datetime):
+    async with get_async_db() as db:
+        stmt = select(Workflow).where(
+            and_(
+                Workflow.user_id == user_id,
+                Workflow.status.in_(status),
+                Workflow.created_at >= date_from
+            )
+        ).order_by(Workflow.created_at.desc()).limit(50)
+        
+        result = await db.execute(stmt)
+        return result.scalars().all()
+
+# ✅ Agregações eficientes
+async def get_user_stats(user_id: int):
+    async with get_async_db() as db:
+        stmt = select(
+            func.count(Workflow.id).label('total_workflows'),
+            func.avg(Workflow.execution_time).label('avg_time'),
+            func.sum(
+                case((Workflow.status == 'completed', 1), else_=0)
+            ).label('completed_workflows')
+        ).where(Workflow.user_id == user_id)
+        
+        result = await db.execute(stmt)
+        return result.first()._asdict()
+```
+
+### **Migration & Schema Management**
+
+```python
+# ✅ Todas as migrações devem usar a Base unificada
+from synapse.database import Base
+
+# ✅ Comando para gerar migração
+# python -m alembic revision --autogenerate -m "add_new_table"
+
+# ✅ Schema obrigatório para todas as tabelas
+__table_args__ = {"schema": "synapscale_db"}
+
+# ✅ Imports corretos em migrações
+# from synapse.database import Base
+# from synapse.models.user import User  # Para relacionamentos
+```
+
+### **Error Handling & Recovery**
+
+```python
+# ✅ Tratamento robusto de erros de database
+from sqlalchemy.exc import (
+    SQLAlchemyError, 
+    IntegrityError, 
+    OperationalError,
+    DisconnectionError
+)
+
+async def robust_database_operation():
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            async with get_async_db() as db:
+                # Operação de database
+                result = await db.execute(stmt)
+                await db.commit()
+                return result
+                
+        except DisconnectionError as e:
+            logger.warning(f"Database disconnection, retry {attempt + 1}/{max_retries}")
+            if attempt == max_retries - 1:
+                raise HTTPException(status_code=503, detail="Database unavailable")
+            await asyncio.sleep(2 ** attempt)  # Backoff exponencial
+            
+        except IntegrityError as e:
+            logger.error(f"Data integrity error: {e}")
+            raise HTTPException(status_code=400, detail="Data conflict")
+            
+        except OperationalError as e:
+            logger.error(f"Database operational error: {e}")
+            raise HTTPException(status_code=503, detail="Database error")
+            
+        except SQLAlchemyError as e:
+            logger.error(f"Unexpected database error: {e}")
+            raise HTTPException(status_code=500, detail="Internal database error")
+```
+
+### **Performance & Monitoring**
+
+```python
+# ✅ Monitoring de conexões
+from synapse.database import engine
+
+async def get_connection_stats():
+    pool = engine.pool
+    return {
+        "pool_size": pool.size(),
+        "checked_in": pool.checkedin(),
+        "checked_out": pool.checkedout(),
+        "overflow": pool.overflow(),
+        "invalid": pool.invalid()
+    }
+
+# ✅ Query performance logging
+import time
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def log_query_performance(operation: str):
+    start_time = time.time()
+    try:
+        yield
+    finally:
+        duration = time.time() - start_time
+        if duration > 1.0:  # Log queries lentas
+            logger.warning(f"Slow query detected", extra={
+                "operation": operation,
+                "duration": duration,
+                "slow_query": True
+            })
+```
+
+### **Regras de Importação Database**
+
+```python
+# ✅ SEMPRE usar importações do arquivo unificado
+from synapse.database import get_db, get_async_db, Base, engine, SessionLocal
+
+# ✅ Para models
+from synapse.database import Base
+
+class MyModel(Base):
+    # definição do model
+
+# ✅ Para endpoints
+from synapse.database import get_db
+
+@router.get("/endpoint")
+async def my_endpoint(db: Session = Depends(get_db)):
+    # lógica do endpoint
+
+# ❌ NUNCA usar estas importações
+from synapse.core.database import get_db  # ❌ Localização proibida
+from synapse.db import Base  # ❌ Arquivo não padrão
+from synapse.core.db.session import SessionLocal  # ❌ Estrutura antiga
+```
+
+---
+
+## ⚙️ SISTEMA DE CONFIGURAÇÃO UNIFICADO - REGRAS CRÍTICAS
+
+### **🚨 ÚNICA FONTE DE VERDADE: `src/synapse/core/config.py`**
+
+**CONTEXTO**: O SynapScale possui um sistema de configuração centralizado usando Pydantic v2 que gerencia todas as configurações do sistema, incluindo database, LLM providers, storage, security, e muito mais.
+
+**❌ ARQUIVOS PROIBIDOS (NUNCA CRIAR):**
+- `src/synapse/config.py` - PROIBIDO (órfão deletado)
+- `src/synapse/core/config_new.py` - PROIBIDO (arquivo temporário deletado)
+- `src/synapse/core/config/config.py` - PROIBIDO (diretório desnecessário)
+- `src/synapse/core/config/constants.py` - PROIBIDO (constantes estão no config principal)
+- `src/synapse/core/unified_config.py` - PROIBIDO (erro temporário deletado)
+- `src/synapse/settings.py` - PROIBIDO (nome não padronizado)
+
+**✅ ÚNICO ARQUIVO VÁLIDO:**
+- `src/synapse/core/config.py` - Sistema unificado de configuração
+
+### **Importação Obrigatória**
+```python
+# ✅ SEMPRE use estas importações únicas
+from synapse.core.config import (
+    settings,           # Instância principal de configuração
+    FILE_CATEGORIES,    # Constantes de categorias de arquivo
+    setup_logging,      # Configuração de logging
+    validate_settings,  # Validação de configurações
+    get_settings        # Factory function para settings
+)
+
+# ❌ NUNCA use estas importações (arquivos deletados/proibidos)
+from synapse.config import settings  # ❌ PROIBIDO - arquivo órfão deletado
+from synapse.core.config_new import settings  # ❌ PROIBIDO - arquivo removido
+from synapse.core.config.constants import FILE_CATEGORIES  # ❌ PROIBIDO - diretório deletado
+from synapse.core.unified_config import settings  # ❌ PROIBIDO - arquivo temporário deletado
+from synapse.settings import settings  # ❌ PROIBIDO - nome não padronizado
+```
+
+### **Sistema Unificado - Funcionalidades Integradas**
+
+**🔧 CARACTERÍSTICAS TÉCNICAS:**
+- **Pydantic v2**: Validação robusta e type safety
+- **Environment Variables**: Carregamento automático de .env
+- **Multiple Providers**: LLM, Storage, Database, Email, etc.
+- **Validation**: Validação automática de URLs, emails, tokens
+- **Security**: Configurações de JWT, CORS, encryption
+- **Performance**: Cache de configurações, lazy loading
+- **Development/Production**: Configurações específicas por ambiente
+
+### **Configurações Disponíveis**
+
+```python
+# ✅ Configurações de Database
+settings.DATABASE_URL          # URL completa do PostgreSQL
+settings.DB_POOL_SIZE          # Tamanho do pool de conexões
+settings.DB_MAX_OVERFLOW       # Conexões extras permitidas
+settings.DB_POOL_TIMEOUT       # Timeout para obter conexão
+
+# ✅ Configurações de Redis
+settings.REDIS_URL             # URL do Redis para cache/sessions
+settings.CACHE_DEFAULT_TTL     # TTL padrão para cache (300s)
+settings.REDIS_MAX_CONNECTIONS # Máximo de conexões Redis
+
+# ✅ Configurações de LLM Providers
+settings.OPENAI_API_KEY        # Chave API OpenAI
+settings.ANTHROPIC_API_KEY     # Chave API Anthropic/Claude
+settings.GOOGLE_API_KEY        # Chave API Google/Gemini
+settings.GROK_API_KEY          # Chave API Grok/XAI
+settings.DEEPSEEK_API_KEY      # Chave API DeepSeek
+settings.TESS_API_KEY          # Chave API Tess (nacional)
+
+# ✅ Configurações de Storage
+settings.STORAGE_TYPE          # "local", "s3", "gcs"
+settings.STORAGE_BASE_PATH     # Caminho base para arquivos
+settings.AWS_ACCESS_KEY_ID     # Credenciais AWS S3
+settings.AWS_SECRET_ACCESS_KEY
+settings.AWS_S3_BUCKET
+settings.GCS_BUCKET_NAME       # Google Cloud Storage
+
+# ✅ Configurações de Security
+settings.SECRET_KEY            # Chave secreta JWT
+settings.JWT_ALGORITHM         # Algoritmo JWT (HS256)
+settings.ACCESS_TOKEN_EXPIRE   # Expiração token (30 min)
+settings.REFRESH_TOKEN_EXPIRE  # Expiração refresh (7 dias)
+settings.ENCRYPTION_KEY        # Chave para criptografia simétrica
+
+# ✅ Configurações de Email
+settings.SMTP_HOST             # Servidor SMTP
+settings.SMTP_PORT             # Porta SMTP
+settings.SMTP_USERNAME         # Usuário SMTP
+settings.SMTP_PASSWORD         # Senha SMTP
+settings.EMAIL_FROM            # Email remetente padrão
+
+# ✅ Configurações de Rate Limiting
+settings.RATE_LIMIT_ENABLED    # Ativar rate limiting
+settings.DEFAULT_RATE_LIMIT    # Limite padrão (100/minute)
+settings.LLM_RATE_LIMIT        # Limite para LLM (20/hour)
+settings.UPLOAD_RATE_LIMIT     # Limite para uploads (10/minute)
+
+# ✅ Configurações de Files
+settings.MAX_FILE_SIZE         # Tamanho máximo arquivo (50MB)
+settings.ALLOWED_EXTENSIONS    # Extensões permitidas
+settings.ALLOWED_MIME_TYPES    # MIME types permitidos
+settings.ENABLE_MALWARE_SCAN   # Ativar scan de malware
+
+# ✅ Configurações de Development
+settings.DEBUG                 # Modo debug
+settings.ENVIRONMENT           # "development", "staging", "production"
+settings.LOG_LEVEL             # Nível de log
+settings.ENABLE_CORS           # Ativar CORS
+settings.CORS_ORIGINS          # Origens permitidas CORS
+```
+
+### **Padrões de Uso Corretos**
+
+```python
+# ✅ Acessar configurações
+from synapse.core.config import settings
+
+# Usar configurações em services
+class LLMService:
+    def __init__(self):
+        self.openai_key = settings.OPENAI_API_KEY
+        self.anthropic_key = settings.ANTHROPIC_API_KEY
+        self.max_tokens = settings.LLM_MAX_TOKENS
+    
+    async def generate_response(self, provider: str):
+        if provider == "openai" and not self.openai_key:
+            raise ValueError("OpenAI API key not configured")
+        # ... lógica
+
+# ✅ Validação de configurações obrigatórias
+from synapse.core.config import validate_settings
+
+async def startup_validation():
+    """Validar configurações na inicialização."""
+    try:
+        validate_settings()
+        logger.info("All settings validated successfully")
+    except ValueError as e:
+        logger.error(f"Configuration error: {e}")
+        raise
+
+# ✅ Configurações por ambiente
+if settings.ENVIRONMENT == "development":
+    # Configurações específicas de desenvolvimento
+    enable_debug_mode()
+elif settings.ENVIRONMENT == "production":
+    # Configurações específicas de produção
+    setup_monitoring()
+
+# ✅ Usar constantes definidas
+from synapse.core.config import FILE_CATEGORIES
+
+def validate_file_category(category: str):
+    if category not in FILE_CATEGORIES:
+        raise ValueError(f"Invalid category. Must be one of: {FILE_CATEGORIES}")
+    return category
+
+# ✅ Setup de logging usando configurações
+from synapse.core.config import setup_logging
+
+def configure_application():
+    setup_logging()  # Usa settings.LOG_LEVEL automaticamente
+```
+
+### **Configurações de Providers LLM**
+
+```python
+# ✅ Configuração completa de providers
+from synapse.core.config import settings
+
+class UnifiedLLMConfig:
+    """Configuração centralizada para todos os providers LLM."""
+    
+    @property
+    def openai_config(self) -> dict:
+        return {
+            "api_key": settings.OPENAI_API_KEY,
+            "base_url": settings.OPENAI_BASE_URL,
+            "max_tokens": settings.OPENAI_MAX_TOKENS,
+            "timeout": settings.LLM_TIMEOUT
+        }
+    
+    @property
+    def anthropic_config(self) -> dict:
+        return {
+            "api_key": settings.ANTHROPIC_API_KEY,
+            "base_url": settings.ANTHROPIC_BASE_URL,
+            "max_tokens": settings.ANTHROPIC_MAX_TOKENS,
+            "timeout": settings.LLM_TIMEOUT
+        }
+    
+    @property
+    def google_config(self) -> dict:
+        return {
+            "api_key": settings.GOOGLE_API_KEY,
+            "project_id": settings.GOOGLE_PROJECT_ID,
+            "location": settings.GOOGLE_LOCATION,
+            "max_tokens": settings.GOOGLE_MAX_TOKENS
+        }
+    
+    def get_provider_config(self, provider: str) -> dict:
+        """Obter configuração específica do provider."""
+        configs = {
+            "openai": self.openai_config,
+            "anthropic": self.anthropic_config,
+            "google": self.google_config,
+            "grok": self.grok_config,
+            "deepseek": self.deepseek_config,
+            "tess": self.tess_config
+        }
+        
+        if provider not in configs:
+            raise ValueError(f"Unsupported provider: {provider}")
+        
+        config = configs[provider]
+        if not config.get("api_key"):
+            raise ValueError(f"API key not configured for provider: {provider}")
+        
+        return config
+```
+
+### **Validação Avançada de Configurações**
+
+```python
+# ✅ Validações customizadas
+from pydantic import field_validator, model_validator
+from typing import List, Optional
+
+class Settings(BaseSettings):
+    # ... outros campos ...
+    
+    @field_validator('DATABASE_URL')
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        if not v.startswith(('postgresql://', 'postgresql+asyncpg://', 'postgresql+psycopg2://')):
+            raise ValueError('DATABASE_URL must be a PostgreSQL URL')
+        return v
+    
+    @field_validator('REDIS_URL')
+    @classmethod
+    def validate_redis_url(cls, v: str) -> str:
+        if not v.startswith('redis://'):
+            raise ValueError('REDIS_URL must be a Redis URL')
+        return v
+    
+    @field_validator('CORS_ORIGINS')
+    @classmethod
+    def validate_cors_origins(cls, v: List[str]) -> List[str]:
+        for origin in v:
+            if not origin.startswith(('http://', 'https://')):
+                raise ValueError(f'Invalid CORS origin: {origin}')
+        return v
+    
+    @model_validator(mode='after')
+    def validate_llm_providers(self):
+        """Validar que pelo menos um provider LLM está configurado."""
+        llm_keys = [
+            self.OPENAI_API_KEY,
+            self.ANTHROPIC_API_KEY,
+            self.GOOGLE_API_KEY,
+            self.GROK_API_KEY
+        ]
+        
+        if not any(llm_keys):
+            raise ValueError('At least one LLM provider API key must be configured')
+        
+        return self
+    
+    @model_validator(mode='after')
+    def validate_storage_config(self):
+        """Validar configuração de storage."""
+        if self.STORAGE_TYPE == "s3":
+            if not all([self.AWS_ACCESS_KEY_ID, self.AWS_SECRET_ACCESS_KEY, self.AWS_S3_BUCKET]):
+                raise ValueError('S3 storage requires AWS credentials and bucket name')
+        elif self.STORAGE_TYPE == "gcs":
+            if not self.GCS_BUCKET_NAME:
+                raise ValueError('GCS storage requires bucket name')
+        
+        return self
+```
+
+### **Environment Variables & .env**
+
+```python
+# ✅ Configuração de .env
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"  # Ignorar variáveis extras
+    )
+    
+    # ✅ Valores padrão para desenvolvimento
+    ENVIRONMENT: str = "development"
+    DEBUG: bool = False
+    LOG_LEVEL: str = "INFO"
+    
+    # ✅ Configurações obrigatórias
+    DATABASE_URL: str
+    REDIS_URL: str
+    SECRET_KEY: str
+    
+    # ✅ Configurações opcionais com padrões
+    MAX_FILE_SIZE: int = 50 * 1024 * 1024  # 50MB
+    CACHE_DEFAULT_TTL: int = 300  # 5 minutos
+    ACCESS_TOKEN_EXPIRE: int = 30  # 30 minutos
+
+# ✅ Instância singleton
+settings = Settings()
+```
+
+### **Helpers e Utilities**
+
+```python
+# ✅ Funções helper para configurações
+from synapse.core.config import settings
+
+def get_database_config() -> dict:
+    """Configuração completa do database."""
+    return {
+        "url": settings.DATABASE_URL,
+        "pool_size": settings.DB_POOL_SIZE,
+        "max_overflow": settings.DB_MAX_OVERFLOW,
+        "pool_timeout": settings.DB_POOL_TIMEOUT,
+        "pool_recycle": settings.DB_POOL_RECYCLE,
+        "echo": settings.DEBUG  # Log SQL queries em debug
+    }
+
+def get_cors_config() -> dict:
+    """Configuração do CORS."""
+    return {
+        "allow_origins": settings.CORS_ORIGINS,
+        "allow_credentials": True,
+        "allow_methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+        "allow_headers": ["*"]
+    }
+
+def get_security_config() -> dict:
+    """Configuração de segurança."""
+    return {
+        "secret_key": settings.SECRET_KEY,
+        "algorithm": settings.JWT_ALGORITHM,
+        "access_token_expire": settings.ACCESS_TOKEN_EXPIRE,
+        "refresh_token_expire": settings.REFRESH_TOKEN_EXPIRE
+    }
+
+def is_production() -> bool:
+    """Verificar se está em produção."""
+    return settings.ENVIRONMENT == "production"
+
+def is_development() -> bool:
+    """Verificar se está em desenvolvimento."""
+    return settings.ENVIRONMENT == "development"
+```
+
+### **Regras de Importação Config**
+
+```python
+# ✅ SEMPRE usar importações do arquivo unificado
+from synapse.core.config import settings, FILE_CATEGORIES, setup_logging
+
+# ✅ Para validação
+from synapse.core.config import validate_settings, get_settings
+
+# ✅ Para helpers
+from synapse.core.config import (
+    get_database_config,
+    get_cors_config,
+    is_production
+)
+
+# ❌ NUNCA usar estas importações (arquivos deletados/proibidos)
+from synapse.config import settings  # ❌ Arquivo órfão deletado
+from synapse.core.config_new import settings  # ❌ Arquivo temporário deletado
+from synapse.core.config.constants import FILE_CATEGORIES  # ❌ Diretório deletado
+from synapse.core.unified_config import settings  # ❌ Erro temporário deletado
+from synapse.settings import settings  # ❌ Nome não padronizado
+```
+
+### **Regra de Ouro: UMA CONFIGURAÇÃO, UMA FONTE**
+
+**🎯 PRINCÍPIO FUNDAMENTAL:**
+> "Um repositório, uma configuração, uma fonte de verdade."
+> 
+> Se você está pensando em criar outro arquivo de configuração,
+> **PARE** e adicione ao `src/synapse/core/config.py` existente.
+
+**✅ SEMPRE:**
+- Adicionar novas configurações no arquivo principal
+- Usar validação Pydantic para novos campos
+- Documentar configurações com comments
+- Testar configurações em desenvolvimento
+
+**❌ NUNCA:**
+- Criar arquivos de configuração duplicados
+- Hardcoding de valores que deveriam ser configuráveis
+- Ignorar validação de configurações críticas
+- Deixar configurações sensíveis sem variáveis de ambiente
 
 ## ⚡ CACHE REDIS & BACKGROUND TASKS
 
@@ -1506,6 +2504,12 @@ redis-cli --scan --pattern "synapscale:*" | head -10  # Listar chaves
 
 ## 🚨 NUNCA FAÇA
 
+**❌ CRÍTICO - ARQUIVO PRINCIPAL:**
+❌ Criar `src/synapse/app.py` (arquivo removido, usar apenas main.py)
+❌ Duplicar instância FastAPI fora de `src/synapse/main.py`
+❌ Referenciar qualquer arquivo que não seja `src.synapse.main:app` em deploy/scripts
+
+**❌ OUTRAS REGRAS CRÍTICAS:**
 ❌ Hardcoding de valores sensíveis
 ❌ Commit de credenciais ou .env
 ❌ Queries SQL diretas sem validação
@@ -1517,6 +2521,12 @@ redis-cli --scan --pattern "synapscale:*" | head -10  # Listar chaves
 
 ## ✅ SEMPRE FAÇA
 
+**✅ CRÍTICO - ARQUIVO PRINCIPAL:**
+✅ Usar APENAS `src/synapse/main.py` para inicialização FastAPI
+✅ Referenciar `src.synapse.main:app` em scripts, deploy e documentação
+✅ Modificar aplicação principal SOMENTE em `main.py`
+
+**✅ OUTRAS REGRAS ESSENCIAIS:**
 ✅ Validar inputs do usuário
 ✅ Usar transações para operações críticas
 ✅ Logs informativos mas não verbosos demais

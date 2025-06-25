@@ -53,6 +53,7 @@ class Workspace(Base):
     """
 
     __tablename__ = "workspaces"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -251,10 +252,11 @@ class WorkspaceProject(Base):
     """
 
     __tablename__ = "workspace_projects"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=False, index=True)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=False, index=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=False, index=True)
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id"), nullable=False, index=True)
 
     # Informações do projeto
     name = Column(String(100), nullable=False)
@@ -308,9 +310,10 @@ class ProjectCollaborator(Base):
     """
 
     __tablename__ = "project_collaborators"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("workspace_projects.id"), nullable=False, index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspace_projects.id"), nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
 
     # Permissões específicas do projeto
@@ -336,21 +339,19 @@ class ProjectCollaborator(Base):
         return f"<ProjectCollaborator(project_id={self.project_id}, user_id={self.user_id})>"
 
 
-
-
-
 class ProjectComment(Base):
     """
     Modelo para comentários em projetos
     """
 
     __tablename__ = "project_comments"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("workspace_projects.id"), nullable=False, index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspace_projects.id"), nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
     parent_id = Column(
-        UUID(as_uuid=True), ForeignKey("project_comments.id"), index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.project_comments.id"), index=True
     )  # Para threads
 
     # Conteúdo
@@ -389,9 +390,10 @@ class ProjectVersion(Base):
     """
 
     __tablename__ = "project_versions"
+    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    project_id = Column(UUID(as_uuid=True), ForeignKey("workspace_projects.id"), nullable=False, index=True)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspace_projects.id"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
 
     # Versão

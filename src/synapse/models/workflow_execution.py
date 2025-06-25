@@ -58,6 +58,7 @@ class WorkflowExecution(Base):
     """
 
     __tablename__ = "workflow_executions"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -66,7 +67,7 @@ class WorkflowExecution(Base):
     )
 
     # Relacionamentos
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("workflows.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    workflow_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False, index=True)
 
     # Status e controle
@@ -168,6 +169,7 @@ class NodeExecution(Base):
     """
 
     __tablename__ = "node_executions"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -175,9 +177,9 @@ class NodeExecution(Base):
 
     # Relacionamentos
     workflow_execution_id = Column(
-        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
+        Integer, ForeignKey("synapscale_db.workflow_executions.id"), nullable=False, index=True
     )
-    node_id = Column(Integer, ForeignKey("nodes.id"), nullable=False, index=True)
+    node_id = Column(Integer, ForeignKey("synapscale_db.nodes.id"), nullable=False, index=True)
 
     # Identificação do nó
     node_key = Column(
@@ -269,6 +271,7 @@ class ExecutionQueue(Base):
     """
 
     __tablename__ = "workflow_execution_queue"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -278,7 +281,7 @@ class ExecutionQueue(Base):
 
     # Relacionamentos
     workflow_execution_id = Column(
-        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
+        Integer, ForeignKey("synapscale_db.workflow_executions.id"), nullable=False, index=True
     )
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False, index=True)
 
@@ -327,16 +330,17 @@ class ExecutionMetrics(Base):
     """
 
     __tablename__ = "workflow_execution_metrics"
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     workflow_execution_id = Column(
-        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
+        Integer, ForeignKey("synapscale_db.workflow_executions.id"), nullable=False, index=True
     )
     node_execution_id = Column(
-        Integer, ForeignKey("node_executions.id"), nullable=True, index=True
+        Integer, ForeignKey("synapscale_db.node_executions.id"), nullable=True, index=True
     )
 
     # Tipo de métrica

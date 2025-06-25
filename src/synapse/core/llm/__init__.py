@@ -2,24 +2,21 @@
 Módulo de integração com LLMs do SynapScale
 """
 
-# Import all services
-from .unified_service import unified_service  # Mock service (for fallback)
-
+# Import services from the main services module
 try:
-    from .real_llm_service import real_llm_service
-    from .user_variables_llm_service import user_variables_llm_service
+    from synapse.services.llm_service import UnifiedLLMService, get_llm_service, get_llm_service_direct
     
-    # Use user_variables service by default (supports DB API keys)
-    llm_service = user_variables_llm_service
-    print("✅ UserVariablesLLMService loaded successfully (with DB API keys support)")
+    # Use UnifiedLLMService as the main service
+    llm_service = get_llm_service_direct
+    print("✅ UnifiedLLMService loaded successfully (with full LLM capabilities)")
 except ImportError as e:
-    try:
-        from .real_llm_service import real_llm_service
-        llm_service = real_llm_service
-        print("✅ Real LLM Service loaded successfully")
-    except ImportError as e2:
-        print(f"⚠️  Real LLM Service not available, using mock: {e2}")
-        llm_service = unified_service
+    print(f"⚠️  UnifiedLLMService not available: {e}")
+    llm_service = None
 
-# Export both for flexibility
-__all__ = ["llm_service", "unified_service", "real_llm_service", "user_variables_llm_service"]
+# Export services for flexibility
+__all__ = [
+    "llm_service", 
+    "UnifiedLLMService",
+    "get_llm_service",
+    "get_llm_service_direct"
+]

@@ -1,7 +1,8 @@
 import pytest
 
 from synapse.core.websockets.manager import WebSocketHandler
-from synapse.core.llm.unified_service import unified_service, LLMResponse
+from synapse.services.llm_service import UnifiedLLMService
+from synapse.schemas.llm import LLMResponse
 from synapse.models.conversation import Conversation
 
 
@@ -16,7 +17,8 @@ async def test_handle_chat_message_success(db_session, test_user, test_utils, mo
     async def fake_chat_completion(*args, **kwargs):
         return LLMResponse(content="ok", model="m", provider="p", usage={"tokens": 5})
 
-    monkeypatch.setattr(unified_service, "chat_completion", fake_chat_completion)
+    # Mock the UnifiedLLMService.chat_completion method
+    monkeypatch.setattr(UnifiedLLMService, "chat_completion", fake_chat_completion)
 
     handler = WebSocketHandler(mock_websocket, test_user, db_session)
     await handler._handle_chat_message({"conversation_id": conversation.id, "content": "hi"})
@@ -36,7 +38,8 @@ async def test_handle_chat_message_failure(db_session, test_user, test_utils, mo
     async def fake_fail(*args, **kwargs):
         raise RuntimeError("fail")
 
-    monkeypatch.setattr(unified_service, "chat_completion", fake_fail)
+    # Mock the UnifiedLLMService.chat_completion method to fail
+    monkeypatch.setattr(UnifiedLLMService, "chat_completion", fake_fail)
 
     handler = WebSocketHandler(mock_websocket, test_user, db_session)
     await handler._handle_chat_message({"conversation_id": conversation.id, "content": "hi"})

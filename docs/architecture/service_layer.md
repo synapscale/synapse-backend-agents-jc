@@ -123,7 +123,7 @@ src/synapse/
 │   │   ├── repository.py            # Repository pattern implementation
 │   │   ├── dependency_container.py  # DI container
 │   │   └── service_configuration.py # Service configuration
-│   ├── logging_system.py           # Structured logging
+│   ├── logger_config.py            # Unified logging system
 │   └── exceptions.py               # Custom exceptions
 ├── services/
 │   ├── __init__.py
@@ -180,7 +180,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate]):
 
 ```python
 import logging
-from synapse.core.logging_system import get_logger
+from synapse.logger_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -396,7 +396,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate]):
 
 ```python
 import logging
-from synapse.core.logging_system import get_logger
+from synapse.logger_config import get_logger
 
 class UserService(BaseService[User, UserCreate, UserUpdate]):
     def __init__(self, *args, **kwargs):
@@ -606,7 +606,7 @@ async def test_create_user_success(user_service, mock_repository):
 - Error response standardization
 - Error tracking and analytics
 
-### ✅ Structured Logging (`src/synapse/core/logging_system.py`)
+### ✅ Unified Logging System (`src/synapse/logger_config.py`)
 - JSON-formatted structured logs
 - Contextual information capture
 - Error tracking and metrics

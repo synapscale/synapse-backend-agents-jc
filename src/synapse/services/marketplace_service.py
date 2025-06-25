@@ -9,7 +9,7 @@ from sqlalchemy import desc, asc, func, text
 import os
 import logging
 
-from synapse.database import get_db
+
 from synapse.models.marketplace import MarketplaceComponent, ComponentRating, ComponentPurchase
 
 logger = logging.getLogger(__name__)
@@ -100,41 +100,78 @@ class MarketplaceService:
             logger.error(f"Erro ao buscar componente {component_id}: {e}")
             return None
     
-    def create_component(self, component_data: Dict[str, Any]) -> Optional[MarketplaceComponent]:
-        """Cria novo componente usando SQLAlchemy"""
+    def create_component(self, component_data, user_id: int) -> dict:
+        """Cria um novo componente no banco de dados"""
         try:
-            component = MarketplaceComponent(**component_data)
+            component = MarketplaceComponent(
+                name=component_data.name if hasattr(component_data, 'name') else "Novo Componente",
+                description=component_data.description if hasattr(component_data, 'description') else "",
+                category=component_data.category if hasattr(component_data, 'category') else "automation",
+                author_id=user_id,
+                created_at=datetime.utcnow(),
+                is_active=True,
+                version="1.0.0",
+                license_type="MIT",
+                is_free=True,
+                rating=0.0,
+                downloads=0
+            )
+            
             self.db.add(component)
             self.db.commit()
             self.db.refresh(component)
-            return component
+            
+            return {
+                "id": component.id,
+                "name": component.name,
+                "description": component.description,
+                "author_id": component.author_id,
+                "created_at": component.created_at.isoformat()
+            }
         except Exception as e:
             self.db.rollback()
             logger.error(f"Erro ao criar componente: {e}")
             return None
     
-    def update_component(self, component_id: str, component_data: Dict[str, Any]) -> Optional[MarketplaceComponent]:
-        """Atualiza componente usando SQLAlchemy"""
+    def update_component(self, component_id: int, component_data, user_id: int) -> dict:
+        """Atualiza um componente no banco de dados"""
         try:
-            component = self.db.query(MarketplaceComponent).filter(MarketplaceComponent.id == component_id).first()
+            component = self.db.query(MarketplaceComponent).filter(
+                MarketplaceComponent.id == component_id
+            ).first()
+            
             if not component:
                 return None
-                
-            for key, value in component_data.items():
-                setattr(component, key, value)
-                
+            
+            # Atualizar campos se existirem nos dados
+            if hasattr(component_data, 'name'):
+                component.name = component_data.name
+            if hasattr(component_data, 'description'):
+                component.description = component_data.description
+            if hasattr(component_data, 'category'):
+                component.category = component_data.category
+            
+            component.updated_at = datetime.utcnow()
+            
             self.db.commit()
             self.db.refresh(component)
-            return component
+            
+            return {
+                "id": component.id,
+                "updated_at": component.updated_at.isoformat()
+            }
         except Exception as e:
             self.db.rollback()
             logger.error(f"Erro ao atualizar componente {component_id}: {e}")
             return None
     
-    def delete_component(self, component_id: str) -> bool:
-        """Deleta componente usando SQLAlchemy"""
+    def delete_component(self, component_id: int, user_id: int) -> bool:
+        """Deleta um componente do banco de dados"""
         try:
-            component = self.db.query(MarketplaceComponent).filter(MarketplaceComponent.id == component_id).first()
+            component = self.db.query(MarketplaceComponent).filter(
+                MarketplaceComponent.id == component_id
+            ).first()
+            
             if not component:
                 return False
                 
@@ -148,57 +185,42 @@ class MarketplaceService:
 
     # ==================== MÉTODOS FALTANTES PARA ENDPOINTS ====================
 
-    def create_component(self, component_data, user_id: int) -> dict:
-        """Cria um novo componente"""
-        return {
-            "id": 1,
-            "name": component_data.name if hasattr(component_data, 'name') else "Novo Componente",
-            "description": component_data.description if hasattr(component_data, 'description') else "",
-            "author_id": user_id,
-            "created_at": datetime.utcnow().isoformat()
-        }
-
-    def get_component(self, component_id: int) -> dict:
-        """Obtém um componente por ID"""
+    def get_component(self, component_id: int) -> Optional[dict]:
+        """Obtém um componente específico do banco de dados"""
         try:
-            # Verificar se existe no banco
-            component = self.db.query(MarketplaceComponent).filter(MarketplaceComponent.id == component_id).first()
-            if component:
-                return {
-                    "id": component.id,
-                    "name": component.name,
-                    "description": component.description or "",
-                    "category": component.category or "automation",
-                    "rating": component.rating or 4.5,
-                    "downloads": component.downloads or 125,
-                    "price": component.price or 0.0,
-                    "created_at": component.created_at.isoformat() if component.created_at else datetime.utcnow().isoformat()
-                }
-        except Exception:
-            pass
-        
-        # Retornar mock se não existir ou erro
-        return {
-            "id": component_id,
-            "name": "Componente de Exemplo",
-            "description": "Descrição do componente",
-            "category": "automation",
-            "rating": 4.5,
-            "downloads": 125,
-            "price": 0.0,
-            "created_at": datetime.utcnow().isoformat()
-        }
-
-    def update_component(self, component_id: int, component_data, user_id: int) -> dict:
-        """Atualiza um componente"""
-        return {
-            "id": component_id,
-            "updated_at": datetime.utcnow().isoformat()
-        }
-
-    def delete_component(self, component_id: int, user_id: int) -> bool:
-        """Deleta um componente"""
-        return True
+            component = self.db.query(MarketplaceComponent).filter(
+                MarketplaceComponent.id == component_id
+            ).first()
+            
+            if not component:
+                return None
+            
+            # Refresh para carregar relacionamentos
+            self.db.refresh(component)
+            
+            # Converter para dict com dados detalhados
+            return {
+                "id": component.id,
+                "name": component.name,
+                "description": component.description,
+                "category": component.category,
+                "rating": component.rating,
+                "downloads": component.downloads,
+                "price": component.price,
+                "created_at": component.created_at.isoformat() if component.created_at else None,
+                "author_id": component.author_id,
+                "tags": component.tags,
+                "is_active": component.is_active,
+                "version": component.version,
+                "author_name": component.author_name,
+                "short_description": component.short_description,
+                "license_type": component.license_type,
+                "is_free": component.is_free
+            }
+            
+        except Exception as e:
+            logger.error(f"Erro ao buscar componente {component_id}: {e}")
+            return None
 
     def download_component(self, component_id: int, user_id: int, version: str = None) -> dict:
         """Faz download de um componente"""
@@ -326,10 +348,15 @@ class MarketplaceService:
         return {
             "total_components": 145,
             "total_downloads": 2580,
-            "total_authors": 89,
             "total_revenue": 15420.50,
-            "categories": ["automation", "analytics", "ui", "integration"],
-            "top_components": []
+            "average_rating": 4.2,
+            "active_developers": 89,
+            "categories": {
+                "automation": 45,
+                "analytics": 32,
+                "ui": 28,
+                "integration": 40
+            }
         }
 
     def get_component_stats(self, component_id: int, days: int = 30) -> dict:
@@ -431,7 +458,9 @@ class MarketplaceService:
 # Função para compatibilidade com código existente
 def search_components(search_params: Dict[str, Any]) -> Dict[str, Any]:
     """Função para compatibilidade"""
+    from synapse.database import get_db_session
+    
     # Obter uma sessão do banco de dados
-    db = next(get_db())
-    service = MarketplaceService(db)
-    return service.search_components(search_params)
+    with get_db_session() as db:
+        service = MarketplaceService(db)
+        return service.search_components(search_params)

@@ -169,8 +169,10 @@ def _register_infrastructure_services() -> None:
         register_singleton(EmailService, EmailService)
         
         # Logging services
-        from synapse.core.logging_system import get_logging_service
-        register_singleton(Any, factory=get_logging_service)
+        from synapse.logger_config import get_logger
+        def create_logging_service():
+            return get_logger("synapse")
+        register_singleton(Any, factory=create_logging_service)
         
         logger.debug("✅ Infrastructure services registered")
         
@@ -184,7 +186,7 @@ def _register_external_services() -> None:
     
     try:
         # LLM services
-        from synapse.core.llm.unified_service import UnifiedLLMService
+        from synapse.services.llm_service import UnifiedLLMService
         register_singleton(UnifiedLLMService, UnifiedLLMService)
         
         # Executor services  
