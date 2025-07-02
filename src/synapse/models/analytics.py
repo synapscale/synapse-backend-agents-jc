@@ -279,29 +279,7 @@ class AnalyticsUserInsight(Base):
 
 
 
-class AnalyticsAlert(Base):
-    __tablename__ = "analytics_alerts"
-    id = Column(UUID(as_uuid=True), primary_key=True)
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    condition = Column(JSONB, nullable=False)
-    notification_config = Column(JSONB, nullable=False)
-    is_active = Column(Boolean, nullable=False, server_default=text("true"))
-    owner_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-    )
-    last_triggered_at = Column(DateTime(timezone=True))
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
+# AnalyticsAlert is now defined in analytics_alert.py to avoid duplication
 
 
 class AnalyticsExport(Base):

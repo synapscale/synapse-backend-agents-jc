@@ -18,9 +18,8 @@ from synapse.models.analytics_event import AnalyticsEvent
 from synapse.models.analytics_metric import AnalyticsMetric
 from synapse.models.user import User
 from synapse.core.email.service import EmailService
-from synapse.core.websockets.manager import WebSocketManager
-from synapse.schemas.models import AlertCreate
-from synapse.schemas.models import AlertUpdate
+from synapse.core.websockets.manager import ConnectionManager
+from synapse.schemas.analytics import AlertCreate, AlertUpdate
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +57,7 @@ class AlertService:
     def __init__(self, db: Session):
         self.db = db
         self.email_service = EmailService()
-        self.websocket_manager = WebSocketManager()
+        self.websocket_manager = ConnectionManager()
         self._alert_states = {}  # Cache for alert state management
         self._evaluation_running = False
 

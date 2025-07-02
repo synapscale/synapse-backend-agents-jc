@@ -578,6 +578,24 @@ class AlertResponse(BaseModel):
         from_attributes = True
 
 
+class AlertCreate(BaseModel):
+    """Schema for creating new alerts"""
+    name: str = Field(..., min_length=1, max_length=100)
+    description: str | None = Field(None, max_length=500)
+    condition: dict[str, Any] = Field(..., description="Alert condition configuration")
+    notification_config: dict[str, Any] = Field(..., description="Notification settings")
+    is_active: bool = True
+
+
+class AlertUpdate(BaseModel):
+    """Schema for updating existing alerts"""
+    name: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = Field(None, max_length=500)
+    condition: dict[str, Any] | None = Field(None, description="Alert condition configuration")
+    notification_config: dict[str, Any] | None = Field(None, description="Notification settings")
+    is_active: bool | None = None
+
+
 class AnalyticsOverview(BaseModel):
     period: dict[str, datetime]
     user_metrics: dict[str, Any]
