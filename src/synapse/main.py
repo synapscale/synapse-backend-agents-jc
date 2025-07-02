@@ -113,11 +113,9 @@ async def lifespan(app: FastAPI):
         os.makedirs(upload_dir, exist_ok=True)
         logger.info(f"📁 Diretório de uploads criado: {upload_dir}")
 
-        # Configurar sistema de tracing distribuído
+        # Tracing já foi configurado durante a criação da aplicação
         if settings.ENABLE_TRACING:
-            setup_tracing()
-            instrument_libraries()
-            logger.info("✅ Sistema de tracing distribuído configurado")
+            logger.info("✅ Sistema de tracing distribuído já configurado")
 
         # Inicializar banco de dados
         await init_db()
@@ -527,6 +525,10 @@ setup_error_handlers(app)
 
 # Configurar tracing distribuído
 if settings.ENABLE_TRACING:
+    # Configurar tracing antes de instrumentar
+    setup_tracing()
+    instrument_libraries()
+    
     # Adicionar middleware de tracing
     app.add_middleware(TracingMiddleware)
     # Instrumentar FastAPI

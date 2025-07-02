@@ -189,22 +189,34 @@ def setup_tracing() -> bool:
             provider.add_span_processor(console_processor)
             exporters.append("console")
 
-        # Jaeger exporter
-        if JAEGER_AVAILABLE:
+        # Jaeger exporter (apenas se endpoint estiver configurado)
+        if JAEGER_AVAILABLE and config.jaeger_endpoint and config.jaeger_endpoint != "http://localhost:14268/api/traces":
             try:
+                # Usar collector_endpoint (versões recentes) ou endpoint (versões antigas)
                 jaeger_exporter = JaegerExporter(
-                    endpoint=config.jaeger_endpoint,
+                    collector_endpoint=config.jaeger_endpoint,
                 )
                 jaeger_processor = BatchSpanProcessor(jaeger_exporter)
                 provider.add_span_processor(jaeger_processor)
                 exporters.append("jaeger")
+            except TypeError:
+                # Fallback para versões antigas do OpenTelemetry
+                try:
+                    jaeger_exporter = JaegerExporter(
+                        endpoint=config.jaeger_endpoint,
+                    )
+                    jaeger_processor = BatchSpanProcessor(jaeger_exporter)
+                    provider.add_span_processor(jaeger_processor)
+                    exporters.append("jaeger")
+                except Exception as e:
+                    logger.warning(f"Falha ao configurar Jaeger exporter (fallback): {e}")
             except Exception as e:
                 logger.warning(f"Falha ao configurar Jaeger exporter: {e}")
         else:
-            logger.debug("Jaeger exporter não disponível")
+            logger.debug("Jaeger exporter não disponível ou não configurado")
 
-        # OTLP exporter
-        if OTLP_AVAILABLE:
+        # OTLP exporter (apenas se endpoint estiver configurado)
+        if OTLP_AVAILABLE and config.otlp_endpoint and config.otlp_endpoint != "http://localhost:4317":
             try:
                 otlp_exporter = OTLPSpanExporter(
                     endpoint=config.otlp_endpoint,
@@ -216,7 +228,7 @@ def setup_tracing() -> bool:
             except Exception as e:
                 logger.warning(f"Falha ao configurar OTLP exporter: {e}")
         else:
-            logger.debug("OTLP exporter não disponível")
+            logger.debug("OTLP exporter não disponível ou não configurado")
 
         # Obter tracer global
         _tracing_state.tracer = trace.get_tracer(__name__)

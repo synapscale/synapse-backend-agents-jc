@@ -305,6 +305,18 @@ async def get_cache_manager() -> CacheManager:
     return _cache_manager
 
 
+def get_cache_service() -> CacheManager:
+    """Retorna instância do cache service para compatibilidade
+    
+    IMPORTANTE: Esta função retorna uma instância não-inicializada
+    para compatibilidade síncrona. Para uso completo, prefira
+    get_cache_manager() em contexto assíncrono.
+    """
+    # Retorna instância não-inicializada para evitar problemas com loops
+    # A inicialização acontecerá quando necessário via get_cache_manager()
+    return CacheManager()
+
+
 # ========================================
 # DECORADORES DE CACHE
 # ========================================

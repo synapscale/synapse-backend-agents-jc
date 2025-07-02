@@ -210,111 +210,8 @@ class BusinessMetric(Base):
         return f"<BusinessMetric(date={self.date}, period='{self.period_type}', total_users={self.total_users})>"
 
 
-class CustomReport(Base):
-    """
-    Modelo para relatórios personalizados
-    """
-
-    __tablename__ = "custom_reports"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id"),
-        nullable=False,
-        index=True,
-    )
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("workspaces.id"), index=True)
-
-    # Informações do relatório
-    name = Column(String(200), nullable=False)
-    description = Column(Text)
-    category = Column(String(50), index=True)
-
-    # Configuração
-    query_config = Column(JSON, nullable=False)  # Configuração da query
-    visualization_config = Column(JSON, default=dict)  # Configuração de visualização
-    filters = Column(JSON, default=dict)  # Filtros aplicados
-
-    # Agendamento
-    is_scheduled = Column(Boolean, default=False, nullable=False)
-    schedule_config = Column(JSON, default=dict)  # Configuração de agendamento
-    last_run_at = Column(DateTime)
-    next_run_at = Column(DateTime)
-
-    # Compartilhamento
-    is_public = Column(Boolean, default=False, nullable=False)
-    shared_with = Column(JSON, default=list)  # Lista de user_ids
-
-    # Cache
-    cached_data = Column(JSON)
-    cache_expires_at = Column(DateTime)
-
-    # Status
-    status = Column(
-        String(20), default="active", nullable=False
-    )  # active, archived, deleted
-
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
-
-    # Relacionamentos
-    user = relationship("User")
-    workspace = relationship("Workspace")
-    executions = relationship(
-        "ReportExecution", back_populates="report", cascade="all, delete-orphan"
-    )
-
-    def __repr__(self):
-        return (
-            f"<CustomReport(id={self.id}, name='{self.name}', user_id={self.user_id})>"
-        )
 
 
-class ReportExecution(Base):
-    """
-    Modelo para execuções de relatórios
-    """
-
-    __tablename__ = "report_executions"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    report_id = Column(
-        UUID(as_uuid=True), ForeignKey("custom_reports.id"), nullable=False, index=True
-    )
-    user_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), index=True
-    )  # Quem executou (pode ser automático)
-
-    # Execução
-    execution_type = Column(String(20), nullable=False)  # manual, scheduled, api
-    parameters = Column(JSON, default=dict)  # Parâmetros da execução
-
-    # Resultado
-    status = Column(
-        String(20), default="running", nullable=False
-    )  # running, completed, failed
-    result_data = Column(JSON)  # Dados do resultado
-    error_message = Column(Text)
-
-    # Performance
-    execution_time_ms = Column(Integer)
-    rows_processed = Column(Integer)
-    data_size_bytes = Column(Integer)
-
-    # Timestamps
-    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    completed_at = Column(DateTime)
-
-    # Relacionamentos
-    report = relationship("CustomReport", back_populates="executions")
-    user = relationship("User")
-
-    def __repr__(self):
-        return f"<ReportExecution(id={self.id}, report_id={self.report_id}, status='{self.status}')>"
 
 
 class AnalyticsUserInsight(Base):
@@ -380,65 +277,6 @@ class AnalyticsUserInsight(Base):
         return f"<UserInsight(id={self.id}, user_id={self.user_id}, type='{self.insight_type}')>"
 
 
-class AnalyticsDashboard(Base):
-    """
-    Modelo para dashboards de analytics personalizados
-    """
-
-    __tablename__ = "analytics_dashboards"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    icon = Column(String(50))
-    color = Column(String(7), default="#3B82F6")
-
-    # ForeignKey para o usuário dono do dashboard
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-
-    # Configuração
-    layout = Column(JSON, nullable=False)  # Layout dos widgets
-    widgets = Column(JSON, nullable=False)  # Configuração dos widgets
-    filters = Column(JSON, default=dict)  # Filtros globais
-
-    # Configurações de atualização
-    auto_refresh = Column(Boolean, default=True, nullable=False)
-    refresh_interval = Column(Integer, default=300)  # segundos
-
-    # Compartilhamento
-    is_public = Column(Boolean, nullable=False, server_default=text("false"))
-    shared_with = Column(JSON, default=list)
-
-    # Status
-    is_default = Column(Boolean, default=False, nullable=False)
-    status = Column(String(20), default="active", nullable=False)
-
-    # Timestamps
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
-    last_viewed_at = Column(DateTime)
-
-    # Relacionamentos
-    user = relationship("User", back_populates="analytics_dashboards")
-    workspace = relationship("Workspace")
-    workspace_id = Column(
-        UUID(as_uuid=True), ForeignKey("workspaces.id"), nullable=True, index=True
-    )
-
-    def __repr__(self):
-        return f"<AnalyticsDashboard(id={self.id}, name='{self.name}', user_id={self.user_id})>"
 
 
 class AnalyticsAlert(Base):
@@ -499,25 +337,4 @@ class AnalyticsMetric(Base):
     )
 
 
-class AnalyticsReport(Base):
-    __tablename__ = "analytics_reports"
-    id = Column(UUID(as_uuid=True), primary_key=True)
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    report_query = Column("query", JSONB, nullable=False)
-    schedule = Column(String(50))
-    owner_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-    )
-    is_active = Column(Boolean, nullable=False, server_default=text("true"))
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    ) 
+ 

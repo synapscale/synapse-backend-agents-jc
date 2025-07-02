@@ -783,6 +783,7 @@ class TemplateService:
                             TemplateLicense.ENTERPRISE.value,
                         ]
                     ),
+                    WorkflowTemplate.tenant_id == tenant_id,
                 )
                 .scalar()
             )
@@ -927,6 +928,7 @@ class TemplateService:
                 await db.execute(select(TemplateFavorite))
                 .filter(
                     TemplateFavorite.user_id == user_id,
+                    TemplateFavorite.tenant_id == tenant_id,
                 )
                 .scalar()
             )
