@@ -93,7 +93,7 @@ class ExecutionResponse(ExecutionBase):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -174,7 +174,7 @@ class NodeExecutionResponse(NodeExecutionBase):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -218,7 +218,7 @@ class QueueItemResponse(BaseModel):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -361,6 +361,73 @@ class NodeExecutionFilter(BaseModel):
         pattern="^(execution_order|created_at|started_at|completed_at|duration_ms)$",
     )
     order_direction: str = Field(default="asc", pattern="^(asc|desc)$")
+
+
+# Schema para validação de workflow
+class WorkflowValidation(BaseModel):
+    """Resultado da validação de workflow"""
+
+    is_valid: bool
+    errors: list[str]
+    warnings: list[str]
+    estimated_duration_seconds: int | None = None
+    total_nodes: int
+    required_variables: list[str]
+    optional_variables: list[str]
+    dependencies: dict[str, list[str]]
+
+
+# ===== MISSING SCHEMAS FOR EXECUTIONS ENDPOINTS =====
+
+class WorkflowExecutionWithNodesResponse(BaseModel):
+    """Response schema for workflow execution with node executions included"""
+    
+    execution: ExecutionResponse
+    node_executions: list[NodeExecutionResponse] = []
+    total_node_executions: int = 0
+    
+    model_config = {"from_attributes": True}
+
+
+class ExecutionMetricsResponse(BaseModel):
+    """Response schema for execution metrics and statistics"""
+    
+    execution_id: str
+    workflow_id: str
+    total_duration_ms: int | None = None
+    nodes_count: int = 0
+    completed_nodes: int = 0
+    failed_nodes: int = 0
+    success_rate: float = 0.0
+    average_node_duration_ms: float | None = None
+    retry_count: int = 0
+    progress_percentage: float = 0.0
+    
+    # Node breakdown by status
+    nodes_by_status: dict[str, int] = {}
+    
+    # Performance metrics
+    fastest_node_ms: int | None = None
+    slowest_node_ms: int | None = None
+    
+    # Error metrics
+    error_types: dict[str, int] = {}
+    most_common_errors: list[str] = []
+    
+    # Resource utilization
+    estimated_duration_ms: int | None = None
+    actual_duration_ms: int | None = None
+    efficiency_percentage: float | None = None
+    
+    model_config = {"from_attributes": True}
+
+
+# ===== WORKFLOW EXECUTION ALIASES FOR BACKWARD COMPATIBILITY =====
+
+# Use ExecutionResponse as the main workflow execution response
+WorkflowExecutionResponse = ExecutionResponse
+WorkflowExecutionCreate = ExecutionCreate  
+WorkflowExecutionUpdate = ExecutionUpdate
 
 
 # Schema para validação de workflow

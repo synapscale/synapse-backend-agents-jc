@@ -1,1062 +1,743 @@
 """
-Endpoints para Execução de Workflows
-Criado por José - um desenvolvedor Full Stack
-API completa para gerenciamento de execuções em tempo real
+Executions endpoints with comprehensive workflow and node execution management
 """
 
-import logging
-import os
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import and_, or_, func, desc, asc
+from typing import List, Optional, Dict, Any, Union
+import uuid
 from datetime import datetime
 
-from synapse.database import get_db
-from synapse.api.deps import get_current_user
-from synapse.models.user import User
+from synapse.api.deps import get_current_active_user, get_db
 from synapse.schemas.workflow_execution import (
-    ExecutionCreate,
-    ExecutionResponse,
+    WorkflowExecutionCreate,
+    WorkflowExecutionUpdate,
+    WorkflowExecutionResponse,
+    WorkflowExecutionWithNodesResponse,
     NodeExecutionResponse,
-    ExecutionStats,
-    ExecutionFilter,
-    ExecutionControl,
-    ExecutionBatch,
-    WorkflowValidation,
+    ExecutionMetricsResponse,
 )
-from synapse.services.execution_service import ExecutionService
-from synapse.core.websockets.manager import ConnectionManager
+from synapse.schemas.base import PaginatedResponse
+from synapse.models.workflow_execution import WorkflowExecution, ExecutionStatus
+from synapse.models.node_execution import NodeExecution
+from synapse.models.workflow import Workflow
+from synapse.models.user import User
 
-logger = logging.getLogger(__name__)
-
-# Router para execuções
 router = APIRouter()
 
-# Instância global do serviço (será inicializada no startup)
-execution_service: Optional[ExecutionService] = None
-websocket_manager: Optional[ConnectionManager] = None
 
-
-def get_execution_service() -> ExecutionService:
-    """
-    Obtém a instância do serviço de execução.
-    
-    Returns:
-        ExecutionService: Instância do serviço de execução
-        
-    Raises:
-        RuntimeError: Se o serviço não foi inicializado
-    """
-    global execution_service
-    
-    # Verifica se a engine está habilitada PRIMEIRO
-    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
-    if not execution_engine_enabled:
-        raise HTTPException(
-            status_code=503, 
-            detail="🚫 Engine de execução desabilitada. Configure EXECUTION_ENGINE_ENABLED=true para habilitar."
-        )
-    
-    # Só cria se realmente habilitado
-    if execution_service is None:
-        raise HTTPException(
-            status_code=503,
-            detail="🚫 Serviço de execução não foi inicializado. Verifique se EXECUTION_ENGINE_ENABLED=true."
-        )
-    
-    return execution_service
-
-
-@router.post("/", response_model=ExecutionResponse, status_code=201, summary="Criar execução de workflow", tags=["workflows"])
-async def create_execution(
-    execution_data: ExecutionCreate,
-    start_immediately: bool = Query(
-        default=True, description="Iniciar execução imediatamente"
-    ),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> ExecutionResponse:
-    """
-    Cria uma nova execução de workflow com configurações personalizadas.
-    
-    Permite criar e opcionalmente iniciar uma execução de workflow
-    com dados de entrada, variáveis e prioridade específicos.
-    
-    Args:
-        execution_data: Dados da execução a ser criada
-        start_immediately: Se deve iniciar a execução imediatamente
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
-        
-    Returns:
-        ExecutionResponse: Dados da execução criada
-        
-    Raises:
-        HTTPException: 400 se dados inválidos
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Criando execução do workflow {execution_data.workflow_id} para usuário {current_user.id} - início imediato: {start_immediately}")
-        execution = await service.create_and_start_execution(
-            db,
-            execution_data,
-            current_user.id,
-            start_immediately,
-        )
-        logger.info(f"Execução {execution.id} criada com sucesso para usuário {current_user.id}")
-        return execution
-    except ValueError as e:
-        logger.warning(f"Dados inválidos para execução do workflow {execution_data.workflow_id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro ao criar execução do workflow {execution_data.workflow_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/", response_model=List[ExecutionResponse], summary="Listar execuções do usuário", tags=["workflows"])
+@router.get("/", response_model=PaginatedResponse[WorkflowExecutionResponse])
 async def list_executions(
-    status: Optional[List[str]] = Query(None, description="Filtrar por status"),
-    workflow_ids: Optional[List[int]] = Query(
-        None, description="Filtrar por IDs de workflow"
-    ),
-    created_after: Optional[datetime] = Query(None, description="Criado após esta data"),
-    created_before: Optional[datetime] = Query(
-        None, description="Criado antes desta data"
-    ),
-    tags: Optional[List[str]] = Query(None, description="Filtrar por tags"),
-    limit: int = Query(default=50, ge=1, le=1000, description="Limite de resultados"),
-    offset: int = Query(default=0, ge=0, description="Offset para paginação"),
-    order_by: str = Query(
-        default="created_at",
-        pattern="^(created_at|updated_at|started_at|completed_at|priority)$",
-        description="Campo para ordenação"
-    ),
-    order_direction: str = Query(default="desc", pattern="^(asc|desc)$", description="Direção da ordenação"),
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(50, ge=1, le=1000, description="Number of records to return"),
+    status: Optional[ExecutionStatus] = Query(None, description="Filter by execution status"),
+    workflow_id: Optional[str] = Query(None, description="Filter by workflow ID"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    priority: Optional[str] = Query(None, description="Filter by priority"),
+    start_date: Optional[datetime] = Query(None, description="Filter executions started after this date"),
+    end_date: Optional[datetime] = Query(None, description="Filter executions started before this date"),
+    min_progress: Optional[float] = Query(None, ge=0.0, le=100.0, description="Minimum progress percentage"),
+    has_errors: Optional[bool] = Query(None, description="Filter executions with/without errors"),
+    sort_by: Optional[str] = Query("created_at", description="Sort field"),
+    sort_order: Optional[str] = Query("desc", regex="^(asc|desc)$", description="Sort order"),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> List[ExecutionResponse]:
+):
     """
-    Lista execuções do usuário com filtros avançados e paginação.
-    
-    Permite filtrar por status, workflows, datas, tags e aplicar
-    ordenação e paginação para navegação eficiente.
-    
-    Args:
-        status: Lista de status para filtrar (opcional)
-        workflow_ids: IDs de workflows para filtrar (opcional)
-        created_after: Data mínima de criação (opcional)
-        created_before: Data máxima de criação (opcional)
-        tags: Tags para filtrar (opcional)
-        limit: Limite de resultados por página
-        offset: Offset para paginação
-        order_by: Campo para ordenação
-        order_direction: Direção da ordenação (asc/desc)
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
-        
-    Returns:
-        List[ExecutionResponse]: Lista de execuções
-        
-    Raises:
-        HTTPException: 400 se filtros inválidos
-        HTTPException: 500 se erro interno do servidor
+    List workflow executions with comprehensive filtering, search, and pagination
     """
     try:
-        # Validação de datas
-        if created_after and created_before and created_after > created_before:
-            raise HTTPException(status_code=400, detail="Data inicial deve ser anterior à data final")
-            
-        logger.info(f"Listando execuções para usuário {current_user.id} - limite: {limit}, offset: {offset}")
-        
-        # Converte status strings para enum se fornecido
-        status_enums = None
+        # Base query with relationships
+        query = db.query(WorkflowExecution).options(
+            joinedload(WorkflowExecution.workflow),
+            joinedload(WorkflowExecution.user)
+        )
+
+        # Apply tenant filtering
+        query = query.filter(WorkflowExecution.tenant_id == current_user.tenant_id)
+
+        # Apply filters
         if status:
-            from synapse.models.workflow_execution import ExecutionStatus
-            status_enums = [
-                ExecutionStatus(s)
-                for s in status
-                if s in ExecutionStatus.__members__.values()
-            ]
-
-        filters = ExecutionFilter(
-            status=status_enums,
-            workflow_ids=workflow_ids,
-            created_after=created_after,
-            created_before=created_before,
-            tags=tags,
-            limit=limit,
-            offset=offset,
-            order_by=order_by,
-            order_direction=order_direction,
-        )
-
-        executions = await service.get_user_executions(db, current_user.id, filters)
-        logger.info(f"Retornadas {len(executions)} execuções para usuário {current_user.id}")
-        return executions
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao listar execuções para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/stats", response_model=ExecutionStats, summary="Estatísticas de execução", tags=["workflows"])
-async def get_execution_statistics(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> ExecutionStats:
-    """
-    Obtém estatísticas completas de execução do usuário.
-    
-    Retorna métricas agregadas incluindo contadores, taxas de sucesso,
-    durações médias e tendências de performance.
-    
-    Args:
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
+            query = query.filter(WorkflowExecution.status == status)
         
-    Returns:
-        ExecutionStats: Estatísticas de execução
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo estatísticas de execução para usuário {current_user.id}")
-        
-        try:
-            # Chamada para o serviço
-            stats_data = await service.get_execution_statistics(db, current_user.id)
-            
-            # Verificar se stats_data é um objeto ExecutionStats válido
-            if not isinstance(stats_data, ExecutionStats):
-                logger.error(f"Serviço retornou tipo inválido: {type(stats_data)}")
-                # Converter para dict e depois para ExecutionStats como fallback
-                if hasattr(stats_data, '__dict__'):
-                    stats_dict = stats_data.__dict__
-                else:
-                    stats_dict = stats_data if isinstance(stats_data, dict) else {}
-                
-                # Criar ExecutionStats com valores padrão para campos obrigatórios
-                stats_data = ExecutionStats(
-                    total_executions=stats_dict.get('total_executions', 0),
-                    running_executions=stats_dict.get('running_executions', 0),
-                    completed_executions=stats_dict.get('completed_executions', 0),
-                    failed_executions=stats_dict.get('failed_executions', 0),
-                    cancelled_executions=stats_dict.get('cancelled_executions', 0),
-                    average_duration_seconds=stats_dict.get('average_duration_seconds'),
-                    success_rate_percentage=stats_dict.get('success_rate_percentage', 0.0),
-                    total_nodes_executed=stats_dict.get('total_nodes_executed', 0),
-                    average_nodes_per_execution=stats_dict.get('average_nodes_per_execution', 0.0),
-                    most_used_workflows=stats_dict.get('most_used_workflows', []),
-                    execution_trends=stats_dict.get('execution_trends', {})
-                )
-            
-            logger.info(f"Estatísticas de execução obtidas com sucesso para usuário {current_user.id}")
-            return stats_data
-            
-        except ValueError as e:
-            logger.warning(f"Dados inválidos ao obter estatísticas para usuário {current_user.id}: {str(e)}")
-            raise HTTPException(status_code=400, detail=f"Dados inválidos: {str(e)}")
-        except Exception as e:
-            logger.error(f"Erro no serviço ao obter estatísticas para usuário {current_user.id}: {str(e)}")
-            # Retornar estatísticas padrão em caso de erro do serviço
-            return ExecutionStats(
-                total_executions=0,
-                running_executions=0,
-                completed_executions=0,
-                failed_executions=0,
-                cancelled_executions=0,
-                average_duration_seconds=None,
-                success_rate_percentage=0.0,
-                total_nodes_executed=0,
-                average_nodes_per_execution=0.0,
-                most_used_workflows=[],
-                execution_trends={}
-            )
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro inesperado ao obter estatísticas para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{execution_id}", response_model=ExecutionResponse, summary="Obter execução específica", tags=["workflows"])
-async def get_execution(
-    execution_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> ExecutionResponse:
-    """
-    Obtém detalhes completos de uma execução específica.
-    
-    Retorna informações detalhadas sobre status, progresso,
-    dados de entrada/saída e métricas da execução.
-    
-    Args:
-        execution_id: ID único da execução
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
-        
-    Returns:
-        ExecutionResponse: Dados completos da execução
-        
-    Raises:
-        HTTPException: 404 se execução não encontrada
-        HTTPException: 403 se sem permissão de acesso
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo execução {execution_id} para usuário {current_user.id}")
-        execution = await service.get_execution_status(
-            db, execution_id, current_user.id
-        )
-        if not execution:
-            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Execução não encontrada")
-        logger.info(f"Execução {execution_id} obtida com sucesso para usuário {current_user.id}")
-        return execution
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao obter execução {execution_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/{execution_id}/control", summary="Controlar execução", tags=["workflows"])
-async def control_execution(
-    execution_id: str,
-    control: ExecutionControl,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> Dict[str, Any]:
-    """
-    Controla uma execução através de ações específicas.
-    
-    Permite executar ações de controle como iniciar, pausar, resumir,
-    cancelar ou reiniciar uma execução específica.
-    
-    Args:
-        execution_id: ID único da execução
-        control: Configuração da ação de controle
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
-        
-    Returns:
-        Dict[str, Any]: Resultado da ação de controle
-        
-    Raises:
-        HTTPException: 404 se execução não encontrada
-        HTTPException: 400 se ação inválida ou não permitida
-        HTTPException: 403 se sem permissão de controle
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Executando ação '{control.action}' na execução {execution_id} para usuário {current_user.id}")
-        
-        if control.action == "cancel":
-            success = await service.cancel_execution(
-                db, execution_id, current_user.id, control.reason
-            )
-        elif control.action == "retry":
-            success = await service.retry_execution(db, execution_id, current_user.id)
-        elif control.action == "start":
-            success = await service.engine.start_execution(execution_id)
-        elif control.action == "pause":
-            success = await service.engine.pause_execution(execution_id)
-        elif control.action == "resume":
-            success = await service.engine.resume_execution(execution_id)
-        else:
-            logger.warning(f"Ação inválida '{control.action}' solicitada para execução {execution_id}")
-            raise HTTPException(status_code=400, detail=f"Ação '{control.action}' não suportada")
-
-        if not success:
-            logger.warning(f"Falha ao executar ação '{control.action}' na execução {execution_id}")
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Não foi possível executar a ação '{control.action}' na execução"
-            )
-            
-        logger.info(f"Ação '{control.action}' executada com sucesso na execução {execution_id} para usuário {current_user.id}")
-        return {"success": True, "action": control.action, "execution_id": execution_id}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao executar ação '{control.action}' na execução {execution_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/batch", summary="Controle em lote de execuções", tags=["workflows"])
-async def batch_control_executions(
-    batch: ExecutionBatch,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> Dict[str, Any]:
-    """
-    Executa ações de controle em múltiplas execuções simultaneamente.
-    
-    Permite aplicar a mesma ação (cancelar, pausar, etc.) em
-    várias execuções de uma só vez para operações em lote.
-    
-    Args:
-        batch: Configuração da operação em lote
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
-        
-    Returns:
-        Dict[str, Any]: Resultado das operações em lote
-        
-    Raises:
-        HTTPException: 400 se configuração inválida
-        HTTPException: 403 se sem permissão para algumas execuções
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Executando ação em lote '{batch.action}' em {len(batch.execution_ids)} execuções para usuário {current_user.id}")
-        
-        results = []
-        successful = 0
-        failed = 0
-        
-        for execution_id in batch.execution_ids:
+        if workflow_id:
             try:
-                if batch.action == "cancel":
-                    success = await service.cancel_execution(
-                        db, execution_id, current_user.id, batch.reason
-                    )
-                elif batch.action == "retry":
-                    success = await service.retry_execution(db, execution_id, current_user.id)
-                elif batch.action == "pause":
-                    success = await service.engine.pause_execution(execution_id)
-                elif batch.action == "resume":
-                    success = await service.engine.resume_execution(execution_id)
-                else:
-                    logger.warning(f"Ação inválida '{batch.action}' em operação em lote")
-                    raise HTTPException(status_code=400, detail=f"Ação '{batch.action}' não suportada")
-                
-                if success:
-                    successful += 1
-                    results.append({"execution_id": execution_id, "success": True})
-                else:
-                    failed += 1
-                    results.append({"execution_id": execution_id, "success": False, "error": "Operação falhou"})
-                    
-            except Exception as e:
-                failed += 1
-                results.append({"execution_id": execution_id, "success": False, "error": str(e)})
-                logger.warning(f"Falha na operação '{batch.action}' para execução {execution_id}: {str(e)}")
+                workflow_uuid = uuid.UUID(workflow_id)
+                query = query.filter(WorkflowExecution.workflow_id == workflow_uuid)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid workflow_id format"
+                )
         
-        logger.info(f"Operação em lote concluída para usuário {current_user.id}: {successful} sucessos, {failed} falhas")
-        return {
-            "action": batch.action,
-            "total": len(batch.execution_ids),
-            "successful": successful,
-            "failed": failed,
-            "results": results
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro na operação em lote para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{execution_id}/nodes", response_model=List[NodeExecutionResponse], summary="Obter nós da execução", tags=["workflows"])
-async def get_execution_nodes(
-    execution_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> List[NodeExecutionResponse]:
-    """
-    Obtém informações de execução de todos os nós de uma execução.
-    
-    Retorna status, dados de entrada/saída, duração e
-    métricas para cada nó executado no workflow.
-    
-    Args:
-        execution_id: ID único da execução
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
+        if user_id:
+            try:
+                user_uuid = uuid.UUID(user_id)
+                query = query.filter(WorkflowExecution.user_id == user_uuid)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid user_id format"
+                )
         
-    Returns:
-        List[NodeExecutionResponse]: Lista de execuções de nós
+        if priority:
+            query = query.filter(WorkflowExecution.priority == priority)
         
-    Raises:
-        HTTPException: 404 se execução não encontrada
-        HTTPException: 403 se sem permissão de acesso
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo nós da execução {execution_id} para usuário {current_user.id}")
+        if start_date:
+            query = query.filter(WorkflowExecution.started_at >= start_date)
         
-        # Validate execution_id format
-        if not execution_id or not execution_id.strip():
-            logger.warning(f"ID da execução inválido: '{execution_id}'")
-            raise HTTPException(status_code=400, detail="ID da execução inválido")
+        if end_date:
+            query = query.filter(WorkflowExecution.started_at <= end_date)
         
-        try:
-            # Call service method using get_node_executions (not get_execution_nodes)
-            nodes = await service.get_node_executions(db, execution_id, current_user.id)
-            
-            # Verify that we have a valid execution by checking if empty list means not found
-            # We need to explicitly check if the execution exists
-            from synapse.models.workflow_execution import WorkflowExecution
-            execution_exists = db.query(WorkflowExecution).filter(
-                WorkflowExecution.execution_id == execution_id,
-                WorkflowExecution.user_id == current_user.id
-            ).first() is not None
-            
-            if not execution_exists:
-                logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}")
-                raise HTTPException(status_code=404, detail="Execução não encontrada")
-            
-            # Convert response data if needed
-            if isinstance(nodes, list):
-                # Ensure each node has the correct structure
-                processed_nodes = []
-                for node in nodes:
-                    try:
-                        if hasattr(node, '__dict__'):
-                            processed_nodes.append(node)
-                        elif isinstance(node, dict):
-                            # Convert dict to NodeExecutionResponse if needed
-                            processed_nodes.append(NodeExecutionResponse(**node))
-                        else:
-                            processed_nodes.append(node)
-                    except Exception as node_error:
-                        logger.warning(f"Erro ao processar nó da execução {execution_id}: {str(node_error)}")
-                        # Skip problematic nodes but continue processing
-                        continue
-                
-                logger.info(f"Retornados {len(processed_nodes)} nós da execução {execution_id} para usuário {current_user.id}")
-                return processed_nodes
+        if min_progress is not None:
+            query = query.filter(WorkflowExecution.progress_percentage >= min_progress)
+        
+        if has_errors is not None:
+            if has_errors:
+                query = query.filter(WorkflowExecution.error_message.isnot(None))
             else:
-                logger.error(f"Serviço retornou tipo inválido para nós: {type(nodes)}")
-                return []
-                
-        except ValueError as e:
-            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}: {str(e)}")
-            raise HTTPException(status_code=404, detail="Execução não encontrada")
-        except Exception as e:
-            logger.error(f"Erro no serviço ao obter nós da execução {execution_id}: {str(e)}")
-            raise HTTPException(status_code=500, detail="Erro interno do servidor")
-            
-    except HTTPException:
-        raise
+                query = query.filter(WorkflowExecution.error_message.is_(None))
+
+        # Apply sorting
+        sort_column = getattr(WorkflowExecution, sort_by, WorkflowExecution.created_at)
+        if sort_order == "desc":
+            query = query.order_by(desc(sort_column))
+        else:
+            query = query.order_by(asc(sort_column))
+
+        # Get total count for pagination
+        total = query.count()
+
+        # Apply pagination
+        executions = query.offset(skip).limit(limit).all()
+
+        # Convert to response format
+        execution_responses = []
+        for execution in executions:
+            execution_data = WorkflowExecutionResponse.from_orm(execution)
+            execution_responses.append(execution_data)
+
+        return PaginatedResponse(
+            items=execution_responses,
+            total=total,
+            skip=skip,
+            limit=limit,
+            has_next=(skip + limit) < total,
+            has_prev=skip > 0
+        )
+
     except Exception as e:
-        logger.error(f"Erro inesperado ao obter nós da execução {execution_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error listing executions: {str(e)}"
+        )
 
 
-@router.get("/{execution_id}/logs", summary="Obter logs da execução", tags=["workflows"])
-async def get_execution_logs(
-    execution_id: str,
-    include_nodes: bool = Query(default=True, description="Incluir logs dos nós"),
+@router.post("/", response_model=WorkflowExecutionResponse, status_code=status.HTTP_201_CREATED)
+async def create_execution(
+    execution_data: WorkflowExecutionCreate,
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> Dict[str, Any]:
+):
     """
-    Obtém logs completos de uma execução e seus nós.
-    
-    Retorna logs estruturados da execução principal e
-    opcionalmente de todos os nós executados.
-    
-    Args:
-        execution_id: ID único da execução
-        include_nodes: Se deve incluir logs dos nós individuais
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
-        
-    Returns:
-        Dict[str, Any]: Logs estruturados da execução
-        
-    Raises:
-        HTTPException: 404 se execução não encontrada
-        HTTPException: 403 se sem permissão de acesso
-        HTTPException: 500 se erro interno do servidor
+    Create and start a new workflow execution
     """
     try:
-        logger.info(f"Obtendo logs da execução {execution_id} para usuário {current_user.id} - incluir nós: {include_nodes}")
-        
-        # Call service method with correct parameters
-        try:
-            logs = await service.get_execution_logs(db, execution_id, current_user.id)
-        except ValueError as e:
-            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}: {str(e)}")
-            raise HTTPException(status_code=404, detail="Execução não encontrada")
-        except Exception as e:
-            logger.error(f"Erro no serviço ao obter logs da execução {execution_id}: {str(e)}")
-            raise HTTPException(status_code=500, detail="Erro interno do servidor")
-        
-        if not logs:
-            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Execução não encontrada")
-        
-        # Ensure proper structure with include_nodes parameter
-        if not include_nodes and 'node_logs' in logs:
-            logs = {k: v for k, v in logs.items() if k != 'node_logs'}
-        
-        logger.info(f"Logs da execução {execution_id} obtidos para usuário {current_user.id}")
-        return logs
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao obter logs da execução {execution_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{execution_id}/metrics", summary="Obter métricas da execução", tags=["workflows"])
-async def get_execution_metrics(
-    execution_id: str,
-    metric_types: Optional[List[str]] = Query(
-        None, description="Filtrar por tipos de métrica"
-    ),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> Dict[str, Any]:
-    """
-    Obtém métricas detalhadas de performance de uma execução.
-    
-    Retorna métricas de tempo, memória, CPU e outras métricas
-    de performance coletadas durante a execução.
-    
-    Args:
-        execution_id: ID único da execução
-        metric_types: Tipos específicos de métricas para filtrar
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        service: Serviço de execução
-        
-    Returns:
-        Dict[str, Any]: Métricas de performance da execução
-        
-    Raises:
-        HTTPException: 404 se execução não encontrada
-        HTTPException: 403 se sem permissão de acesso
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo métricas da execução {execution_id} para usuário {current_user.id} - tipos: {metric_types}")
-        
-        # Call service method with correct parameters
-        try:
-            metrics_list = await service.get_execution_metrics(db, execution_id, current_user.id)
-        except ValueError as e:
-            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}: {str(e)}")
-            raise HTTPException(status_code=404, detail="Execução não encontrada")
-        except Exception as e:
-            logger.error(f"Erro no serviço ao obter métricas da execução {execution_id}: {str(e)}")
-            raise HTTPException(status_code=500, detail="Erro interno do servidor")
-        
-        if not metrics_list:
-            logger.warning(f"Execução {execution_id} não encontrada para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Execução não encontrada")
-        
-        # Format metrics properly and apply filters if specified
-        metrics_dict = {
-            "execution_id": execution_id,
-            "metrics": metrics_list,
-            "total_metrics": len(metrics_list)
-        }
-        
-        # Filter by metric types if specified
-        if metric_types:
-            filtered_metrics = [
-                metric for metric in metrics_list 
-                if metric.get("metric_type") in metric_types
-            ]
-            metrics_dict["metrics"] = filtered_metrics
-            metrics_dict["filtered_count"] = len(filtered_metrics)
-            
-        logger.info(f"Métricas da execução {execution_id} obtidas para usuário {current_user.id}")
-        return metrics_dict
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao obter métricas da execução {execution_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/validate-workflow", summary="Validar workflow para execução", tags=["workflows"])
-async def validate_workflow_for_execution(
-    workflow_id: int,
-    variables: Optional[Dict[str, Any]] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> WorkflowValidation:
-    """
-    Valida se um workflow está pronto para execução.
-    
-    Verifica configurações, dependências, variáveis obrigatórias
-    e recursos necessários antes de iniciar uma execução.
-    
-    Args:
-        workflow_id: ID do workflow a ser validado
-        variables: Variáveis personalizadas para validação
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        WorkflowValidation: Resultado da validação com detalhes
-        
-    Raises:
-        HTTPException: 404 se workflow não encontrado
-        HTTPException: 403 se sem permissão de acesso
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Validando workflow {workflow_id} para execução por usuário {current_user.id}")
-        
-        # Obtém o workflow
-        from synapse.services.workflow_service import WorkflowService
-        workflow_service = WorkflowService()
-        workflow = await workflow_service.get_workflow(db, workflow_id, current_user.id)
+        # Validate workflow exists and user has access
+        workflow = db.query(Workflow).filter(
+            and_(
+                Workflow.id == execution_data.workflow_id,
+                Workflow.tenant_id == current_user.tenant_id
+            )
+        ).first()
         
         if not workflow:
-            logger.warning(f"Workflow {workflow_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Workflow não encontrado")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Workflow not found or access denied"
+            )
 
-        validation_result = {
-            "valid": True,
-            "workflow_id": workflow_id,
-            "errors": [],
-            "warnings": [],
-            "requirements": {
-                "nodes_count": len(workflow.nodes) if workflow.nodes else 0,
-                "connections_count": len(workflow.connections) if workflow.connections else 0,
-                "required_variables": [],
-                "optional_variables": [],
-            },
-            "estimated_duration": None,
-            "resource_requirements": {
-                "memory_mb": 256,  # Estimativa base
-                "cpu_cores": 1,
-                "storage_mb": 100,
-            }
-        }
+        # Generate execution ID
+        execution_id = f"exec_{uuid.uuid4().hex[:12]}"
 
-        # Validações específicas
-        if not workflow.nodes:
-            validation_result["valid"] = False
-            validation_result["errors"].append("Workflow não possui nós definidos")
+        # Create new execution
+        execution = WorkflowExecution(
+            id=uuid.uuid4(),
+            execution_id=execution_id,
+            workflow_id=execution_data.workflow_id,
+            user_id=current_user.id,
+            status=ExecutionStatus.PENDING,
+            priority=execution_data.priority or "medium",
+            input_data=execution_data.input_data or {},
+            context_data=execution_data.context_data or {},
+            variables=execution_data.variables or {},
+            total_nodes=0,  # Will be updated when workflow is parsed
+            completed_nodes=0,
+            failed_nodes=0,
+            progress_percentage=0.0,
+            max_retries=execution_data.max_retries or 3,
+            auto_retry=execution_data.auto_retry or False,
+            notify_on_completion=execution_data.notify_on_completion or False,
+            notify_on_failure=execution_data.notify_on_failure or True,
+            tags=execution_data.tags,
+            metadata=execution_data.metadata or {},
+            tenant_id=current_user.tenant_id,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+
+        db.add(execution)
+        db.commit()
+        db.refresh(execution)
+
+        # TODO: Integrate with execution service to start the workflow
+        # This would typically enqueue the execution for processing
         
-        if not workflow.is_active:
-            validation_result["valid"] is False
-            validation_result["warnings"].append("Workflow está inativo")
+        return WorkflowExecutionResponse.from_orm(execution)
 
-        # Valida variáveis obrigatórias
-        if variables is None:
-            variables = current_user.variables or {}
-            
-        required_vars = workflow.required_variables or []
-        missing_vars = [var for var in required_vars if var not in variables]
-        if missing_vars:
-            validation_result["valid"] = False
-            validation_result["errors"].append(f"Variáveis obrigatórias não fornecidas: {missing_vars}")
-        
-        validation_result["requirements"]["required_variables"] = required_vars
-        validation_result["requirements"]["optional_variables"] = workflow.optional_variables or []
-
-        logger.info(f"Validação do workflow {workflow_id} concluída - válido: {validation_result['valid']}")
-        return WorkflowValidation(**validation_result)
-        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao validar workflow {workflow_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating execution: {str(e)}"
+        )
 
 
-@router.get("/queue/status", summary="Status da fila de execução", tags=["workflows"])
-async def get_queue_status(
+@router.get("/{execution_id}", response_model=WorkflowExecutionWithNodesResponse)
+async def get_execution(
+    execution_id: str,
+    include_nodes: bool = Query(True, description="Include node executions in response"),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+):
     """
-    Obtém status detalhado da fila de execução do usuário.
-    
-    Retorna informações sobre execuções pendentes, em andamento,
-    posição na fila e estimativas de tempo.
-    
-    Args:
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, Any]: Status completo da fila de execução
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
+    Get a specific workflow execution by ID with optional node executions
     """
     try:
-        logger.info(f"Obtendo status da fila para usuário {current_user.id}")
+        # Try to parse as UUID first, then check execution_id field
+        execution = None
         
-        # Obtém estatísticas da fila
-        from synapse.models.workflow_execution import ExecutionStatus, WorkflowExecution
-        from sqlalchemy import func
+        try:
+            execution_uuid = uuid.UUID(execution_id)
+            execution = db.query(WorkflowExecution).options(
+                joinedload(WorkflowExecution.workflow),
+                joinedload(WorkflowExecution.user)
+            ).filter(
+                and_(
+                    WorkflowExecution.id == execution_uuid,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+        except ValueError:
+            # If not a valid UUID, search by execution_id field
+            execution = db.query(WorkflowExecution).options(
+                joinedload(WorkflowExecution.workflow),
+                joinedload(WorkflowExecution.user)
+            ).filter(
+                and_(
+                    WorkflowExecution.execution_id == execution_id,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+
+        if not execution:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Execution not found"
+            )
+
+        # Get node executions if requested
+        node_executions = []
+        if include_nodes:
+            node_executions = db.query(NodeExecution).filter(
+                and_(
+                    NodeExecution.workflow_execution_id == execution.id,
+                    NodeExecution.tenant_id == current_user.tenant_id
+                )
+            ).order_by(NodeExecution.execution_order).all()
+
+        # Convert to response format
+        execution_response = WorkflowExecutionResponse.from_orm(execution)
         
-        # Execuções pendentes do usuário
-        pending_executions = db.query(func.count(WorkflowExecution.id)).filter(
-            WorkflowExecution.user_id == current_user.id,
-            WorkflowExecution.status == ExecutionStatus.PENDING
-        ).scalar() or 0
+        if include_nodes:
+            node_responses = [NodeExecutionResponse.from_orm(node) for node in node_executions]
+            return WorkflowExecutionWithNodesResponse(
+                **execution_response.dict(),
+                node_executions=node_responses
+            )
+        else:
+            return WorkflowExecutionWithNodesResponse(
+                **execution_response.dict(),
+                node_executions=[]
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving execution: {str(e)}"
+        )
+
+
+@router.put("/{execution_id}/status")
+async def update_execution_status(
+    execution_id: str,
+    new_status: ExecutionStatus = Query(..., description="New execution status"),
+    error_message: Optional[str] = Query(None, description="Error message if status is failed"),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Update the status of a workflow execution
+    """
+    try:
+        # Find execution
+        execution = None
         
-        # Execuções em andamento do usuário
-        running_executions = db.query(func.count(WorkflowExecution.id)).filter(
-            WorkflowExecution.user_id == current_user.id,
-            WorkflowExecution.status == ExecutionStatus.RUNNING
-        ).scalar() or 0
-        
-        # Execuções em pausa do usuário
-        paused_executions = db.query(func.count(WorkflowExecution.id)).filter(
-            WorkflowExecution.user_id == current_user.id,
-            WorkflowExecution.status == ExecutionStatus.PAUSED
-        ).scalar() or 0
-        
-        # Posição na fila global (aproximada)
-        total_pending = db.query(func.count(WorkflowExecution.id)).filter(
-            WorkflowExecution.status == ExecutionStatus.PENDING
-        ).scalar() or 0
-        
-        # Get user limits with safe defaults
-        execution_limit = getattr(current_user, 'execution_limit', None) or 5
-        queue_limit = getattr(current_user, 'queue_limit', None) or 100
-        
-        queue_status = {
-            "user_queue": {
-                "pending": pending_executions,
-                "running": running_executions,
-                "paused": paused_executions,
-                "total_active": pending_executions + running_executions + paused_executions
-            },
-            "global_queue": {
-                "total_pending": total_pending,
-                "estimated_wait_time_minutes": max(total_pending * 2, 1) if total_pending > 0 else 0
-            },
-            "limits": {
-                "max_concurrent_executions": execution_limit,
-                "max_queue_size": queue_limit
-            },
-            "status": "healthy" if total_pending < 1000 else "congested"
+        try:
+            execution_uuid = uuid.UUID(execution_id)
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.id == execution_uuid,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+        except ValueError:
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.execution_id == execution_id,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+
+        if not execution:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Execution not found"
+            )
+
+        # Update status and related fields
+        old_status = execution.status
+        execution.status = new_status
+        execution.updated_at = datetime.utcnow()
+
+        if new_status == ExecutionStatus.RUNNING and old_status == ExecutionStatus.PENDING:
+            execution.started_at = datetime.utcnow()
+        elif new_status in [ExecutionStatus.COMPLETED, ExecutionStatus.FAILED, ExecutionStatus.CANCELLED]:
+            execution.completed_at = datetime.utcnow()
+            if execution.started_at:
+                duration = execution.completed_at - execution.started_at
+                execution.actual_duration = int(duration.total_seconds())
+
+        if new_status == ExecutionStatus.FAILED and error_message:
+            execution.error_message = error_message
+
+        if new_status == ExecutionStatus.COMPLETED:
+            execution.progress_percentage = 100.0
+
+        db.commit()
+
+        return {
+            "message": f"Execution status updated to {new_status}",
+            "execution_id": execution.execution_id,
+            "old_status": old_status,
+            "new_status": new_status,
+            "updated_at": execution.updated_at
         }
-        
-        logger.info(f"Status da fila obtido para usuário {current_user.id} - pendentes: {pending_executions}, rodando: {running_executions}")
-        return queue_status
-        
-    except Exception as e:
-        logger.error(f"Erro ao obter status da fila para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
-
-@router.get("/admin/engine-status", summary="Status do engine de execução", tags=["workflows", "advanced"])
-async def get_engine_status(
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> Dict[str, Any]:
-    """
-    Obtém status detalhado do engine de execução (admin only).
-    
-    Retorna informações sobre performance, saúde, recursos
-    e estatísticas operacionais do engine.
-    
-    Args:
-        current_user: Usuário autenticado (deve ser admin)
-        service: Serviço de execução
-        
-    Returns:
-        Dict[str, Any]: Status completo do engine
-        
-    Raises:
-        HTTPException: 403 se não for admin
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        # Verifica se é admin
-        if not getattr(current_user, 'is_admin', False):
-            logger.warning(f"Usuário {current_user.id} tentou acessar status do engine sem ser admin")
-            raise HTTPException(status_code=403, detail="Acesso negado - apenas administradores")
-            
-        logger.info(f"Obtendo status do engine para admin {current_user.id}")
-        engine_status = await service.get_engine_status()
-        logger.info(f"Status do engine obtido para admin {current_user.id}")
-        return engine_status
-        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao obter status do engine para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating execution status: {str(e)}"
+        )
 
 
-@router.post("/admin/engine/start", summary="Iniciar engine de execução", tags=["workflows", "advanced"])
-async def start_engine(
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> Dict[str, Any]:
+@router.delete("/{execution_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def cancel_execution(
+    execution_id: str,
+    force: bool = Query(False, description="Force cancel even if already completed"),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
     """
-    Inicia o engine de execução de workflows (admin only).
-    
-    Ativa o engine para processar execuções pendentes
-    e aceitar novas solicitações de execução.
-    
-    Args:
-        current_user: Usuário autenticado (deve ser admin)
-        service: Serviço de execução
-        
-    Returns:
-        Dict[str, Any]: Resultado da operação de inicialização
-        
-    Raises:
-        HTTPException: 403 se não for admin
-        HTTPException: 400 se engine já estiver rodando
-        HTTPException: 500 se erro interno do servidor
+    Cancel a workflow execution
     """
     try:
-        # Verifica se é admin
-        if not getattr(current_user, 'is_admin', False):
-            logger.warning(f"Usuário {current_user.id} tentou iniciar engine sem ser admin")
-            raise HTTPException(status_code=403, detail="Acesso negado - apenas administradores")
-            
-        logger.info(f"Iniciando engine por admin {current_user.id}")
-        success = await service.start_engine()
+        # Find execution
+        execution = None
         
-        if not success:
-            logger.warning(f"Falha ao iniciar engine por admin {current_user.id}")
-            raise HTTPException(status_code=400, detail="Não foi possível iniciar o engine")
-            
-        logger.info(f"Engine iniciado com sucesso por admin {current_user.id}")
-        return {"success": True, "message": "Engine iniciado com sucesso"}
+        try:
+            execution_uuid = uuid.UUID(execution_id)
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.id == execution_uuid,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+        except ValueError:
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.execution_id == execution_id,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+
+        if not execution:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Execution not found"
+            )
+
+        # Check if cancellation is allowed
+        if not force and execution.status in [ExecutionStatus.COMPLETED, ExecutionStatus.FAILED]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot cancel execution with status {execution.status}"
+            )
+
+        # Update status to cancelled
+        execution.status = ExecutionStatus.CANCELLED
+        execution.completed_at = datetime.utcnow()
+        execution.updated_at = datetime.utcnow()
         
+        if execution.started_at:
+            duration = execution.completed_at - execution.started_at
+            execution.actual_duration = int(duration.total_seconds())
+
+        db.commit()
+
+        # TODO: Integrate with execution service to actually stop the workflow
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao iniciar engine por usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error cancelling execution: {str(e)}"
+        )
 
 
-@router.post("/admin/engine/stop", summary="Parar engine de execução", tags=["workflows", "advanced"])
-async def stop_engine(
-    current_user: User = Depends(get_current_user),
-    service: ExecutionService = Depends(get_execution_service),
-) -> Dict[str, Any]:
+@router.get("/{execution_id}/logs")
+async def get_execution_logs(
+    execution_id: str,
+    node_id: Optional[str] = Query(None, description="Filter logs by specific node"),
+    log_level: Optional[str] = Query(None, description="Filter by log level"),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
     """
-    Para o engine de execução de workflows (admin only).
-    
-    Interrompe o processamento de novas execuções e
-    finaliza execuções em andamento de forma segura.
-    
-    Args:
-        current_user: Usuário autenticado (deve ser admin)
-        service: Serviço de execução
-        
-    Returns:
-        Dict[str, Any]: Resultado da operação de parada
-        
-    Raises:
-        HTTPException: 403 se não for admin
-        HTTPException: 400 se engine já estiver parado
-        HTTPException: 500 se erro interno do servidor
+    Get execution logs for a workflow execution
     """
     try:
-        # Verifica se é admin
-        if not getattr(current_user, 'is_admin', False):
-            logger.warning(f"Usuário {current_user.id} tentou parar engine sem ser admin")
-            raise HTTPException(status_code=403, detail="Acesso negado - apenas administradores")
-            
-        logger.info(f"Parando engine por admin {current_user.id}")
-        success = await service.stop_engine()
+        # Find execution
+        execution = None
         
-        if not success:
-            logger.warning(f"Falha ao parar engine por admin {current_user.id}")
-            raise HTTPException(status_code=400, detail="Não foi possível parar o engine")
-            
-        logger.info(f"Engine parado com sucesso por admin {current_user.id}")
-        return {"success": True, "message": "Engine parado com sucesso"}
-        
+        try:
+            execution_uuid = uuid.UUID(execution_id)
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.id == execution_uuid,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+        except ValueError:
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.execution_id == execution_id,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+
+        if not execution:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Execution not found"
+            )
+
+        # Get workflow execution logs
+        workflow_logs = []
+        if execution.execution_log:
+            workflow_logs.append({
+                "timestamp": execution.updated_at,
+                "level": "INFO",
+                "source": "workflow",
+                "message": execution.execution_log
+            })
+
+        # Get node execution logs
+        node_query = db.query(NodeExecution).filter(
+            and_(
+                NodeExecution.workflow_execution_id == execution.id,
+                NodeExecution.tenant_id == current_user.tenant_id
+            )
+        )
+
+        if node_id:
+            try:
+                node_uuid = uuid.UUID(node_id)
+                node_query = node_query.filter(NodeExecution.node_id == node_uuid)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid node_id format"
+                )
+
+        node_executions = node_query.order_by(NodeExecution.execution_order).all()
+
+        node_logs = []
+        for node_exec in node_executions:
+            if node_exec.execution_log:
+                log_entry = {
+                    "timestamp": node_exec.updated_at,
+                    "level": "ERROR" if node_exec.error_message else "INFO",
+                    "source": f"node_{node_exec.node_key}",
+                    "node_id": str(node_exec.node_id),
+                    "node_name": node_exec.node_name,
+                    "message": node_exec.execution_log
+                }
+                
+                if node_exec.error_message:
+                    log_entry["error"] = node_exec.error_message
+                
+                node_logs.append(log_entry)
+
+        # Combine and sort logs by timestamp
+        all_logs = workflow_logs + node_logs
+        all_logs.sort(key=lambda x: x["timestamp"] or datetime.min)
+
+        # Apply log level filter
+        if log_level:
+            all_logs = [log for log in all_logs if log["level"].upper() == log_level.upper()]
+
+        return {
+            "execution_id": execution.execution_id,
+            "execution_status": execution.status,
+            "total_logs": len(all_logs),
+            "logs": all_logs
+        }
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao parar engine por usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving execution logs: {str(e)}"
+        )
 
 
-# Funções de lifecycle do serviço
-async def initialize_execution_service(ws_manager: Optional[ConnectionManager] = None) -> None:
+@router.get("/{execution_id}/metrics", response_model=ExecutionMetricsResponse)
+async def get_execution_metrics(
+    execution_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
     """
-    Inicializa o serviço de execução com websocket manager.
-    
-    Configura conexões, recursos e estado inicial do serviço
-    para processar execuções de workflow.
-    
-    Args:
-        ws_manager: Manager de conexões websocket (opcional)
+    Get execution metrics and statistics
+    """
+    try:
+        # Find execution
+        execution = None
         
-    Raises:
-        RuntimeError: Se falha na inicialização
-    """
-    global execution_service, websocket_manager
-    
-    # Verifica se a engine está habilitada
-    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
-    if not execution_engine_enabled:
-        logger.info("⚠️  Engine de Execução desabilitada via EXECUTION_ENGINE_ENABLED=false")
-        return
-    
-    try:
-        logger.info("Inicializando serviço de execução")
-        websocket_manager = ws_manager
-        execution_service = ExecutionService(websocket_manager)
-        await execution_service.initialize()
-        logger.info("Serviço de execução inicializado com sucesso")
+        try:
+            execution_uuid = uuid.UUID(execution_id)
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.id == execution_uuid,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+        except ValueError:
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.execution_id == execution_id,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+
+        if not execution:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Execution not found"
+            )
+
+        # Get node execution metrics
+        node_executions = db.query(NodeExecution).filter(
+            and_(
+                NodeExecution.workflow_execution_id == execution.id,
+                NodeExecution.tenant_id == current_user.tenant_id
+            )
+        ).all()
+
+        # Calculate metrics
+        total_duration = execution.actual_duration or 0
+        avg_node_duration = 0
+        max_node_duration = 0
+        min_node_duration = 0
+        total_retries = execution.retry_count or 0
+        
+        if node_executions:
+            durations = [ne.duration_ms for ne in node_executions if ne.duration_ms]
+            if durations:
+                avg_node_duration = sum(durations) / len(durations)
+                max_node_duration = max(durations)
+                min_node_duration = min(durations)
+            
+            total_retries += sum(ne.retry_count or 0 for ne in node_executions)
+
+        # Node breakdown
+        nodes_by_status = {}
+        for node_exec in node_executions:
+            if node_exec.error_message:
+                status_key = "failed"
+            elif node_exec.completed_at:
+                status_key = "completed"
+            elif node_exec.started_at:
+                status_key = "running"
+            else:
+                status_key = "pending"
+            
+            nodes_by_status[status_key] = nodes_by_status.get(status_key, 0) + 1
+
+        return ExecutionMetricsResponse(
+            execution_id=execution.execution_id,
+            workflow_id=str(execution.workflow_id),
+            status=execution.status,
+            total_duration_seconds=total_duration,
+            progress_percentage=execution.progress_percentage or 0.0,
+            total_nodes=execution.total_nodes or 0,
+            completed_nodes=execution.completed_nodes or 0,
+            failed_nodes=execution.failed_nodes or 0,
+            pending_nodes=(execution.total_nodes or 0) - (execution.completed_nodes or 0) - (execution.failed_nodes or 0),
+            total_retries=total_retries,
+            avg_node_duration_ms=round(avg_node_duration, 2),
+            max_node_duration_ms=max_node_duration,
+            min_node_duration_ms=min_node_duration,
+            nodes_by_status=nodes_by_status,
+            started_at=execution.started_at,
+            completed_at=execution.completed_at,
+            created_at=execution.created_at,
+            updated_at=execution.updated_at
+        )
+
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao inicializar serviço de execução: {str(e)}")
-        raise RuntimeError(f"Falha na inicialização do serviço de execução: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving execution metrics: {str(e)}"
+        )
 
 
-async def shutdown_execution_service() -> None:
+@router.get("/{execution_id}/nodes", response_model=PaginatedResponse[NodeExecutionResponse])
+async def get_execution_nodes(
+    execution_id: str,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=1000),
+    node_status: Optional[str] = Query(None, description="Filter by node execution status"),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
     """
-    Finaliza o serviço de execução de forma segura.
-    
-    Para execuções em andamento, salva estado e
-    libera recursos do sistema.
-    
-    Raises:
-        RuntimeError: Se falha no shutdown
+    Get node executions for a specific workflow execution
     """
-    global execution_service
-    
-    # Verifica se a engine está habilitada
-    execution_engine_enabled = os.getenv('EXECUTION_ENGINE_ENABLED', 'true').lower() == 'true'
-    if not execution_engine_enabled:
-        logger.info("ℹ️  Engine de Execução já estava desabilitada")
-        return
-    
     try:
-        if execution_service:
-            logger.info("Finalizando serviço de execução")
-            await execution_service.shutdown()
-            execution_service = None
-            logger.info("Serviço de execução finalizado com sucesso")
+        # Find execution
+        execution = None
+        
+        try:
+            execution_uuid = uuid.UUID(execution_id)
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.id == execution_uuid,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+        except ValueError:
+            execution = db.query(WorkflowExecution).filter(
+                and_(
+                    WorkflowExecution.execution_id == execution_id,
+                    WorkflowExecution.tenant_id == current_user.tenant_id
+                )
+            ).first()
+
+        if not execution:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Execution not found"
+            )
+
+        # Query node executions
+        query = db.query(NodeExecution).filter(
+            and_(
+                NodeExecution.workflow_execution_id == execution.id,
+                NodeExecution.tenant_id == current_user.tenant_id
+            )
+        )
+
+        # Apply status filter
+        if node_status:
+            if node_status.lower() == "failed":
+                query = query.filter(NodeExecution.error_message.isnot(None))
+            elif node_status.lower() == "completed":
+                query = query.filter(
+                    and_(
+                        NodeExecution.completed_at.isnot(None),
+                        NodeExecution.error_message.is_(None)
+                    )
+                )
+            elif node_status.lower() == "running":
+                query = query.filter(
+                    and_(
+                        NodeExecution.started_at.isnot(None),
+                        NodeExecution.completed_at.is_(None)
+                    )
+                )
+            elif node_status.lower() == "pending":
+                query = query.filter(NodeExecution.started_at.is_(None))
+
+        # Get total count
+        total = query.count()
+
+        # Apply pagination and ordering
+        node_executions = query.order_by(NodeExecution.execution_order).offset(skip).limit(limit).all()
+
+        # Convert to response format
+        node_responses = [NodeExecutionResponse.from_orm(node) for node in node_executions]
+
+        return PaginatedResponse(
+            items=node_responses,
+            total=total,
+            skip=skip,
+            limit=limit,
+            has_next=(skip + limit) < total,
+            has_prev=skip > 0
+        )
+
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao finalizar serviço de execução: {str(e)}")
-        raise RuntimeError(f"Falha no shutdown do serviço de execução: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving execution nodes: {str(e)}"
+        )
+
+
+# Legacy functions for backward compatibility
+async def initialize_execution_service(websocket_manager):
+    """Initialize execution service (placeholder implementation)"""
+    # TODO: Implement actual execution service initialization
+    pass
+
+
+async def shutdown_execution_service():
+    """Shutdown execution service (placeholder implementation)"""
+    # TODO: Implement actual execution service shutdown
+    pass
