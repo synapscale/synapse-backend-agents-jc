@@ -20,12 +20,16 @@ from synapse.schemas.models import (
     ProjectUpdate,
     CommentCreate,
 )
-from synapse.models.subscription import UserSubscription, PlanType, SubscriptionStatus
-from synapse.models.tenant import Tenant, TenantStatus
+from synapse.models.user_subscription import UserSubscription
 from synapse.models.plan import Plan
+from synapse.models.tenant import Tenant, TenantStatus
 from synapse.models.workspace_member import WorkspaceMember, WorkspaceRole
 from synapse.models.workspace_activity import WorkspaceActivity
 from synapse.models.workspace_invitation import WorkspaceInvitation
+from synapse.models.workspace_project import WorkspaceProject
+from synapse.models.project_collaborator import ProjectCollaborator
+from synapse.models.project_comment import ProjectComment
+from synapse.schemas.user_features import SubscriptionStatus
 
 logger = logging.getLogger(__name__)
 

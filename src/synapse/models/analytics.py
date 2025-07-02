@@ -301,18 +301,5 @@ class AnalyticsExport(Base):
     completed_at = Column(DateTime(timezone=True))
 
 
-class AnalyticsMetric(Base):
-    __tablename__ = "analytics_metrics"
-    id = Column(UUID(as_uuid=True), primary_key=True)
-    metric_name = Column(String(100), nullable=False)
-    metric_value = Column(DECIMAL(15, 4), nullable=False)
-    dimensions = Column(JSONB, server_default=text("'{}'"), nullable=False)
-    timestamp = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-
-
- 
+# Note: AnalyticsMetric model is defined in analytics_metric.py
+# This avoids SQLAlchemy registry conflicts with duplicate class names

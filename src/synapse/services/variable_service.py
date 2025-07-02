@@ -15,11 +15,14 @@ import yaml
 import logging
 
 from synapse.models.user_variable import UserVariable
-from synapse.schemas.user_variable import (
+from synapse.schemas.user_features import (
     UserVariableCreate,
     UserVariableUpdate,
-    UserVariableImport,
-    UserVariableExport,
+    VariableImportRequest,
+    VariableExportRequest,
+    VariableImportResult,
+    UserVariableSearchRequest,
+    UserVariableListResponse,
     UserVariableStats,
     UserVariableValidation,
 )
@@ -320,7 +323,7 @@ class VariableService:
     def import_from_env(
         db: Session,
         user_id: int,
-        import_data: UserVariableImport,
+        import_data: VariableImportRequest,
     ) -> dict[str, Any]:
         """
         Importa variáveis de um arquivo .env
@@ -400,7 +403,7 @@ class VariableService:
     def export_variables(
         db: Session,
         user_id: int,
-        export_data: UserVariableExport,
+        export_data: VariableExportRequest,
     ) -> dict[str, Any]:
         """
         Exporta variáveis do usuário em diferentes formatos

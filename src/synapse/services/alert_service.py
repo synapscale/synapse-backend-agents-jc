@@ -1,17 +1,19 @@
 """
-Alert Service for Real-time Monitoring and Notifications
-Implements the actual alert evaluation engine and notification delivery system
+Enhanced Alert Service for Real-time Monitoring and Notifications
+Implements robust alert evaluation engine and multi-channel notification system
 """
 
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional, Union, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc, func, text
+from sqlalchemy import and_, or_, desc, func, text, select
+from sqlalchemy.exc import SQLAlchemyError
 import json
 import uuid
 from enum import Enum
+from dataclasses import dataclass, asdict
 
 from synapse.models.analytics_alert import AnalyticsAlert
 from synapse.models.analytics_event import AnalyticsEvent  
@@ -24,9 +26,41 @@ from synapse.schemas.analytics import AlertCreate, AlertUpdate
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class AlertEvaluationResult:
+    """Result of alert evaluation"""
+    alert_id: str
+    should_trigger: bool
+    current_value: float
+    threshold: float
+    previous_value: Optional[float] = None
+    evaluation_time: datetime = None
+    
+    def __post_init__(self):
+        if self.evaluation_time is None:
+            self.evaluation_time = datetime.utcnow()
+
+
+@dataclass
+class AlertState:
+    """Enhanced alert state tracking"""
+    alert_id: str
+    status: str
+    last_evaluation: Optional[datetime]
+    last_triggered: Optional[datetime]
+    trigger_count: int
+    current_value: Optional[float]
+    previous_value: Optional[float]
+    consecutive_triggers: int = 0
+    is_in_cooldown: bool = False
+    cooldown_until: Optional[datetime] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
 class AlertSeverity(Enum):
     """Alert severity levels"""
-
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -35,47 +69,66 @@ class AlertSeverity(Enum):
 
 class AlertStatus(Enum):
     """Alert status"""
-
     ACTIVE = "active"
     PAUSED = "paused"
     TRIGGERED = "triggered"
     RESOLVED = "resolved"
+    COOLDOWN = "cooldown"
 
 
 class NotificationChannel(Enum):
     """Notification channels"""
-
     EMAIL = "email"
     WEBSOCKET = "websocket"
     WEBHOOK = "webhook"
     SLACK = "slack"
 
 
+class AlertConditionOperator(Enum):
+    """Alert condition operators"""
+    GREATER_THAN = "gt"
+    GREATER_THAN_OR_EQUAL = "gte"
+    LESS_THAN = "lt"
+    LESS_THAN_OR_EQUAL = "lte"
+    EQUAL = "eq"
+    NOT_EQUAL = "ne"
+    PERCENTAGE_CHANGE = "pct_change"
+
+
 class AlertService:
-    """Real-time alert evaluation and notification service"""
+    """Enhanced real-time alert evaluation and notification service"""
 
     def __init__(self, db: Session):
         self.db = db
         self.email_service = EmailService()
         self.websocket_manager = ConnectionManager()
-        self._alert_states = {}  # Cache for alert state management
+        self._alert_states: Dict[str, AlertState] = {}  # Enhanced state tracking
         self._evaluation_running = False
+        self._evaluation_interval = 30  # seconds
+        self._batch_size = 50  # Process alerts in batches
+        self._cooldown_period = 300  # 5 minutes default cooldown
+        self._metrics_cache = {}  # Cache for metric values
+        self._cache_ttl = 60  # Cache TTL in seconds
 
     async def create_alert(
         self, alert_data: Dict[str, Any], user_id: str
     ) -> Dict[str, Any]:
-        """Create a new alert with real validation and setup"""
+        """Create a new alert with enhanced validation and setup"""
         try:
-            # Validate alert condition
-            condition_validated = self._validate_alert_condition(
-                alert_data.get("condition", {})
-            )
-            if not condition_validated:
-                raise ValueError("Invalid alert condition configuration")
+            # Enhanced validation
+            validation_result = self._validate_alert_data(alert_data)
+            if not validation_result["valid"]:
+                raise ValueError(f"Invalid alert data: {validation_result['errors']}")
 
-            # Create alert in database
+            # Validate that the metric exists
+            metric_name = alert_data.get("condition", {}).get("metric")
+            if not await self._metric_exists(metric_name):
+                logger.warning(f"Alert created for non-existent metric: {metric_name}")
+
+            # Create alert with enhanced configuration
+            alert_id = uuid.uuid4()
             alert = AnalyticsAlert(
-                id=uuid.uuid4(),
+                id=alert_id,
                 name=alert_data.get("name"),
                 description=alert_data.get("description"),
                 condition=alert_data.get("condition"),
@@ -90,17 +143,29 @@ class AlertService:
             self.db.commit()
             self.db.refresh(alert)
 
-            # Initialize alert state
-            self._alert_states[str(alert.id)] = {
-                "last_evaluation": None,
-                "last_triggered": None,
-                "trigger_count": 0,
-                "current_value": None,
-                "status": AlertStatus.ACTIVE.value,
-            }
+            # Initialize enhanced alert state
+            self._alert_states[str(alert.id)] = AlertState(
+                alert_id=str(alert.id),
+                status=AlertStatus.ACTIVE.value,
+                last_evaluation=None,
+                last_triggered=None,
+                trigger_count=0,
+                current_value=None,
+                previous_value=None,
+                consecutive_triggers=0,
+                is_in_cooldown=False,
+                cooldown_until=None
+            )
+
+            # Record alert creation event
+            await self._record_alert_event(
+                alert_id=str(alert.id),
+                event_type="alert_created",
+                details={"user_id": user_id, "metric": metric_name}
+            )
 
             logger.info(
-                f"Alert created: {alert.name} (ID: {alert.id}) for user {user_id}"
+                f"Enhanced alert created: {alert.name} (ID: {alert.id}) for user {user_id}"
             )
 
             return {
@@ -110,12 +175,77 @@ class AlertService:
                 "created_at": alert.created_at.isoformat(),
                 "condition": alert.condition,
                 "notification_config": alert.notification_config,
+                "metric_exists": await self._metric_exists(metric_name)
             }
 
+        except SQLAlchemyError as e:
+            logger.error(f"Database error creating alert: {str(e)}")
+            self.db.rollback()
+            raise ValueError(f"Database error: {str(e)}")
         except Exception as e:
             logger.error(f"Failed to create alert: {str(e)}")
             self.db.rollback()
             raise
+
+    async def _validate_alert_data(self, alert_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced alert data validation"""
+        errors = []
+        
+        # Basic field validation
+        if not alert_data.get("name"):
+            errors.append("Alert name is required")
+        elif len(alert_data["name"]) > 100:
+            errors.append("Alert name too long (max 100 characters)")
+            
+        # Condition validation
+        condition = alert_data.get("condition", {})
+        condition_errors = self._validate_alert_condition(condition)
+        if condition_errors:
+            errors.extend(condition_errors)
+            
+        # Notification config validation
+        notification_config = alert_data.get("notification_config", {})
+        notification_errors = self._validate_notification_config(notification_config)
+        if notification_errors:
+            errors.extend(notification_errors)
+        
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors
+        }
+
+    async def _metric_exists(self, metric_name: str) -> bool:
+        """Check if a metric exists in the database"""
+        if not metric_name:
+            return False
+            
+        try:
+            result = self.db.query(AnalyticsMetric).filter(
+                AnalyticsMetric.metric_name == metric_name
+            ).first()
+            return result is not None
+        except Exception as e:
+            logger.error(f"Error checking metric existence: {str(e)}")
+            return False
+
+    async def _record_alert_event(
+        self, alert_id: str, event_type: str, details: Dict[str, Any]
+    ):
+        """Record an alert-related event"""
+        try:
+            event = AnalyticsEvent(
+                id=uuid.uuid4(),
+                event_type=event_type,
+                event_data={
+                    "alert_id": alert_id,
+                    **details
+                },
+                created_at=datetime.utcnow()
+            )
+            self.db.add(event)
+            self.db.commit()
+        except Exception as e:
+            logger.error(f"Failed to record alert event: {str(e)}")
 
     async def get_user_alerts(
         self, user_id: str, status: str = None, limit: int = 20, offset: int = 0
@@ -196,11 +326,9 @@ class AlertService:
 
             # Validate new condition if provided
             if alert_data.condition:
-                condition_validated = self._validate_alert_condition(
-                    alert_data.condition
-                )
-                if not condition_validated:
-                    raise ValueError("Invalid alert condition configuration")
+                condition_errors = self._validate_alert_condition(alert_data.condition)
+                if condition_errors:
+                    raise ValueError(f"Invalid alert condition: {', '.join(condition_errors)}")
                 alert.condition = alert_data.condition
 
             # Update fields
@@ -718,30 +846,82 @@ class AlertService:
             else:
                 return AlertSeverity.LOW
 
-    def _validate_alert_condition(self, condition: Dict[str, Any]) -> bool:
-        """Validate alert condition structure"""
+    def _validate_alert_condition(self, condition: Dict[str, Any]) -> List[str]:
+        """Validate alert condition structure and return errors"""
+        errors = []
+        
         try:
             required_fields = ["metric", "operator", "threshold"]
 
             for field in required_fields:
                 if field not in condition:
-                    return False
+                    errors.append(f"Missing required field: {field}")
 
             # Validate operator
-            valid_operators = ["gt", "gte", "lt", "lte", "eq", "ne"]
-            if condition["operator"] not in valid_operators:
-                return False
+            valid_operators = [op.value for op in AlertConditionOperator]
+            if condition.get("operator") and condition["operator"] not in valid_operators:
+                errors.append(f"Invalid operator. Valid options: {valid_operators}")
 
             # Validate threshold is numeric
-            try:
-                float(condition["threshold"])
-            except (ValueError, TypeError):
-                return False
+            if condition.get("threshold") is not None:
+                try:
+                    float(condition["threshold"])
+                except (ValueError, TypeError):
+                    errors.append("Threshold must be a numeric value")
 
-            return True
+            # Validate aggregation if present
+            if condition.get("aggregation"):
+                valid_aggregations = ["avg", "sum", "min", "max", "count"]
+                if condition["aggregation"] not in valid_aggregations:
+                    errors.append(f"Invalid aggregation. Valid options: {valid_aggregations}")
 
-        except Exception:
-            return False
+            # Validate timeframe if present
+            if condition.get("timeframe"):
+                try:
+                    timeframe = int(condition["timeframe"])
+                    if timeframe < 60 or timeframe > 86400:  # 1 minute to 24 hours
+                        errors.append("Timeframe must be between 60 and 86400 seconds")
+                except (ValueError, TypeError):
+                    errors.append("Timeframe must be an integer (seconds)")
+
+        except Exception as e:
+            errors.append(f"Validation error: {str(e)}")
+
+        return errors
+
+    def _validate_notification_config(self, config: Dict[str, Any]) -> List[str]:
+        """Validate notification configuration"""
+        errors = []
+        
+        try:
+            channels = config.get("channels", [])
+            if not isinstance(channels, list):
+                errors.append("Notification channels must be a list")
+                return errors
+
+            valid_channel_types = [ch.value for ch in NotificationChannel]
+            
+            for i, channel in enumerate(channels):
+                if not isinstance(channel, dict):
+                    errors.append(f"Channel {i} must be an object")
+                    continue
+                    
+                channel_type = channel.get("type")
+                if not channel_type:
+                    errors.append(f"Channel {i} missing type")
+                elif channel_type not in valid_channel_types:
+                    errors.append(f"Channel {i} invalid type. Valid: {valid_channel_types}")
+                
+                # Validate webhook URL if webhook type
+                if channel_type == NotificationChannel.WEBHOOK.value:
+                    webhook_config = channel.get("config", {})
+                    if not webhook_config.get("url"):
+                        errors.append(f"Webhook channel {i} missing URL")
+                    
+        except Exception as e:
+            errors.append(f"Notification config validation error: {str(e)}")
+            
+        return errors
 
     async def get_alert_metrics(self, alert_id: str, user_id: str) -> Dict[str, Any]:
         """Get metrics and history for a specific alert"""

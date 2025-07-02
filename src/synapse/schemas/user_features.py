@@ -226,26 +226,23 @@ class UserVariableBase(BaseModel):
         return v
 
 
-class UserVariableCreate(UserVariableBase):
+class UserVariableCreate(BaseModel):
     """Schema para criação de variables"""
 
-    tenant_id: Optional[uuid.UUID] = Field(None, description="ID do tenant")
+    key: str = Field(..., min_length=1, max_length=255, pattern=r'^[A-Z][A-Z0-9_]*$')
+    value: str = Field(..., min_length=1)
+    description: str | None = Field(None, max_length=1000)
+    category: str | None = Field(None, max_length=100)
+    is_encrypted: bool = False
 
 
 class UserVariableUpdate(BaseModel):
     """Schema para atualização de variables"""
 
-    key: Optional[str] = Field(
-        None, min_length=1, max_length=255, description="Nova chave"
-    )
-    value: Optional[str] = Field(None, description="Novo valor")
-    is_secret: Optional[bool] = Field(None, description="Novo status de secreta")
-    is_encrypted: Optional[bool] = Field(
-        None, description="Novo status de criptografia"
-    )
-    is_active: Optional[bool] = Field(None, description="Novo status ativo")
-    category: Optional[VariableCategory] = Field(None, description="Nova categoria")
-    description: Optional[str] = Field(None, description="Nova descrição")
+    value: str | None = Field(None, min_length=1)
+    description: str | None = Field(None, max_length=1000)
+    category: str | None = Field(None, max_length=100)
+    is_active: bool | None = None
 
 
 class UserVariableResponse(UserVariableBase):
@@ -456,20 +453,9 @@ class UserSubscriptionSearchRequest(BaseModel):
 class UserVariableSearchRequest(BaseModel):
     """Schema para busca de variables"""
 
-    user_ids: Optional[List[uuid.UUID]] = Field(None, description="IDs dos usuários")
-    tenant_id: Optional[uuid.UUID] = Field(None, description="ID do tenant")
-    categories: Optional[List[VariableCategory]] = Field(None, description="Categorias")
-    is_secret: Optional[bool] = Field(None, description="Filtrar por secretas")
-    is_active: Optional[bool] = Field(None, description="Filtrar por ativas")
-    is_encrypted: Optional[bool] = Field(None, description="Filtrar por criptografadas")
-
-    # Busca textual
-    key_pattern: Optional[str] = Field(None, description="Padrão da chave")
-    description_search: Optional[str] = Field(None, description="Busca na descrição")
-
-    # Paginação
-    page: int = Field(1, ge=1, description="Página")
-    size: int = Field(50, ge=1, le=200, description="Tamanho da página")
+    query: str = Field(..., min_length=1, max_length=100)
+    category: str | None = None
+    is_active: bool | None = None
 
 
 # ==================== SCHEMAS DE LISTAGEM ====================
@@ -556,30 +542,45 @@ class BulkVariableResult(BaseModel):
 class VariableExportRequest(BaseModel):
     """Schema para exportação de variáveis"""
 
-    user_id: uuid.UUID = Field(..., description="ID do usuário")
-    categories: Optional[List[VariableCategory]] = Field(
-        None, description="Categorias a exportar"
-    )
-    include_secrets: bool = Field(False, description="Incluir variáveis secretas")
-    format: str = Field("json", description="Formato da exportação")
+    format: str = Field(..., pattern=r'^(env|json|yaml)$')
+    include_inactive: bool = False
+    category: str | None = None
 
 
 class VariableImportRequest(BaseModel):
     """Schema para importação de variáveis"""
 
-    user_id: uuid.UUID = Field(..., description="ID do usuário")
-    variables_data: List[Dict[str, Any]] = Field(..., description="Dados das variáveis")
-    merge_strategy: str = Field("skip", description="Estratégia de merge")
-    validate_only: bool = Field(False, description="Apenas validar")
+    source: str = Field(..., pattern=r'^(env_file|text|json)$')
+    content: str = Field(..., min_length=1)
+    replace_existing: bool = False
+    category: str | None = Field(None, max_length=100)
 
 
 class VariableImportResult(BaseModel):
     """Resultado da importação de variáveis"""
 
-    imported: int = Field(0, description="Quantidade importada")
-    skipped: int = Field(0, description="Quantidade ignorada")
-    errors: List[str] = Field(default_factory=list, description="Erros encontrados")
-    warnings: List[str] = Field(default_factory=list, description="Avisos")
+    imported: int
+    skipped: int
+    errors: list[str]
+    warnings: list[str]
     created_variables: List[UserVariableSecureResponse] = Field(
         default_factory=list, description="Variáveis criadas"
     )
+
+
+# ==================== VARIABLE SCHEMAS ====================
+
+class UserVariableStats(BaseModel):
+    total_variables: int
+    active_variables: int
+    inactive_variables: int
+    sensitive_variables: int
+    categories_count: dict[str, int]
+    last_updated: datetime | None = None
+
+class UserVariableValidation(BaseModel):
+    key: str
+    is_valid: bool
+    errors: list[str]
+    warnings: list[str]
+    suggestions: list[str]

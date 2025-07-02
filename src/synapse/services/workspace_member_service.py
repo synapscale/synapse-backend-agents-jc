@@ -9,7 +9,8 @@ from synapse.models.workspace_member import WorkspaceMember, WorkspaceRole
 from synapse.models.workspace_activity import WorkspaceActivity
 from synapse.models.workspace_invitation import WorkspaceInvitation
 from synapse.models.user import User
-from synapse.models.subscription import UserSubscription, Plan
+from synapse.models.user_subscription import UserSubscription
+from synapse.models.plan import Plan
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 import uuid
