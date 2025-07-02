@@ -11,19 +11,86 @@ from contextlib import contextmanager
 from functools import wraps
 from typing import Any, Dict, Optional, Union
 
-from opentelemetry import trace
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.trace import Status, StatusCode
-from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+# Check if OpenTelemetry is available at all
+OPENTELEMETRY_AVAILABLE = False
+try:
+    from opentelemetry import trace
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+    from opentelemetry.semconv.resource import ResourceAttributes
+    from opentelemetry.trace import Status, StatusCode
+    from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+    OPENTELEMETRY_AVAILABLE = True
+except ImportError:
+    # Create dummy objects if OpenTelemetry is not available
+    trace = None
+    Resource = None
+    TracerProvider = None
+    BatchSpanProcessor = None
+    ConsoleSpanExporter = None
+    ResourceAttributes = None
+    Status = None
+    StatusCode = None
+    TraceContextTextMapPropagator = None
+
+# Optional imports - graceful degradation if packages not available
+if OPENTELEMETRY_AVAILABLE:
+    try:
+        from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+        JAEGER_AVAILABLE = True
+    except ImportError:
+        JaegerExporter = None
+        JAEGER_AVAILABLE = False
+
+    try:
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        OTLP_AVAILABLE = True
+    except ImportError:
+        OTLPSpanExporter = None
+        OTLP_AVAILABLE = False
+
+    try:
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        FASTAPI_INSTRUMENTATION_AVAILABLE = True
+    except ImportError:
+        FastAPIInstrumentor = None
+        FASTAPI_INSTRUMENTATION_AVAILABLE = False
+
+    try:
+        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+        HTTPX_INSTRUMENTATION_AVAILABLE = True
+    except ImportError:
+        HTTPXClientInstrumentor = None
+        HTTPX_INSTRUMENTATION_AVAILABLE = False
+
+    try:
+        from opentelemetry.instrumentation.redis import RedisInstrumentor
+        REDIS_INSTRUMENTATION_AVAILABLE = True
+    except ImportError:
+        RedisInstrumentor = None
+        REDIS_INSTRUMENTATION_AVAILABLE = False
+
+    try:
+        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+        SQLALCHEMY_INSTRUMENTATION_AVAILABLE = True
+    except ImportError:
+        SQLAlchemyInstrumentor = None
+        SQLALCHEMY_INSTRUMENTATION_AVAILABLE = False
+else:
+    # If OpenTelemetry is not available, set all to False
+    JAEGER_AVAILABLE = False
+    OTLP_AVAILABLE = False
+    FASTAPI_INSTRUMENTATION_AVAILABLE = False
+    HTTPX_INSTRUMENTATION_AVAILABLE = False
+    REDIS_INSTRUMENTATION_AVAILABLE = False
+    SQLALCHEMY_INSTRUMENTATION_AVAILABLE = False
+    JaegerExporter = None
+    OTLPSpanExporter = None
+    FastAPIInstrumentor = None
+    HTTPXClientInstrumentor = None
+    RedisInstrumentor = None
+    SQLAlchemyInstrumentor = None
 
 from synapse.core.config import settings
 
@@ -58,6 +125,10 @@ def setup_tracing() -> None:
     """Configura o sistema de tracing distribuído."""
     global tracer
 
+    if not OPENTELEMETRY_AVAILABLE:
+        logger.warning("OpenTelemetry não está disponível - tracing desabilitado")
+        return
+
     config = TracingConfig()
 
     if not config.enabled:
@@ -88,27 +159,33 @@ def setup_tracing() -> None:
         exporters.append("console")
 
     # Jaeger exporter
-    try:
-        jaeger_exporter = JaegerExporter(
-            endpoint=config.jaeger_endpoint,
-        )
-        jaeger_processor = BatchSpanProcessor(jaeger_exporter)
-        provider.add_span_processor(jaeger_processor)
-        exporters.append("jaeger")
-    except Exception as e:
-        logger.warning(f"Falha ao configurar Jaeger exporter: {e}")
+    if JAEGER_AVAILABLE:
+        try:
+            jaeger_exporter = JaegerExporter(
+                endpoint=config.jaeger_endpoint,
+            )
+            jaeger_processor = BatchSpanProcessor(jaeger_exporter)
+            provider.add_span_processor(jaeger_processor)
+            exporters.append("jaeger")
+        except Exception as e:
+            logger.warning(f"Falha ao configurar Jaeger exporter: {e}")
+    else:
+        logger.warning("Jaeger exporter não disponível - pacote não instalado")
 
     # OTLP exporter
-    try:
-        otlp_exporter = OTLPSpanExporter(
-            endpoint=config.otlp_endpoint,
-            insecure=True,
-        )
-        otlp_processor = BatchSpanProcessor(otlp_exporter)
-        provider.add_span_processor(otlp_processor)
-        exporters.append("otlp")
-    except Exception as e:
-        logger.warning(f"Falha ao configurar OTLP exporter: {e}")
+    if OTLP_AVAILABLE:
+        try:
+            otlp_exporter = OTLPSpanExporter(
+                endpoint=config.otlp_endpoint,
+                insecure=True,
+            )
+            otlp_processor = BatchSpanProcessor(otlp_exporter)
+            provider.add_span_processor(otlp_processor)
+            exporters.append("otlp")
+        except Exception as e:
+            logger.warning(f"Falha ao configurar OTLP exporter: {e}")
+    else:
+        logger.warning("OTLP exporter não disponível - pacote não instalado")
 
     # Obter tracer global
     tracer = trace.get_tracer(__name__)
@@ -120,7 +197,15 @@ def setup_tracing() -> None:
 
 def instrument_fastapi(app) -> None:
     """Instrumenta aplicação FastAPI com OpenTelemetry."""
+    if not OPENTELEMETRY_AVAILABLE:
+        logger.warning("OpenTelemetry não está disponível - instrumentação FastAPI desabilitada")
+        return
+
     if not settings.ENABLE_TRACING:
+        return
+
+    if not FASTAPI_INSTRUMENTATION_AVAILABLE:
+        logger.warning("FastAPI instrumentation não disponível - pacote não instalado")
         return
 
     try:
@@ -135,20 +220,41 @@ def instrument_fastapi(app) -> None:
 
 def instrument_libraries() -> None:
     """Instrumenta bibliotecas com OpenTelemetry."""
+    if not OPENTELEMETRY_AVAILABLE:
+        logger.warning("OpenTelemetry não está disponível - instrumentação de bibliotecas desabilitada")
+        return
+
     if not settings.ENABLE_TRACING:
         return
 
+    instrumented = []
+
     try:
         # Instrumentar HTTPX
-        HTTPXClientInstrumentor().instrument()
+        if HTTPX_INSTRUMENTATION_AVAILABLE:
+            HTTPXClientInstrumentor().instrument()
+            instrumented.append("HTTPX")
+        else:
+            logger.warning("HTTPX instrumentation não disponível - pacote não instalado")
 
         # Instrumentar Redis
-        RedisInstrumentor().instrument()
+        if REDIS_INSTRUMENTATION_AVAILABLE:
+            RedisInstrumentor().instrument()
+            instrumented.append("Redis")
+        else:
+            logger.warning("Redis instrumentation não disponível - pacote não instalado")
 
         # Instrumentar SQLAlchemy
-        SQLAlchemyInstrumentor().instrument()
+        if SQLALCHEMY_INSTRUMENTATION_AVAILABLE:
+            SQLAlchemyInstrumentor().instrument()
+            instrumented.append("SQLAlchemy")
+        else:
+            logger.warning("SQLAlchemy instrumentation não disponível - pacote não instalado")
 
-        logger.info("Bibliotecas instrumentadas com OpenTelemetry")
+        if instrumented:
+            logger.info(f"Bibliotecas instrumentadas com OpenTelemetry: {', '.join(instrumented)}")
+        else:
+            logger.warning("Nenhuma biblioteca foi instrumentada - pacotes não disponíveis")
     except Exception as e:
         logger.error(f"Erro ao instrumentar bibliotecas: {e}")
 
@@ -160,7 +266,7 @@ def create_span(
     set_status_on_exception: bool = True,
 ):
     """Context manager para criar spans personalizados."""
-    if not tracer:
+    if not OPENTELEMETRY_AVAILABLE or not tracer:
         yield None
         return
 
@@ -188,7 +294,7 @@ def trace_operation(
     def decorator(func):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
-            if not tracer:
+            if not OPENTELEMETRY_AVAILABLE or not tracer:
                 return await func(*args, **kwargs)
 
             span_name = operation_name or f"{func.__module__}.{func.__name__}"
@@ -224,7 +330,7 @@ def trace_operation(
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
-            if not tracer:
+            if not OPENTELEMETRY_AVAILABLE or not tracer:
                 return func(*args, **kwargs)
 
             span_name = operation_name or f"{func.__module__}.{func.__name__}"
@@ -467,7 +573,7 @@ def trace_database_operation(
 
 def get_current_trace_id() -> Optional[str]:
     """Obtém o trace ID atual para correlação com logs."""
-    if not tracer:
+    if not OPENTELEMETRY_AVAILABLE or not tracer or not trace:
         return None
 
     current_span = trace.get_current_span()
@@ -480,7 +586,7 @@ def get_current_trace_id() -> Optional[str]:
 
 def get_current_span_id() -> Optional[str]:
     """Obtém o span ID atual para correlação com logs."""
-    if not tracer:
+    if not OPENTELEMETRY_AVAILABLE or not tracer or not trace:
         return None
 
     current_span = trace.get_current_span()
@@ -493,7 +599,7 @@ def get_current_span_id() -> Optional[str]:
 
 def add_span_attribute(key: str, value: Any) -> None:
     """Adiciona atributo ao span atual."""
-    if not tracer:
+    if not OPENTELEMETRY_AVAILABLE or not tracer or not trace:
         return
 
     current_span = trace.get_current_span()
@@ -503,7 +609,7 @@ def add_span_attribute(key: str, value: Any) -> None:
 
 def add_span_event(name: str, attributes: Optional[Dict[str, Any]] = None) -> None:
     """Adiciona evento ao span atual."""
-    if not tracer:
+    if not OPENTELEMETRY_AVAILABLE or not tracer or not trace:
         return
 
     current_span = trace.get_current_span()
@@ -513,7 +619,7 @@ def add_span_event(name: str, attributes: Optional[Dict[str, Any]] = None) -> No
 
 def inject_trace_context(headers: Dict[str, str]) -> Dict[str, str]:
     """Injeta contexto de trace em headers HTTP."""
-    if not tracer:
+    if not OPENTELEMETRY_AVAILABLE or not tracer:
         return headers
 
     propagator.inject(headers)
@@ -522,7 +628,7 @@ def inject_trace_context(headers: Dict[str, str]) -> Dict[str, str]:
 
 def extract_trace_context(headers: Dict[str, str]) -> None:
     """Extrai contexto de trace de headers HTTP."""
-    if not tracer:
+    if not OPENTELEMETRY_AVAILABLE or not tracer or not trace:
         return
 
     context = propagator.extract(headers)
@@ -570,6 +676,6 @@ def get_trace_context() -> Dict[str, Optional[str]]:
 
 
 # Inicialização automática se habilitado
-if settings.ENABLE_TRACING:
+if OPENTELEMETRY_AVAILABLE and settings.ENABLE_TRACING:
     setup_tracing()
     instrument_libraries()
