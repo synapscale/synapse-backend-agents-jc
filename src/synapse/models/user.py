@@ -2,15 +2,24 @@
 Modelo de usuário completo com autenticação e autorização
 """
 
-from sqlalchemy import Column, String, Boolean, DateTime, JSON, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
 from passlib.context import CryptContext
 from synapse.database import Base
+from enum import Enum as PyEnum
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+class UserStatus(PyEnum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    SUSPENDED = "suspended"
+    PENDING = "pending"
+    DELETED = "deleted"
 
 
 class User(Base):
@@ -31,16 +40,21 @@ class User(Base):
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    status = Column(String(20), default="active")
+    user_metadata = Column("metadata", JSONB, default=dict)
+    last_login_at = Column(DateTime(timezone=True))
+    login_count = Column(Integer, default=0)
+    failed_login_attempts = Column(Integer, default=0)
+    account_locked_until = Column(DateTime(timezone=True))
+    tenant_id = Column(
+        UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True
+    )
 
     workflows = relationship(
         "Workflow", back_populates="user", cascade="all, delete-orphan"
     )
-    nodes = relationship(
-        "Node", back_populates="user", cascade="all, delete-orphan"
-    )
-    agents = relationship(
-        "Agent", back_populates="user", cascade="all, delete-orphan"
-    )
+    nodes = relationship("Node", back_populates="user", cascade="all, delete-orphan")
+    agents = relationship("Agent", back_populates="user", cascade="all, delete-orphan")
     conversations = relationship(
         "Conversation", back_populates="user", cascade="all, delete-orphan"
     )
@@ -52,6 +66,31 @@ class User(Base):
     )
     variables = relationship(
         "UserVariable", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    # Relacionamentos de autenticação - NOVOS MODELS
+    password_reset_tokens = relationship(
+        "PasswordResetToken", back_populates="user", cascade="all, delete-orphan"
+    )
+    email_verification_tokens = relationship(
+        "EmailVerificationToken", back_populates="user", cascade="all, delete-orphan"
+    )
+    tenant_roles = relationship(
+        "UserTenantRole",
+        foreign_keys="UserTenantRole.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    # Relacionamentos de auditoria e analytics - NOVOS MODELS
+    audit_logs = relationship(
+        "AuditLog", back_populates="user", cascade="all, delete-orphan"
+    )
+    insights = relationship(
+        "UserInsight", back_populates="user", cascade="all, delete-orphan"
+    )
+    subscriptions = relationship(
+        "UserSubscription", back_populates="user", cascade="all, delete-orphan", overlaps="subscription"
     )
 
     # Relacionamentos de templates
@@ -105,6 +144,9 @@ class User(Base):
         foreign_keys="WorkspaceInvitation.invited_user_id",
         back_populates="invited_user",
     )
+    workspace_activities = relationship(
+        "WorkspaceActivity", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # Relacionamentos de analytics
     analytics_events = relationship(
@@ -116,23 +158,54 @@ class User(Base):
     custom_reports = relationship(
         "CustomReport", back_populates="user", cascade="all, delete-orphan"
     )
-    user_insights = relationship(
-        "UserInsight", back_populates="user", cascade="all, delete-orphan"
-    )
     analytics_dashboards = relationship(
-        "AnalyticsDashboard", back_populates="user", cascade="all, delete-orphan", foreign_keys="AnalyticsDashboard.user_id"
+        "AnalyticsDashboard",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="AnalyticsDashboard.user_id",
     )
 
-    # Relacionamento de assinatura
+    # Relacionamento de assinatura (uma para um)
     subscription = relationship(
-        "UserSubscription", back_populates="user", uselist=False, cascade="all, delete-orphan"
+        "UserSubscription",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    # Project relationships
+    project_versions = relationship(
+        "ProjectVersion", back_populates="user", cascade="all, delete-orphan"
     )
 
     # Novos relacionamentos LLM
-    usage_logs = relationship("UsageLog", back_populates="user", cascade="all, delete-orphan")
-    billing_events = relationship("BillingEvent", back_populates="user", cascade="all, delete-orphan") 
-    message_feedbacks = relationship("MessageFeedback", back_populates="user", cascade="all, delete-orphan")
-    created_tags = relationship("Tag", back_populates="created_by_user", cascade="all, delete-orphan")
+    usage_logs = relationship(
+        "UsageLog", back_populates="user", cascade="all, delete-orphan"
+    )
+    billing_events = relationship(
+        "BillingEvent", back_populates="user", cascade="all, delete-orphan"
+    )
+    message_feedbacks = relationship(
+        "MessageFeedback", back_populates="user", cascade="all, delete-orphan"
+    )
+    created_tags = relationship(
+        "Tag", back_populates="created_by_user", cascade="all, delete-orphan"
+    )
+
+    # Relacionamentos de Pagamento - NOVOS MODELS
+    payment_customers = relationship(
+        "PaymentCustomer", back_populates="user", cascade="all, delete-orphan"
+    )
+    created_coupons = relationship(
+        "Coupon", 
+        foreign_keys="Coupon.created_by",
+        back_populates="creator", 
+        cascade="all, delete-orphan"
+    )
+
+    # Relacionamentos
+    tenant = relationship("Tenant", back_populates="users")
+    files = relationship("File", back_populates="user")
 
     def verify_password(self, password: str) -> bool:
         """Verifica se a senha fornecida está correta"""
@@ -146,14 +219,14 @@ class User(Base):
     def first_name(self) -> str:
         """Compatibilidade: extrai primeiro nome do full_name"""
         if self.full_name:
-            return self.full_name.split(' ')[0]
+            return self.full_name.split(" ")[0]
         return ""
 
     @property
     def last_name(self) -> str:
         """Compatibilidade: extrai sobrenome do full_name"""
-        if self.full_name and ' ' in self.full_name:
-            return ' '.join(self.full_name.split(' ')[1:])
+        if self.full_name and " " in self.full_name:
+            return " ".join(self.full_name.split(" ")[1:])
         return ""
 
     @property
@@ -187,7 +260,7 @@ class User(Base):
             "email": self.email,
             "username": self.username,
             "first_name": self.first_name,  # property
-            "last_name": self.last_name,    # property
+            "last_name": self.last_name,  # property
             "full_name": self.full_name,
             "avatar_url": self.avatar_url,  # property
             "profile_image_url": self.profile_image_url,
@@ -199,77 +272,3 @@ class User(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
-
-
-class RefreshToken(Base):
-    __tablename__ = "refresh_tokens"
-    __table_args__ = {"schema": "synapscale_db"}
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    token = Column(String(500), unique=True, nullable=False, index=True)
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    is_revoked = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relacionamento
-    user = relationship("User", back_populates="refresh_tokens")
-
-    def is_expired(self) -> bool:
-        """Verifica se o token está expirado"""
-        from datetime import datetime, timezone
-
-        return datetime.now(timezone.utc) > self.expires_at
-
-    def is_valid(self) -> bool:
-        """Verifica se o token é válido (não expirado e não revogado)"""
-        return not self.is_expired() and not self.is_revoked
-
-
-class PasswordResetToken(Base):
-    __tablename__ = "password_reset_tokens"
-    __table_args__ = {"schema": "synapscale_db"}
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    token = Column(String(500), unique=True, nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    def is_expired(self) -> bool:
-        """Verifica se o token está expirado"""
-        from datetime import datetime, timezone
-
-        return datetime.now(timezone.utc) > self.expires_at
-
-    def is_valid(self) -> bool:
-        """Verifica se o token é válido (não expirado e não usado)"""
-        return not self.is_expired() and not self.is_used
-
-
-class EmailVerificationToken(Base):
-    __tablename__ = "email_verification_tokens"
-    __table_args__ = {"schema": "synapscale_db"}
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    token = Column(String(500), unique=True, nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    expires_at = Column(DateTime(timezone=True), nullable=False)
-    is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    def is_expired(self) -> bool:
-        """Verifica se o token está expirado"""
-        from datetime import datetime, timezone
-
-        return datetime.now(timezone.utc) > self.expires_at
-
-    def is_valid(self) -> bool:
-        """Verifica se o token é válido (não expirado e não usado)"""
-        return not self.is_expired() and not self.is_used

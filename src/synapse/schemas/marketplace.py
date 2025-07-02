@@ -143,13 +143,13 @@ class ComponentResponse(ComponentBase):
 
     class Config:
         from_attributes = True
-    
+
     @validator("id", "author_id", pre=True)
     def convert_uuid_to_string(cls, v):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -218,13 +218,13 @@ class RatingResponse(RatingBase):
 
     class Config:
         from_attributes = True
-    
+
     @validator("id", "component_id", "user_id", pre=True)
     def convert_uuid_to_string(cls, v):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -277,13 +277,13 @@ class PurchaseResponse(BaseModel):
 
     class Config:
         from_attributes = True
-    
+
     @validator("id", "component_id", "user_id", pre=True)
     def convert_uuid_to_string(cls, v):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 

@@ -13,6 +13,7 @@ from sqlalchemy.orm import sessionmaker, Session
 
 logger = logging.getLogger(__name__)
 
+
 # ============================
 # CONFIGURAÇÃO CENTRALIZADA
 # ============================
@@ -22,6 +23,7 @@ def get_database_config() -> Dict[str, Any]:
     """
     try:
         from synapse.core.config import settings
+
         return settings.get_database_config()
     except ImportError:
         # Fallback para variáveis de ambiente diretas
@@ -34,6 +36,7 @@ def get_database_config() -> Dict[str, Any]:
             "pool_timeout": 30,
             "pool_recycle": 300,
         }
+
 
 # Get database configuration
 db_config = get_database_config()
@@ -92,12 +95,8 @@ if DATABASE_URL:
             "options": f"-csearch_path={DATABASE_SCHEMA},public",
         },
     )
-    
-    SessionLocal = sessionmaker(
-        autocommit=False, 
-        autoflush=False, 
-        bind=sync_engine
-    )
+
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
 
 # ============================
 # BASE AND METADATA
@@ -106,12 +105,13 @@ if DATABASE_URL:
 # Create base class for models
 Base = declarative_base()
 
-# Metadata for schema
-metadata = MetaData(schema=DATABASE_SCHEMA)
+# Metadata for schema operations
+schema_metadata = MetaData(schema=DATABASE_SCHEMA)
 
 # ============================
 # DATABASE DEPENDENCIES
 # ============================
+
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
@@ -127,12 +127,14 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
+
 # Backwards-compatible alias (explicit async session)
 get_db_async = get_async_db
 
 # ----------------------------
 # SYNC DATABASE DEPENDENCY
 # ----------------------------
+
 
 def get_db() -> Generator[Session, None, None]:
     """FastAPI dependency that yields a synchronous `Session`. Use this for code that relies on the classic `.query()` API and synchronous commit/rollback operations."""
@@ -142,12 +144,14 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
+
 # Alias kept for legacy imports
 get_db_sync = get_db
 
 # ============================
 # DATABASE OPERATIONS
 # ============================
+
 
 async def init_db() -> None:
     """
@@ -158,11 +162,11 @@ async def init_db() -> None:
             # Test connection
             await conn.execute(text("SELECT 1"))
             logger.info(f"✅ Database connection successful to: {DATABASE_SCHEMA}")
-            
+
             # Create schema if it doesn't exist
             await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {DATABASE_SCHEMA}"))
             logger.info(f"✅ Schema '{DATABASE_SCHEMA}' ensured")
-            
+
     except Exception as e:
         logger.error(f"❌ Database initialization failed: {e}")
         raise
@@ -174,7 +178,7 @@ async def close_db() -> None:
     """
     try:
         await async_engine.dispose()
-        if 'sync_engine' in globals():
+        if "sync_engine" in globals():
             sync_engine.dispose()
         logger.info("✅ Database connections closed")
     except Exception as e:
@@ -270,9 +274,11 @@ def get_database_info() -> Optional[Dict[str, Any]]:
         logger.error(f"❌ Failed to get database info: {e}")
         return None
 
+
 # ----------------------------
 # CONTEXT MANAGER (SYNC)
 # ----------------------------
+
 
 @contextmanager
 def get_db_session():
@@ -290,24 +296,25 @@ def get_db_session():
     finally:
         db.close()
 
+
 # ============================
 # EXPORTS
 # ============================
 
 # Export main functions
 __all__ = [
-    "get_async_db",        # Async dependency
-    "get_db",              # Sync dependency  
-    "get_db_sync",         # Sync alias
-    "get_db_session",      # Context manager
-    "init_db", 
+    "get_async_db",  # Async dependency
+    "get_db",  # Sync dependency
+    "get_db_sync",  # Sync alias
+    "get_db_session",  # Context manager
+    "init_db",
     "close_db",
     "test_database_connection",
     "get_database_info",
     "AsyncSessionLocal",
     "SessionLocal",
     "Base",
-    "metadata",
+    "schema_metadata",
     "async_engine",
     "sync_engine",
 ]

@@ -1,642 +1,554 @@
 """
-Endpoints para gerenciamento de agentes de IA
-Criado por José - um desenvolvedor Full Stack
-API completa para CRUD e controle de agentes inteligentes
+Agents endpoints - Gerenciamento de agentes de IA
 """
 
-import logging
-from typing import Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_, or_
+from sqlalchemy.orm import selectinload
+from typing import List, Optional
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
-
-from synapse.database import get_db
-from synapse.models.user import User
-from synapse.models.agent import Agent, AgentStatus
-from synapse.api.deps import get_current_user
+from synapse.api.deps import get_current_active_user, get_db
 from synapse.schemas.agent import (
+    AgentResponse,
     AgentCreate,
     AgentUpdate,
-    AgentResponse,
     AgentListResponse,
+    AgentStatus,
+    AgentEnvironment,
+    AgentScope,
 )
+from synapse.models import Agent, User, Workspace, Tenant
 
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.get(
-    "/",
-    response_model=AgentListResponse,
-    summary="Listar agentes",
-    tags=["ai"],
-)
+@router.get("/", response_model=AgentListResponse)
 async def list_agents(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
     page: int = Query(1, ge=1, description="Número da página"),
-    size: int = Query(20, ge=1, le=100, description="Itens por página"),
-    agent_type: Optional[str] = Query(None, description="Filtrar por tipo de agente"),
-    search: Optional[str] = Query(None, description="Termo de busca"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> AgentListResponse:
-    """
-    Lista todos os agentes do usuário com filtros e paginação.
-    
-    Retorna agentes ordenados por atividade recente,
-    com opções de filtro por tipo e busca textual.
-    
-    Args:
-        page: Número da página (1-based)
-        size: Número de itens por página
-        agent_type: Tipo específico de agente para filtrar
-        search: Termo para buscar em nome e descrição
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        AgentListResponse: Lista paginada de agentes
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Listando agentes para usuário {current_user.id} - página: {page}, tipo: {agent_type}")
-        
-        query = db.query(Agent).filter(Agent.user_id == current_user.id)
+    size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
+    workspace_id: Optional[uuid.UUID] = Query(
+        None, description="Filtrar por workspace"
+    ),
+    search: Optional[str] = Query(None, description="Buscar por nome ou descrição"),
+    status: Optional[AgentStatus] = Query(None, description="Filtrar por status"),
+    environment: Optional[AgentEnvironment] = Query(
+        None, description="Filtrar por ambiente"
+    ),
+    scope: Optional[AgentScope] = Query(None, description="Filtrar por escopo"),
+    is_active: Optional[bool] = Query(None, description="Filtrar agentes ativos"),
+):
+    """Listar agentes do usuário"""
 
-        # Filtros
-        if agent_type:
-            query = query.filter(Agent.agent_type == agent_type)
-            logger.info(f"Filtrando por tipo: {agent_type}")
+    # Query base
+    query = select(Agent).options(
+        selectinload(Agent.user), selectinload(Agent.workspace)
+    )
 
-        if search:
-            query = query.filter(
-                Agent.name.ilike(f"%{search}%") | Agent.description.ilike(f"%{search}%"),
+    conditions = []
+
+    # Filtrar por agentes do usuário
+    conditions.append(Agent.user_id == current_user.id)
+
+    # Filtrar por workspace se especificado
+    if workspace_id:
+        # Verificar se o usuário tem acesso ao workspace
+        workspace_result = await db.execute(
+            select(Workspace).where(
+                and_(
+                    Workspace.id == workspace_id,
+                    or_(
+                        Workspace.owner_id == current_user.id,
+                        Workspace.is_public == True,
+                        # TODO: Verificar se é membro do workspace
+                    ),
+                )
             )
-            logger.info(f"Filtrando por busca: '{search}'")
-
-        # Ordenar por atividade recente
-        query = query.order_by(Agent.last_active_at.desc().nullslast())
-
-        # Paginação
-        total = query.count()
-        agents = query.offset((page - 1) * size).limit(size).all()
-
-        logger.info(f"Retornados {len(agents)} agentes de {total} total para usuário {current_user.id}")
-        
-        return AgentListResponse(
-            items=[a.to_dict() for a in agents],
-            total=total,
-            page=page,
-            size=size,
-            pages=(total + size - 1) // size,
         )
-    except Exception as e:
-        logger.error(f"Erro ao listar agentes para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        workspace = workspace_result.scalar_one_or_none()
+        if not workspace:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Workspace não encontrado ou sem acesso",
+            )
+        conditions.append(Agent.workspace_id == workspace_id)
+
+    # Aplicar filtros adicionais
+    if search:
+        search_term = f"%{search}%"
+        conditions.append(
+            or_(Agent.name.ilike(search_term), Agent.description.ilike(search_term))
+        )
+
+    if status:
+        conditions.append(Agent.status == status.value)
+
+    if environment:
+        conditions.append(Agent.environment == environment.value)
+
+    if scope:
+        conditions.append(Agent.scope == scope.value)
+
+    if is_active is not None:
+        conditions.append(Agent.is_active == is_active)
+
+    if conditions:
+        query = query.where(and_(*conditions))
+
+    # Contar total
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar()
+
+    # Aplicar paginação
+    offset = (page - 1) * size
+    query = query.offset(offset).limit(size).order_by(Agent.updated_at.desc())
+
+    # Executar query
+    result = await db.execute(query)
+    agents = result.scalars().all()
+
+    # Calcular páginas
+    pages = (total + size - 1) // size
+
+    # Converter para response
+    agent_responses = []
+    for agent in agents:
+        agent_responses.append(
+            AgentResponse(
+                id=agent.id,
+                name=agent.name,
+                description=agent.description,
+                version=agent.version,
+                environment=agent.environment,
+                status=agent.status,
+                scope=agent.scope,
+                configuration=agent.configuration or {},
+                metadata=agent.metadata or {},
+                is_active=agent.is_active,
+                user_id=agent.user_id,
+                workspace_id=agent.workspace_id,
+                tenant_id=agent.tenant_id,
+                created_at=agent.created_at,
+                updated_at=agent.updated_at,
+                # Dados relacionados
+                user_name=agent.user.full_name if agent.user else None,
+                workspace_name=agent.workspace.name if agent.workspace else None,
+            )
+        )
+
+    return AgentListResponse(
+        items=agent_responses, total=total, page=page, pages=pages, size=size
+    )
 
 
-@router.post("/", response_model=AgentResponse, summary="Criar agente", tags=["ai"])
+@router.post("/", response_model=AgentResponse)
 async def create_agent(
     agent_data: AgentCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> AgentResponse:
-    """
-    Cria um novo agente de IA personalizado.
-    
-    Permite criar agentes com configurações específicas
-    de personalidade e modelo de linguagem.
-    
-    Args:
-        agent_data: Dados do agente a ser criado
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        AgentResponse: Agente criado
-        
-    Raises:
-        HTTPException: 400 se dados inválidos
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Criando agente '{agent_data.name}' para usuário {current_user.id}")
-        
-        # Validate agent_data before creating
-        if not agent_data.name or len(agent_data.name.strip()) == 0:
-            logger.warning(f"Nome do agente vazio para usuário {current_user.id}")
-            raise HTTPException(status_code=400, detail="Nome do agente é obrigatório")
-        
-        # Create agent object with proper field mapping
-        agent = Agent(
-            name=agent_data.name.strip(),
-            description=agent_data.description,
-            agent_type=agent_data.agent_type,
-            personality=agent_data.personality,
-            instructions=agent_data.instructions,
-            model_provider=agent_data.model_provider,
-            provider=agent_data.model_provider,  # Map to provider field for compatibility
-            model=agent_data.model,
-            temperature=agent_data.temperature,
-            max_tokens=agent_data.max_tokens,
-            tools=agent_data.tools or [],
-            knowledge_base=agent_data.knowledge_base or {},
-            avatar_url=agent_data.avatar_url,
-            user_id=current_user.id,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Criar novo agente"""
+
+    # Verificar se workspace existe e usuário tem acesso
+    if agent_data.workspace_id:
+        workspace_result = await db.execute(
+            select(Workspace).where(
+                and_(
+                    Workspace.id == agent_data.workspace_id,
+                    or_(
+                        Workspace.owner_id == current_user.id,
+                        # TODO: Verificar se é membro do workspace
+                    ),
+                )
+            )
+        )
+        workspace = workspace_result.scalar_one_or_none()
+        if not workspace:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Workspace não encontrado ou sem acesso",
+            )
+
+    # Verificar se nome é único no escopo (workspace ou tenant)
+    name_conditions = [Agent.name == agent_data.name, Agent.user_id == current_user.id]
+
+    if agent_data.scope == AgentScope.WORKSPACE and agent_data.workspace_id:
+        name_conditions.append(Agent.workspace_id == agent_data.workspace_id)
+    elif agent_data.scope == AgentScope.PRIVATE:
+        name_conditions.append(Agent.scope == AgentScope.PRIVATE.value)
+
+    existing_agent = await db.execute(select(Agent).where(and_(*name_conditions)))
+    if existing_agent.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Já existe um agente com este nome no escopo especificado",
         )
 
-        db.add(agent)
-        db.commit()
-        db.refresh(agent)
+    # Criar agente
+    agent = Agent(
+        name=agent_data.name,
+        description=agent_data.description,
+        version=agent_data.version,
+        environment=agent_data.environment,
+        status=AgentStatus.DRAFT.value,  # Sempre criar como draft
+        scope=agent_data.scope,
+        configuration=agent_data.configuration,
+        metadata=agent_data.metadata,
+        is_active=False,  # Sempre criar como inativo
+        user_id=current_user.id,
+        workspace_id=agent_data.workspace_id,
+        tenant_id=current_user.tenant_id,
+    )
 
-        logger.info(f"Agente '{agent.name}' criado com sucesso (ID: {agent.id}) para usuário {current_user.id}")
-        
-        # Convert to dict and ensure proper response format
-        response_data = agent.to_dict(include_sensitive=True)
-        return AgentResponse(**response_data)
-        
-    except HTTPException:
-        db.rollback()
-        raise
-    except ValueError as e:
-        logger.error(f"Erro de validação ao criar agente para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=400, detail=f"Dados inválidos: {str(e)}")
-    except Exception as e:
-        logger.error(f"Erro interno ao criar agente para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    db.add(agent)
+    await db.commit()
+    await db.refresh(agent)
+
+    return AgentResponse(
+        id=agent.id,
+        name=agent.name,
+        description=agent.description,
+        version=agent.version,
+        environment=agent.environment,
+        status=agent.status,
+        scope=agent.scope,
+        configuration=agent.configuration or {},
+        metadata=agent.metadata or {},
+        is_active=agent.is_active,
+        user_id=agent.user_id,
+        workspace_id=agent.workspace_id,
+        tenant_id=agent.tenant_id,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
+        user_name=current_user.full_name,
+    )
 
 
-@router.get("/{agent_id}", response_model=AgentResponse, summary="Obter agente", tags=["ai"])
+@router.get("/{agent_id}", response_model=AgentResponse)
 async def get_agent(
-    agent_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> AgentResponse:
-    """
-    Obtém um agente específico por ID.
-    
-    Retorna dados completos do agente se o usuário
-    for o proprietário.
-    
-    Args:
-        agent_id: ID único do agente
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        AgentResponse: Dados do agente
-        
-    Raises:
-        HTTPException: 404 se agente não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        agent_uuid = uuid.UUID(agent_id)
-        logger.info(f"Obtendo agente {agent_id} para usuário {current_user.id}")
-        
-        agent = (
-            db.query(Agent)
-            .filter(
-                Agent.id == agent_id,
-                Agent.user_id == current_user.id,
-            )
-            .first()
+    agent_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Obter agente por ID"""
+
+    result = await db.execute(
+        select(Agent)
+        .options(selectinload(Agent.user), selectinload(Agent.workspace))
+        .where(Agent.id == agent_id)
+    )
+    agent = result.scalar_one_or_none()
+
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agente não encontrado"
         )
 
-        if not agent:
-            logger.warning(f"Agente {agent_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agente não encontrado",
-            )
+    # Verificar acesso
+    has_access = False
 
-        logger.info(f"Agente {agent_id} obtido com sucesso para usuário {current_user.id}")
-        return agent.to_dict()
-    except ValueError:
-        logger.warning(f"agent_id inválido: {agent_id}")
-        raise HTTPException(status_code=404, detail="Agente não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao obter agente {agent_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    # Owner sempre tem acesso
+    if agent.user_id == current_user.id:
+        has_access = True
+    # Agentes globais são acessíveis por todos
+    elif agent.scope == AgentScope.GLOBAL.value:
+        has_access = True
+    # Agentes de workspace são acessíveis por membros
+    elif agent.scope == AgentScope.WORKSPACE.value and agent.workspace:
+        if agent.workspace.owner_id == current_user.id or agent.workspace.is_public:
+            has_access = True
+        # TODO: Verificar se é membro do workspace
+
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Não autorizado a acessar este agente",
+        )
+
+    return AgentResponse(
+        id=agent.id,
+        name=agent.name,
+        description=agent.description,
+        version=agent.version,
+        environment=agent.environment,
+        status=agent.status,
+        scope=agent.scope,
+        configuration=agent.configuration or {},
+        metadata=agent.metadata or {},
+        is_active=agent.is_active,
+        user_id=agent.user_id,
+        workspace_id=agent.workspace_id,
+        tenant_id=agent.tenant_id,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
+        user_name=agent.user.full_name if agent.user else None,
+        workspace_name=agent.workspace.name if agent.workspace else None,
+    )
 
 
-@router.put("/{agent_id}", response_model=AgentResponse, summary="Atualizar agente", tags=["ai"])
+@router.put("/{agent_id}", response_model=AgentResponse)
 async def update_agent(
-    agent_id: str,
-    agent_data: AgentUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> AgentResponse:
-    """
-    Atualiza um agente existente.
-    
-    Permite modificar configurações do agente se o usuário
-    for o proprietário.
-    
-    Args:
-        agent_id: ID único do agente
-        agent_data: Dados atualizados do agente
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        AgentResponse: Agente atualizado
-        
-    Raises:
-        HTTPException: 404 se agente não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        agent_uuid = uuid.UUID(agent_id)
-        logger.info(f"Atualizando agente {agent_id} para usuário {current_user.id}")
-        
-        agent = (
-            db.query(Agent)
-            .filter(
-                Agent.id == agent_id,
-                Agent.user_id == current_user.id,
-            )
-            .first()
+    agent_id: uuid.UUID,
+    agent_update: AgentUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Atualizar agente"""
+
+    result = await db.execute(select(Agent).where(Agent.id == agent_id))
+    agent = result.scalar_one_or_none()
+
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agente não encontrado"
         )
 
-        if not agent:
-            logger.warning(f"Agente {agent_id} não encontrado para usuário {current_user.id}")
+    # Apenas owner pode atualizar
+    if agent.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas o proprietário pode atualizar o agente",
+        )
+
+    # Verificar se nome é único se sendo alterado
+    if agent_update.name and agent_update.name != agent.name:
+        name_conditions = [
+            Agent.name == agent_update.name,
+            Agent.user_id == current_user.id,
+            Agent.id != agent_id,
+        ]
+
+        if agent.scope == AgentScope.WORKSPACE.value and agent.workspace_id:
+            name_conditions.append(Agent.workspace_id == agent.workspace_id)
+        elif agent.scope == AgentScope.PRIVATE.value:
+            name_conditions.append(Agent.scope == AgentScope.PRIVATE.value)
+
+        existing = await db.execute(select(Agent).where(and_(*name_conditions)))
+        if existing.scalar_one_or_none():
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agente não encontrado",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Já existe um agente com este nome no escopo especificado",
             )
 
-        # Atualizar campos
-        update_count = 0
-        for field, value in agent_data.dict(exclude_unset=True).items():
-            if field == "model":
-                setattr(agent, "model", value)
-            elif field == "model_provider":
-                setattr(agent, "model_provider", value)
-            elif hasattr(agent, field):
-                setattr(agent, field, value)
-                update_count += 1
+    # Atualizar campos
+    update_data = agent_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(agent, field, value)
 
-        if update_count > 0:
-            db.commit()
-            db.refresh(agent)
-            logger.info(f"Agente {agent_id} atualizado com sucesso - {update_count} campos modificados")
-        else:
-            logger.info(f"Nenhuma alteração necessária no agente {agent_id}")
+    await db.commit()
+    await db.refresh(agent)
 
-        return agent.to_dict()
-    except ValueError:
-        logger.warning(f"agent_id inválido: {agent_id}")
-        raise HTTPException(status_code=404, detail="Agente não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao atualizar agente {agent_id} para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    return AgentResponse(
+        id=agent.id,
+        name=agent.name,
+        description=agent.description,
+        version=agent.version,
+        environment=agent.environment,
+        status=agent.status,
+        scope=agent.scope,
+        configuration=agent.configuration or {},
+        metadata=agent.metadata or {},
+        is_active=agent.is_active,
+        user_id=agent.user_id,
+        workspace_id=agent.workspace_id,
+        tenant_id=agent.tenant_id,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
+    )
 
 
-@router.delete("/{agent_id}", summary="Deletar agente", tags=["ai"])
+@router.delete("/{agent_id}")
 async def delete_agent(
-    agent_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, str]:
-    """
-    Remove um agente do usuário.
-    
-    Deleta permanentemente o agente se o usuário
-    for o proprietário.
-    
-    Args:
-        agent_id: ID único do agente
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, str]: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se agente não encontrado
-        HTTPException: 403 se não for o proprietário  
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        agent_uuid = uuid.UUID(agent_id)
-        logger.info(f"Deletando agente {agent_id} para usuário {current_user.id}")
-        
-        agent = (
-            db.query(Agent)
-            .filter(
-                Agent.id == agent_id,
-                Agent.user_id == current_user.id,
-            )
-            .first()
+    agent_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Deletar agente"""
+
+    result = await db.execute(select(Agent).where(Agent.id == agent_id))
+    agent = result.scalar_one_or_none()
+
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agente não encontrado"
         )
 
-        if not agent:
-            logger.warning(f"Agente {agent_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agente não encontrado",
-            )
+    # Apenas owner pode deletar
+    if agent.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas o proprietário pode deletar o agente",
+        )
 
-        agent_name = agent.name
-        db.delete(agent)
-        db.commit()
+    # Soft delete
+    agent.status = AgentStatus.ARCHIVED.value
+    agent.is_active = False
 
-        logger.info(f"Agente '{agent_name}' (ID: {agent_id}) deletado com sucesso para usuário {current_user.id}")
-        return {"message": "Agente deletado com sucesso"}
-    except ValueError:
-        logger.warning(f"agent_id inválido: {agent_id}")
-        raise HTTPException(status_code=404, detail="Agente não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao deletar agente {agent_id} para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    await db.commit()
+
+    return {"message": "Agente deletado com sucesso"}
 
 
-@router.post("/{agent_id}/activate", summary="Ativar agente", tags=["ai"])
+@router.post("/{agent_id}/activate")
 async def activate_agent(
-    agent_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, str]:
-    """
-    Ativa um agente para uso em conversações.
-    
-    Coloca o agente em estado ativo, permitindo
-    seu uso em chats e workflows.
-    
-    Args:
-        agent_id: ID único do agente
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, str]: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se agente não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 400 se já estiver ativo
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        agent_uuid = uuid.UUID(agent_id)
-        logger.info(f"Ativando agente {agent_id} para usuário {current_user.id}")
-        
-        agent = (
-            db.query(Agent)
-            .filter(
-                Agent.id == agent_id,
-                Agent.user_id == current_user.id,
-            )
-            .first()
+    agent_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Ativar agente"""
+
+    result = await db.execute(select(Agent).where(Agent.id == agent_id))
+    agent = result.scalar_one_or_none()
+
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agente não encontrado"
         )
 
-        if not agent:
-            logger.warning(f"Agente {agent_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agente não encontrado",
-            )
+    # Apenas owner pode ativar
+    if agent.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas o proprietário pode ativar o agente",
+        )
 
-        if agent.status == "active" or agent.status == AgentStatus.ACTIVE:
-            logger.warning(f"Agente {agent_id} já está ativo")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Agente já está ativo",
-            )
+    # Verificar se configuração está válida
+    if not agent.configuration or not agent.configuration.get("model_id"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Agente precisa ter configuração válida para ser ativado",
+        )
 
-        agent.status = AgentStatus.ACTIVE
-        db.commit()
+    agent.is_active = True
+    agent.status = AgentStatus.ACTIVE.value
 
-        logger.info(f"Agente '{agent.name}' (ID: {agent_id}) ativado com sucesso")
-        return {"message": "Agente ativado com sucesso"}
-    except ValueError:
-        logger.warning(f"agent_id inválido: {agent_id}")
-        raise HTTPException(status_code=404, detail="Agente não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao ativar agente {agent_id} para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    await db.commit()
+
+    return {"message": "Agente ativado com sucesso"}
 
 
-@router.post("/{agent_id}/deactivate", summary="Desativar agente", tags=["ai"])
+@router.post("/{agent_id}/deactivate")
 async def deactivate_agent(
-    agent_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, str]:
-    """
-    Desativa um agente temporariamente.
-    
-    Coloca o agente em estado inativo, impedindo
-    seu uso até ser reativado.
-    
-    Args:
-        agent_id: ID único do agente
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, str]: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se agente não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 400 se já estiver inativo
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        agent_uuid = uuid.UUID(agent_id)
-        logger.info(f"Desativando agente {agent_id} para usuário {current_user.id}")
-        
-        agent = (
-            db.query(Agent)
-            .filter(
-                Agent.id == agent_id,
-                Agent.user_id == current_user.id,
-            )
-            .first()
+    agent_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Desativar agente"""
+
+    result = await db.execute(select(Agent).where(Agent.id == agent_id))
+    agent = result.scalar_one_or_none()
+
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agente não encontrado"
         )
 
-        if not agent:
-            logger.warning(f"Agente {agent_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agente não encontrado",
-            )
-
-        if agent.status == "inactive" or agent.status == AgentStatus.INACTIVE:
-            logger.warning(f"Agente {agent_id} já está inativo")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Agente já está inativo",
-            )
-
-        agent.status = AgentStatus.INACTIVE
-        db.commit()
-
-        logger.info(f"Agente '{agent.name}' (ID: {agent_id}) desativado com sucesso")
-        return {"message": "Agente desativado com sucesso"}
-    except ValueError:
-        logger.warning(f"agent_id inválido: {agent_id}")
-        raise HTTPException(status_code=404, detail="Agente não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao desativar agente {agent_id} para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{agent_id}/stats", summary="Estatísticas do agente", tags=["ai", "workflows"])
-async def get_agent_stats(
-    agent_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
-    """
-    Obtém estatísticas de uso de um agente.
-    
-    Retorna métricas de performance e uso do agente,
-    incluindo conversas, mensagens e avaliações.
-    
-    Args:
-        agent_id: ID único do agente
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, Any]: Estatísticas do agente
-        
-    Raises:
-        HTTPException: 404 se agente não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        agent_uuid = uuid.UUID(agent_id)
-        logger.info(f"Obtendo estatísticas do agente {agent_id} para usuário {current_user.id}")
-        
-        agent = (
-            db.query(Agent)
-            .filter(
-                Agent.id == agent_id,
-                Agent.user_id == current_user.id,
-            )
-            .first()
+    # Apenas owner pode desativar
+    if agent.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas o proprietário pode desativar o agente",
         )
 
-        if not agent:
-            logger.warning(f"Agente {agent_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agente não encontrado",
-            )
+    agent.is_active = False
+    agent.status = AgentStatus.INACTIVE.value
 
-        stats = {
-            "agent_id": agent_id,
-            "agent_name": agent.name,
-            "conversation_count": getattr(agent, 'conversation_count', 0),
-            "message_count": getattr(agent, 'message_count', 0),
-            "rating_average": getattr(agent, 'rating_average', None),
-            "rating_count": getattr(agent, 'rating_count', 0),
-            "last_active_at": agent.last_active_at,
-            "created_at": agent.created_at,
-            "status": agent.status.value if hasattr(agent.status, 'value') else agent.status,
-            "total_tokens_used": getattr(agent, 'total_tokens_used', 0),
-        }
+    await db.commit()
 
-        logger.info(f"Estatísticas obtidas para agente {agent_id} - {stats['conversation_count']} conversas, {stats['message_count']} mensagens")
-        return stats
-    except ValueError:
-        logger.warning(f"agent_id inválido: {agent_id}")
-        raise HTTPException(status_code=404, detail="Agente não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao obter estatísticas do agente {agent_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    return {"message": "Agente desativado com sucesso"}
 
 
-@router.post("/{agent_id}/duplicate", response_model=AgentResponse, summary="Duplicar agente", tags=["ai"])
-async def duplicate_agent(
-    agent_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> AgentResponse:
-    """
-    Duplica um agente existente.
-    
-    Cria uma cópia do agente com todas as configurações,
-    permitindo usar como base para novos agentes.
-    
-    Args:
-        agent_id: ID único do agente a ser duplicado
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        AgentResponse: Agente duplicado
-        
-    Raises:
-        HTTPException: 404 se agente não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        agent_uuid = uuid.UUID(agent_id)
-        logger.info(f"Duplicando agente {agent_id} para usuário {current_user.id}")
-        
-        original = (
-            db.query(Agent)
-            .filter(
-                Agent.id == agent_id,
-                Agent.user_id == current_user.id,
-            )
-            .first()
+@router.post("/{agent_id}/clone", response_model=AgentResponse)
+async def clone_agent(
+    agent_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    new_name: Optional[str] = Query(None, description="Nome para o clone"),
+):
+    """Clonar agente"""
+
+    result = await db.execute(select(Agent).where(Agent.id == agent_id))
+    agent = result.scalar_one_or_none()
+
+    if not agent:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Agente não encontrado"
         )
 
-        if not original:
-            logger.warning(f"Agente {agent_id} não encontrado para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Agente não encontrado",
-            )
+    # Verificar se tem acesso para clonar
+    has_access = False
+    if agent.user_id == current_user.id:
+        has_access = True
+    elif agent.scope == AgentScope.GLOBAL.value:
+        has_access = True
+    elif agent.scope == AgentScope.WORKSPACE.value and agent.workspace:
+        if agent.workspace.owner_id == current_user.id or agent.workspace.is_public:
+            has_access = True
 
-        # Criar cópia
-        duplicate_name = f"{original.name} (Cópia)"
-        duplicate = Agent(
-            name=duplicate_name,
-            description=original.description,
-            agent_type=original.agent_type,
-            personality=original.personality,
-            instructions=original.instructions,
-            model_provider=original.model_provider,
-            model=original.model,
-            temperature=original.temperature,
-            max_tokens=original.max_tokens,
-            tools=original.tools,
-            knowledge_base=original.knowledge_base,
-            avatar_url=original.avatar_url,
-            status="draft",
-            user_id=current_user.id,
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Não autorizado a clonar este agente",
         )
 
-        db.add(duplicate)
-        db.commit()
-        db.refresh(duplicate)
+    # Gerar nome único
+    clone_name = new_name or f"{agent.name} (Clone)"
+    counter = 1
+    while True:
+        existing = await db.execute(
+            select(Agent).where(
+                and_(
+                    Agent.name == clone_name,
+                    Agent.user_id == current_user.id,
+                    Agent.scope == AgentScope.PRIVATE.value,
+                )
+            )
+        )
+        if not existing.scalar_one_or_none():
+            break
+        clone_name = f"{agent.name} (Clone {counter})"
+        counter += 1
 
-        logger.info(f"Agente '{original.name}' duplicado com sucesso (ID: {duplicate.id}) - nome: '{duplicate_name}'")
-        return duplicate.to_dict()
-    except ValueError:
-        logger.warning(f"agent_id inválido: {agent_id}")
-        raise HTTPException(status_code=404, detail="Agente não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao duplicar agente {agent_id} para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    # Criar clone
+    clone = Agent(
+        name=clone_name,
+        description=f"Clone de {agent.name}",
+        version="1.0.0",
+        environment=agent.environment,
+        status=AgentStatus.DRAFT.value,
+        scope=AgentScope.PRIVATE.value,  # Clones são sempre privados
+        configuration=agent.configuration.copy() if agent.configuration else {},
+        metadata=agent.metadata.copy() if agent.metadata else {},
+        is_active=False,
+        user_id=current_user.id,
+        workspace_id=None,  # Clones não herdam workspace
+        tenant_id=current_user.tenant_id,
+    )
+
+    db.add(clone)
+    await db.commit()
+    await db.refresh(clone)
+
+    return AgentResponse(
+        id=clone.id,
+        name=clone.name,
+        description=clone.description,
+        version=clone.version,
+        environment=clone.environment,
+        status=clone.status,
+        scope=clone.scope,
+        configuration=clone.configuration or {},
+        metadata=clone.metadata or {},
+        is_active=clone.is_active,
+        user_id=clone.user_id,
+        workspace_id=clone.workspace_id,
+        tenant_id=clone.tenant_id,
+        created_at=clone.created_at,
+        updated_at=clone.updated_at,
+        user_name=current_user.full_name,
+    )

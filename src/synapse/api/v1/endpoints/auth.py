@@ -12,16 +12,18 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm, HTTPBasicCredentials
 from sqlalchemy.orm import Session
 
-from synapse.api.deps import get_current_user, get_current_active_user, get_current_user_basic
+from synapse.api.deps import (
+    get_current_user,
+    get_current_active_user,
+    get_current_user_basic,
+)
 from synapse.core.auth.jwt import jwt_manager
 from synapse.core.email.service import email_service
 from synapse.database import get_db
-from synapse.models.user import (
-    User,
-    RefreshToken,
-    PasswordResetToken,
-    EmailVerificationToken,
-)
+from synapse.models.user import User
+from synapse.models.refresh_token import RefreshToken
+from synapse.models.password_reset_token import PasswordResetToken
+from synapse.models.email_verification_token import EmailVerificationToken
 from synapse.schemas.auth import (
     UserCreate,
     UserResponse,
@@ -30,8 +32,8 @@ from synapse.schemas.auth import (
     PasswordResetRequest,
     PasswordResetConfirm,
     EmailVerificationRequest,
+    UserRegister,
 )
-from synapse.schemas.response import wrap_data_response, wrap_empty_response
 from synapse.services.user_defaults import create_user_defaults
 
 logger = logging.getLogger(__name__)
@@ -39,9 +41,8 @@ router = APIRouter()
 
 
 @router.post(
-    "/docs-login", 
-    response_model=Dict[str, Any], 
-    tags=["authentication"],
+    "/docs-login",
+    response_model=Dict[str, Any],
     summary="🔐 Login para Documentação Swagger",
     description="""
     **Endpoint especial para facilitar o login na documentação Swagger**
@@ -80,8 +81,8 @@ router = APIRouter()
     dependencies=[],  # Remove security dependency to use explicit basic auth
     responses={
         200: {"description": "Login realizado com sucesso"},
-        401: {"description": "Credenciais inválidas"}
-    }
+        401: {"description": "Credenciais inválidas"},
+    },
 )
 async def docs_login(
     request: Request,
@@ -114,7 +115,7 @@ async def docs_login(
         return wrap_data_response(
             data=token_data,
             message="Login via documentação realizado com sucesso",
-            request=request
+            request=request,
         )
 
     except Exception as e:
@@ -130,8 +131,7 @@ async def docs_login(
     response_model=Dict[str, Any],
     status_code=status.HTTP_201_CREATED,
     summary="Registrar novo usuário",
-    response_description="Usuário registrado com sucesso",
-    tags=["authentication"],
+    response_description="Usuário registrado com sucesso"
 )
 async def register_user(
     request: Request,
@@ -164,16 +164,20 @@ async def register_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email já está registrado",
         )
-    
+
     # Verificar se username já existe
-    existing_username = db.query(User).filter(User.username == user_data.username).first()
+    existing_username = (
+        db.query(User).filter(User.username == user_data.username).first()
+    )
     if existing_username:
-        logger.info(f"Tentativa de registro duplicado para username: {user_data.username}")
+        logger.info(
+            f"Tentativa de registro duplicado para username: {user_data.username}"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username já está em uso",
         )
-    
+
     try:
         # Criar novo usuário
         user = User(
@@ -186,19 +190,27 @@ async def register_user(
         db.commit()
         db.refresh(user)
         logger.info(f"Usuário criado com sucesso: {user.email} (ID: {user.id})")
-        
+
         # Criar dados padrão para o novo usuário (workspace individual + plano FREE)
         try:
             defaults_result = create_user_defaults(db, user)
             if defaults_result["success"]:
                 logger.info(f"✅ Dados padrão criados para usuário: {user.email}")
-                logger.info(f"   - Workspace individual: {defaults_result['workspace']['name']}")
-                logger.info(f"   - Plano: {defaults_result['subscription']['plan_name']}")
+                logger.info(
+                    f"   - Workspace individual: {defaults_result['workspace']['name']}"
+                )
+                logger.info(
+                    f"   - Plano: {defaults_result['subscription']['plan_name']}"
+                )
             else:
-                logger.error(f"❌ Falha ao criar dados padrão: {defaults_result['error']}")
+                logger.error(
+                    f"❌ Falha ao criar dados padrão: {defaults_result['error']}"
+                )
         except Exception as e:
-            logger.error(f"❌ Erro ao criar dados padrão para usuário {user.email}: {str(e)}")
-        
+            logger.error(
+                f"❌ Erro ao criar dados padrão para usuário {user.email}: {str(e)}"
+            )
+
         # Gerar token de verificação de email
         verification_token = secrets.token_urlsafe(32)
         expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
@@ -225,7 +237,7 @@ async def register_user(
         return wrap_data_response(
             data=user_response.dict(),
             message="Usuário registrado com sucesso. Verifique seu email para ativar a conta.",
-            request=request
+            request=request,
         )
 
     except HTTPException:
@@ -240,11 +252,10 @@ async def register_user(
 
 
 @router.post(
-    "/login", 
-    response_model=Dict[str, Any], 
-    summary="Login do usuário", 
-    response_description="Tokens de acesso e refresh gerados", 
-    tags=["authentication"]
+    "/login",
+    response_model=Dict[str, Any],
+    summary="Login do usuário",
+    response_description="Tokens de acesso e refresh gerados"
 )
 async def login(
     request: Request,
@@ -276,24 +287,22 @@ async def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Conta desativada",
         )
-    
+
     # Criar tokens
     access_token = jwt_manager.create_access_token(
         data={"sub": user.email, "user_id": str(user.id)},
     )
     user_refresh_token = jwt_manager.create_refresh_token(str(user.id), db)
-    
+
     token_data = Token(
         access_token=access_token,
         refresh_token=user_refresh_token,
         token_type="bearer",
         user=UserResponse.from_orm(user),
     )
-    
+
     return wrap_data_response(
-        data=token_data.dict(),
-        message="Login realizado com sucesso",
-        request=request
+        data=token_data.dict(), message="Login realizado com sucesso", request=request
     )
 
 
@@ -301,8 +310,7 @@ async def login(
     "/refresh",
     response_model=Dict[str, Any],
     summary="Renovar token de acesso",
-    response_description="Novo token de acesso gerado",
-    tags=["authentication"],
+    response_description="Novo token de acesso gerado"
 )
 async def refresh_token(
     request: Request,
@@ -327,12 +335,14 @@ async def refresh_token(
             db,
         )
         if not access_token:
-            logger.info(f"Tentativa de refresh com token inválido: {refresh_data.refresh_token}")
+            logger.info(
+                f"Tentativa de refresh com token inválido: {refresh_data.refresh_token}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Erro ao gerar novo token de acesso",
             )
-        
+
         # Buscar usuário para retornar dados atualizados
         token_record = (
             db.query(RefreshToken)
@@ -340,12 +350,14 @@ async def refresh_token(
             .first()
         )
         if not token_record:
-            logger.info(f"Refresh token não encontrado no banco: {refresh_data.refresh_token}")
+            logger.info(
+                f"Refresh token não encontrado no banco: {refresh_data.refresh_token}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token inválido",
             )
-        
+
         user = db.query(User).filter(User.id == token_record.user_id).first()
         token_data = Token(
             access_token=access_token,
@@ -353,13 +365,13 @@ async def refresh_token(
             token_type="bearer",
             user=UserResponse.from_orm(user),
         )
-        
+
         return wrap_data_response(
             data=token_data.dict(),
             message="Token renovado com sucesso",
-            request=request
+            request=request,
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:  # pylint: disable=broad-exception-caught
@@ -374,8 +386,7 @@ async def refresh_token(
     "/logout",
     response_model=Dict[str, Any],
     summary="Logout do usuário",
-    response_description="Logout realizado com sucesso",
-    tags=["authentication"],
+    response_description="Logout realizado com sucesso"
 )
 async def logout(
     request: Request,
@@ -397,13 +408,14 @@ async def logout(
     """
     try:
         jwt_manager.revoke_refresh_token(refresh_data.refresh_token, db)
-        logger.info(f"Logout realizado para refresh token: {refresh_data.refresh_token}")
-        
-        return wrap_empty_response(
-            message="Logout realizado com sucesso",
-            request=request
+        logger.info(
+            f"Logout realizado para refresh token: {refresh_data.refresh_token}"
         )
-        
+
+        return wrap_empty_response(
+            message="Logout realizado com sucesso", request=request
+        )
+
     except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error("Erro ao fazer logout: %s", str(e))
         raise HTTPException(
@@ -416,8 +428,7 @@ async def logout(
     "/logout-all",
     response_model=Dict[str, Any],
     summary="Logout de todos os dispositivos",
-    response_description="Logout de todos os dispositivos realizado com sucesso",
-    tags=["authentication"],
+    response_description="Logout de todos os dispositivos realizado com sucesso"
 )
 async def logout_all(
     request: Request,
@@ -431,13 +442,15 @@ async def logout_all(
     """
     try:
         jwt_manager.revoke_all_user_tokens(str(current_user.id), db)
-        logger.info(f"Logout de todos os dispositivos realizado para user_id: {current_user.id}")
-        
+        logger.info(
+            f"Logout de todos os dispositivos realizado para user_id: {current_user.id}"
+        )
+
         return wrap_empty_response(
             message="Logout de todos os dispositivos realizado com sucesso",
-            request=request
+            request=request,
         )
-        
+
     except Exception as e:  # pylint: disable=broad-exception-caught
         logger.error(
             "Erro ao fazer logout de todos os dispositivos: %s",
@@ -453,8 +466,7 @@ async def logout_all(
     "/me",
     response_model=Dict[str, Any],
     summary="Obter informações do usuário autenticado",
-    response_description="Dados do usuário autenticado retornados com sucesso",
-    tags=["authentication"],
+    response_description="Dados do usuário autenticado retornados com sucesso"
 )
 async def get_current_user_info(
     request: Request,
@@ -469,7 +481,7 @@ async def get_current_user_info(
     return wrap_data_response(
         data=user_response.dict(),
         message="Informações do usuário obtidas com sucesso",
-        request=request
+        request=request,
     )
 
 
@@ -477,8 +489,7 @@ async def get_current_user_info(
     "/verify-email",
     response_model=Dict[str, Any],
     summary="Verificar email do usuário",
-    response_description="Email verificado com sucesso",
-    tags=["authentication"],
+    response_description="Email verificado com sucesso"
 )
 async def verify_email(
     request: Request,
@@ -497,46 +508,42 @@ async def verify_email(
     }
     ```
     """
-    # Buscar token de verificação
-    email_token = (
-        db.query(EmailVerificationToken)
-        .filter(EmailVerificationToken.token == verification_data.token)
-        .first()
-    )
-    if not email_token or not email_token.is_valid():
-        logger.info(f"Tentativa de verificação com token inválido: {verification_data.token}")
+    # Buscar token de verificação usando o método enhanced do modelo
+    email_token = EmailVerificationToken.find_valid_token(db, verification_data.token)
+    if not email_token:
+        logger.info(
+            f"Tentativa de verificação com token inválido: {verification_data.token}"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Token de verificação inválido ou expirado",
         )
-    
+
     # Buscar usuário
     user = db.query(User).filter(User.id == email_token.user_id).first()
     if not user:
-        logger.info(f"Token de verificação válido, mas usuário não encontrado: {email_token.user_id}")
+        logger.info(
+            f"Token de verificação válido, mas usuário não encontrado: {email_token.user_id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuário não encontrado",
         )
-    
+
     # Verificar email
     user.is_verified = True
-    email_token.is_used = True  # type: ignore
+    email_token.use_token()  # Usar método enhanced do modelo
     db.commit()
     logger.info(f"Email verificado com sucesso para user_id: {user.id}")
-    
-    return wrap_empty_response(
-        message="Email verificado com sucesso",
-        request=request
-    )
+
+    return wrap_empty_response(message="Email verificado com sucesso", request=request)
 
 
 @router.post(
     "/resend-verification",
     response_model=Dict[str, Any],
     summary="Reenviar email de verificação",
-    response_description="Email de verificação reenviado com sucesso",
-    tags=["authentication"],
+    response_description="Email de verificação reenviado com sucesso"
 )
 async def resend_verification_email(
     request: Request,
@@ -549,42 +556,33 @@ async def resend_verification_email(
     Não requer corpo de requisição.
     """
     if current_user.is_verified:
-        return wrap_empty_response(
-            message="Email já está verificado",
-            request=request
-        )
-    
-    # Invalidar tokens de verificação anteriores
-    db.query(EmailVerificationToken).filter(
-        EmailVerificationToken.user_id == current_user.id,
-        EmailVerificationToken.is_used == False,  # pylint: disable=singleton-comparison
-    ).update({"is_used": True})
-    
-    # Gerar novo token
-    verification_token = secrets.token_urlsafe(32)
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
-    email_token = EmailVerificationToken(
-        token=verification_token,
-        user_id=current_user.id,
-        expires_at=expires_at,
+        return wrap_empty_response(message="Email já está verificado", request=request)
+
+    # Invalidar tokens de verificação anteriores usando o método do modelo
+    EmailVerificationToken.invalidate_user_tokens(db, str(current_user.id))
+
+    # Gerar novo token usando o método enhanced do modelo
+    email_token = EmailVerificationToken.create_for_user(
+        user_id=str(current_user.id),
+        email=current_user.email,
+        expires_in_minutes=1440,  # 24 horas
     )
     db.add(email_token)
     db.commit()
-    
+
     # Enviar email
     try:
         await email_service.send_verification_email(
             current_user.email,
             current_user.full_name,
-            verification_token,
+            email_token.token,
         )
         logger.info(f"Email de verificação reenviado para: {current_user.email}")
-        
+
         return wrap_empty_response(
-            message="Email de verificação reenviado com sucesso",
-            request=request
+            message="Email de verificação reenviado com sucesso", request=request
         )
-        
+
     except Exception as e:
         logger.error(f"Erro ao reenviar email de verificação: {e}")
         raise HTTPException(
@@ -597,8 +595,7 @@ async def resend_verification_email(
     "/forgot-password",
     response_model=Dict[str, Any],
     summary="Solicitar redefinição de senha",
-    response_description="Instruções de redefinição enviadas se o email existir",
-    tags=["authentication"],
+    response_description="Instruções de redefinição enviadas se o email existir"
 )
 async def forgot_password(
     request: Request,
@@ -621,43 +618,38 @@ async def forgot_password(
     user = db.query(User).filter(User.email == request_data.email).first()
     if not user:
         # Por segurança, não revelamos se o email existe ou não
-        logger.info(f"Solicitação de reset para email inexistente: {request_data.email}")
+        logger.info(
+            f"Solicitação de reset para email inexistente: {request_data.email}"
+        )
         return wrap_empty_response(
             message="Se o email existir, instruções de redefinição foram enviadas",
-            request=request
+            request=request,
         )
-    
-    # Invalidar tokens de reset anteriores
-    db.query(PasswordResetToken).filter(
-        PasswordResetToken.user_id == user.id,
-        PasswordResetToken.is_used == False,  # pylint: disable=singleton-comparison
-    ).update({"is_used": True})
-    
-    # Gerar novo token
-    reset_token = secrets.token_urlsafe(32)
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
-    password_token = PasswordResetToken(
-        token=reset_token,
-        user_id=user.id,
-        expires_at=expires_at,
+
+    # Invalidar tokens de reset anteriores usando o método do modelo
+    PasswordResetToken.invalidate_user_tokens(db, str(user.id))
+
+    # Gerar novo token usando o método enhanced do modelo
+    password_token = PasswordResetToken.create_for_user(
+        user_id=str(user.id), expires_in_minutes=60  # 1 hora
     )
     db.add(password_token)
     db.commit()
-    
+
     # Enviar email
     try:
         await email_service.send_password_reset_email(
             user.email,
             user.full_name,
-            reset_token,
+            password_token.token,
         )
         logger.info(f"Email de redefinição enviado para: {user.email}")
     except Exception as e:
         logger.error(f"Erro ao enviar email de redefinição: {e}")
-    
+
     return wrap_empty_response(
         message="Se o email existir, instruções de redefinição foram enviadas",
-        request=request
+        request=request,
     )
 
 
@@ -665,8 +657,7 @@ async def forgot_password(
     "/reset-password",
     response_model=Dict[str, Any],
     summary="Redefinir senha do usuário",
-    response_description="Senha redefinida com sucesso",
-    tags=["authentication"],
+    response_description="Senha redefinida com sucesso"
 )
 async def reset_password(
     request: Request,
@@ -687,49 +678,45 @@ async def reset_password(
     }
     ```
     """
-    # Buscar token de reset
-    token_record = (
-        db.query(PasswordResetToken)
-        .filter(PasswordResetToken.token == reset_data.token)
-        .first()
-    )
-    if not token_record or not token_record.is_valid():
-        logger.info(f"Tentativa de reset com token inválido ou expirado: {reset_data.token}")
+    # Buscar token de reset usando o método enhanced do modelo
+    token_record = PasswordResetToken.find_valid_token(db, reset_data.token)
+    if not token_record:
+        logger.info(
+            f"Tentativa de reset com token inválido ou expirado: {reset_data.token}"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Token de redefinição inválido ou expirado",
         )
-    
+
     # Buscar usuário
     user = db.query(User).filter(User.id == token_record.user_id).first()
     if not user:
-        logger.info(f"Token de reset válido, mas usuário não encontrado: {token_record.user_id}")
+        logger.info(
+            f"Token de reset válido, mas usuário não encontrado: {token_record.user_id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuário não encontrado",
         )
-    
+
     # Redefinir senha
     user.set_password(reset_data.new_password)
-    token_record.is_used = True  # type: ignore
-    
+    token_record.use_token()  # Usar método enhanced do modelo
+
     # Revogar todos os refresh tokens do usuário por segurança
     jwt_manager.revoke_all_user_tokens(str(user.id), db)
     db.commit()
     logger.info(f"Senha redefinida com sucesso para user_id: {user.id}")
-    
-    return wrap_empty_response(
-        message="Senha redefinida com sucesso",
-        request=request
-    )
+
+    return wrap_empty_response(message="Senha redefinida com sucesso", request=request)
 
 
 @router.post(
     "/change-password",
     response_model=Dict[str, Any],
     summary="Alterar senha do usuário autenticado",
-    response_description="Senha alterada com sucesso",
-    tags=["authentication"],
+    response_description="Senha alterada com sucesso"
 )
 async def change_password(
     request: Request,
@@ -751,32 +738,30 @@ async def change_password(
     """
     # Verificar senha atual
     if not current_user.verify_password(current_password):
-        logger.info(f"Tentativa de alteração de senha com senha atual incorreta para user_id: {current_user.id}")
+        logger.info(
+            f"Tentativa de alteração de senha com senha atual incorreta para user_id: {current_user.id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Senha atual incorreta",
         )
-    
+
     # Definir nova senha
     current_user.set_password(new_password)
-    
+
     # Revogar todos os refresh tokens por segurança
     jwt_manager.revoke_all_user_tokens(str(current_user.id), db)
     db.commit()
     logger.info(f"Senha alterada com sucesso para user_id: {current_user.id}")
-    
-    return wrap_empty_response(
-        message="Senha alterada com sucesso",
-        request=request
-    )
+
+    return wrap_empty_response(message="Senha alterada com sucesso", request=request)
 
 
 @router.delete(
     "/account",
     response_model=Dict[str, Any],
     summary="Excluir conta do usuário autenticado",
-    response_description="Conta excluída com sucesso",
-    tags=["authentication"],
+    response_description="Conta excluída com sucesso"
 )
 async def delete_account(
     request: Request,
@@ -796,30 +781,28 @@ async def delete_account(
     """
     # Verificar senha
     if not current_user.verify_password(password):
-        logger.info(f"Tentativa de exclusão de conta com senha incorreta para user_id: {current_user.id}")
+        logger.info(
+            f"Tentativa de exclusão de conta com senha incorreta para user_id: {current_user.id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Senha incorreta",
         )
-    
+
     # Revogar todos os tokens
     jwt_manager.revoke_all_user_tokens(str(current_user.id), db)
-    
+
     # Excluir usuário
     db.delete(current_user)
     db.commit()
     logger.info(f"Conta excluída com sucesso para user_id: {current_user.id}")
-    
-    return wrap_empty_response(
-        message="Conta excluída com sucesso",
-        request=request
-    )
+
+    return wrap_empty_response(message="Conta excluída com sucesso", request=request)
 
 
 @router.get(
     "/test-token",
     response_model=Dict[str, Any],
-    tags=["authentication"],
     summary="🧪 Teste de Token JWT",
     description="""
     **Endpoint para testar se a autenticação JWT está funcionando**
@@ -835,7 +818,7 @@ async def delete_account(
     3. Execute este endpoint para testar
     
     Se estiver funcionando, você verá suas informações de usuário.
-    """
+    """,
 )
 async def test_token(
     request: Request,
@@ -849,25 +832,26 @@ async def test_token(
         "user": {
             "id": str(current_user.id),
             "email": current_user.email,
-            "name": current_user.name if hasattr(current_user, 'name') else current_user.full_name,
+            "name": (
+                current_user.name
+                if hasattr(current_user, "name")
+                else current_user.full_name
+            ),
             "is_active": current_user.is_active,
             "is_verified": current_user.is_verified,
         },
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "status": "authenticated"
+        "status": "authenticated",
     }
-    
+
     return wrap_data_response(
-        data=test_data,
-        message="Token JWT testado com sucesso",
-        request=request
+        data=test_data, message="Token JWT testado com sucesso", request=request
     )
 
 
 @router.get(
     "/test-hybrid-auth",
     response_model=Dict[str, Any],
-    tags=["authentication"],
     summary="🧪 Teste de Autenticação Híbrida",
     description="""
     **Endpoint para testar se a autenticação híbrida está funcionando**
@@ -895,7 +879,7 @@ async def test_token(
     ## ✅ Resultado:
     Se funcionando corretamente, você verá suas informações de usuário
     independente do método de autenticação usado.
-    """
+    """,
 )
 async def test_hybrid_authentication(
     request: Request,
@@ -909,25 +893,31 @@ async def test_hybrid_authentication(
         "user": {
             "id": str(current_user.id),
             "email": current_user.email,
-            "name": current_user.name if hasattr(current_user, 'name') else current_user.full_name,
+            "name": (
+                current_user.name
+                if hasattr(current_user, "name")
+                else current_user.full_name
+            ),
             "is_active": current_user.is_active,
             "is_verified": current_user.is_verified,
-            "is_admin": current_user.is_admin if hasattr(current_user, 'is_admin') else False,
+            "is_admin": (
+                current_user.is_admin if hasattr(current_user, "is_admin") else False
+            ),
         },
         "authentication": {
             "status": "authenticated",
             "methods_supported": [
                 "HTTPBearer (JWT Token)",
-                "HTTPBasic (Email/Password)"
+                "HTTPBasic (Email/Password)",
             ],
-            "note": "Este endpoint aceita ambos os métodos de autenticação automaticamente"
+            "note": "Este endpoint aceita ambos os métodos de autenticação automaticamente",
         },
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "server_time": time.time()
+        "server_time": time.time(),
     }
-    
+
     return wrap_data_response(
         data=test_data,
         message="Autenticação híbrida testada com sucesso",
-        request=request
+        request=request,
     )

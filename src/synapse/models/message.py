@@ -2,7 +2,17 @@
 Modelo de mensagem para conversações
 """
 
-from sqlalchemy import Column, String, DateTime, Text, JSON, Integer, Float, ForeignKey, text
+from sqlalchemy import (
+    Column,
+    String,
+    DateTime,
+    Text,
+    JSON,
+    Integer,
+    Float,
+    ForeignKey,
+    text,
+)
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
@@ -17,7 +27,15 @@ class Message(Base):
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms_conversations.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "synapscale_db.llms_conversations.id",
+            ondelete="CASCADE",
+            onupdate="CASCADE",
+        ),
+        nullable=False,
+    )
 
     # Conteúdo
     role = Column(String(20), nullable=False)  # user, assistant, system
@@ -43,17 +61,23 @@ class Message(Base):
     feedback = Column(Text, nullable=True)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
     # Relacionamentos existentes
     conversation = relationship("Conversation", back_populates="messages")
-    
+
     # Novos relacionamentos LLM
-    usage_logs = relationship("UsageLog", back_populates="message", cascade="all, delete-orphan")
-    message_feedbacks = relationship("MessageFeedback", back_populates="message", cascade="all, delete-orphan")
+    usage_logs = relationship(
+        "UsageLog", back_populates="message", cascade="all, delete-orphan"
+    )
+    feedbacks = relationship(
+        "MessageFeedback", back_populates="message", cascade="all, delete-orphan"
+    )
     billing_events = relationship("BillingEvent", back_populates="message")
 
     def __repr__(self):

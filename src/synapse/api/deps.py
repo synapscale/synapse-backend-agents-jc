@@ -21,7 +21,7 @@ from synapse.core.auth.password import verify_password
 # Removido auto_error=False para evitar conflitos na documentação
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/auth/login",
-    auto_error=False  # Não gerar erro automaticamente
+    auto_error=False,  # Não gerar erro automaticamente
 )
 
 # Esquema de autenticação básica (email/senha) para documentação
@@ -57,7 +57,7 @@ async def get_current_user_basic(
 
     # Buscar usuário por email (username na autenticação básica)
     user = db.query(User).filter(User.email == credentials.username).first()
-    
+
     if not user:
         raise credentials_exception
 
@@ -204,13 +204,13 @@ async def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """
-    Verifica se o usuário atual está ativo.
+    Dependência para obter o usuário atual ativo.
 
     Args:
         current_user: Usuário atual
 
     Returns:
-        Objeto User ativo
+        Objeto User do usuário ativo
 
     Raises:
         HTTPException: Se o usuário estiver inativo
@@ -219,6 +219,54 @@ async def get_current_active_user(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Usuário inativo",
+        )
+
+    return current_user
+
+
+async def require_admin(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """
+    Dependência que requer que o usuário atual seja um administrador.
+
+    Args:
+        current_user: Usuário atual ativo
+
+    Returns:
+        Objeto User do administrador
+
+    Raises:
+        HTTPException: Se o usuário não for administrador
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão de administrador necessária. Apenas usuários com privilégios de superusuário podem acessar este recurso.",
+        )
+
+    return current_user
+
+
+async def get_current_superuser(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """
+    Verifica se o usuário atual é um superusuário/administrador.
+
+    Args:
+        current_user: Usuário atual
+
+    Returns:
+        Objeto User do superusuário
+
+    Raises:
+        HTTPException: Se o usuário não for superusuário
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissões de superusuário necessárias",
         )
 
     return current_user

@@ -1,15 +1,34 @@
 """
 Schemas Pydantic para autenticação e validação de dados
+ALINHADO PERFEITAMENTE COM O BANCO PostgreSQL schema synapscale_db
 """
 
-from pydantic import BaseModel, EmailStr, validator, Field
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr, validator, Field, ConfigDict
+from typing import Optional, List, Dict, Any
 from datetime import datetime
+from enum import Enum
 import re
+import uuid
+
+
+# ==================== ENUMS ALINHADOS COM O BANCO ====================
+
+
+class UserStatus(str, Enum):
+    """Status do usuário - ALINHADO COM O BANCO"""
+
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    SUSPENDED = "suspended"
+    PENDING = "pending"
+
+
+# ==================== SCHEMAS DE AUTENTICAÇÃO - LOGIN ====================
 
 
 class UserLogin(BaseModel):
     """Schema para login de usuário"""
+
     username: str = Field(..., description="Email ou username do usuário")
     password: str = Field(..., min_length=1, description="Senha do usuário")
 
@@ -21,14 +40,21 @@ class UserLogin(BaseModel):
         return v.strip()
 
 
+# ==================== SCHEMAS BASE PARA USUÁRIOS ====================
+
+
 class UserBase(BaseModel):
-    email: EmailStr
-    username: str = Field(..., min_length=3, max_length=50)
-    full_name: str = Field(..., min_length=2, max_length=200)
+    """Schema base para usuários - ALINHADO COM users TABLE"""
+
+    email: EmailStr = Field(..., max_length=255, description="Email do usuário")
+    username: str = Field(..., min_length=3, max_length=255, description="Username")
+    full_name: str = Field(
+        ..., min_length=2, max_length=200, description="Nome completo"
+    )
 
     @validator("username")
     def validate_username(cls, v):
-        """Valida username"""
+        """Valida username - ALINHADO COM CONSTRAINT DO BANCO"""
         if not re.match(r"^[a-zA-Z0-9_-]+$", v):
             raise ValueError("Username deve conter apenas letras, números, _ ou -")
         return v.lower()
@@ -43,13 +69,34 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     """
-    Schema para criação de novos usuários.
-    Inclui validações específicas para registro.
+    Schema para criação de novos usuários
+    ALINHADO COM users TABLE + validações de negócio
     """
-    password: str = Field(..., min_length=8, description="Senha do usuário (mínimo 8 caracteres)")
+
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=255,
+        description="Senha do usuário (mínimo 8 caracteres)",
+    )
     confirm_password: Optional[str] = Field(None, description="Confirmação da senha")
-    terms_accepted: Optional[bool] = Field(False, description="Aceite dos termos de uso")
-    marketing_consent: Optional[bool] = Field(False, description="Consentimento para marketing")
+
+    # Campos opcionais alinhados com a tabela users
+    profile_image_url: Optional[str] = Field(
+        None, max_length=500, description="URL da imagem de perfil"
+    )
+    bio: Optional[str] = Field(
+        None, max_length=1000, description="Biografia do usuário"
+    )
+    tenant_id: Optional[uuid.UUID] = Field(None, description="ID do tenant")
+
+    # Campos de negócio não persistidos diretamente
+    terms_accepted: Optional[bool] = Field(
+        False, description="Aceite dos termos de uso"
+    )
+    marketing_consent: Optional[bool] = Field(
+        False, description="Consentimento para marketing"
+    )
 
     @validator("password")
     def validate_password(cls, v):
@@ -65,7 +112,7 @@ class UserCreate(UserBase):
     @validator("confirm_password")
     def passwords_match(cls, v, values):
         """Valida se as senhas coincidem"""
-        if 'password' in values and v != values['password']:
+        if "password" in values and v != values["password"]:
             raise ValueError("Senhas não coincidem")
         return v
 
@@ -75,74 +122,144 @@ UserRegister = UserCreate
 
 
 class UserUpdate(BaseModel):
-    first_name: str | None = None
-    last_name: str | None = None
-    avatar_url: str | None = None
+    """Schema para atualização de usuários - ALINHADO COM users TABLE"""
 
-    @validator("first_name", "last_name")
-    def validate_names(cls, v):
-        """Valida nomes"""
+    email: Optional[EmailStr] = Field(None, max_length=255, description="Novo email")
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=255, description="Novo username"
+    )
+    full_name: Optional[str] = Field(
+        None, min_length=2, max_length=200, description="Novo nome completo"
+    )
+    profile_image_url: Optional[str] = Field(
+        None, max_length=500, description="Nova URL da imagem"
+    )
+    bio: Optional[str] = Field(None, max_length=1000, description="Nova biografia")
+    is_active: Optional[bool] = Field(None, description="Novo status ativo")
+    is_verified: Optional[bool] = Field(None, description="Novo status verificado")
+    status: Optional[UserStatus] = Field(None, description="Novo status")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Novos metadados")
+
+    @validator("username")
+    def validate_username(cls, v):
+        """Valida username"""
+        if v and not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Username deve conter apenas letras, números, _ ou -")
+        return v.lower() if v else v
+
+    @validator("full_name")
+    def validate_full_name(cls, v):
+        """Valida nome completo"""
         if v and len(v.strip()) < 2:
-            raise ValueError("Nome deve ter pelo menos 2 caracteres")
+            raise ValueError("Nome completo deve ter pelo menos 2 caracteres")
         return v.strip() if v else v
 
 
 class UserResponse(BaseModel):
-    id: str
-    email: str
-    username: str
-    first_name: str | None
-    last_name: str | None
-    full_name: str
-    avatar_url: str | None
-    profile_image_url: str | None
-    bio: str | None
-    is_active: bool
-    is_verified: bool
-    is_superuser: bool
-    role: str
-    created_at: datetime | None
-    updated_at: datetime | None
+    """Schema completo de resposta do usuário - PERFEITAMENTE ALINHADO COM users TABLE"""
 
-    @validator("id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
-    model_config = {"from_attributes": True}
+    # Campos principais - EXATAMENTE como na tabela
+    id: uuid.UUID = Field(..., description="ID único do usuário")
+    email: EmailStr = Field(..., description="Email do usuário")
+    username: str = Field(..., description="Nome de usuário")
+    full_name: str = Field(..., description="Nome completo")
+
+    # Status e permissões - EXATAMENTE como na tabela
+    is_active: bool = Field(..., description="Se o usuário está ativo")
+    is_verified: bool = Field(..., description="Se o email foi verificado")
+    is_superuser: bool = Field(..., description="Se é administrador")
+    status: UserStatus = Field(..., description="Status atual")
+
+    # Informações de perfil - EXATAMENTE como na tabela
+    profile_image_url: Optional[str] = Field(
+        None, description="URL da imagem de perfil"
+    )
+    bio: Optional[str] = Field(None, description="Biografia do usuário")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Metadados adicionais"
+    )
+
+    # Informações de segurança - EXATAMENTE como na tabela
+    last_login_at: Optional[datetime] = Field(None, description="Último login")
+    login_count: int = Field(0, description="Número de logins")
+    failed_login_attempts: int = Field(0, description="Tentativas de login falhadas")
+    account_locked_until: Optional[datetime] = Field(
+        None, description="Conta bloqueada até"
+    )
+
+    # Relacionamentos - EXATAMENTE como na tabela
+    tenant_id: Optional[uuid.UUID] = Field(None, description="ID do tenant")
+
+    # Timestamps - EXATAMENTE como na tabela
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+
+
+# ==================== SCHEMAS DE TOKENS ====================
 
 
 class Token(BaseModel):
-    """Schema para tokens de autenticação"""
+    """Schema básico para tokens de autenticação"""
+
     access_token: str = Field(..., description="Token de acesso JWT")
     token_type: str = Field(default="bearer", description="Tipo do token")
-    expires_in: Optional[int] = Field(None, description="Tempo de expiração em segundos")
+    expires_in: Optional[int] = Field(
+        None, description="Tempo de expiração em segundos"
+    )
 
 
 class TokenResponse(BaseModel):
     """Schema completo para resposta de autenticação"""
+
     access_token: str = Field(..., description="Token de acesso JWT")
     token_type: str = Field(default="bearer", description="Tipo do token")
-    expires_in: Optional[int] = Field(None, description="Tempo de expiração em segundos")
-    refresh_token: Optional[str] = Field(None, description="Token de refresh (opcional)")
-    user: Optional[UserResponse] = Field(None, description="Dados do usuário autenticado")
+    expires_in: Optional[int] = Field(
+        None, description="Tempo de expiração em segundos"
+    )
+    refresh_token: Optional[str] = Field(None, description="Token de refresh")
+    user: Optional[UserResponse] = Field(
+        None, description="Dados do usuário autenticado"
+    )
 
 
 class RefreshTokenRequest(BaseModel):
-    refresh_token: str
+    """Schema para solicitação de refresh token - ALINHADO COM refresh_tokens TABLE"""
+
+    refresh_token: str = Field(..., max_length=500, description="Token de refresh")
+
+
+class RefreshTokenResponse(BaseModel):
+    """Schema de resposta do refresh token - ALINHADO COM refresh_tokens TABLE"""
+
+    id: uuid.UUID = Field(..., description="ID do token")
+    token: str = Field(..., description="Token de refresh")
+    user_id: uuid.UUID = Field(..., description="ID do usuário")
+    expires_at: datetime = Field(..., description="Data de expiração")
+    is_revoked: Optional[bool] = Field(False, description="Se foi revogado")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==================== SCHEMAS DE RESET DE SENHA ====================
 
 
 class PasswordResetRequest(BaseModel):
-    email: EmailStr
+    """Schema para solicitação de reset de senha - ALINHADO COM password_reset_tokens TABLE"""
+
+    email: EmailStr = Field(..., description="Email para reset")
 
 
 class PasswordResetConfirm(BaseModel):
-    token: str
-    new_password: str = Field(..., min_length=8, max_length=100)
+    """Schema para confirmação de reset de senha - ALINHADO COM password_reset_tokens TABLE"""
+
+    token: str = Field(..., max_length=500, description="Token de reset")
+    new_password: str = Field(
+        ..., min_length=8, max_length=255, description="Nova senha"
+    )
 
     @validator("new_password")
     def validate_password(cls, v):
@@ -165,14 +282,53 @@ class PasswordResetConfirm(BaseModel):
         return v
 
 
+class PasswordResetTokenResponse(BaseModel):
+    """Schema de resposta do token de reset - ALINHADO COM password_reset_tokens TABLE"""
+
+    id: uuid.UUID = Field(..., description="ID do token")
+    token: str = Field(..., description="Token de reset")
+    user_id: uuid.UUID = Field(..., description="ID do usuário")
+    expires_at: datetime = Field(..., description="Data de expiração")
+    is_used: Optional[bool] = Field(False, description="Se foi usado")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==================== SCHEMAS DE VERIFICAÇÃO DE EMAIL ====================
+
+
 class EmailVerificationRequest(BaseModel):
-    token: str
+    """Schema para verificação de email - ALINHADO COM email_verification_tokens TABLE"""
+
+    token: str = Field(..., max_length=500, description="Token de verificação")
+
+
+class EmailVerificationTokenResponse(BaseModel):
+    """Schema de resposta do token de verificação - ALINHADO COM email_verification_tokens TABLE"""
+
+    id: uuid.UUID = Field(..., description="ID do token")
+    token: str = Field(..., description="Token de verificação")
+    user_id: uuid.UUID = Field(..., description="ID do usuário")
+    expires_at: datetime = Field(..., description="Data de expiração")
+    is_used: Optional[bool] = Field(False, description="Se foi usado")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==================== SCHEMAS DE MUDANÇA DE SENHA ====================
 
 
 class PasswordChangeRequest(BaseModel):
-    """Schema para solicitação de mudança de senha"""
+    """Schema para mudança de senha autenticada"""
+
     current_password: str = Field(..., description="Senha atual")
-    new_password: str = Field(..., min_length=8, description="Nova senha")
+    new_password: str = Field(
+        ..., min_length=8, max_length=255, description="Nova senha"
+    )
     confirm_password: str = Field(..., description="Confirmação da nova senha")
 
     @validator("new_password")
@@ -189,13 +345,40 @@ class PasswordChangeRequest(BaseModel):
     @validator("confirm_password")
     def passwords_match(cls, v, values):
         """Valida se as senhas coincidem"""
-        if 'new_password' in values and v != values['new_password']:
+        if "new_password" in values and v != values["new_password"]:
             raise ValueError("Senhas não coincidem")
         return v
 
 
+# ==================== SCHEMAS DE ROLES E TENANT ====================
+
+
+class UserTenantRoleResponse(BaseModel):
+    """Schema para roles do usuário por tenant - ALINHADO COM user_tenant_roles TABLE"""
+
+    id: uuid.UUID = Field(..., description="ID do role")
+    user_id: uuid.UUID = Field(..., description="ID do usuário")
+    tenant_id: uuid.UUID = Field(..., description="ID do tenant")
+    role_id: uuid.UUID = Field(..., description="ID do role")
+    granted_by: Optional[uuid.UUID] = Field(None, description="Concedido por")
+    granted_at: datetime = Field(..., description="Data de concessão")
+    expires_at: Optional[datetime] = Field(None, description="Data de expiração")
+    is_active: bool = Field(True, description="Se está ativo")
+    conditions: Dict[str, Any] = Field(
+        default_factory=dict, description="Condições do role"
+    )
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ==================== SCHEMAS DE 2FA (FUTURO) ====================
+
+
 class TwoFactorSetup(BaseModel):
     """Schema para configuração de autenticação de dois fatores"""
+
     secret: Optional[str] = Field(None, description="Chave secreta do 2FA")
     qr_code: Optional[str] = Field(None, description="QR code para configuração")
     backup_codes: Optional[List[str]] = Field(None, description="Códigos de backup")
@@ -203,29 +386,42 @@ class TwoFactorSetup(BaseModel):
 
 class TwoFactorVerify(BaseModel):
     """Schema para verificação de código 2FA"""
+
     code: str = Field(..., description="Código de verificação 2FA")
     remember_device: Optional[bool] = Field(False, description="Lembrar dispositivo")
 
 
 class TwoFactorDisable(BaseModel):
     """Schema para desabilitação de 2FA"""
+
     password: str = Field(..., description="Senha atual para confirmação")
     code: Optional[str] = Field(None, description="Código 2FA (se habilitado)")
 
 
+# ==================== SCHEMAS DE PREFERÊNCIAS E PERFIL ====================
+
+
 class UserPreferences(BaseModel):
-    """Schema para preferências do usuário"""
-    language: Optional[str] = Field("pt-BR", description="Idioma preferido")
-    timezone: Optional[str] = Field("America/Sao_Paulo", description="Fuso horário")
-    email_notifications: Optional[bool] = Field(True, description="Receber notificações por email")
-    push_notifications: Optional[bool] = Field(True, description="Receber notificações push")
+    """Schema para preferências do usuário (armazenadas em metadata)"""
+
+    language: Optional[str] = Field("en", description="Idioma preferido")
+    timezone: Optional[str] = Field("UTC", description="Fuso horário")
+    email_notifications: Optional[bool] = Field(
+        True, description="Notificações por email"
+    )
+    push_notifications: Optional[bool] = Field(True, description="Notificações push")
     newsletter: Optional[bool] = Field(False, description="Receber newsletter")
 
 
 class UserProfile(BaseModel):
-    """Schema para perfil completo do usuário"""
-    bio: Optional[str] = Field(None, description="Biografia do usuário")
-    avatar_url: Optional[str] = Field(None, description="URL do avatar")
+    """Schema para perfil estendido do usuário"""
+
+    bio: Optional[str] = Field(
+        None, max_length=1000, description="Biografia do usuário"
+    )
+    profile_image_url: Optional[str] = Field(
+        None, max_length=500, description="URL do avatar"
+    )
     website: Optional[str] = Field(None, description="Website pessoal")
     location: Optional[str] = Field(None, description="Localização")
     company: Optional[str] = Field(None, description="Empresa")
@@ -234,17 +430,23 @@ class UserProfile(BaseModel):
 
 class UserStats(BaseModel):
     """Schema para estatísticas do usuário"""
-    workflows_created: Optional[int] = Field(0, description="Workflows criados")
-    workflows_executed: Optional[int] = Field(0, description="Workflows executados")
-    last_login: Optional[datetime] = Field(None, description="Último login")
-    account_created: Optional[datetime] = Field(None, description="Data de criação da conta")
-    total_executions: Optional[int] = Field(0, description="Total de execuções")
+
+    login_count: int = Field(0, description="Número total de logins")
+    last_login_at: Optional[datetime] = Field(None, description="Último login")
+    failed_login_attempts: int = Field(0, description="Tentativas de login falhadas")
+    account_created: datetime = Field(..., description="Data de criação da conta")
+    workspaces_count: Optional[int] = Field(0, description="Número de workspaces")
+    workflows_count: Optional[int] = Field(0, description="Número de workflows")
+
+
+# ==================== SCHEMAS DE SESSÃO E SEGURANÇA ====================
 
 
 class SessionInfo(BaseModel):
     """Schema para informações da sessão"""
+
     session_id: str = Field(..., description="ID da sessão")
-    user_id: str = Field(..., description="ID do usuário")
+    user_id: uuid.UUID = Field(..., description="ID do usuário")
     ip_address: Optional[str] = Field(None, description="Endereço IP")
     user_agent: Optional[str] = Field(None, description="User agent")
     created_at: datetime = Field(..., description="Data de criação da sessão")
@@ -253,7 +455,8 @@ class SessionInfo(BaseModel):
 
 
 class AuthProvider(BaseModel):
-    """Schema para provedores de autenticação"""
+    """Schema para provedores de autenticação externos"""
+
     provider_id: str = Field(..., description="ID do provedor")
     provider_name: str = Field(..., description="Nome do provedor")
     client_id: Optional[str] = Field(None, description="Client ID")
@@ -261,296 +464,26 @@ class AuthProvider(BaseModel):
     scopes: Optional[List[str]] = Field(None, description="Escopos de permissão")
 
 
-# ==================== WORKFLOW SCHEMAS ====================
-# Note: Estas classes provavelmente deveriam estar em workflow.py
-# mas estão aqui para manter compatibilidade
+# ==================== SCHEMAS DE LISTAGEM E BUSCA ====================
 
 
-# Schemas para Workflow
-class WorkflowBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200)
-    description: str | None = None
-    category: str | None = None
-    tags: list[str] | None = []
-    is_public: bool = False
+class UserListResponse(BaseModel):
+    """Schema para listagem de usuários"""
+
+    users: List[UserResponse] = Field(..., description="Lista de usuários")
+    total: int = Field(..., description="Total de usuários")
+    page: int = Field(..., description="Página atual")
+    size: int = Field(..., description="Tamanho da página")
+    pages: int = Field(..., description="Total de páginas")
 
 
-class WorkflowCreate(WorkflowBase):
-    definition: dict = Field(..., description="Estrutura completa do workflow")
+class UserSearchRequest(BaseModel):
+    """Schema para busca de usuários"""
 
-    @validator("definition")
-    def validate_definition(cls, v):
-        """Valida estrutura da definição"""
-        if not isinstance(v, dict):
-            raise ValueError("Definição deve ser um objeto JSON válido")
-
-        required_keys = ["nodes", "connections"]
-        for key in required_keys:
-            if key not in v:
-                raise ValueError(f'Definição deve conter a chave "{key}"')
-
-        if not isinstance(v["nodes"], list):
-            raise ValueError("Nodes deve ser uma lista")
-
-        if not isinstance(v["connections"], list):
-            raise ValueError("Connections deve ser uma lista")
-
-        return v
-
-
-class WorkflowUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=200)
-    description: str | None = None
-    category: str | None = None
-    tags: list[str] | None = None
-    is_public: bool | None = None
-    definition: dict | None = None
-    status: str | None = None
-
-
-class WorkflowResponse(WorkflowBase):
-    id: str
-    user_id: str
-    workspace_id: str | None
-    version: str
-    status: str
-    thumbnail_url: str | None
-    downloads_count: int
-    rating_average: float
-    rating_count: int
-    execution_count: int
-    last_executed_at: datetime | None
-    created_at: datetime | None
-    updated_at: datetime | None
-    definition: dict | None = None
-
-    @validator("id", "user_id", "workspace_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-    model_config = {"from_attributes": True}
-
-
-# Schemas para Node
-class NodeBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200)
-    description: str | None = None
-    type: str
-    category: str | None = None
-    is_public: bool = False
-
-
-class NodeCreate(NodeBase):
-    code_template: str = Field(..., min_length=1)
-    input_schema: dict
-    output_schema: dict
-    parameters_schema: dict | None = {}
-    icon: str | None = "🔧"
-    color: str | None = "#6366f1"
-    documentation: str | None = None
-    examples: list[dict] | None = []
-
-    @validator("input_schema", "output_schema")
-    def validate_schemas(cls, v):
-        """Valida schemas JSON"""
-        if not isinstance(v, dict):
-            raise ValueError("Schema deve ser um objeto JSON válido")
-
-        required_keys = ["type", "properties"]
-        for key in required_keys:
-            if key not in v:
-                raise ValueError(f'Schema deve conter a chave "{key}"')
-
-        return v
-
-
-class NodeUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=200)
-    description: str | None = None
-    category: str | None = None
-    is_public: bool | None = None
-    code_template: str | None = None
-    input_schema: dict | None = None
-    output_schema: dict | None = None
-    parameters_schema: dict | None = None
-    icon: str | None = None
-    color: str | None = None
-    documentation: str | None = None
-    examples: list[dict] | None = None
-
-
-class NodeResponse(NodeBase):
-    id: str
-    user_id: str
-    workspace_id: str | None
-    status: str
-    version: str
-    icon: str
-    color: str
-    documentation: str | None
-    examples: list[dict]
-    downloads_count: int
-    usage_count: int
-    rating_average: float
-    rating_count: int
-    created_at: datetime | None
-    updated_at: datetime | None
-    code_template: str | None = None
-    input_schema: dict | None = None
-    output_schema: dict | None = None
-    parameters_schema: dict | None = None
-
-    @validator("id", "user_id", "workspace_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-    model_config = {"from_attributes": True}
-
-
-# Schemas para Agent
-class AgentBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200)
-    description: str | None = None
-    agent_type: str = "general"
-
-
-class AgentCreate(AgentBase):
-    personality: str | None = None
-    instructions: str | None = None
-    model_provider: str = "openai"
-    model_name: str = "gpt-4"
-    temperature: float = Field(0.7, ge=0.0, le=2.0)
-    max_tokens: int = Field(1000, ge=1, le=4000)
-    tools: list[str] | None = []
-    knowledge_base: dict | None = {}
-    avatar_url: str | None = None
-
-
-class AgentUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=200)
-    description: str | None = None
-    personality: str | None = None
-    instructions: str | None = None
-    model_provider: str | None = None
-    model_name: str | None = None
-    temperature: float | None = Field(None, ge=0.0, le=2.0)
-    max_tokens: int | None = Field(None, ge=1, le=4000)
-    tools: list[str] | None = None
-    knowledge_base: dict | None = None
-    avatar_url: str | None = None
-    status: str | None = None
-
-
-class AgentResponse(AgentBase):
-    id: str
-    user_id: str
-    workspace_id: str | None
-    model_provider: str
-    model_name: str
-    temperature: float
-    max_tokens: int
-    status: str
-    avatar_url: str | None
-    conversation_count: int
-    message_count: int
-    rating_average: float
-    rating_count: int
-    last_active_at: datetime | None
-    created_at: datetime | None
-    updated_at: datetime | None
-
-    @validator("id", "user_id", "workspace_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-    model_config = {"from_attributes": True}
-
-
-# Schemas para Conversation
-class ConversationCreate(BaseModel):
-    agent_id: str | None = None
-    title: str | None = None
-    context: dict | None = {}
-
-
-class ConversationResponse(BaseModel):
-    id: str
-    user_id: str
-    agent_id: str | None
-    workspace_id: str | None
-    title: str | None
-    status: str
-    message_count: int
-    total_tokens_used: int
-    last_message_at: datetime | None
-    created_at: datetime | None
-    updated_at: datetime | None
-
-    @validator("id", "user_id", "agent_id", "workspace_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-    model_config = {"from_attributes": True}
-
-
-# Schemas para Message
-class MessageCreate(BaseModel):
-    content: str = Field(..., min_length=1)
-    attachments: list[dict] | None = []
-
-
-class MessageResponse(BaseModel):
-    id: str
-    conversation_id: str
-    role: str
-    content: str
-    attachments: list[dict]
-    model_used: str | None
-    tokens_used: int
-    processing_time_ms: int
-    created_at: datetime | None
-
-    @validator("id", "conversation_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-    model_config = {"from_attributes": True}
-
-
-# Schemas para paginação
-class PaginationParams(BaseModel):
-    page: int = Field(1, ge=1)
-    size: int = Field(20, ge=1, le=100)
-
-
-class PaginatedResponse(BaseModel):
-    items: list[dict]
-    total: int
-    page: int
-    size: int
-    pages: int
+    query: Optional[str] = Field(None, description="Termo de busca")
+    status: Optional[UserStatus] = Field(None, description="Filtrar por status")
+    tenant_id: Optional[uuid.UUID] = Field(None, description="Filtrar por tenant")
+    is_verified: Optional[bool] = Field(None, description="Filtrar por verificação")
+    is_active: Optional[bool] = Field(None, description="Filtrar por ativo")
+    page: int = Field(1, ge=1, description="Página")
+    size: int = Field(20, ge=1, le=100, description="Tamanho da página")

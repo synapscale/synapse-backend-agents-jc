@@ -15,11 +15,12 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 try:
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
-    
+
     print("🔍 Verificando relacionamentos no schema synapscale_db...")
-    
+
     # Verificar chaves estrangeiras
-    cur.execute("""
+    cur.execute(
+        """
         SELECT
             tc.table_name, 
             kcu.column_name, 
@@ -35,15 +36,16 @@ try:
               AND ccu.table_schema = tc.table_schema
         WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'synapscale_db'
         ORDER BY tc.table_name;
-    """)
-    
+    """
+    )
+
     relationships = cur.fetchall()
     print(f"\n📊 Total de relacionamentos encontrados: {len(relationships)}")
     for rel in relationships:
         print(f"  ✓ {rel[0]}.{rel[1]} -> {rel[2]}.{rel[3]}")
-    
+
     cur.close()
     conn.close()
-    
+
 except Exception as e:
     print(f"❌ Erro: {e}")

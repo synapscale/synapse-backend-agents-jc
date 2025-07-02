@@ -6,72 +6,81 @@ import os
 import sys
 from pathlib import Path
 
+
 def show_env_values(env_file=".env", show_secrets=False):
     """Mostra valores do arquivo .env de forma legível"""
-    
+
     env_path = Path(env_file)
     if not env_path.exists():
         print(f"❌ Arquivo {env_file} não encontrado!")
         return
-    
+
     print(f"🔍 VISUALIZADOR DO ARQUIVO: {env_file}")
     print("=" * 60)
-    
-    with open(env_path, 'r', encoding='utf-8') as f:
+
+    with open(env_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    
+
     current_section = ""
     line_num = 0
-    
+
     for line in lines:
         line_num += 1
         line = line.rstrip()
-        
+
         # Seções (comentários com ===)
-        if line.startswith('#') and '===' in line:
-            current_section = line.strip('# =')
+        if line.startswith("#") and "===" in line:
+            current_section = line.strip("# =")
             print(f"\n🏷️  {current_section}")
             print("-" * 40)
             continue
-        
+
         # Comentários normais
-        if line.startswith('#') or not line.strip():
+        if line.startswith("#") or not line.strip():
             continue
-        
+
         # Variáveis de ambiente
-        if '=' in line:
-            key, value = line.split('=', 1)
+        if "=" in line:
+            key, value = line.split("=", 1)
             key = key.strip()
             value = value.strip()
-            
+
             # Determinar se é um valor sensível
             sensitive_keys = [
-                'SECRET', 'KEY', 'PASSWORD', 'TOKEN', 'API_KEY', 
-                'JWT', 'DATABASE_URL', 'REDIS', 'SMTP_PASSWORD'
+                "SECRET",
+                "KEY",
+                "PASSWORD",
+                "TOKEN",
+                "API_KEY",
+                "JWT",
+                "DATABASE_URL",
+                "REDIS",
+                "SMTP_PASSWORD",
             ]
-            
+
             is_sensitive = any(sensitive in key.upper() for sensitive in sensitive_keys)
-            
+
             if value:
                 # Mascaramento removido - sempre mostrar valores completos
                 print(f"✅ {key}: {value}")
             else:
                 print(f"⚪ {key}: (vazio)")
-    
+
     print("\n" + "=" * 60)
     print("💡 DICAS:")
     print("• Mascaramento removido - todos os valores são mostrados")
     print("• Para editar: nano .env")
     print("• Para testar carregamento: python test_env.py")
 
+
 if __name__ == "__main__":
     show_secrets = "--show-secrets" in sys.argv or "-s" in sys.argv
     env_file = ".env"
-    
+
     # Permite especificar arquivo diferente
     for arg in sys.argv[1:]:
-        if not arg.startswith('-') and arg.endswith(('.env', '.env.example')):
+        if not arg.startswith("-") and arg.endswith((".env", ".env.example")):
             env_file = arg
             break
-    
+
     show_env_values(env_file, show_secrets)

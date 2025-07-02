@@ -1,19 +1,15 @@
-"""Esquemas para integração com modelos de linguagem (LLMs).
-
-Este módulo contém os esquemas para requisições e respostas
-relacionadas à geração de texto, contagem de tokens e informações
-sobre modelos e provedores disponíveis.
-"""
+"""Esquemas para integração com modelos de linguagem (LLMs)."""
 
 from enum import Enum
 from typing import Dict, List, Optional, Union, Any
+from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
 
 class LLMCapability(str, Enum):
     """Capacidades dos modelos LLM."""
-
     TEXT = "text"
     VISION = "vision"
     FUNCTION_CALLING = "function_calling"
@@ -24,7 +20,6 @@ class LLMCapability(str, Enum):
 
 class LLMProvider(str, Enum):
     """Provedores de LLM disponíveis."""
-
     OPENAI = "openai"
     CLAUDE = "claude"
     GEMINI = "gemini"
@@ -35,300 +30,114 @@ class LLMProvider(str, Enum):
     OTHER = "outro"
 
 
-class OpenAIModel(str, Enum):
-    """Modelos disponíveis da OpenAI."""
-
-    GPT_4O = "gpt-4o"
-    GPT_4_TURBO = "gpt-4-turbo"
-    GPT_4 = "gpt-4"
-    GPT_35_TURBO = "gpt-3.5-turbo"
-    OTHER = "outro"
-
-
-class ClaudeModel(str, Enum):
-    """Modelos disponíveis da Anthropic Claude."""
-
-    CLAUDE_3_OPUS = "claude-3-opus-20240229"
-    CLAUDE_3_SONNET = "claude-3-sonnet-20240229"
-    CLAUDE_3_HAIKU = "claude-3-haiku-20240307"
-    OTHER = "outro"
+# Base schemas
+class LLMCreate(BaseModel):
+    """Schema para criação de LLM."""
+    name: str = Field(..., description="Nome do modelo")
+    provider: str = Field(..., description="Provedor do modelo")
+    model_id: str = Field(..., description="ID do modelo no provedor")
+    description: Optional[str] = Field(None, description="Descrição do modelo")
+    capabilities: List[str] = Field(default_factory=list, description="Capacidades do modelo")
+    context_window: int = Field(default=0, description="Tamanho do contexto em tokens")
+    token_limit: int = Field(default=0, description="Limite de tokens na resposta")
+    pricing: Optional[Dict[str, float]] = Field(None, description="Informações de preço")
+    is_active: bool = Field(default=True, description="Se o modelo está ativo")
 
 
-class GeminiModel(str, Enum):
-    """Modelos disponíveis do Google Gemini."""
-
-    GEMINI_15_PRO = "gemini-1.5-pro"
-    GEMINI_15_FLASH = "gemini-1.5-flash"
-    GEMINI_10_PRO = "gemini-1.0-pro"
-    OTHER = "outro"
-
-
-class LlamaModel(str, Enum):
-    """Modelos disponíveis do Llama."""
-
-    LLAMA_3_70B = "llama-3-70b"
-    LLAMA_3_8B = "llama-3-8b"
-    LLAMA_2_70B = "llama-2-70b"
-    OTHER = "outro"
-
-
-class LLMModelInfo(BaseModel):
-    """Informações sobre um modelo LLM."""
-
-    id: str = Field(..., description="Identificador único do modelo")
-    provider: str = Field(..., description="Provedor do modelo (ex: openai, claude)")
-    name: str = Field(..., description="Nome amigável do modelo")
-    capabilities: list[str] = Field(
-        default_factory=list,
-        description="Lista de capacidades do modelo",
-    )
-    context_window: int = Field(
-        default=0,
-        description="Tamanho máximo do contexto em tokens",
-    )
-    token_limit: int = Field(
-        default=0,
-        description="Limite de tokens na resposta",
-    )
-    description: str | None = Field(
-        None,
-        description="Descrição detalhada do modelo",
-    )
-    pricing: dict[str, float] | None = Field(
-        None,
-        description="Informações de preço (por 1K tokens)",
-    )
-
-
-class LLMProviderInfo(BaseModel):
-    """Informações sobre um provedor LLM."""
-
-    id: str = Field(..., description="Identificador único do provedor")
-    name: str = Field(..., description="Nome amigável do provedor")
-    description: str = Field(..., description="Descrição do provedor")
-    status: str = Field(..., description="Status do provedor (active, inactive)")
-    models_count: int = Field(
-        default=0,
-        description="Número de modelos disponíveis",
-    )
-    website: str | None = Field(
-        None,
-        description="Website do provedor",
-    )
-    documentation: str | None = Field(
-        None,
-        description="Link para documentação",
-    )
-
-
-class LLMGenerateRequest(BaseModel):
-    """Requisição para geração de texto."""
-
-    prompt: str = Field(
-        ...,
-        description="Texto de entrada para o modelo (obrigatório)",
-    )
-    provider: LLMProvider | None = Field(
-        None,
-        description="Provedor LLM a ser usado (opcional, padrão: openai)",
-    )
-    model: str | None = Field(
-        None,
-        description="Modelo específico do provedor (opcional)",
-    )
-    temperature: float | None = Field(
-        0.7,
-        description="Controle de aleatoriedade (0.0-1.0, padrão: 0.7)",
-    )
-    max_tokens: int | None = Field(
-        1000,
-        description="Limite de tokens na resposta (padrão: 1000)",
-    )
-    top_p: float | None = Field(
-        1.0,
-        description="Controle de diversidade via amostragem nucleus (0.0-1.0)",
-    )
-    frequency_penalty: float | None = Field(
-        0.0,
-        description="Reduz repetições de palavras (-2.0 a 2.0)",
-    )
-    presence_penalty: float | None = Field(
-        0.0,
-        description="Incentiva novos tópicos (-2.0 a 2.0)",
-    )
-    stop: str | list[str] | None = Field(
-        None,
-        description="Sequências que indicam fim da geração",
-    )
-    stream: bool | None = Field(
-        False,
-        description="Se verdadeiro, retorna tokens à medida que são gerados",
-    )
-    functions: list[dict] | None = Field(
-        None,
-        description="Funções disponíveis para function calling",
-    )
-    function_call: str | dict | None = Field(
-        None,
-        description="Controle de function calling",
-    )
-    response_format: dict | None = Field(
-        None,
-        description="Formato desejado para a resposta",
-    )
-    seed: int | None = Field(
-        None,
-        description="Seed para determinismo",
-    )
-    tools: list[dict] | None = Field(
-        None,
-        description="Ferramentas disponíveis para o modelo",
-    )
-    tool_choice: str | dict | None = Field(
-        None,
-        description="Controle de escolha de ferramentas",
-    )
-    extra_params: dict | None = Field(
-        None,
-        description="Parâmetros adicionais específicos do provedor",
-    )
-
-
-class LLMGenerateResponse(BaseModel):
-    """Resposta da geração de texto."""
-
-    text: str = Field(..., description="Texto gerado")
-    provider: str = Field(..., description="Provedor usado")
-    model: str = Field(..., description="Modelo usado")
-    usage: dict[str, int] = Field(
-        ...,
-        description="Informações de uso (tokens)",
-    )
-    finish_reason: str | None = Field(
-        None,
-        description="Razão de término da geração",
-    )
-    function_call: dict | None = Field(
-        None,
-        description="Detalhes da chamada de função, se aplicável",
-    )
-    tool_calls: list[dict] | None = Field(
-        None,
-        description="Detalhes das chamadas de ferramentas, se aplicável",
-    )
-    metadata: dict | None = Field(
-        None,
-        description="Metadados adicionais",
-    )
-
-
-class LLMCountTokensRequest(BaseModel):
-    """Requisição para contagem de tokens."""
-
-    text: str = Field(..., description="Texto para contar tokens")
-    provider: LLMProvider | None = Field(
-        None,
-        description="Provedor LLM (opcional, padrão: openai)",
-    )
-    model: str | None = Field(
-        None,
-        description="Modelo específico do provedor (opcional)",
-    )
-
-
-class LLMCountTokensResponse(BaseModel):
-    """Resposta da contagem de tokens."""
-
-    token_count: int = Field(..., description="Número de tokens")
-    provider: str = Field(..., description="Provedor usado")
-    model: str = Field(..., description="Modelo usado")
-    metadata: dict | None = Field(
-        None,
-        description="Metadados adicionais",
-    )
-
-
-class LLMChatRequest(BaseModel):
-    """Requisição para chat completion."""
-    
-    messages: list[dict[str, str]] = Field(
-        ...,
-        description="Lista de mensagens do chat",
-        example=[
-            {"role": "user", "content": "Olá, como você está?"},
-            {"role": "assistant", "content": "Olá! Estou bem, obrigado. Como posso ajudá-lo hoje?"},
-            {"role": "user", "content": "Preciso de ajuda com Python"}
-        ]
-    )
-    provider: LLMProvider | None = Field(
-        None,
-        description="Provedor LLM a ser usado (opcional, padrão: openai)",
-    )
-    model: str | None = Field(
-        None,
-        description="Modelo específico do provedor (opcional)",
-    )
-    temperature: float | None = Field(
-        0.7,
-        description="Controle de aleatoriedade (0.0-1.0, padrão: 0.7)",
-    )
-    max_tokens: int | None = Field(
-        1000,
-        description="Limite de tokens na resposta (padrão: 1000)",
-    )
-    top_p: float | None = Field(
-        1.0,
-        description="Controle de diversidade via amostragem nucleus (0.0-1.0)",
-    )
-    frequency_penalty: float | None = Field(
-        0.0,
-        description="Reduz repetições de palavras (-2.0 a 2.0)",
-    )
-    presence_penalty: float | None = Field(
-        0.0,
-        description="Incentiva novos tópicos (-2.0 a 2.0)",
-    )
-    stop: str | list[str] | None = Field(
-        None,
-        description="Sequências que indicam fim da geração",
-    )
-    stream: bool | None = Field(
-        False,
-        description="Se verdadeiro, retorna tokens à medida que são gerados",
-    )
-    functions: list[dict] | None = Field(
-        None,
-        description="Funções disponíveis para function calling",
-    )
-    function_call: str | dict | None = Field(
-        None,
-        description="Controle de function calling",
-    )
+class LLMUpdate(BaseModel):
+    """Schema para atualização de LLM."""
+    name: Optional[str] = Field(None, description="Nome do modelo")
+    description: Optional[str] = Field(None, description="Descrição do modelo")
+    capabilities: Optional[List[str]] = Field(None, description="Capacidades do modelo")
+    context_window: Optional[int] = Field(None, description="Tamanho do contexto em tokens")
+    token_limit: Optional[int] = Field(None, description="Limite de tokens na resposta")
+    pricing: Optional[Dict[str, float]] = Field(None, description="Informações de preço")
+    is_active: Optional[bool] = Field(None, description="Se o modelo está ativo")
 
 
 class LLMResponse(BaseModel):
-    """Resposta padrão dos LLMs (unificada)."""
-    
-    content: str = Field(..., description="Conteúdo gerado pelo modelo")
-    model: str = Field(..., description="Modelo usado")
-    provider: str = Field(..., description="Provedor usado")
-    usage: dict[str, int] = Field(
-        default_factory=dict,
-        description="Informações de uso (tokens)",
-    )
-    metadata: dict[str, Any] = Field(
-        default_factory=dict,
-        description="Metadados adicionais",
-    )
-    finish_reason: str | None = Field(
-        None,
-        description="Razão de término da geração",
-    )
-    function_call: dict | None = Field(
-        None,
-        description="Detalhes da chamada de função, se aplicável",
-    )
-    tool_calls: list[dict] | None = Field(
-        None,
-        description="Detalhes das chamadas de ferramentas, se aplicável",
-    )
+    """Schema de resposta para LLM."""
+    id: UUID = Field(..., description="ID único do modelo")
+    name: str = Field(..., description="Nome do modelo")
+    provider: str = Field(..., description="Provedor do modelo")
+    model_id: str = Field(..., description="ID do modelo no provedor")
+    description: Optional[str] = Field(None, description="Descrição do modelo")
+    capabilities: List[str] = Field(default_factory=list, description="Capacidades do modelo")
+    context_window: int = Field(default=0, description="Tamanho do contexto em tokens")
+    token_limit: int = Field(default=0, description="Limite de tokens na resposta")
+    pricing: Optional[Dict[str, float]] = Field(None, description="Informações de preço")
+    is_active: bool = Field(default=True, description="Se o modelo está ativo")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Data de atualização")
+
+
+class LLMListResponse(BaseModel):
+    """Schema de resposta para lista de LLMs."""
+    items: List[LLMResponse] = Field(..., description="Lista de LLMs")
+    total: int = Field(..., description="Total de itens")
+    page: int = Field(..., description="Página atual")
+    per_page: int = Field(..., description="Itens por página")
+    has_next: bool = Field(..., description="Se há próxima página")
+    has_prev: bool = Field(..., description="Se há página anterior")
+
+
+# Conversation schemas
+class LLMConversationCreate(BaseModel):
+    """Schema para criação de conversa com LLM."""
+    llm_id: UUID = Field(..., description="ID do LLM")
+    title: Optional[str] = Field(None, description="Título da conversa")
+    system_prompt: Optional[str] = Field(None, description="Prompt do sistema")
+    temperature: float = Field(default=0.7, description="Temperatura para geração")
+    max_tokens: Optional[int] = Field(None, description="Máximo de tokens na resposta")
+
+
+class LLMConversationResponse(BaseModel):
+    """Schema de resposta para conversa com LLM."""
+    id: UUID = Field(..., description="ID único da conversa")
+    llm_id: UUID = Field(..., description="ID do LLM")
+    user_id: UUID = Field(..., description="ID do usuário")
+    title: Optional[str] = Field(None, description="Título da conversa")
+    system_prompt: Optional[str] = Field(None, description="Prompt do sistema")
+    temperature: float = Field(default=0.7, description="Temperatura para geração")
+    max_tokens: Optional[int] = Field(None, description="Máximo de tokens na resposta")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Data de atualização")
+
+
+class LLMConversationListResponse(BaseModel):
+    """Schema de resposta para lista de conversas com LLM."""
+    items: List[LLMConversationResponse] = Field(..., description="Lista de conversas")
+    total: int = Field(..., description="Total de itens")
+    page: int = Field(..., description="Página atual")
+    per_page: int = Field(..., description="Itens por página")
+    has_next: bool = Field(..., description="Se há próxima página")
+    has_prev: bool = Field(..., description="Se há página anterior")
+
+
+# Message schemas
+class LLMMessageCreate(BaseModel):
+    """Schema para criação de mensagem em conversa com LLM."""
+    conversation_id: UUID = Field(..., description="ID da conversa")
+    role: str = Field(..., description="Papel da mensagem (user/assistant)")
+    content: str = Field(..., description="Conteúdo da mensagem")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Metadados da mensagem")
+
+
+class LLMMessageResponse(BaseModel):
+    """Schema de resposta para mensagem em conversa com LLM."""
+    id: UUID = Field(..., description="ID único da mensagem")
+    conversation_id: UUID = Field(..., description="ID da conversa")
+    role: str = Field(..., description="Papel da mensagem (user/assistant)")
+    content: str = Field(..., description="Conteúdo da mensagem")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Metadados da mensagem")
+    created_at: datetime = Field(..., description="Data de criação")
+
+
+class LLMMessageListResponse(BaseModel):
+    """Schema de resposta para lista de mensagens em conversa com LLM."""
+    items: List[LLMMessageResponse] = Field(..., description="Lista de mensagens")
+    total: int = Field(..., description="Total de itens")
+    page: int = Field(..., description="Página atual")
+    per_page: int = Field(..., description="Itens por página")
+    has_next: bool = Field(..., description="Se há próxima página")
+    has_prev: bool = Field(..., description="Se há página anterior")

@@ -1,0 +1,282 @@
+# PRD: Implementação da Reestruturação Otimizada do Banco de Dados SynapScale
+
+## 1. Visão Geral do Projeto
+
+### 1.1 Objetivo
+Implementar a reestruturação completa e otimizada do banco de dados `synapscale_db`, garantindo uma arquitetura robusta, performática, segura e alinhada com as melhores práticas para um sistema SaaS multi-tenant B2B.
+
+### 1.2 Escopo
+- Migração de 147+ tabelas seguindo as recomendações do plano otimizado
+- Padronização de tipos de dados (JSON → JSONB, timestamps com timezone)
+- Implementação de Row-Level Security (RLS) onde apropriado
+- Atualização de modelos ORM (SQLAlchemy)
+- Sincronização de APIs e endpoints
+- Criação de testes abrangentes
+- Documentação técnica completa
+
+### 1.3 Critérios de Sucesso
+- 100% das tabelas migradas conforme especificação
+- Zero quebras de funcionalidade existente
+- Performance mantida ou melhorada
+- Todos os testes passando
+- Documentação atualizada
+- Sistema pronto para produção
+
+## 2. Arquitetura e Princípios Técnicos
+
+### 2.1 Princípios Fundamentais
+- **Multi-tenancy**: Manutenção estratégica de `tenant_id` em tabelas filhas
+- **Performance**: Preservação de colunas de contagem denormalizadas
+- **Segurança**: Implementação de RLS onde aplicável
+- **Consistência**: Padronização de tipos de dados e nomenclatura
+- **Integridade**: Definição clara de ações ON DELETE para foreign keys
+
+### 2.2 Stack Tecnológico
+- **Banco de Dados**: PostgreSQL 13+
+- **ORM**: SQLAlchemy 2.x
+- **Migrações**: Alembic
+- **API**: FastAPI
+- **Testes**: pytest
+- **Documentação**: Markdown + Diagramas ER
+
+## 3. Especificações Técnicas Detalhadas
+
+### 3.1 Padronizações Globais
+
+#### 3.1.1 Tipos de Dados
+- **JSON → JSONB**: Todas as colunas JSON devem ser migradas para JSONB
+- **Timestamps**: Usar `timestamp with time zone` para todas as colunas de data/hora
+- **Nomenclatura**: Padronizar `meta_data` para `metadata`
+
+#### 3.1.2 Foreign Keys
+- Definir ações ON DELETE apropriadas para todas as foreign keys
+- CASCADE para dados dependentes
+- SET NULL para referências opcionais
+- RESTRICT para dados críticos
+
+#### 3.1.3 Multi-tenancy
+- Manter `tenant_id` em tabelas filhas para performance e RLS
+- Exceção: Remover `tenant_id` da tabela `users` (gerenciado via `user_tenant_roles`)
+
+### 3.2 Grupos de Tabelas e Transformações
+
+#### 3.2.1 Tabelas de Backup (16 tabelas)
+- **Ação**: Exportar via pg_dump e remover do schema de produção
+- **Automação**: Script de arquivamento com logs de auditoria
+
+#### 3.2.2 RBAC (3 tabelas)
+- **rbac_roles**: Remover coluna `permissions` (migrar para `rbac_role_permissions`)
+- **rbac_permissions**: Clarificar arquitetura de `tenant_id` nulável
+- **rbac_role_permissions**: Manter estrutura atual
+
+#### 3.2.3 Workflows e Execuções (2 tabelas)
+- **workflows**: `workspace_id` NOT NULL, `tags` JSON → JSONB, ON DELETE CASCADE
+- **workflow_executions**: JSON → JSONB, `meta_data` → `metadata`
+
+#### 3.2.4 LLMs e Agentes (6 tabelas)
+- **agents**: Remover `model_provider`, JSON → JSONB, `workspace_id` NOT NULL
+- **llms**: `llm_metadata` JSON → JSONB, ajustar ON DELETE para logs
+- **llms_conversations**: JSON → JSONB, clarificar `tenant_id`
+- **llms_conversations_turns**: Renomear para `conversation_turns`
+- **llms_messages**: Remover `rating`/`feedback`, renomear para `messages`
+- **llms_message_feedbacks**: JSON → JSONB, renomear para `message_feedbacks`
+- **llms_usage_logs**: JSON → JSONB, manter todas as colunas de rastreamento
+
+#### 3.2.5 Marketplace e Componentes (5 tabelas)
+- **marketplace_components**: Remover `author_name`, JSON → JSONB, manter contadores
+- **component_versions**: JSON → JSONB, timestamps com timezone
+- **component_purchases**: Timestamps com timezone
+- **component_ratings**: Timestamps com timezone
+- **component_downloads**: Timestamps com timezone
+
+#### 3.2.6 Analytics (6 tabelas)
+- Padronizar JSON → JSONB em todas as tabelas
+- Timestamps com timezone
+- Adicionar ações ON DELETE apropriadas
+- Manter `tenant_id` em todas as tabelas
+
+#### 3.2.7 Billing e Pagamentos (5 tabelas)
+- **billing_events**: `billing_metadata` JSON → JSONB
+- Manter estruturas atuais das demais tabelas
+
+#### 3.2.8 Gerenciamento de Usuários (5 tabelas)
+- **users**: **REMOVER** coluna `tenant_id`
+- Manter estruturas das demais tabelas de autenticação
+
+#### 3.2.9 Workspaces e Projetos (8 tabelas)
+- **workspaces**: `feature_usage_count` JSON → JSONB, manter contadores
+- **workspace_projects**: Timestamps com timezone, manter contadores
+- **workspace_members**: JSON → JSONB, timestamps com timezone
+- **workspace_activities**: `meta_data` → `metadata`, JSON → JSONB
+- **workspace_invitations**: Timestamps com timezone
+- **project_collaborators**: JSON → JSONB, timestamps com timezone
+- **project_comments**: Timestamps com timezone
+- **project_versions**: JSON → JSONB, timestamps com timezone
+
+#### 3.2.10 Nós e Workflows (9 tabelas)
+- **nodes**: JSON → JSONB, manter contadores de performance
+- **node_executions**: JSON → JSONB, `meta_data` → `metadata`
+- **node_templates**: JSON → JSONB
+- **workflow_connections**: Adicionar ações ON DELETE
+- **workflow_execution_metrics**: JSON → JSONB
+- **workflow_execution_queue**: JSON → JSONB, `meta_data` → `metadata`
+- **workflow_nodes**: JSON → JSONB
+- **workflow_templates**: JSON → JSONB, manter contadores
+
+#### 3.2.11 Métricas e Relatórios (6 tabelas)
+- Padronizar JSON → JSONB em todas as tabelas
+- Timestamps com timezone
+- Adicionar ações ON DELETE apropriadas
+
+#### 3.2.12 Templates (5 tabelas)
+- **template_collections**: JSON → JSONB
+- **template_usage**: `modifications_made` JSON → JSONB
+- Manter estruturas das demais tabelas
+
+#### 3.2.13 Outras Tabelas (5 tabelas)
+- **tags**: `tag_metadata` JSON → JSONB
+- Manter estruturas das demais tabelas
+
+## 4. Implementação por Fases
+
+### 4.1 Fase 1: Preparação e Infraestrutura
+- Backup completo do banco de dados
+- Setup de ambiente de desenvolvimento/staging
+- Criação de scripts de migração Alembic
+- Implementação de testes de regressão
+
+### 4.2 Fase 2: Migrações de Dados
+- Execução das migrações Alembic por grupos de tabelas
+- Validação de integridade dos dados
+- Testes de performance após cada grupo
+
+### 4.3 Fase 3: Atualização de Código
+- Atualização de modelos SQLAlchemy
+- Sincronização de serviços e APIs
+- Atualização de schemas Pydantic
+- Implementação de Row-Level Security
+
+### 4.4 Fase 4: Testes e Validação
+- Execução de testes unitários e de integração
+- Testes de performance e carga
+- Validação de funcionalidades end-to-end
+- Revisão de segurança
+
+### 4.5 Fase 5: Documentação e Deploy
+- Atualização de documentação técnica
+- Criação de diagramas ER atualizados
+- Deploy em ambiente de produção
+- Monitoramento pós-deploy
+
+## 5. Requisitos de Qualidade
+
+### 5.1 Performance
+- Queries não devem degradar mais que 5%
+- Operações CRUD devem manter ou melhorar tempos de resposta
+- Índices otimizados para colunas JSONB
+
+### 5.2 Segurança
+- Row-Level Security implementado onde apropriado
+- Validação de permissões multi-tenant
+- Auditoria de acessos mantida
+
+### 5.3 Confiabilidade
+- Zero downtime durante migrações
+- Rollback testado e documentado
+- Backup e recovery procedures atualizados
+
+### 5.4 Manutenibilidade
+- Código limpo e bem documentado
+- Padrões de nomenclatura consistentes
+- Estrutura modular e extensível
+
+## 6. Riscos e Mitigações
+
+### 6.1 Riscos Técnicos
+- **Perda de dados**: Mitigado com backups completos e testes rigorosos
+- **Degradação de performance**: Mitigado com benchmarks e otimizações
+- **Quebra de compatibilidade**: Mitigado com testes de regressão abrangentes
+
+### 6.2 Riscos de Negócio
+- **Downtime**: Mitigado com estratégia de migração incremental
+- **Impacto em usuários**: Mitigado com comunicação e janelas de manutenção
+- **Atraso no cronograma**: Mitigado com planejamento detalhado e marcos
+
+## 7. Entregáveis
+
+### 7.1 Código
+- Scripts de migração Alembic
+- Modelos SQLAlchemy atualizados
+- Serviços e APIs sincronizados
+- Testes automatizados
+
+### 7.2 Documentação
+- Diagramas ER atualizados
+- Guia de migração
+- Documentação de APIs
+- Manual de troubleshooting
+
+### 7.3 Infraestrutura
+- Scripts de backup e recovery
+- Monitoramento e alertas
+- Políticas de retenção de dados
+- Procedimentos de rollback
+
+## 8. Cronograma Estimado
+
+- **Fase 1**: 2 semanas
+- **Fase 2**: 3 semanas
+- **Fase 3**: 4 semanas
+- **Fase 4**: 2 semanas
+- **Fase 5**: 1 semana
+
+**Total**: 12 semanas
+
+## 9. Recursos Necessários
+
+### 9.1 Equipe
+- 1 Database Engineer (líder técnico)
+- 2 Backend Developers
+- 1 DevOps Engineer
+- 1 QA Engineer
+
+### 9.2 Infraestrutura
+- Ambiente de desenvolvimento completo
+- Ambiente de staging espelhado
+- Ferramentas de backup e monitoramento
+- Recursos computacionais para testes de carga
+
+## 10. Critérios de Aceitação
+
+### 10.1 Técnicos
+- ✅ Todas as migrações executadas com sucesso
+- ✅ Zero quebras de funcionalidade
+- ✅ Performance mantida ou melhorada
+- ✅ Todos os testes passando (>95% coverage)
+- ✅ Documentação completa e atualizada
+
+### 10.2 Negócio
+- ✅ Sistema operacional em produção
+- ✅ Usuários não impactados negativamente
+- ✅ Métricas de performance dentro do esperado
+- ✅ Capacidade de rollback testada e documentada
+- ✅ Equipe treinada nas novas estruturas
+
+## 11. Considerações Especiais
+
+### 11.1 Multi-tenancy
+- Especial atenção à manutenção de `tenant_id` para RLS
+- Validação rigorosa de isolamento entre tenants
+- Testes específicos para cenários multi-tenant
+
+### 11.2 Backward Compatibility
+- Manutenção de APIs existentes durante transição
+- Versionamento de schemas quando necessário
+- Comunicação clara de breaking changes
+
+### 11.3 Monitoramento
+- Métricas específicas para novas estruturas JSONB
+- Alertas para performance de queries críticas
+- Dashboard de saúde do banco de dados
+
+Este PRD serve como guia completo para a implementação da reestruturação otimizada do banco de dados SynapScale, garantindo que todos os aspectos técnicos, de qualidade e de negócio sejam adequadamente contemplados. 

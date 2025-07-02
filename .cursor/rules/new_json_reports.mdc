@@ -1,0 +1,386 @@
+---
+description: "Regras para gerenciamento de arquivos JSON de relatórios e configurações"
+globs: ["**/*.json"]
+alwaysApply: true
+---
+# 📊 REGRA CRÍTICA - GERENCIAMENTO DE ARQUIVOS JSON DE RELATÓRIOS
+
+## **🚨 REGRA ABSOLUTA: REUTILIZAR ANTES DE CRIAR**
+
+**CONTEXTO**: O repositório está sendo poluído com arquivos JSON de relatórios, configurações e análises duplicados e abandonados. Precisamos manter organização e reutilizar estruturas existentes para evitar confusão e redundância.
+
+**❌ PROIBIDO:**
+- Criar novos arquivos .json de relatórios sem verificar se já existe similar
+- Deixar arquivos JSON na raiz do repositório quando podem estar em pastas específicas
+- Abandonar arquivos JSON após uso sem limpeza ou consolidação
+- Duplicar estruturas de dados em novos arquivos JSON
+- Criar relatórios JSON pontuais sem plano de consolidação/limpeza
+
+**✅ OBRIGATÓRIO:**
+
+## 1. **VERIFICAÇÃO ANTES DE CRIAR**
+
+```bash
+# ✅ SEMPRE verificar arquivos JSON existentes primeiro
+ls -la *.json | grep -E "(report|test|analysis|config|validation|structure|performance)"
+find . -name "*.json" | grep -E "(report|test|analysis|config|validation|structure|performance)"
+find . -name "*.json" -exec grep -l "similar_structure" {} \;
+```
+
+## 2. **PRIORIDADE DE REUTILIZAÇÃO**
+
+```json
+// ✅ SEMPRE otimizar arquivos JSON existentes ao invés de criar novos
+// Exemplo: Se existe test_config.json, EDITAR ele para adicionar novas configurações
+// ao invés de criar new_test_configuration.json
+
+// ❌ ERRADO: Criar novo arquivo JSON
+// create_file("new_analysis_report.json", content="{...}")
+
+// ✅ CORRETO: Otimizar existente
+// edit_file("reports/analysis_report.json", 
+//           old_str='"existing_data": {...}', 
+//           new_str='"existing_data": {...},\n  "new_analysis": {...}')
+```
+
+## 3. **ORGANIZAÇÃO OBRIGATÓRIA**
+
+```text
+✅ ESTRUTURA CORRETA:
+reports/
+├── test-results/           # Resultados de testes automatizados
+├── analysis/               # Análises de código e estrutura
+├── performance/            # Relatórios de performance
+├── validation/             # Relatórios de validação
+├── config/                 # Configurações de ferramentas
+└── temp/                   # Relatórios temporários
+
+config/
+├── test/                   # Configurações de teste
+├── build/                  # Configurações de build
+└── deployment/             # Configurações de deploy
+
+❌ EVITAR NA RAIZ:
+├── test_report.json        # Deve estar em reports/test-results/
+├── analysis_*.json         # Deve estar em reports/analysis/
+├── performance_*.json      # Deve estar em reports/performance/
+├── validation_*.json       # Deve estar em reports/validation/
+├── *_config.json          # Deve estar em config/categoria/
+```
+
+## 4. **ARQUIVOS JSON PONTUAIS - CONSOLIDAÇÃO OBRIGATÓRIA**
+
+```json
+// ✅ Para arquivos JSON temporários/pontuais:
+
+// 1. Criar em local adequado
+// reports/temp/temp_database_analysis_20250107.json
+
+// 2. Usar com metadados claros
+{
+  "_metadata": {
+    "type": "TEMPORARY_REPORT",
+    "created": "2025-01-07",
+    "purpose": "Análise pontual da estrutura do banco de dados",
+    "consolidate_to": "reports/analysis/database_structure.json",
+    "delete_after": "2025-01-14",
+    "status": "pending_consolidation"
+  },
+  "analysis_data": {
+    // dados da análise...
+  }
+}
+
+// 3. SEMPRE consolidar ou deletar após uso
+// TODO: Consolidar dados em relatório definitivo ✅
+```
+
+## 5. **WORKFLOW OBRIGATÓRIO**
+
+```bash
+# ✅ Antes de criar qualquer arquivo JSON de relatório:
+
+# 1. Verificar se existe similar
+echo "🔍 Verificando arquivos JSON existentes..."
+find . -name "*.json" -type f | grep -E "(report|test|analysis|config|validation)" | head -15
+
+# 2. Se existe similar, EDITAR ao invés de criar novo
+echo "✏️ Editando arquivo JSON existente ao invés de criar novo..."
+
+# 3. Se não existe, criar em local correto
+echo "📁 Criando em pasta adequada (reports/, config/, etc.)"
+
+# 4. Para JSONs pontuais, adicionar metadados de consolidação
+echo "🗂️ Adicionando _metadata para consolidação posterior..."
+
+# 5. Após uso, SEMPRE consolidar ou limpar
+echo "✅ Consolidando arquivos JSON temporários..."
+```
+
+## 6. **ARQUIVOS JSON PERMITIDOS NA RAIZ (APENAS)**
+
+```json
+// ✅ ÚNICOS arquivos JSON permitidos na raiz (casos excepcionais):
+{
+  "ALLOWED_ROOT_JSON": [
+    "package.json",              // Configuração do Node.js
+    "package-lock.json",         // Lock do Node.js
+    "pyproject.toml",            // Configuração Python (não JSON, mas similar)
+    "current_openapi.json",      // Schema OpenAPI atual
+    "current_openapi.json.backup", // Backup do schema (temporário)
+    "tasks.json",                // Configuração de tasks do projeto
+    "tsconfig.json",             // Configuração TypeScript (se aplicável)
+    "jest.config.json"           // Configuração de testes (se aplicável)
+  ]
+}
+
+// ❌ Qualquer outro arquivo JSON DEVE estar em pastas específicas
+// ⚠️  Backups e relatórios temporários devem ser movidos após consolidação
+```
+
+## 7. **VERIFICAÇÃO PRÉ-COMMIT**
+
+```bash
+# ✅ Checklist obrigatório antes de commit:
+echo "📋 Verificações de arquivos JSON:"
+echo "- [ ] Não criei JSON duplicado quando já existia similar?"
+echo "- [ ] Arquivos JSON estão em pastas adequadas e não na raiz?"
+echo "- [ ] JSONs pontuais têm _metadata para consolidação?"
+echo "- [ ] Reutilizei estruturas JSON existentes ao máximo?"
+echo "- [ ] Arquivos JSON temporários foram consolidados após uso?"
+echo "- [ ] Não há estruturas contraditórias entre arquivos JSON?"
+echo "- [ ] Schemas JSON estão consistentes entre arquivos?"
+```
+
+## 8. **PENALIDADES POR VIOLAÇÃO**
+- **1ª violação**: Refatorar/consolidar imediatamente
+- **2ª violação**: Revisar toda estrutura de relatórios JSON
+- **3ª violação**: Reorganização completa dos arquivos JSON
+
+## **🎯 REGRA DE OURO:**
+> "Se existe similar, EDITE. Se não existe, crie em pasta adequada. Se é pontual, CONSOLIDE após uso."
+
+## 9. **EXEMPLOS PRÁTICOS**
+
+### ✅ CORRETO - Reutilizando arquivo JSON existente
+```json
+// Cenário: Preciso adicionar novos resultados de teste
+// Encontrei: reports/test-results/api_endpoints_test.json
+
+// Ao invés de criar novo, EDITO o existente:
+// edit_file("reports/test-results/api_endpoints_test.json",
+//     old_str='"test_summary": {...}',
+//     new_str='"test_summary": {...},\n  "new_endpoints_test": {...}')
+
+{
+  "test_summary": {
+    "total_tests": 150,
+    "passed": 147,
+    "failed": 3
+  },
+  "new_endpoints_test": {
+    "llm_endpoints": {
+      "tested": 25,
+      "passed": 24,
+      "failed": 1
+    }
+  }
+}
+```
+
+### ❌ INCORRETO - Criando desnecessariamente
+```json
+// ❌ NÃO FAZER: Criar llm_test_results.json quando já existe api_endpoints_test.json
+// create_file("llm_test_results.json", content="{...}")
+```
+
+### ✅ CORRETO - Arquivo JSON pontual com consolidação
+```json
+// Arquivo para análise específica e temporária
+// reports/temp/database_performance_analysis_2025_01_07.json
+{
+  "_metadata": {
+    "type": "TEMPORARY_ANALYSIS",
+    "created": "2025-01-07T10:30:00Z",
+    "purpose": "Análise pontual de performance do banco de dados",
+    "consolidate_to": "reports/performance/database_metrics.json",
+    "delete_after": "2025-01-14",
+    "author": "system_analysis"
+  },
+  "performance_data": {
+    "query_times": {...},
+    "connection_pool": {...}
+  }
+}
+
+// Após análise:
+// 1. Extrair insights importantes
+// 2. Consolidar em reports/performance/database_metrics.json
+// 3. Deletar arquivo temporário
+```
+
+### ✅ CORRETO - Consolidação de múltiplos arquivos JSON
+```json
+// Se existem: test_results_api.json, test_results_llm.json, test_results_auth.json
+// Consolidar em: reports/test-results/comprehensive_test_results.json
+
+{
+  "_metadata": {
+    "type": "CONSOLIDATED_REPORT",
+    "consolidated_from": [
+      "test_results_api.json",
+      "test_results_llm.json", 
+      "test_results_auth.json"
+    ],
+    "consolidated_date": "2025-01-07",
+    "next_update": "2025-01-14"
+  },
+  "api_tests": { /* dados do test_results_api.json */ },
+  "llm_tests": { /* dados do test_results_llm.json */ },
+  "auth_tests": { /* dados do test_results_auth.json */ }
+}
+```
+
+## 10. **COMANDOS ÚTEIS PARA VERIFICAÇÃO**
+
+```bash
+# Listar todos os arquivos JSON na raiz (para limpeza)
+ls -la *.json | grep -vE "^(package|package-lock|current_openapi|tasks|tsconfig|jest\.config)\.json$"
+
+# Encontrar arquivos JSON similares por estrutura
+find . -name "*.json" -exec grep -l "similar_key_structure" {} \;
+
+# Verificar estrutura de reports/
+tree reports/ -I "*.tmp" -I "node_modules"
+
+# Contar arquivos JSON duplicados/similares por tipo
+find . -name "*test*.json" -o -name "*report*.json" -o -name "*analysis*.json" | wc -l
+
+# Buscar arquivos JSON órfãos (sem referências)
+find . -name "*.json" -type f | while read file; do
+  if ! grep -r "$(basename "$file")" --exclude="*.json" . >/dev/null 2>&1; then
+    echo "Órfão: $file"
+  fi
+done
+
+# Verificar JSON válidos
+find . -name "*.json" -exec python3 -m json.tool {} \; >/dev/null 2>&1 || echo "JSON inválido encontrado"
+
+# Identificar arquivos JSON órfãos na raiz que deveriam estar em pastas
+find . -maxdepth 1 -name "*.json" -type f | grep -vE "^./(package|package-lock|current_openapi|tasks|tsconfig|jest\.config)\.json$"
+```
+
+## 11. **PADRÕES DE NOMENCLATURA**
+
+### ✅ NOMENCLATURA CORRETA
+```text
+reports/
+├── test-results/
+│   ├── api-endpoints.json       # Não "API_TEST_RESULTS.json"
+│   ├── authentication.json     # Não "AUTH_TEST_REPORT.json"
+│   └── performance-tests.json  # Usar kebab-case
+├── analysis/
+│   ├── code-structure.json     # Não "CODE_ANALYSIS.json"
+│   ├── dependency-check.json   # Não "DEPS_REPORT.json"
+│   └── security-scan.json      # Específico e claro
+└── validation/
+    ├── model-validation.json   # Não "MODELS_CHECK.json"
+    ├── api-compliance.json     # Não "API_VALIDATION.json"
+    └── database-integrity.json # Não "DB_CHECK.json"
+```
+
+### ❌ NOMENCLATURA INCORRETA
+```text
+# Evitar nomes genéricos ou redundantes:
+- report.json                   # Muito genérico
+- test_results.json            # Deve ser específico
+- analysis_data.json           # Deve indicar tipo de análise
+- temp_file.json              # Usar convenção de temporários
+- backup_config.json          # Não deixar backups no repo
+- new_report_2025.json        # Evitar datas/versões no nome
+```
+
+## 12. **TEMPLATE PARA NOVOS ARQUIVOS JSON**
+
+```json
+{
+  "_metadata": {
+    "version": "1.0",
+    "type": "report|config|analysis|validation",
+    "created": "2025-01-07T10:30:00Z",
+    "updated": "2025-01-07T10:30:00Z",
+    "purpose": "Descrição específica do propósito",
+    "author": "system|user|tool_name",
+    "schema_version": "1.0",
+    "related_files": ["arquivo1.json", "arquivo2.json"]
+  },
+  "summary": {
+    "total_items": 0,
+    "success_count": 0,
+    "error_count": 0,
+    "warnings": []
+  },
+  "data": {
+    // Estrutura principal dos dados
+  },
+  "errors": [
+    // Lista de erros encontrados
+  ],
+  "next_steps": [
+    // Ações recomendadas
+  ]
+}
+```
+
+## 13. **PROCESSO DE MANUTENÇÃO**
+
+```bash
+# Revisão semanal de arquivos JSON
+# 1. Verificar JSONs órfãos
+find . -name "*.json" -atime +7
+
+# 2. Consolidar temporários
+find reports/temp/ -name "*.json" -mtime +7
+
+# 3. Validar estrutura JSON
+find . -name "*.json" -exec python3 -c "import json; json.load(open('{}'))" \; 2>/dev/null
+
+# 4. Atualizar metadados
+grep -r "_metadata" --include="*.json" . | grep "pending_consolidation"
+```
+
+## 14. **PROCESSO DE LIMPEZA AUTOMÁTICA**
+
+```bash
+# Script de limpeza semanal recomendado
+#!/bin/bash
+
+echo "🧹 Iniciando limpeza de arquivos JSON..."
+
+# 1. Identificar arquivos JSON órfãos na raiz
+echo "📋 Arquivos JSON órfãos na raiz:"
+find . -maxdepth 1 -name "*.json" -type f | grep -vE "^./(package|package-lock|current_openapi|tasks|tsconfig|jest\.config)\.json$"
+
+# 2. Listar arquivos JSON temporários antigos
+echo "⏰ Arquivos JSON temporários antigos (>7 dias):"
+find reports/temp/ -name "*.json" -mtime +7 2>/dev/null || echo "Pasta reports/temp/ não existe"
+
+# 3. Verificar arquivos JSON inválidos
+echo "❌ Arquivos JSON com sintaxe inválida:"
+find . -name "*.json" -type f | while read file; do
+  if ! python3 -m json.tool "$file" >/dev/null 2>&1; then
+    echo "JSON inválido: $file"
+  fi
+done
+
+# 4. Verificar duplicações por estrutura
+echo "🔍 Possíveis duplicações por tipo:"
+find . -name "*test*.json" -o -name "*report*.json" -o -name "*analysis*.json" | sort | uniq -c | grep -v "1 "
+
+# 5. Verificar arquivos com metadados de consolidação pendente
+echo "📊 Arquivos pendentes de consolidação:"
+grep -r "pending_consolidation" --include="*.json" . 2>/dev/null || echo "Nenhum arquivo pendente"
+
+# 6. Sugerir consolidações
+echo "💡 Sugestões de consolidação disponíveis em .cursor/rules/new_json_reports.mdc"
+```

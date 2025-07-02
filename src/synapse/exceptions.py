@@ -9,13 +9,16 @@ from fastapi import HTTPException, status
 
 class SynapseBaseException(Exception):
     """Exceção base para todas as exceções personalizadas do SynapScale.
-    
+
     Args:
         message (str): Mensagem de erro amigável para o usuário.
         error_code (str, opcional): Código de erro único para rastreamento e padronização (ex: 'AUTH_001').
         details (Any, opcional): Detalhes adicionais para debug ou contexto (ex: dict, str, etc).
     """
-    def __init__(self, message: str = "Erro interno", error_code: str = None, details=None):
+
+    def __init__(
+        self, message: str = "Erro interno", error_code: str = None, details=None
+    ):
         self.message = message
         self.error_code = error_code
         self.details = details
@@ -25,7 +28,12 @@ class SynapseBaseException(Exception):
 class ServiceError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro na camada de serviços."""
 
-    def __init__(self, message: str = "Erro na camada de serviços", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Erro na camada de serviços",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -39,7 +47,12 @@ class ServiceError(SynapseBaseException):
 class FileValidationError(SynapseBaseException):
     """Exceção lançada quando um arquivo não passa nas validações."""
 
-    def __init__(self, message: str = "O arquivo não passou nas validações", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "O arquivo não passou nas validações",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -53,7 +66,12 @@ class FileValidationError(SynapseBaseException):
 class StorageError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro no armazenamento."""
 
-    def __init__(self, message: str = "Erro ao armazenar ou recuperar arquivo", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Erro ao armazenar ou recuperar arquivo",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -67,7 +85,12 @@ class StorageError(SynapseBaseException):
 class DatabaseError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro no banco de dados."""
 
-    def __init__(self, message: str = "Erro no banco de dados", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Erro no banco de dados",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -81,7 +104,12 @@ class DatabaseError(SynapseBaseException):
 class AuthenticationError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro de autenticação."""
 
-    def __init__(self, message: str = "Erro de autenticação", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Erro de autenticação",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -95,7 +123,9 @@ class AuthenticationError(SynapseBaseException):
 class AuthorizationError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro de autorização."""
 
-    def __init__(self, message: str = "Permissão negada", error_code: str = None, details=None):
+    def __init__(
+        self, message: str = "Permissão negada", error_code: str = None, details=None
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -109,7 +139,12 @@ class AuthorizationError(SynapseBaseException):
 class RateLimitError(SynapseBaseException):
     """Exceção lançada quando o limite de taxa é excedido."""
 
-    def __init__(self, message: str = "Limite de requisições excedido", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Limite de requisições excedido",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -123,7 +158,12 @@ class RateLimitError(SynapseBaseException):
 class NotFoundError(SynapseBaseException):
     """Exceção lançada quando um recurso não é encontrado."""
 
-    def __init__(self, message: str = "Recurso não encontrado", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Recurso não encontrado",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -137,7 +177,9 @@ class NotFoundError(SynapseBaseException):
 class ValidationError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro de validação."""
 
-    def __init__(self, message: str = "Erro de validação", error_code: str = None, details=None):
+    def __init__(
+        self, message: str = "Erro de validação", error_code: str = None, details=None
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -151,7 +193,9 @@ class ValidationError(SynapseBaseException):
 class WorkspaceError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro específico de workspace."""
 
-    def __init__(self, message: str = "Erro no workspace", error_code: str = None, details=None):
+    def __init__(
+        self, message: str = "Erro no workspace", error_code: str = None, details=None
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -165,7 +209,9 @@ class WorkspaceError(SynapseBaseException):
 class ProjectError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro específico de projeto."""
 
-    def __init__(self, message: str = "Erro no projeto", error_code: str = None, details=None):
+    def __init__(
+        self, message: str = "Erro no projeto", error_code: str = None, details=None
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -179,7 +225,12 @@ class ProjectError(SynapseBaseException):
 class AnalyticsError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro específico de analytics."""
 
-    def __init__(self, message: str = "Erro no sistema de analytics", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Erro no sistema de analytics",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -193,7 +244,9 @@ class AnalyticsError(SynapseBaseException):
 class ConversationError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro específico de conversação."""
 
-    def __init__(self, message: str = "Erro na conversação", error_code: str = None, details=None):
+    def __init__(
+        self, message: str = "Erro na conversação", error_code: str = None, details=None
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -207,7 +260,9 @@ class ConversationError(SynapseBaseException):
 class AgentError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro específico de agente."""
 
-    def __init__(self, message: str = "Erro no agente", error_code: str = None, details=None):
+    def __init__(
+        self, message: str = "Erro no agente", error_code: str = None, details=None
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -221,7 +276,9 @@ class AgentError(SynapseBaseException):
 class WorkflowError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro específico de workflow."""
 
-    def __init__(self, message: str = "Erro no workflow", error_code: str = None, details=None):
+    def __init__(
+        self, message: str = "Erro no workflow", error_code: str = None, details=None
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -235,7 +292,9 @@ class WorkflowError(SynapseBaseException):
 class LLMServiceError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro específico do serviço LLM."""
 
-    def __init__(self, message: str = "Erro no serviço LLM", error_code: str = None, details=None):
+    def __init__(
+        self, message: str = "Erro no serviço LLM", error_code: str = None, details=None
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -249,7 +308,12 @@ class LLMServiceError(SynapseBaseException):
 class ConfigurationError(SynapseBaseException):
     """Exceção lançada quando ocorre um erro de configuração."""
 
-    def __init__(self, message: str = "Erro de configuração", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Erro de configuração",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -263,7 +327,12 @@ class ConfigurationError(SynapseBaseException):
 class ServiceUnavailableError(SynapseBaseException):
     """Exceção lançada quando um serviço está indisponível."""
 
-    def __init__(self, message: str = "Serviço indisponível", error_code: str = None, details=None):
+    def __init__(
+        self,
+        message: str = "Serviço indisponível",
+        error_code: str = None,
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -502,11 +571,17 @@ NotFoundException = NotFoundError
 ForbiddenException = AuthorizationError
 BadRequestException = ValidationError
 
+
 # LLM-specific exceptions
 class ModelNotFoundError(NotFoundError):
     """Exceção lançada quando um modelo LLM específico não é encontrado."""
 
-    def __init__(self, message: str = "Modelo LLM não encontrado", error_code: str = "LLM_MODEL_001", details=None):
+    def __init__(
+        self,
+        message: str = "Modelo LLM não encontrado",
+        error_code: str = "LLM_MODEL_001",
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -520,7 +595,12 @@ class ModelNotFoundError(NotFoundError):
 class ProviderNotFoundError(NotFoundError):
     """Exceção lançada quando um provedor LLM específico não é encontrado."""
 
-    def __init__(self, message: str = "Provedor LLM não encontrado", error_code: str = "LLM_PROVIDER_001", details=None):
+    def __init__(
+        self,
+        message: str = "Provedor LLM não encontrado",
+        error_code: str = "LLM_PROVIDER_001",
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -534,7 +614,12 @@ class ProviderNotFoundError(NotFoundError):
 class InvalidModelProviderCombinationError(ValidationError):
     """Exceção lançada quando uma combinação modelo/provedor é inválida."""
 
-    def __init__(self, message: str = "Combinação modelo/provedor inválida", error_code: str = "LLM_COMBINATION_001", details=None):
+    def __init__(
+        self,
+        message: str = "Combinação modelo/provedor inválida",
+        error_code: str = "LLM_COMBINATION_001",
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -548,7 +633,12 @@ class InvalidModelProviderCombinationError(ValidationError):
 class LLMDatabaseError(DatabaseError):
     """Exceção lançada quando ocorre um erro específico no banco de dados de LLMs."""
 
-    def __init__(self, message: str = "Erro no banco de dados de LLMs", error_code: str = "LLM_DB_001", details=None):
+    def __init__(
+        self,
+        message: str = "Erro no banco de dados de LLMs",
+        error_code: str = "LLM_DB_001",
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:
@@ -562,7 +652,12 @@ class LLMDatabaseError(DatabaseError):
 class LLMConfigurationError(ConfigurationError):
     """Exceção lançada quando há erro na configuração do LLM service."""
 
-    def __init__(self, message: str = "Erro de configuração do LLM service", error_code: str = "LLM_CONFIG_001", details=None):
+    def __init__(
+        self,
+        message: str = "Erro de configuração do LLM service",
+        error_code: str = "LLM_CONFIG_001",
+        details=None,
+    ):
         """Inicializa a exceção com uma mensagem.
 
         Args:

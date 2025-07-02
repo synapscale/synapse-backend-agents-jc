@@ -1,500 +1,229 @@
-# Product Requirements Document (PRD)
-# SynapScale API Endpoints Recovery & Optimization Project
-
-## Overview
-
-Este projeto visa corrigir e otimizar os 71 endpoints com falhas identificados nos testes automatizados da API SynapScale, elevando a taxa de sucesso de 70.7% para 95%+. O foco é resolver problemas críticos de infraestrutura, implementar funcionalidades faltantes e otimizar a performance geral do sistema.
-
-**Problema Principal**: 71 de 242 endpoints (29.3%) estão falhando, causando degradação da experiência do usuário e limitando a funcionalidade completa da plataforma.
-
-**Valor Entregue**: Sistema API robusto, confiável e completo que suporta todas as funcionalidades prometidas da plataforma SynapScale.
-
-**Público-Alvo**: Desenvolvedores internos, usuários da API, clientes enterprise e sistema de automação.
-
-## Core Features
-
-### 1. Sistema de Workspaces Completo
-**O que faz**: Gerenciamento completo de workspaces, projetos, membros e estatísticas
-**Por que é importante**: 55.9% de falhas (pior categoria) - funcionalidade crítica para multi-tenancy
-**Como funciona**: 
-- Implementação completa do serviço de projetos
-- Sistema de convites e membros funcional
-- Dashboard de estatísticas em tempo real
-- Busca e filtros avançados
-
-### 2. Plataforma Analytics Robusta  
-**O que faz**: Dashboards, métricas em tempo real, relatórios customizados e insights de usuário
-**Por que é importante**: 74.0% sucesso atual - precisa chegar a 95%+ para enterprise
-**Como funciona**:
-- Engine de dashboards dinâmicos
-- Sistema de queries customizadas
-- Métricas em tempo real com WebSocket
-- Relatórios automatizados e insights IA
-
-### 3. Sistema AI/Conversations Otimizado
-**O que faz**: Operações completas de agentes, conversas e integração LLM via HTTP
-**Por que é importante**: Core LLM já funciona (77.8%), mas endpoints HTTP falham
-**Como funciona**:
-- Wrapper HTTP robusto para serviços LLM existentes
-- Sistema de agentes com CRUD completo
-- Operações de conversas com persistência
-- Count-tokens e operações LLM via API
-
-### 4. Engine de Workflows Avançado
-**O que faz**: Execução, logs, métricas e operações de nodes completas
-**Por que é importante**: 64.5% sucesso - workflows são core da automação
-**Como funciona**:
-- Sistema de logs estruturados
-- Métricas de performance em tempo real
-- Operações CRUD completas para nodes
-- Queue management e status tracking
-
-### 5. Sistemas de Suporte Completos
-**O que faz**: Billing, tags, usage logs e outros serviços de apoio
-**Por que é importante**: Funcionalidades enterprise essenciais
-**Como funciona**:
-- Sistema de billing events
-- Tags para organização
-- Logs de usage para analytics
-- Sistemas de feedback
-
-## User Experience
-
-### User Personas
-1. **Desenvolvedor de Automação**: Precisa de APIs confiáveis para workflows
-2. **Administrador Enterprise**: Necessita dashboards e analytics funcionais  
-3. **Usuário Final**: Espera interface responsiva e funcional
-4. **DevOps Engineer**: Requer monitoring e logs completos
-
-### Key User Flows
-1. **Fluxo de Workspace**: Criar → Configurar → Adicionar Membros → Gerenciar Projetos
-2. **Fluxo de Analytics**: Criar Dashboard → Configurar Métricas → Visualizar → Exportar
-3. **Fluxo de AI**: Criar Agente → Configurar → Executar Conversas → Monitorar
-4. **Fluxo de Workflow**: Criar → Testar → Deploy → Monitorar Execução
-
-### UI/UX Considerations
-- **Error Handling**: Mensagens claras em vez de "ERRO INTERNO DO SERVIDOR"
-- **Loading States**: Indicadores visuais para operações longas
-- **Real-time Updates**: WebSocket para status e métricas
-- **Responsive Design**: Funcional em todos os dispositivos
-
-## Technical Architecture
-
-### System Components
-1. **Workspaces Service Layer**
-   - ProjectService com CRUD completo
-   - MembershipService para convites/membros
-   - WorkspaceStatsService para métricas
-   - InvitationService para gestão de convites
-
-2. **Analytics Engine**
-   - DashboardService com templates dinâmicos
-   - QueryEngine para SQL customizado
-   - MetricsCollector em tempo real
-   - ReportGenerator automatizado
-
-3. **AI Integration Layer**  
-   - AgentHTTPService (wrapper do core LLM)
-   - ConversationService com persistência
-   - LLMHTTPService para operações via API
-   - TokenCountService integrado
-
-4. **Workflow Engine**
-   - ExecutionLogger estruturado
-   - NodeManager com operações completas
-   - QueueManager para execuções
-   - MetricsCollector para performance
-
-### Data Models
-```sql
--- Workspaces
-Projects: id, workspace_id, name, description, status, created_at
-WorkspaceMembers: workspace_id, user_id, role, permissions
-WorkspaceInvitations: id, workspace_id, email, role, token, status
-
--- Analytics  
-Dashboards: id, user_id, name, config, widgets
-CustomQueries: id, user_id, query, parameters, cache_ttl
-Metrics: timestamp, metric_name, value, tags
-
--- AI/Conversations
-Agents: id, name, config, llm_provider, status
-Conversations: id, agent_id, user_id, title, status
-ConversationMessages: id, conversation_id, role, content
-
--- Workflows
-ExecutionLogs: execution_id, timestamp, level, message, context
-NodeMetrics: node_id, execution_id, duration, memory, status
-```
-
-### APIs and Integrations
-- **Database**: PostgreSQL com migrations estruturadas
-- **Cache**: Redis para métricas e sessions
-- **WebSocket**: Real-time updates para dashboards
-- **LLM Integration**: Wrapper HTTP para serviços existentes
-- **File Storage**: Sistema de upload/download robusto
-
-### Infrastructure Requirements
-- **Database Optimization**: Índices para queries pesadas
-- **Cache Strategy**: Redis para dados frequentes
-- **Error Handling**: Logging estruturado e monitoring
-- **Performance**: Rate limiting e connection pooling
-
-## Development Roadmap
-
-### Phase 1: Infrastructure & Critical Fixes (Foundation)
-**Scope**: Resolver erros 500 críticos e estabelecer base sólida
-- Implementar error handling global estruturado
-- Corrigir configuração OpenAI (organization header)
-- Estabelecer logging e monitoring robusto
-- Implementar health checks para todos os serviços
-- Configurar database connection pooling
-- **Deliverable**: 0 erros 500, sistema estável
-
-### Phase 2: Workspaces Core (MVP Usável)
-**Scope**: Sistema de workspaces básico mas funcional
-- Implementar ProjectService com CRUD básico
-- Sistema de membros e permissões simples
-- Estatísticas básicas de workspace
-- Interface de convites funcional
-- **Deliverable**: Workspaces totalmente funcionais (55.9% → 90%+)
-
-### Phase 3: Analytics Foundation (Visibilidade)
-**Scope**: Dashboards e métricas básicas funcionando
-- DashboardService com templates pré-definidos
-- Métricas básicas em tempo real
-- Sistema de queries simples
-- Relatórios básicos
-- **Deliverable**: Analytics funcionais (74.0% → 90%+)
-
-### Phase 4: AI/Conversations Integration (Core Value)
-**Scope**: Integração completa do core LLM com HTTP
-- AgentHTTPService wrapper
-- ConversationService com persistência
-- Operações LLM via HTTP endpoints
-- Count-tokens e operações básicas
-- **Deliverable**: AI endpoints funcionais (60.7% → 90%+)
-
-### Phase 5: Workflows Advanced (Automation)
-**Scope**: Sistema de workflows robusto
-- ExecutionLogger estruturado
-- NodeManager completo
-- Queue management
-- Métricas de performance
-- **Deliverable**: Workflows totalmente funcionais (64.5% → 95%+)
-
-### Phase 6: Enterprise Features (Polish)
-**Scope**: Funcionalidades enterprise e otimizações
-- Sistema de billing completo
-- Tags e organização avançada
-- Usage logs detalhados
-- Performance optimization
-- **Deliverable**: Sistema enterprise-ready (95%+ global)
-
-## Logical Dependency Chain
-
-### Foundation First (Phase 1)
-1. **Error Handling Global** - Base para tudo
-2. **Logging & Monitoring** - Visibilidade essencial
-3. **Database Optimization** - Performance base
-4. **OpenAI Configuration Fix** - LLM stability
-
-### Quick Wins for Visibility (Phase 2)
-5. **Workspaces Basic CRUD** - Funcionalidade imediata
-6. **Members Management** - Multi-user básico
-7. **Project Operations** - Core workspace functionality
-
-### Building Value (Phase 3-4)
-8. **Analytics Dashboards** - Visibilidade de dados
-9. **Real-time Metrics** - Feedback imediato
-10. **AI HTTP Integration** - Core value proposition
-11. **Conversation Management** - User experience
-
-### Advanced Features (Phase 5-6)
-12. **Workflow Execution Engine** - Automation completa
-13. **Enterprise Billing** - Monetização
-14. **Advanced Analytics** - Insights profundos
-15. **Performance Optimization** - Scale preparation
-
-## Risks and Mitigations
-
-### Technical Challenges
-**Risk**: Complexidade de integração entre serviços existentes
-**Mitigation**: Approach incremental, testes unitários robustos, rollback strategy
-
-**Risk**: Performance degradation com novas funcionalidades
-**Mitigation**: Load testing, caching strategy, database optimization
-
-**Risk**: Breaking changes em APIs existentes
-**Mitigation**: Versionamento de API, backward compatibility, migration guides
-
-### MVP Definition
-**Risk**: Scope creep e over-engineering
-**Mitigation**: MVP claramente definido por phase, focus em funcionalidade básica primeiro
-
-**Risk**: Dependências complexas entre features
-**Mitigation**: Dependency chain bem definido, features independentes quando possível
-
-### Resource Constraints
-**Risk**: Tempo limitado para implementação
-**Mitigation**: Priorização clara, phases bem definidas, paralelização quando possível
-
-**Risk**: Conhecimento limitado do codebase existente
-**Mitigation**: Documentação detalhada, code review rigoroso, pair programming
-
-## Appendix
-
-### Research Findings
-- **Sistema LLM Core**: 77.8% sucesso (superior à média) - base sólida
-- **Error Patterns**: 48 endpoints com erro 500 - problemas de implementação
-- **Performance**: Sistema base rápido (0.00s latência LLM)
-- **Architecture**: Base sólida, precisa de implementação de features
-
-### Technical Specifications
-```python
-# Error Handling Pattern
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Unhandled exception: {exc}", extra={"request": request})
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error", "error_id": str(uuid4())}
-    )
-
-# Service Pattern
-class WorkspaceService:
-    async def create_project(self, workspace_id: int, project_data: ProjectCreate):
-        # Implementation with proper error handling
-        
-# Health Check Pattern  
-@app.get("/health/{service}")
-async def health_check(service: str):
-    # Service-specific health checks
-```
-
-### Success Metrics
-- **Overall Success Rate**: 70.7% → 95%+
-- **Workspaces**: 55.9% → 95%+
-- **Analytics**: 74.0% → 95%+
-- **AI/Conversations**: 60.7% → 95%+
-- **Workflows**: 64.5% → 95%+
-- **Zero 500 Errors**: Target 0 internal server errors
-- **Response Time**: < 2s for 95% of requests
-- **Uptime**: 99.9% availability
-
-### Implementation Timeline Estimate
-- **Phase 1**: 1-2 weeks (Infrastructure)
-- **Phase 2**: 2-3 weeks (Workspaces)
-- **Phase 3**: 2-3 weeks (Analytics)  
-- **Phase 4**: 1-2 weeks (AI Integration)
-- **Phase 5**: 2-3 weeks (Workflows)
-- **Phase 6**: 1-2 weeks (Enterprise Polish)
-- **Total**: 9-15 weeks for complete implementation 
-
-# Unificação e Consolidação dos Endpoints LLM
-
-## 1. Resumo Executivo
-
-### Problema Identificado
-Atualmente existem dois sistemas separados de endpoints LLM que atendem propósitos similares mas com implementações diferentes:
-
-**Sistema Legado (api/v1/llm/*)**
-- Localização: `src/synapse/api/v1/endpoints/llm/routes.py`
-- Registrado em: `src/synapse/api/v1/api.py` 
-- Características: Dados hardcoded em enums (`ProviderEnum`, `ModelEnum`)
-- Endpoints: `/generate`, `/chat`, `/models`, `/providers`, `/{provider}/generate`, etc.
-- Funcionalidade: Chamadas diretas aos provedores, métricas, logging completo
-
-**Sistema Novo (api/v1/llms/*)**
-- Localização: `src/synapse/api/v1/endpoints/llm_catalog.py`
-- Registrado em: `src/synapse/api/v1/router.py`
-- Características: Dados dinâmicos do banco (`table llms`)
-- Endpoints: `/` (lista LLMs), `/{llm_id}` (detalhes)
-- Funcionalidade: Catálogo de modelos baseado em banco de dados
-
-### Objetivo
-Integrar os dois sistemas mantendo todas as funcionalidades existentes, usando o banco de dados como fonte única da verdade para informações de modelos e provedores.
-
-## 2. Análise Detalhada
-
-### Funcionalidades do Sistema Legado (preservar)
-- ✅ Geração de texto (`/generate`)
-- ✅ Chat completion (`/chat`) 
-- ✅ Contagem de tokens (`/count-tokens`)
-- ✅ Listagem de modelos (`/models`)
-- ✅ Listagem de provedores (`/providers`)
-- ✅ Endpoints específicos por provedor (`/{provider}/generate`, `/{provider}/models`)
-- ✅ Integração com UsageLog e BillingEvent
-- ✅ Métricas de performance
-- ✅ Suporte a user variables para API keys
-- ✅ Logging completo
-
-### Funcionalidades do Sistema Novo (integrar)
-- ✅ Listagem dinâmica de LLMs do banco (`/llms/`)
-- ✅ Detalhes de LLM específico (`/llms/{llm_id}`)
-- ✅ Filtros por status ativo
-- ✅ Estrutura de dados rica do modelo LLM
-
-## 3. Requisitos Funcionais
-
-### RF01 - Unificação de Endpoints de Listagem
-**Descrição**: Consolidar os endpoints de listagem de modelos e provedores
-**Implementação**:
-- Migrar endpoint `/llm/models` para usar dados da tabela `llms`
-- Migrar endpoint `/llm/providers` para usar dados da tabela `llms` (providers únicos)
-- Manter compatibilidade com filtros por provider
-- Preservar formato de resposta atual
-
-### RF02 - Integração de Dados Dinâmicos
-**Descrição**: Substituir enums hardcoded por dados do banco
-**Implementação**:
-- Criar serviço para validar provider/model contra tabela `llms`
-- Manter enums como fallback para compatibilidade
-- Validar disponibilidade de modelos em tempo real
-- Cache inteligente para performance
-
-### RF03 - Consolidação de Rotas de Catálogo
-**Descrição**: Integrar funcionalidades do `/llms/*` no sistema principal
-**Implementação**:
-- Adicionar endpoints `/llm/catalog` e `/llm/catalog/{llm_id}` 
-- Manter endpoints `/llms/*` como alias durante transição
-- Documentação clara da nova estrutura
-
-### RF04 - Preservação de Funcionalidades Críticas
-**Descrição**: Manter todas as funcionalidades operacionais existentes
-**Implementação**:
-- Preservar endpoints de geração `/generate` e `/chat`
-- Manter logging de UsageLog e BillingEvent
-- Preservar métricas e monitoring
-- Manter integração com user variables
-
-## 4. Requisitos Não-Funcionais
-
-### RNF01 - Compatibilidade com Versões Anteriores
-- Todos os endpoints atuais devem continuar funcionando
-- Formato de resposta mantêm formato e dados consistentes
-- Período de depreciação de 6 meses para mudanças breaking
-
-### RNF02 - Performance
-- Cache de dados de LLMs por 5 minutos
-- Tempo de resposta para listagem < 200ms
-- Fallback automático para enums em caso de falha do banco
-
-### RNF03 - Disponibilidade
-- Graceful degradation se banco indisponível
-- Monitoramento de health dos endpoints
-- Logs detalhados para debugging
-
-## 5. Arquitetura da Solução
-
-### Componentes Principais
-
-#### 5.1 LLM Service Unificado
-```python
-class UnifiedLLMService:
-    def get_available_models(self, provider: Optional[str] = None)
-    def get_available_providers(self)
-    def validate_model_provider(self, model: str, provider: str)
-    def get_model_details(self, llm_id: UUID)
-```
-
-#### 5.2 Migração de Endpoints
-- **Manter**: `/llm/generate`, `/llm/chat`, `/llm/count-tokens`
-- **Migrar**: `/llm/models` → usar banco + cache + fallback
-- **Migrar**: `/llm/providers` → usar banco + cache + fallback  
-- **Adicionar**: `/llm/catalog/*` como nova interface unificada
-- **Deprecar**: `/llms/*` com redirecionamento
-
-#### 5.3 Estratégia de Cache
-- Redis cache para dados de LLMs (TTL: 5min)
-- Cache em memória como backup
-- Invalidação inteligente por webhook/evento
-
-## 6. Plano de Implementação
-
-### Fase 1: Preparação (Semana 1)
-- [ ] Criar UnifiedLLMService com interface compatível
-- [ ] Implementar cache Redis para dados de LLMs
-- [ ] Testes unitários para novo serviço
-- [ ] Validação com dados atuais
-
-### Fase 2: Migração Gradual (Semana 2)
-- [ ] Migrar `/llm/models` para usar banco de dados
-- [ ] Migrar `/llm/providers` para usar banco de dados
-- [ ] Implementar fallback para enums existentes
-- [ ] Testes de integração completos
-
-### Fase 3: Consolidação (Semana 3)
-- [ ] Adicionar endpoints `/llm/catalog/*`
-- [ ] Configurar aliases de `/llms/*` para novos endpoints
-- [ ] Documentação da API atualizada
-- [ ] Testes de aceitação
-
-### Fase 4: Cleanup (Semana 4)
-- [ ] Monitoramento de uso dos endpoints antigos
-- [ ] Comunicação de depreciação para clientes
-- [ ] Logs de migração e métricas
-- [ ] Plano de remoção dos endpoints depreciados
-
-## 7. Critérios de Aceitação
-
-### CA01 - Funcionalidade Preservada
-- [ ] Todos os endpoints atuais continuam funcionando
-- [ ] Respostas mantêm formato e dados consistentes
-- [ ] Performance igual ou melhor que sistema atual
-
-### CA02 - Dados Unificados
-- [ ] Listagem de modelos vem do banco de dados
-- [ ] Informações de provedores são dinâmicas
-- [ ] Cache funciona corretamente com TTL apropriado
-
-### CA03 - Compatibilidade
-- [ ] Clientes existentes não precisam alterar código
-- [ ] Documentação clara das mudanças
-- [ ] Período de transição bem comunicado
-
-## 8. Riscos e Mitigações
-
-### Risco 1: Breaking Changes Não Intencionais
-**Mitigação**: Testes automatizados extensivos e período de rollback
-
-### Risco 2: Performance Degradation
-**Mitigação**: Cache inteligente e monitoramento em tempo real
-
-### Risco 3: Inconsistência de Dados
-**Mitigação**: Validação rigorosa e sincronização de dados
-
-## 9. Definição de Pronto
-
-- [ ] Todos os testes automatizados passando
-- [ ] Performance benchmarks atingidos
-- [ ] Documentação da API atualizada
-- [ ] Code review aprovado por tech lead
-- [ ] Testes de aceitação validados
-- [ ] Monitoramento configurado para novos endpoints
-- [ ] Plano de rollback documentado e testado
-
-## 10. Considerações Técnicas
-
-### Modificações de Arquivos
-- **Preservar**: `src/synapse/api/v1/endpoints/llm/routes.py` (funcionalidades principais)
-- **Modificar**: Serviços internos para usar banco de dados
-- **Adicionar**: Novos endpoints de catálogo
-- **Deprecar**: `src/synapse/api/v1/endpoints/llm_catalog.py` (mover funcionalidades)
-
-### Integração com Banco
-- Usar modelo `LLM` existente da tabela `llms`
-- Manter relacionamentos com `UsageLog` e `BillingEvent`
-- Sincronização com dados de `llms_conversations_turns`
-
-### Backwards Compatibility
-- Manter enums como validação adicional
-- Aliases para endpoints antigos durante transição
-- Versionamento claro da API
+# PRD - CORREÇÃO CRÍTICA ESTRUTURA SAAS SYNAPSCALE
+
+## 📋 RESUMO EXECUTIVO
+
+**Projeto:** Correção crítica da estrutura SaaS SynapScale  
+**Baseado em:** Análise empírica consolidada do banco PostgreSQL `synapscale_db`  
+**Cronograma:** 14 dias (3 fases: Emergencial → Estrutural → Otimização)  
+**Objetivo:** Corrigir problemas críticos que impedem uso em produção e causam perda de receita  
+
+## 🚨 PROBLEMAS CRÍTICOS IDENTIFICADOS
+
+### 1. DUAL TRUTH PROBLEM - JSON vs RELACIONAL (CRÍTICO)
+**Gravidade:** CRÍTICA  
+**Impacto:** Sistema não sabe qual fonte usar → comportamento indefinido  
+**Problema:** Features mantidas em dois locais conflitantes:
+- `plans.features` (JSON) → Mostra TODAS features para FREE
+- `plan_features` (relacional) → Mostra apenas 2 features para FREE
+
+### 2. PLANOS PREMIUM DESCONFIGURADOS (CRÍTICO) 
+**Gravidade:** CRÍTICA  
+**Impacto:** Impossível monetizar adequadamente  
+**Problema:** BASIC, PRO, ENTERPRISE com `features: NULL` e `restrictions: NULL`
+
+### 3. WORKSPACE LIMITS DESSINCONIZADOS (CRÍTICO)
+**Gravidade:** CRÍTICA  
+**Impacto:** Usuários FREE usando recursos premium sem pagar  
+**Problema:** Workspaces não respeitam limites do plano do tenant
+
+### 4. TENANT SETTINGS GENÉRICOS (MÉDIA)
+**Gravidade:** MÉDIA  
+**Impacto:** Tenants não diferenciados por plano  
+**Problema:** Todos tenants com configurações idênticas
+
+### 5. PROBLEMAS ESTRUTURAIS (MÉDIA)
+**Gravidade:** MÉDIA  
+**Impacto:** Inconsistência e manutenibilidade  
+**Problemas:** FK inconsistentes, constraints duplicadas, timestamps mistos
+
+## 💰 IMPACTO COMERCIAL
+
+### RECEITA PERDIDA ATUAL
+- Usuários FREE acessando features premium ($79.90-$199.90/mês perdidos)
+- SSO, White Label, Priority Support gratuitos
+- Workspaces com limites superiores ao plano
+- Impossibilidade de monetização adequada
+
+### RISCOS LEGAIS
+- Auditoria de receita (discrepâncias billing vs features)
+- Compliance SaaS (violação contratos planos pagos)
+- Customer Trust (clientes pagos descobrindo features gratuitas)
+
+## 📅 CRONOGRAMA DE IMPLEMENTAÇÃO (14 DIAS)
+
+### 🚨 FASE 1: EMERGENCIAL (1-2 DIAS)
+**Objetivo:** Parar hemorragia de receita
+
+**DIA 1: Correções Urgentes**
+1. Corrigir features do plano FREE (remover premium features)
+2. Configurar features básicas para BASIC/PRO/ENTERPRISE
+3. Implementar feature gates emergenciais na aplicação
+4. Auditoria de tenants ativos afetados
+
+**DIA 2: Sincronização Básica**
+1. Corrigir limites de workspaces desalinhados
+2. Implementar validação simples tenant → plan → workspace
+3. Comunicação com clientes afetados (se necessário)
+
+### ⚙️ FASE 2: ESTRUTURAL (3-7 DIAS)
+**Objetivo:** Corrigir problemas estruturais e implementar automações
+
+**DIAS 3-4: Database Structure**
+1. Implementar constraints NOT NULL em tenant_id
+2. Padronizar FK actions (ON DELETE/UPDATE)
+3. Remover constraints duplicadas
+4. Padronizar tipos de timestamp
+
+**DIAS 5-6: Automação**
+1. Criar triggers de sincronização tenant ↔ plan
+2. Implementar validações de limites automáticas
+3. Função de auditoria de consistência
+4. Testes de integridade completos
+
+**DIA 7: Validação**
+1. Executar bateria de testes completa
+2. Verificar sincronização de todos os tenants
+3. Auditoria final de consistência
+
+### 🔧 FASE 3: OTIMIZAÇÃO (8-14 DIAS)
+**Objetivo:** Monitoramento e performance
+
+**SEMANA 2: Monitoramento e Alertas**
+1. Implementar logs de feature usage por plano
+2. Dashboards de billing vs usage
+3. Alertas de inconsistências automáticas
+4. Sistema de auditoria contínua
+5. Performance tuning dos queries críticos
+
+## 🎯 REQUISITOS FUNCIONAIS
+
+### RF01: Correção Sistema de Features
+- Sistema deve usar APENAS fonte relacional (`plan_features`)
+- Deprecar e remover JSON de features em `plans.features`
+- Implementar feature gates baseados em `plan_features`
+
+### RF02: Configuração Planos Premium
+- BASIC: API access, webhooks, analytics (5 features)
+- PRO: + Custom branding, team collaboration (8 features)
+- ENTERPRISE: + SSO, white label, priority support (12 features)
+
+### RF03: Sincronização Tenant-Plan-Workspace
+- Workspaces devem herdar limites do plano do tenant
+- Validação automática de limites na criação/atualização
+- Triggers para sincronização automática
+
+### RF04: Auditoria e Monitoramento
+- Logs de feature usage por tenant/plano
+- Alertas de inconsistências automáticas
+- Dashboard de billing vs usage real
+
+## 🎯 REQUISITOS NÃO-FUNCIONAIS
+
+### RNF01: Performance
+- Queries de feature verification < 100ms
+- Triggers de sincronização < 50ms
+- Dashboard de monitoramento < 2s load time
+
+### RNF02: Integridade
+- 0 registros órfãos ou referências quebradas
+- 100% correspondência billing vs features
+- Validação de constraints em tempo real
+
+### RNF03: Monitoramento
+- 100% dos tenants com monitoramento ativo
+- Alertas em tempo real para inconsistências
+- Auditoria completa de todas as operações
+
+## 📊 CRITÉRIOS DE SUCESSO
+
+### ✅ Indicadores de Correção Bem-Sucedida
+- **Feature Consistency:** 100% dos planos com features corretas
+- **Tenant-Plan Sync:** 0 workspaces com limites superiores ao plano
+- **Billing Accuracy:** 100% correspondência billing vs features
+- **Data Integrity:** 0 registros órfãos ou referências quebradas
+- **Performance:** Queries < 100ms
+- **Monitoring:** 100% cobertura de monitoramento
+
+### 📈 KPIs de Monitoramento
+- Inconsistências de features: 0
+- Workspaces over-limit: 0  
+- Features premium em FREE: 0
+- Revenue leakage: $0
+- System uptime: >99.9%
+
+## 🛠️ TECNOLOGIAS E FERRAMENTAS
+
+### Backend
+- **Database:** PostgreSQL (schema `synapscale_db`)
+- **ORM:** SQLAlchemy/Alembic para migrations
+- **API:** FastAPI endpoints para feature verification
+- **Monitoring:** Prometheus + Grafana para dashboards
+
+### Validação e Testes
+- **Unit Tests:** pytest para funções críticas
+- **Integration Tests:** API endpoints de billing/features
+- **Database Tests:** Triggers e constraints
+- **Performance Tests:** Load testing com locust
+
+## 🚀 ENTREGÁVEIS
+
+### FASE 1 (1-2 dias)
+- [ ] Script SQL de correção de features FREE
+- [ ] Script SQL de configuração BASIC/PRO/ENTERPRISE
+- [ ] Feature gates emergenciais na API
+- [ ] Relatório de auditoria de tenants
+
+### FASE 2 (3-7 dias)  
+- [ ] Migrations de constraints NOT NULL
+- [ ] Migrations de padronização FK
+- [ ] Triggers de sincronização automática
+- [ ] Funções de validação de limites
+- [ ] Suite de testes de integridade
+
+### FASE 3 (8-14 dias)
+- [ ] Sistema de logs de feature usage
+- [ ] Dashboard de billing vs usage
+- [ ] Alertas automáticos de inconsistências
+- [ ] Documentação completa do sistema
+- [ ] Performance benchmarks
+
+## ⚠️ RISCOS E MITIGAÇÕES
+
+### Risco 1: Downtime durante correções
+**Mitigação:** Aplicar correções em horário de menor uso, com rollback preparado
+
+### Risco 2: Clientes afetados por mudanças
+**Mitigação:** Comunicação prévia, período de ajuste, suporte dedicado
+
+### Risco 3: Performance degradada
+**Mitigação:** Testes de carga, otimização de queries, monitoring ativo
+
+## 📞 STAKEHOLDERS
+
+### Responsáveis Técnicos
+- **Dev Team:** Implementação das correções
+- **DBA:** Validação de scripts SQL e performance
+- **DevOps:** Deploy e monitoring
+- **QA:** Testes de integridade e validação
+
+### Responsáveis de Negócio
+- **Product:** Validação de features por plano
+- **Finance:** Validação de billing accuracy  
+- **Customer Success:** Comunicação com clientes
+- **Legal:** Compliance e contratos
+
+## 🎯 DEFINIÇÃO DE PRONTO
+
+Uma tarefa está PRONTA quando:
+- [ ] Código implementado e revisado
+- [ ] Testes passando (unit + integration)
+- [ ] Migrations testadas em staging
+- [ ] Performance validada (< 100ms)
+- [ ] Documentação atualizada
+- [ ] Monitoring implementado
+- [ ] Deploy realizado com sucesso
+- [ ] Validação em produção confirmada
 
 ---
 
-**Versão**: 1.0  
-**Data**: Janeiro 2024  
-**Autor**: AI Assistant  
-**Aprovação**: Pendente 
+**📋 Este PRD representa a fonte única da verdade para correção dos problemas críticos identificados na análise empírica do banco de dados SynapScale.**

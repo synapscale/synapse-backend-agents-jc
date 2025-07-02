@@ -17,21 +17,37 @@ class ConversationLLM(Base):
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
-    llm_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms.id", ondelete="CASCADE"), nullable=False, index=True)
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.llms_conversations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    llm_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.llms.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Timestamps de uso
-    first_used_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    last_used_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    first_used_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    last_used_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
     # Métricas de uso
-    message_count = Column(Integer, server_default=text('0'))
-    total_input_tokens = Column(Integer, server_default=text('0'))
-    total_output_tokens = Column(Integer, server_default=text('0'))
-    total_cost_usd = Column(Float, server_default=text('0.0'))
+    message_count = Column(Integer, server_default=text("0"))
+    total_input_tokens = Column(Integer, server_default=text("0"))
+    total_output_tokens = Column(Integer, server_default=text("0"))
+    total_cost_usd = Column(Float, server_default=text("0.0"))
 
     # Relacionamentos
-    conversation = relationship("Conversation", back_populates="llms_conversations_turns")
+    conversation = relationship(
+        "Conversation", back_populates="llms_conversations_turns"
+    )
     llm = relationship("LLM", back_populates="llms_conversations_turns")
 
     def __repr__(self):
@@ -70,8 +86,12 @@ class ConversationLLM(Base):
             "id": str(self.id),
             "conversation_id": str(self.conversation_id),
             "llm_id": str(self.llm_id),
-            "first_used_at": self.first_used_at.isoformat() if self.first_used_at else None,
-            "last_used_at": self.last_used_at.isoformat() if self.last_used_at else None,
+            "first_used_at": (
+                self.first_used_at.isoformat() if self.first_used_at else None
+            ),
+            "last_used_at": (
+                self.last_used_at.isoformat() if self.last_used_at else None
+            ),
             "message_count": self.message_count,
             "total_input_tokens": self.total_input_tokens,
             "total_output_tokens": self.total_output_tokens,
@@ -79,4 +99,4 @@ class ConversationLLM(Base):
             "total_cost_usd": self.total_cost_usd,
             "average_cost_per_message": self.average_cost_per_message,
             "average_tokens_per_message": self.average_tokens_per_message,
-        } 
+        }

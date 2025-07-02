@@ -1,20 +1,23 @@
 """
 Corrige tipo de workspace_id na tabela conversations e foreign keys relacionadas
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
-revision = 'd1bd1387'
-down_revision = 'c02a345b'
+revision = "d1bd1387"
+down_revision = "c02a345b"
 branch_labels = None
 depends_on = None
 
+
 def upgrade():
     """Corrige workspace_id para UUID e foreign keys"""
-    
+
     # 1. Corrigir workspace_id para UUID se necessário
-    op.execute("""
+    op.execute(
+        """
     DO $$
     BEGIN
         -- Verifica se a coluna workspace_id já é UUID
@@ -30,10 +33,12 @@ def upgrade():
             ALTER COLUMN workspace_id TYPE UUID USING workspace_id::uuid;
         END IF;
     END$$;
-    """)
-    
+    """
+    )
+
     # 2. Adicionar foreign key para workspace_id se não existir
-    op.execute("""
+    op.execute(
+        """
     DO $$
     BEGIN
         IF NOT EXISTS (
@@ -48,10 +53,12 @@ def upgrade():
             ON DELETE SET NULL;
         END IF;
     END$$;
-    """)
-    
+    """
+    )
+
     # 3. Corrigir agent_id foreign key para schema correto se necessário
-    op.execute("""
+    op.execute(
+        """
     DO $$
     BEGIN
         -- Remove constraint antiga se existir
@@ -71,13 +78,16 @@ def upgrade():
         FOREIGN KEY (agent_id) REFERENCES synapscale_db.agents(id)
         ON DELETE SET NULL ON UPDATE CASCADE;
     END$$;
-    """)
+    """
+    )
+
 
 def downgrade():
     """Reverte as alterações"""
-    
+
     # Remove as foreign keys adicionadas
-    op.execute("""
+    op.execute(
+        """
     DO $$
     BEGIN
         IF EXISTS (
@@ -90,6 +100,7 @@ def downgrade():
             DROP CONSTRAINT llms_conversations_workspace_id_fkey;
         END IF;
     END$$;
-    """)
-    
-    # Nota: Não revertemos o tipo da coluna para preservar dados 
+    """
+    )
+
+    # Nota: Não revertemos o tipo da coluna para preservar dados

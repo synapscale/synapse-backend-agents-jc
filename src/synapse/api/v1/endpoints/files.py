@@ -1,460 +1,499 @@
 """
-Endpoints para gerenciamento de arquivos
-Criado por José - um desenvolvedor Full Stack
-API completa para upload, download, listagem e gerenciamento de arquivos
-Este módulo implementa os endpoints da API para upload, download,
-listagem e gerenciamento de arquivos com segurança e eficiência.
+Files endpoints - Gerenciamento de arquivos e uploads
 """
 
-import logging
-from typing import Optional, Dict, Any
-from uuid import UUID
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_, or_
+from sqlalchemy.orm import selectinload
+from typing import Optional, List
+import uuid
+import os
+import aiofiles
+import mimetypes
+from pathlib import Path
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    File,
-    Form,
-    HTTPException,
-    Query,
-    UploadFile,
-    status,
-)
-from sqlalchemy.orm import Session
-
-from synapse.constants import FILE_CATEGORIES
-from synapse.api.deps import get_current_user
-from synapse.database import get_db
-from synapse.middlewares.rate_limiting import rate_limit
+from synapse.api.deps import get_current_active_user, get_db
 from synapse.schemas.file import (
-    FileDownloadResponse,
-    FileListResponse,
     FileResponse,
-    FileUploadResponse,
+    FileCreate,
+    FileUpdate,
+    FileListResponse,
+    FileStatus,
+    ScanStatus,
 )
-from synapse.services.file_service import FileService
+from synapse.models import File as FileModel, User, Workspace
 
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Configurações de upload
+UPLOAD_DIRECTORY = Path("uploads")
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+ALLOWED_EXTENSIONS = {
+    ".txt",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
+    ".csv",
+    ".json",
+    ".xml",
+    ".zip",
+    ".tar",
+    ".gz",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".svg",
+    ".mp3",
+    ".wav",
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".wmv",
+    ".py",
+    ".js",
+    ".html",
+    ".css",
+    ".md",
+    ".yaml",
+    ".yml",
+}
 
-@router.post("/upload", response_model=FileUploadResponse, summary="Upload de arquivo", tags=["data"])
+# Criar diretório de upload se não existir
+UPLOAD_DIRECTORY.mkdir(exist_ok=True)
+
+
+def validate_file(file: UploadFile) -> None:
+    """Validar arquivo antes do upload"""
+
+    # Verificar extensão
+    file_ext = Path(file.filename or "").suffix.lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tipo de arquivo não permitido. Extensões permitidas: {', '.join(ALLOWED_EXTENSIONS)}",
+        )
+
+    # Verificar tamanho
+    if file.size and file.size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Arquivo muito grande. Tamanho máximo: {MAX_FILE_SIZE // 1024 // 1024}MB",
+        )
+
+
+@router.post("/upload", response_model=FileResponse)
 async def upload_file(
-    category: str = Form(..., description="Categoria do arquivo"),
-    file: UploadFile = File(..., description="Arquivo a ser enviado"),
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-    _rate_limit=Depends(rate_limit),
-) -> FileUploadResponse:
-    """
-    Realiza o upload de um arquivo para o servidor.
+    file: UploadFile = File(...),
+    workspace_id: Optional[uuid.UUID] = Query(None, description="ID do workspace"),
+    description: Optional[str] = Query(None, description="Descrição do arquivo"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Upload de arquivo"""
 
-    ## Função
-    Este endpoint permite enviar arquivos para o servidor, categorizando-os
-    para facilitar a organização e recuperação posterior.
+    # Validar arquivo
+    validate_file(file)
 
-    ## Quando Usar
-    - Quando precisar armazenar arquivos no servidor
-    - Para enviar documentos, imagens ou outros tipos de arquivos
-    - Quando precisar associar arquivos a categorias específicas
-
-    ## Parâmetros Importantes
-    - **category**: Categoria do arquivo (ex: "imagem", "documento", "audio")
-    - **file**: O arquivo a ser enviado
-
-    ## Resultado Esperado
-    Retorna um objeto JSON contendo:
-    - ID único do arquivo enviado
-    - Nome original do arquivo
-    - Tamanho em bytes
-    - Tipo MIME
-    - URL para download
-    - Timestamp de upload
-    - Categoria associada
-
-    ## Exemplo de Uso
-    ```python
-    import requests
-
-    url = "https://api.synapscale.com/api/v1/files/upload"
-    headers = {"Authorization": "Bearer seu_token"}
-
-    # Preparar o arquivo e categoria
-    files = {"file": open("documento.pdf", "rb")}
-    data = {"category": "documento"}
-
-    response = requests.post(url, files=files, data=data, headers=headers)
-    print(f"Arquivo enviado com ID: {response.json()['id']}")
-    ```
-    
-    Args:
-        category: Categoria para classificar o arquivo
-        file: Arquivo a ser enviado
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        _rate_limit: Middleware de rate limiting
-        
-    Returns:
-        FileUploadResponse: Resposta com dados do arquivo enviado
-        
-    Raises:
-        HTTPException: 400 se categoria inválida
-        HTTPException: 413 se arquivo muito grande
-        HTTPException: 415 se tipo de arquivo não suportado
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Iniciando upload de arquivo '{file.filename}' categoria '{category}' para usuário {current_user.id}")
-        
-        if category not in FILE_CATEGORIES.keys():
-            logger.warning(f"Categoria inválida '{category}' fornecida por usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Categoria inválida. Categorias válidas: {', '.join(FILE_CATEGORIES.keys())}",
-            )
-
-        # Validações de segurança do arquivo
-        if not file.filename:
-            logger.warning(f"Nome de arquivo vazio fornecido por usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Nome do arquivo é obrigatório",
-            )
-
-        # Verificar tamanho do arquivo (limitado pelo FastAPI, mas vamos logar)
-        if hasattr(file, 'size') and file.size:
-            file_size_mb = file.size / (1024 * 1024)
-            logger.info(f"Tamanho do arquivo: {file_size_mb:.2f} MB")
-            
-            # Limite de 100MB por arquivo
-            if file.size > 100 * 1024 * 1024:
-                logger.warning(f"Arquivo muito grande ({file_size_mb:.2f} MB) rejeitado para usuário {current_user.id}")
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail="Arquivo muito grande. Máximo permitido: 100MB",
+    # Verificar workspace se especificado
+    if workspace_id:
+        workspace_result = await db.execute(
+            select(Workspace).where(
+                and_(
+                    Workspace.id == workspace_id,
+                    or_(
+                        Workspace.owner_id == current_user.id,
+                        Workspace.is_public == True,
+                        # TODO: Verificar se é membro
+                    ),
                 )
-
-        file_service = FileService()
-        result = await file_service.upload_file(file, category, current_user.id)
-        
-        logger.info(f"Upload concluído com sucesso - arquivo ID: {result.id}, usuário: {current_user.id}")
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro no upload de arquivo para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor durante upload")
-
-
-@router.get(
-    "/",
-    response_model=FileListResponse,
-    summary="Listar arquivos",
-    tags=["data"],
-)
-async def list_files(
-    page: int = Query(1, ge=1, description="Número da página"),
-    size: int = Query(10, ge=1, le=100, description="Itens por página"),
-    category: Optional[str] = Query(None, description="Filtrar por categoria"),
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-) -> FileListResponse:
-    """
-    Lista os arquivos do usuário com paginação e filtro por categoria.
-
-    ## Função
-    Este endpoint retorna uma lista paginada dos arquivos do usuário atual,
-    com opção de filtrar por categoria específica.
-
-    ## Quando Usar
-    - Para visualizar todos os arquivos enviados pelo usuário
-    - Quando precisar listar arquivos de uma categoria específica
-    - Para implementar uma interface de gerenciamento de arquivos
-
-    ## Parâmetros Importantes
-    - **page**: Número da página para paginação (começa em 1)
-    - **size**: Quantidade de itens por página (entre 1 e 100)
-    - **category**: Filtrar por categoria específica (opcional)
-
-    ## Resultado Esperado
-    Retorna um objeto JSON contendo:
-    - Lista de arquivos com seus metadados
-    - Informações de paginação (página atual, total de páginas)
-    - Total de arquivos encontrados
-
-    ## Exemplo de Uso
-    ```python
-    import requests
-
-    url = "https://api.synapscale.com/api/v1/files/"
-    headers = {"Authorization": "Bearer seu_token"}
-
-    # Listar todos os arquivos (primeira página, 10 itens por página)
-    response = requests.get(url, headers=headers)
-
-    # Ou filtrar por categoria e página específica
-    params = {"category": "imagem", "page": 2, "size": 20}
-    response = requests.get(url, params=params, headers=headers)
-
-    for file in response.json()["items"]:
-        print(f"{file['filename']} - {file['category']} - {file['size']} bytes")
-    ```
-    
-    Args:
-        page: Número da página (1-based)
-        size: Número de itens por página
-        category: Categoria para filtrar arquivos
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        FileListResponse: Lista paginada de arquivos
-        
-    Raises:
-        HTTPException: 400 se categoria inválida
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Listando arquivos para usuário {current_user.id} - página: {page}, categoria: {category}")
-        
-        # Validar categoria se fornecida
-        if category and category not in FILE_CATEGORIES.keys():
-            logger.warning(f"Categoria inválida '{category}' fornecida por usuário {current_user.id}")
+            )
+        )
+        workspace = workspace_result.scalar_one_or_none()
+        if not workspace:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Categoria inválida. Categorias válidas: {', '.join(FILE_CATEGORIES.keys())}",
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Workspace não encontrado ou sem acesso",
             )
 
-        file_service = FileService()
-        files, total = file_service.list_files(db, current_user.id, skip=(page-1)*size, limit=size, category=category)
-        pages = (total + size - 1) // size if size else 1
-        
-        logger.info(f"Retornados {len(files)} arquivos de {total} total para usuário {current_user.id}")
-        return FileListResponse(items=files, total=total, page=page, size=size, pages=pages)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao listar arquivos para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+    # Gerar nome único para o arquivo
+    file_id = uuid.uuid4()
+    file_ext = Path(file.filename or "").suffix.lower()
+    unique_filename = f"{file_id}{file_ext}"
+    file_path = UPLOAD_DIRECTORY / unique_filename
 
-
-@router.get("/{file_id}", response_model=FileResponse, summary="Obter arquivo", tags=["data"])
-async def get_file(
-    file_id: UUID,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-) -> FileResponse:
-    """
-    Obtém informações detalhadas sobre um arquivo específico.
-
-    ## Função
-    Este endpoint retorna metadados detalhados sobre um arquivo específico,
-    identificado pelo seu ID único.
-
-    ## Quando Usar
-    - Quando precisar verificar detalhes de um arquivo específico
-    - Para obter metadados como tamanho, tipo e data de upload
-    - Antes de fazer o download, para verificar se é o arquivo correto
-
-    ## Parâmetros Importantes
-    - **file_id**: ID único do arquivo (UUID)
-
-    ## Resultado Esperado
-    Retorna um objeto JSON contendo:
-    - ID do arquivo
-    - Nome original do arquivo
-    - Tamanho em bytes
-    - Tipo MIME
-    - URL para download
-    - Timestamp de upload
-    - Categoria associada
-
-    ## Exemplo de Uso
-    ```python
-    import requests
-
-    file_id = "550e8400-e29b-41d4-a716-446655440000"  # Exemplo de UUID
-    url = f"https://api.synapscale.com/api/v1/files/{file_id}"
-    headers = {"Authorization": "Bearer seu_token"}
-
-    response = requests.get(url, headers=headers)
-    file_info = response.json()
-
-    print(f"Nome: {file_info['filename']}")
-    print(f"Tipo: {file_info['mime_type']}")
-    print(f"Tamanho: {file_info['size']} bytes")
-    print(f"URL de download: {file_info['download_url']}")
-    ```
-    
-    Args:
-        file_id: ID único do arquivo
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        FileResponse: Dados do arquivo
-        
-    Raises:
-        HTTPException: 404 se arquivo não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
     try:
-        logger.info(f"Obtendo arquivo {file_id} para usuário {current_user.id}")
-        
-        file_service = FileService()
-        result = await file_service.get_file(file_id, current_user.id)
-        
-        logger.info(f"Arquivo {file_id} obtido com sucesso para usuário {current_user.id}")
-        return result
-    except HTTPException:
-        raise
+        # Salvar arquivo no disco
+        async with aiofiles.open(file_path, "wb") as f:
+            content = await file.read()
+            await f.write(content)
+
+        # Obter informações do arquivo
+        file_size = len(content)
+        content_type = (
+            mimetypes.guess_type(file.filename or "")[0] or "application/octet-stream"
+        )
+
+        # Criar registro no banco
+        file_record = FileModel(
+            id=file_id,
+            filename=file.filename or unique_filename,
+            original_filename=file.filename,
+            file_path=str(file_path),
+            file_size=file_size,
+            content_type=content_type,
+            description=description,
+            user_id=current_user.id,
+            workspace_id=workspace_id,
+            tenant_id=current_user.tenant_id,
+            status=FileStatus.ACTIVE.value,
+            scan_status=ScanStatus.PENDING.value,
+        )
+
+        db.add(file_record)
+        await db.commit()
+        await db.refresh(file_record)
+
+        return FileResponse(
+            id=file_record.id,
+            filename=file_record.filename,
+            original_filename=file_record.original_filename,
+            file_size=file_record.file_size,
+            content_type=file_record.content_type,
+            description=file_record.description,
+            user_id=file_record.user_id,
+            workspace_id=file_record.workspace_id,
+            tenant_id=file_record.tenant_id,
+            status=file_record.status,
+            scan_status=file_record.scan_status,
+            download_count=file_record.download_count,
+            is_public=file_record.is_public,
+            metadata=file_record.metadata or {},
+            created_at=file_record.created_at,
+            updated_at=file_record.updated_at,
+            # URL de download
+            download_url=f"/api/v1/files/{file_record.id}/download",
+        )
+
     except Exception as e:
-        logger.error(f"Erro ao obter arquivo {file_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        # Limpar arquivo se erro
+        if file_path.exists():
+            file_path.unlink()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao salvar arquivo: {str(e)}",
+        )
 
 
-@router.get("/{file_id}/download", response_model=FileDownloadResponse, summary="Download de arquivo", tags=["data"])
-async def download_file(
-    file_id: UUID,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-) -> FileDownloadResponse:
-    """
-    Gera um link de download para um arquivo específico.
+@router.get("/", response_model=FileListResponse)
+async def list_files(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    page: int = Query(1, ge=1, description="Número da página"),
+    size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
+    workspace_id: Optional[uuid.UUID] = Query(
+        None, description="Filtrar por workspace"
+    ),
+    search: Optional[str] = Query(None, description="Buscar por nome ou descrição"),
+    content_type: Optional[str] = Query(
+        None, description="Filtrar por tipo de conteúdo"
+    ),
+    status: Optional[FileStatus] = Query(None, description="Filtrar por status"),
+):
+    """Listar arquivos do usuário"""
 
-    ## Função
-    Este endpoint gera um URL temporário para download direto de um arquivo,
-    identificado pelo seu ID único.
+    # Query base
+    query = select(FileModel).options(
+        selectinload(FileModel.user), selectinload(FileModel.workspace)
+    )
 
-    ## Quando Usar
-    - Quando precisar baixar um arquivo específico
-    - Para compartilhar um link de download temporário
-    - Para implementar funcionalidade de download em uma interface
+    conditions = []
 
-    ## Parâmetros Importantes
-    - **file_id**: ID único do arquivo (UUID)
+    # Filtrar por arquivos do usuário ou públicos
+    conditions.append(
+        or_(FileModel.user_id == current_user.id, FileModel.is_public == True)
+    )
 
-    ## Resultado Esperado
-    Retorna um objeto JSON contendo:
-    - URL de download direto para o arquivo
-    - Tempo de expiração do link (se aplicável)
-    - Informações básicas do arquivo (nome, tipo, tamanho)
+    # Filtrar por workspace se especificado
+    if workspace_id:
+        conditions.append(FileModel.workspace_id == workspace_id)
 
-    ## Exemplo de Uso
-    ```python
-    import requests
-    import webbrowser
+    # Aplicar filtros adicionais
+    if search:
+        search_term = f"%{search}%"
+        conditions.append(
+            or_(
+                FileModel.filename.ilike(search_term),
+                FileModel.original_filename.ilike(search_term),
+                FileModel.description.ilike(search_term),
+            )
+        )
 
-    file_id = "550e8400-e29b-41d4-a716-446655440000"  # Exemplo de UUID
-    url = f"https://api.synapscale.com/api/v1/files/{file_id}/download"
-    headers = {"Authorization": "Bearer seu_token"}
+    if content_type:
+        conditions.append(FileModel.content_type.ilike(f"%{content_type}%"))
 
-    response = requests.get(url, headers=headers)
-    download_url = response.json()["download_url"]
-
-    # Abrir o link de download no navegador
-    webbrowser.open(download_url)
-
-    # Ou baixar diretamente
-    file_content = requests.get(download_url).content
-    with open(response.json()["filename"], "wb") as f:
-        f.write(file_content)
-    ```
-    
-    Args:
-        file_id: ID único do arquivo
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        FileDownloadResponse: URL de download e metadados
-        
-    Raises:
-        HTTPException: 404 se arquivo não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Gerando link de download para arquivo {file_id} - usuário {current_user.id}")
-        
-        file_service = FileService()
-        result = await file_service.download_file(file_id, current_user.id)
-        
-        logger.info(f"Link de download gerado para arquivo {file_id} - usuário {current_user.id}")
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao gerar download para arquivo {file_id} - usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.delete("/{file_id}", summary="Deletar arquivo", tags=["data"])
-async def delete_file(
-    file_id: UUID,
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),
-) -> Dict[str, str]:
-    """
-    Remove permanentemente um arquivo do servidor.
-
-    ## Função
-    Este endpoint exclui um arquivo específico do servidor, identificado pelo seu ID único.
-    A operação é permanente e não pode ser desfeita.
-
-    ## Quando Usar
-    - Quando precisar remover arquivos desnecessários
-    - Para liberar espaço de armazenamento
-    - Para implementar funcionalidade de exclusão em uma interface de gerenciamento
-
-    ## Parâmetros Importantes
-    - **file_id**: ID único do arquivo (UUID)
-
-    ## Resultado Esperado
-    Retorna um objeto JSON contendo:
-    - Mensagem de confirmação da exclusão
-
-    ## Exemplo de Uso
-    ```python
-    import requests
-
-    file_id = "550e8400-e29b-41d4-a716-446655440000"  # Exemplo de UUID
-    url = f"https://api.synapscale.com/api/v1/files/{file_id}"
-    headers = {"Authorization": "Bearer seu_token"}
-
-    response = requests.delete(url, headers=headers)
-
-    if response.status_code == 200:
-        print("Arquivo excluído com sucesso!")
+    if status:
+        conditions.append(FileModel.status == status.value)
     else:
-        print(f"Erro ao excluir arquivo: {response.json()['detail']}")
-    ```
-    
-    Args:
-        file_id: ID único do arquivo
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, str]: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se arquivo não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Deletando arquivo {file_id} para usuário {current_user.id}")
-        
-        file_service = FileService()
-        await file_service.delete_file(file_id, current_user.id)
-        
-        logger.info(f"Arquivo {file_id} deletado com sucesso para usuário {current_user.id}")
-        return {"message": "Arquivo deletado com sucesso"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao deletar arquivo {file_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        # Por padrão, só mostrar arquivos ativos
+        conditions.append(FileModel.status == FileStatus.ACTIVE.value)
+
+    if conditions:
+        query = query.where(and_(*conditions))
+
+    # Contar total
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar()
+
+    # Aplicar paginação
+    offset = (page - 1) * size
+    query = query.offset(offset).limit(size).order_by(FileModel.created_at.desc())
+
+    # Executar query
+    result = await db.execute(query)
+    files = result.scalars().all()
+
+    # Calcular páginas
+    pages = (total + size - 1) // size
+
+    # Converter para response
+    file_responses = [
+        FileResponse(
+            id=file.id,
+            filename=file.filename,
+            original_filename=file.original_filename,
+            file_size=file.file_size,
+            content_type=file.content_type,
+            description=file.description,
+            user_id=file.user_id,
+            workspace_id=file.workspace_id,
+            tenant_id=file.tenant_id,
+            status=file.status,
+            scan_status=file.scan_status,
+            download_count=file.download_count,
+            is_public=file.is_public,
+            metadata=file.metadata or {},
+            created_at=file.created_at,
+            updated_at=file.updated_at,
+            download_url=f"/api/v1/files/{file.id}/download",
+            # Dados relacionados
+            user_name=file.user.full_name if file.user else None,
+            workspace_name=file.workspace.name if file.workspace else None,
+        )
+        for file in files
+    ]
+
+    return FileListResponse(
+        items=file_responses, total=total, page=page, pages=pages, size=size
+    )
+
+
+@router.get("/{file_id}", response_model=FileResponse)
+async def get_file(
+    file_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Obter informações do arquivo"""
+
+    result = await db.execute(
+        select(FileModel)
+        .options(selectinload(FileModel.user), selectinload(FileModel.workspace))
+        .where(FileModel.id == file_id)
+    )
+    file = result.scalar_one_or_none()
+
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo não encontrado"
+        )
+
+    # Verificar acesso
+    has_access = False
+    if file.user_id == current_user.id:
+        has_access = True
+    elif file.is_public:
+        has_access = True
+    elif file.workspace and file.workspace.is_public:
+        has_access = True
+    # TODO: Verificar se é membro do workspace
+
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Não autorizado a acessar este arquivo",
+        )
+
+    return FileResponse(
+        id=file.id,
+        filename=file.filename,
+        original_filename=file.original_filename,
+        file_size=file.file_size,
+        content_type=file.content_type,
+        description=file.description,
+        user_id=file.user_id,
+        workspace_id=file.workspace_id,
+        tenant_id=file.tenant_id,
+        status=file.status,
+        scan_status=file.scan_status,
+        download_count=file.download_count,
+        is_public=file.is_public,
+        metadata=file.metadata or {},
+        created_at=file.created_at,
+        updated_at=file.updated_at,
+        download_url=f"/api/v1/files/{file.id}/download",
+        user_name=file.user.full_name if file.user else None,
+        workspace_name=file.workspace.name if file.workspace else None,
+    )
+
+
+@router.get("/{file_id}/download")
+async def download_file(
+    file_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Download do arquivo"""
+
+    result = await db.execute(select(FileModel).where(FileModel.id == file_id))
+    file = result.scalar_one_or_none()
+
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo não encontrado"
+        )
+
+    # Verificar acesso (mesmo código do get_file)
+    has_access = False
+    if file.user_id == current_user.id:
+        has_access = True
+    elif file.is_public:
+        has_access = True
+    elif file.workspace and file.workspace.is_public:
+        has_access = True
+
+    if not has_access:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Não autorizado a baixar este arquivo",
+        )
+
+    # Verificar se arquivo existe no disco
+    file_path = Path(file.file_path)
+    if not file_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Arquivo físico não encontrado",
+        )
+
+    # Incrementar contador de downloads
+    file.download_count += 1
+    await db.commit()
+
+    # Retornar arquivo
+    async def file_generator():
+        async with aiofiles.open(file_path, "rb") as f:
+            while chunk := await f.read(8192):
+                yield chunk
+
+    return StreamingResponse(
+        file_generator(),
+        media_type=file.content_type,
+        headers={
+            "Content-Disposition": f"attachment; filename={file.original_filename}",
+            "Content-Length": str(file.file_size),
+        },
+    )
+
+
+@router.put("/{file_id}", response_model=FileResponse)
+async def update_file(
+    file_id: uuid.UUID,
+    file_update: FileUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Atualizar metadados do arquivo"""
+
+    result = await db.execute(select(FileModel).where(FileModel.id == file_id))
+    file = result.scalar_one_or_none()
+
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo não encontrado"
+        )
+
+    # Apenas o proprietário pode atualizar
+    if file.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas o proprietário pode atualizar o arquivo",
+        )
+
+    # Atualizar campos
+    update_data = file_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(file, field, value)
+
+    await db.commit()
+    await db.refresh(file)
+
+    return FileResponse(
+        id=file.id,
+        filename=file.filename,
+        original_filename=file.original_filename,
+        file_size=file.file_size,
+        content_type=file.content_type,
+        description=file.description,
+        user_id=file.user_id,
+        workspace_id=file.workspace_id,
+        tenant_id=file.tenant_id,
+        status=file.status,
+        scan_status=file.scan_status,
+        download_count=file.download_count,
+        is_public=file.is_public,
+        metadata=file.metadata or {},
+        created_at=file.created_at,
+        updated_at=file.updated_at,
+        download_url=f"/api/v1/files/{file.id}/download",
+    )
+
+
+@router.delete("/{file_id}")
+async def delete_file(
+    file_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Deletar arquivo"""
+
+    result = await db.execute(select(FileModel).where(FileModel.id == file_id))
+    file = result.scalar_one_or_none()
+
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Arquivo não encontrado"
+        )
+
+    # Apenas o proprietário pode deletar
+    if file.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas o proprietário pode deletar o arquivo",
+        )
+
+    # Soft delete
+    file.status = FileStatus.DELETED.value
+
+    await db.commit()
+
+    return {"message": "Arquivo deletado com sucesso"}

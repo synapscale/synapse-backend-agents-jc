@@ -13,6 +13,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UserDigitalOcean(Base):
     """Modelo User adaptado para a estrutura existente no DigitalOcean"""
+
     __tablename__ = "users"
 
     id = Column(String(255), primary_key=True)
@@ -34,41 +35,41 @@ class UserDigitalOcean(Base):
     def set_password(self, password: str):
         """Define uma nova senha para o usuário"""
         self.hashed_password = pwd_context.hash(password)
-    
+
     @property
     def first_name(self):
         """Compatibilidade: extrai primeiro nome do full_name"""
         if self.full_name:
-            return self.full_name.split(' ')[0]
-        return ''
-    
-    @property 
+            return self.full_name.split(" ")[0]
+        return ""
+
+    @property
     def last_name(self):
         """Compatibilidade: extrai sobrenome do full_name"""
-        if self.full_name and ' ' in self.full_name:
-            return ' '.join(self.full_name.split(' ')[1:])
-        return ''
-    
+        if self.full_name and " " in self.full_name:
+            return " ".join(self.full_name.split(" ")[1:])
+        return ""
+
     @property
     def password_hash(self):
         """Compatibilidade: mapeia para hashed_password"""
         return self.hashed_password
-    
+
     @password_hash.setter
     def password_hash(self, value):
         """Compatibilidade: mapeia para hashed_password"""
         self.hashed_password = value
-    
+
     @property
     def role(self):
         """Compatibilidade: mapeia is_superuser para role"""
         return "admin" if self.is_superuser else "user"
-    
+
     @property
     def is_verified(self):
         """Compatibilidade: assume verificado se ativo"""
         return self.is_active
-    
+
     def to_dict(self) -> dict:
         """Converte o usuário para dicionário (sem dados sensíveis)"""
         return {

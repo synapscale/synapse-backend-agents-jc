@@ -25,6 +25,7 @@ from synapse.database import Base
 
 class NodeType(enum.Enum):
     """Tipos de nodes disponíveis no sistema."""
+
     LLM = "llm"
     TRANSFORM = "transform"
     API = "api"
@@ -39,6 +40,7 @@ class NodeType(enum.Enum):
 
 class NodeStatus(enum.Enum):
     """Status possíveis para um node."""
+
     DRAFT = "draft"
     PUBLISHED = "published"
     DEPRECATED = "deprecated"
@@ -47,22 +49,18 @@ class NodeStatus(enum.Enum):
 
 class Node(Base):
     """Modelo principal para nodes do sistema."""
+
     __tablename__ = "nodes"
-    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
     category = Column(String(100), nullable=False)
     description = Column(Text)
-    version = Column(
-        String(50), nullable=False, server_default=text("'1.0.0'")
-    )
+    version = Column(String(50), nullable=False, server_default=text("'1.0.0'"))
 
     user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(
-            "synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"
-        ),
+        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
         index=True,
     )
@@ -83,12 +81,16 @@ class Node(Base):
     type: Column[str] = Column(
         Enum(NodeType, values_callable=lambda x: [e.value for e in x], name="nodetype"),
         nullable=False,
-        server_default="operation"
+        server_default="operation",
     )
     status: Column[str] = Column(
-        Enum(NodeStatus, values_callable=lambda x: [e.value for e in x], name="nodestatus"),
+        Enum(
+            NodeStatus,
+            values_callable=lambda x: [e.value for e in x],
+            name="nodestatus",
+        ),
         nullable=False,
-        server_default="draft"
+        server_default="draft",
     )
     is_public = Column(Boolean, default=False)
     code_template = Column(Text)
@@ -104,16 +106,13 @@ class Node(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
     updated_at = Column(
-        DateTime(timezone=True),
-        server_default=text("NOW()"),
-        onupdate=text("NOW()")
+        DateTime(timezone=True), server_default=text("NOW()"), onupdate=text("NOW()")
     )
 
     # Relacionamento com User
     user = relationship("User", back_populates="nodes")
 
-    # Relacionamento com WorkflowNode
-    workflow_instances = relationship("WorkflowNode", back_populates="node")
+    # Relacionamento com WorkflowNode - REMOVIDO (não há FK no banco real)
 
     # Relacionamento com Workspace
     workspace = relationship("Workspace", back_populates="nodes")
@@ -128,19 +127,13 @@ class Node(Base):
             "category": self.category,
             "user_id": str(self.user_id),
             "workspace_id": (
-                str(self.workspace_id)
-                if self.workspace_id is not None
-                else None
+                str(self.workspace_id) if self.workspace_id is not None else None
             ),
             "created_at": (
-                self.created_at.isoformat()
-                if self.created_at is not None
-                else None
+                self.created_at.isoformat() if self.created_at is not None else None
             ),
             "updated_at": (
-                self.updated_at.isoformat()
-                if self.updated_at is not None
-                else None
+                self.updated_at.isoformat() if self.updated_at is not None else None
             ),
         }
 
@@ -189,15 +182,15 @@ class Node(Base):
 
 class NodeTemplate(Base):
     """Template para criação de nodes baseados em padrões predefinidos."""
+
     __tablename__ = "node_templates"
-    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False)
     description = Column(Text)
     type: Column[str] = Column(
         Enum(NodeType, values_callable=lambda x: [e.value for e in x], name="nodetype"),
-        nullable=False
+        nullable=False,
     )
     category = Column(String(100))
 
@@ -214,13 +207,9 @@ class NodeTemplate(Base):
     examples = Column(JSON, default=list)
 
     # Sistema
-    is_system = Column(
-        Boolean, default=False  # Templates do sistema vs usuário
-    )
+    is_system = Column(Boolean, default=False)  # Templates do sistema vs usuário
     is_active = Column(Boolean, default=True)
-    created_at = Column(
-        DateTime(timezone=True), server_default=text("NOW()")
-    )
+    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
 
     rating_count = Column(Integer, default=0)
     rating_average = Column(Integer, default=0)
@@ -244,15 +233,11 @@ class NodeTemplate(Base):
             "is_system": self.is_system,
             "is_active": self.is_active,
             "created_at": (
-                self.created_at.isoformat()
-                if self.created_at is not None
-                else None
+                self.created_at.isoformat() if self.created_at is not None else None
             ),
         }
 
-    def create_node_from_template(
-        self, user_id: str, name: str | None = None
-    ) -> dict:
+    def create_node_from_template(self, user_id: str, name: str | None = None) -> dict:
         """Cria um novo node baseado neste template"""
         return {
             "name": name or self.name,
@@ -273,14 +258,25 @@ class NodeTemplate(Base):
 
 class NodeRating(Base):
     __tablename__ = "node_ratings"
-    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    node_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.nodes.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE"), nullable=False, index=True)
+    node_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("nodes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     rating = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
-    updated_at = Column(DateTime(timezone=True), server_default=text("NOW()"), onupdate=text("NOW()"))
+    updated_at = Column(
+        DateTime(timezone=True), server_default=text("NOW()"), onupdate=text("NOW()")
+    )
 
     node = relationship("Node", backref="ratings")
     user = relationship("User")

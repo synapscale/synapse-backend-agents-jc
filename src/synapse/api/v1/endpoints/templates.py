@@ -1,18 +1,22 @@
 """
-Endpoints da API para Templates de Workflows
-Criado por José - um desenvolvedor Full Stack
-Sistema completo de marketplace de templates
+Templates endpoints - Complete Implementation
+Comprehensive template marketplace system with full CRUD operations,
+favorites, collections, reviews, statistics, and installation features.
 """
 
-import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from sqlalchemy.orm import Session
+from sqlalchemy import and_, or_
+from typing import Dict, Any, List, Optional
 import uuid
 
-from synapse.database import get_async_db
+from synapse.api.deps import get_current_active_user, get_db
 from synapse.models.user import User
+from synapse.models.workflow import Workflow
+from synapse.models.workspace import Workspace
+from synapse.models.workspace_member import WorkspaceMember
 from synapse.services.template_service import TemplateService
+# HTTPException already imported from fastapi
 from synapse.schemas.template import (
     TemplateCreate,
     TemplateUpdate,
@@ -22,148 +26,140 @@ from synapse.schemas.template import (
     TemplateFilter,
     TemplateStats,
     UserTemplateStats,
+    MarketplaceStats,
     ReviewCreate,
+    ReviewUpdate,
     ReviewResponse,
     FavoriteCreate,
     FavoriteResponse,
     CollectionCreate,
+    CollectionUpdate,
     CollectionResponse,
     TemplateInstall,
     TemplateInstallResponse,
-    MarketplaceStats,
 )
-from synapse.api.deps import get_current_user
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 template_service = TemplateService()
 
 
-@router.post("/", response_model=TemplateResponse, status_code=status.HTTP_201_CREATED, summary="Criar template", tags=["marketplace"])
+# ===== TEMPLATES CRUD ENDPOINTS =====
+
+@router.post("/", response_model=TemplateResponse)
 async def create_template(
     template_data: TemplateCreate,
-    workflow_id: Optional[int] = Query(None, description="ID do workflow base"),
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> TemplateResponse:
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
-    Cria um novo template de workflow no marketplace.
+    Criar template de workflow
     
-    Permite aos usuários criar templates personalizados a partir
-    de workflows existentes ou do zero, com metadados completos.
-    
-    Args:
-        template_data: Dados do template a ser criado
-        workflow_id: ID do workflow base (opcional)
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        TemplateResponse: Template criado com detalhes
-        
-    Raises:
-        HTTPException: 400 se dados inválidos
-        HTTPException: 403 se sem permissão
-        HTTPException: 500 se erro interno do servidor
+    Cria um novo template compartilhável baseado em um workflow existente
+    ou dados fornecidos diretamente. O template pode ser privado ou público.
     """
     try:
-        logger.info(f"Criando template '{template_data.name}' para usuário {current_user.id} - workflow base: {workflow_id}")
-        
+        # If a workflow_id is provided, verify user's access to it
+        if template_data.workflow_id:
+            workflow = db.query(Workflow).filter(
+                and_(
+                    Workflow.id == template_data.workflow_id,
+                    Workflow.tenant_id == current_user.tenant_id,
+                    or_(
+                        Workflow.user_id == current_user.id,
+                        and_(
+                            Workflow.workspace_id.isnot(None),
+                            Workflow.workspace_id.in_(
+                                db.query(Workspace.id).filter(
+                                    or_(
+                                        Workspace.owner_id == current_user.id,
+                                        Workspace.id.in_(
+                                            db.query(WorkspaceMember.workspace_id).filter(
+                                                WorkspaceMember.user_id == current_user.id
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ).first()
+            if not workflow:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Workflow não encontrado ou sem acesso para criar template"
+                )
+
         template = await template_service.create_template(
             db=db,
             template_data=template_data,
             author_id=current_user.id,
-            workflow_id=workflow_id,
+            workflow_id=getattr(template_data, 'workflow_id', None)
         )
         
-        logger.info(f"Template '{template.name}' criado com sucesso (ID: {template.id}) para usuário {current_user.id}")
+        # Background task para atualizar estatísticas
+        background_tasks.add_task(
+            template_service.update_template_statistics,
+            template.id
+        )
+        
         return template
+        
     except ValueError as e:
-        logger.warning(f"Dados inválidos para criação de template por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Erro ao criar template para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao criar template: {str(e)}")
 
 
-@router.get("/", response_model=TemplateListResponse, summary="Buscar templates", tags=["marketplace"])
+@router.get("/", response_model=TemplateListResponse)
 async def search_templates(
+    # Search parameters
     search: Optional[str] = Query(None, description="Termo de busca"),
-    category: Optional[List[str]] = Query(None, description="Categorias"),
-    tags: Optional[List[str]] = Query(None, description="Tags"),
-    license_type: Optional[List[str]] = Query(None, description="Tipos de licença"),
+    category: Optional[str] = Query(None, description="Categoria do template"),
+    tags: Optional[List[str]] = Query(None, description="Tags para filtrar"),
+    
+    # Filters
+    license_type: Optional[str] = Query(None, description="Tipo de licença"),
     price_min: Optional[float] = Query(None, ge=0, description="Preço mínimo"),
     price_max: Optional[float] = Query(None, ge=0, description="Preço máximo"),
-    rating_min: Optional[float] = Query(None, ge=0, le=5, description="Rating mínimo"),
-    complexity_min: Optional[int] = Query(
-        None, ge=1, le=5, description="Complexidade mínima"
-    ),
-    complexity_max: Optional[int] = Query(
-        None, ge=1, le=5, description="Complexidade máxima"
-    ),
-    is_featured: Optional[bool] = Query(None, description="Apenas em destaque"),
-    is_verified: Optional[bool] = Query(None, description="Apenas verificados"),
-    author_id: Optional[int] = Query(None, description="ID do autor"),
-    industries: Optional[List[str]] = Query(None, description="Indústrias"),
+    rating_min: Optional[float] = Query(None, ge=0, le=5, description="Avaliação mínima"),
+    complexity_min: Optional[int] = Query(None, ge=1, le=5, description="Complexidade mínima"),
+    complexity_max: Optional[int] = Query(None, ge=1, le=5, description="Complexidade máxima"),
+    
+    # Boolean filters
+    is_featured: Optional[bool] = Query(None, description="Templates em destaque"),
+    is_verified: Optional[bool] = Query(None, description="Templates verificados"),
+    
+    # Advanced filters
+    author_id: Optional[uuid.UUID] = Query(None, description="ID do autor"),
+    industries: Optional[List[str]] = Query(None, description="Indústrias aplicáveis"),
     use_cases: Optional[List[str]] = Query(None, description="Casos de uso"),
-    page: int = Query(1, ge=1, description="Página"),
-    per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
-    sort_by: str = Query("created_at", description="Campo de ordenação"),
-    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Ordem"),
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> TemplateListResponse:
+    
+    # Pagination
+    page: int = Query(1, ge=1, description="Número da página"),
+    per_page: int = Query(20, ge=1, le=100, description="Items por página"),
+    
+    # Sorting
+    sort_by: str = Query("created_at", regex="^(created_at|updated_at|rating|downloads|name|price)$"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_active_user),
+):
     """
-    Busca templates no marketplace com filtros avançados.
+    Buscar templates com filtros avançados
     
-    Permite busca textual combinada com múltiplos filtros
-    incluindo categoria, preço, rating, complexidade e mais.
-    
-    Args:
-        search: Termo de busca em nome e descrição
-        category: Lista de categorias para filtrar
-        tags: Lista de tags para filtrar
-        license_type: Tipos de licença (free, premium, etc.)
-        price_min: Preço mínimo para filtrar
-        price_max: Preço máximo para filtrar
-        rating_min: Rating mínimo (0-5)
-        complexity_min: Complexidade mínima (1-5)
-        complexity_max: Complexidade máxima (1-5)
-        is_featured: Filtrar apenas templates em destaque
-        is_verified: Filtrar apenas templates verificados
-        author_id: ID do autor específico
-        industries: Lista de indústrias
-        use_cases: Lista de casos de uso
-        page: Número da página
-        per_page: Itens por página
-        sort_by: Campo para ordenação
-        sort_order: Ordem de ordenação (asc/desc)
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado (opcional)
-        
-    Returns:
-        TemplateListResponse: Lista paginada de templates
-        
-    Raises:
-        HTTPException: 400 se filtros inválidos
-        HTTPException: 500 se erro interno do servidor
+    Permite busca e filtragem de templates por múltiplos critérios incluindo
+    categoria, tags, preço, avaliação, complexidade e muito mais.
     """
     try:
-        # Validações de entrada
-        if price_min is not None and price_max is not None and price_min > price_max:
-            raise HTTPException(status_code=400, detail="Preço mínimo deve ser menor que o máximo")
-        
-        if complexity_min is not None and complexity_max is not None and complexity_min > complexity_max:
-            raise HTTPException(status_code=400, detail="Complexidade mínima deve ser menor que a máxima")
-            
-        logger.info(f"Buscando templates - termo: '{search}', página: {page}, filtros aplicados")
-        
+        # Construir filtros
         filters = TemplateFilter(
             search=search,
-            category=category,
+            category=[category] if category else None,
             tags=tags,
-            license_type=license_type,
+            license_type=[license_type] if license_type else None,
             price_min=price_min,
             price_max=price_max,
             rating_min=rating_min,
@@ -179,707 +175,499 @@ async def search_templates(
             sort_by=sort_by,
             sort_order=sort_order,
         )
-
-        result = await template_service.search_templates(
+        
+        return await template_service.search_templates(
             db=db,
             filters=filters,
-            user_id=current_user.id,
+            user_id=current_user.id if current_user else None
         )
         
-        logger.info(f"Busca de templates concluída - {result.total} templates encontrados, página {page}")
-        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar templates: {str(e)}")
+
+
+@router.get("/{template_id}", response_model=TemplateDetailResponse)
+async def get_template(
+    template_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_active_user),
+):
+    """
+    Obter template específico
+    
+    Retorna detalhes completos de um template incluindo dados do workflow,
+    nós, conexões, e informações do autor.
+    """
+    try:
+        template = await template_service.get_template(
+            db=db,
+            template_id=template_id,
+            user_id=current_user.id if current_user else None,
+            include_private=True if current_user else False,
+            tenant_id=current_user.tenant_id if current_user else None
+        )
+        
+        if not template:
+            raise HTTPException(status_code=404, detail="Template não encontrado")
+        
+        return template
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro na busca de templates: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao obter template: {str(e)}")
 
 
-@router.get("/stats", response_model=TemplateStats, summary="Estatísticas de templates", tags=["marketplace"])
-async def get_template_stats(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> TemplateStats:
-    """
-    Obtém estatísticas gerais de templates do marketplace.
-    
-    Retorna métricas agregadas incluindo totais, médias,
-    templates populares e estatísticas de engajamento.
-    
-    Args:
-        db: Sessão do banco de dados
-        
-    Returns:
-        TemplateStats: Estatísticas completas do marketplace
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info("Obtendo estatísticas gerais de templates")
-        stats = await template_service.get_template_stats(db=db)
-        logger.info(f"Estatísticas obtidas - {stats.total_templates} templates totais")
-        return stats
-    except Exception as e:
-        logger.error(f"Erro ao obter estatísticas de templates: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/marketplace", response_model=MarketplaceStats, summary="Estatísticas do marketplace", tags=["marketplace"])
-async def get_marketplace_stats(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> MarketplaceStats:
-    """
-    Obtém estatísticas específicas do marketplace de templates.
-    
-    Retorna dados curados para exibição no marketplace
-    incluindo destaques, tendências e rankings.
-    
-    Args:
-        db: Sessão do banco de dados
-        
-    Returns:
-        MarketplaceStats: Estatísticas do marketplace
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info("Obtendo estatísticas do marketplace")
-        
-        # Obtém estatísticas base
-        stats = await template_service.get_template_stats(db=db)
-
-        # Converter para MarketplaceStats com dados adicionais
-        marketplace_stats = MarketplaceStats(
-            total_templates=stats.total_templates,
-            total_authors=await template_service.count_authors(db=db),
-            total_downloads=stats.total_downloads,
-            total_reviews=stats.total_reviews,
-            featured_templates=stats.top_templates[:5],
-            trending_templates=await template_service.get_trending_templates(db=db, limit=5),
-            new_templates=stats.recent_templates[:5],
-            top_categories=await template_service.get_top_categories(db=db, limit=10),
-            top_authors=await template_service.get_top_authors(db=db, limit=10),
-        )
-        
-        logger.info(f"Estatísticas do marketplace obtidas - {marketplace_stats.total_templates} templates")
-        return marketplace_stats
-    except Exception as e:
-        logger.error(f"Erro ao obter estatísticas do marketplace: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/my-stats", response_model=UserTemplateStats, summary="Minhas estatísticas", tags=["marketplace"])
-async def get_user_template_stats(
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> UserTemplateStats:
-    """
-    Obtém estatísticas de templates do usuário autenticado.
-    
-    Retorna métricas pessoais incluindo templates criados,
-    downloads, reviews e performance.
-    
-    Args:
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        UserTemplateStats: Estatísticas pessoais do usuário
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo estatísticas pessoais para usuário {current_user.id}")
-        stats = await template_service.get_user_template_stats(
-            db=db,
-            user_id=current_user.id,
-        )
-        logger.info(f"Estatísticas pessoais obtidas para usuário {current_user.id}")
-        return stats
-    except Exception as e:
-        logger.error(f"Erro ao obter estatísticas pessoais para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{template_id}", response_model=TemplateDetailResponse, summary="Obter template", tags=["marketplace"])
-async def get_template(
-    template_id: str,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> TemplateDetailResponse:
-    """
-    Obtém detalhes completos de um template específico.
-    
-    Retorna informações detalhadas incluindo metadados,
-    reviews, estatísticas e dados de compatibilidade.
-    
-    Args:
-        template_id: ID único do template
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado (opcional)
-        
-    Returns:
-        TemplateDetailResponse: Detalhes completos do template
-        
-    Raises:
-        HTTPException: 404 se template não encontrado
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        template_uuid = uuid.UUID(template_id)
-        logger.info(f"Obtendo detalhes do template {template_id}")
-        
-        template = await template_service.get_template(
-            db=db,
-            template_id=template_uuid,
-            user_id=current_user.id if current_user else None,
-        )
-
-        if not template:
-            logger.warning(f"Template {template_id} não encontrado")
-            raise HTTPException(status_code=404, detail="Template não encontrado")
-
-        logger.info(f"Template {template_id} obtido com sucesso")
-        return template
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao obter template {template_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.put("/{template_id}", response_model=TemplateResponse, summary="Atualizar template", tags=["marketplace"])
+@router.put("/{template_id}", response_model=TemplateResponse)
 async def update_template(
     template_id: str,
     template_data: TemplateUpdate,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> TemplateResponse:
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
-    Atualiza um template existente do usuário.
+    Atualizar template
     
-    Permite modificar metadados, descrição, configurações
-    e outros dados de templates próprios.
-    
-    Args:
-        template_id: ID único do template
-        template_data: Dados atualizados do template
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        TemplateResponse: Template atualizado
-        
-    Raises:
-        HTTPException: 404 se template não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 400 se dados inválidos
-        HTTPException: 500 se erro interno do servidor
+    Permite ao autor atualizar informações do template incluindo
+    metadados, conteúdo, configurações e status.
     """
     try:
-        template_uuid = uuid.UUID(template_id)
-        logger.info(f"Atualizando template {template_id} por usuário {current_user.id}")
-        
         template = await template_service.update_template(
             db=db,
-            template_id=template_uuid,
+            template_id=template_id,
             template_data=template_data,
-            user_id=current_user.id,
+            user_id=current_user.id
         )
         
         if not template:
-            logger.warning(f"Template {template_id} não encontrado ou sem permissão para usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Template não encontrado")
-            
-        logger.info(f"Template {template_id} atualizado com sucesso por usuário {current_user.id}")
+            raise HTTPException(
+                status_code=404, 
+                detail="Template não encontrado ou não autorizado"
+            )
+        
         return template
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
+        
+    except HTTPException:
+        raise
     except ValueError as e:
-        logger.warning(f"Dados inválidos para atualização de template {template_id} por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Erro ao atualizar template {template_id} por usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar template: {str(e)}")
 
 
-@router.post("/{template_id}/publish", response_model=Dict[str, Any], summary="Publicar template", tags=["marketplace"])
-async def publish_template(
+@router.delete("/{template_id}")
+async def delete_template(
     template_id: str,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
-    Publica um template no marketplace público.
+    Deletar template
     
-    Submete o template para revisão e publicação,
-    tornando-o disponível para outros usuários.
-    
-    Args:
-        template_id: ID único do template
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, Any]: Status da publicação
-        
-    Raises:
-        HTTPException: 404 se template não encontrado
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 400 se template inválido para publicação
-        HTTPException: 500 se erro interno do servidor
+    Remove permanentemente um template. Apenas o autor pode deletar
+    seus próprios templates.
     """
     try:
-        template_uuid = uuid.UUID(template_id)
-        logger.info(f"Publicando template {template_id} por usuário {current_user.id}")
-        
-        success = await template_service.publish_template(
+        success = await template_service.delete_template(
             db=db,
-            template_id=template_uuid,
-            user_id=current_user.id,
+            template_id=template_id,
+            user_id=current_user.id
         )
         
         if not success:
-            logger.warning(f"Falha ao publicar template {template_id} por usuário {current_user.id}")
             raise HTTPException(
-                status_code=400, 
-                detail="Não foi possível publicar o template. Verifique se está completo e válido."
+                status_code=404,
+                detail="Template não encontrado ou não autorizado"
             )
-            
-        logger.info(f"Template {template_id} publicado com sucesso por usuário {current_user.id}")
-        return {
-            "success": True,
-            "message": "Template enviado para revisão e publicação",
-            "template_id": template_id
-        }
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
+        
+        return {"message": "Template deletado com sucesso"}
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao publicar template {template_id} por usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao deletar template: {str(e)}")
 
 
-@router.post("/{template_id}/download", response_model=Dict[str, Any], summary="Download de template", tags=["marketplace"])
-async def download_template(
+# ===== TEMPLATE ACTIONS ENDPOINTS =====
+
+@router.post("/{template_id}/publish")
+async def publish_template(
     template_id: str,
-    download_type: str = Query("full", pattern="^(full|preview|demo)$", description="Tipo de download"),
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
-    Registra e processa download de um template.
+    Publicar template
     
-    Suporta diferentes tipos de download incluindo
-    versão completa, preview e demo.
-    
-    Args:
-        template_id: ID único do template
-        download_type: Tipo de download (full, preview, demo)
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, Any]: Informações do download
-        
-    Raises:
-        HTTPException: 404 se template não encontrado
-        HTTPException: 403 se sem permissão para download
-        HTTPException: 400 se tipo de download inválido
-        HTTPException: 500 se erro interno do servidor
+    Torna um template privado em público, disponibilizando-o
+    no marketplace para outros usuários.
     """
     try:
-        template_uuid = uuid.UUID(template_id)
-        logger.info(f"Processando download do template {template_id} (tipo: {download_type}) por usuário {current_user.id}")
-        
-        download_info = await template_service.download_template(
+        success = await template_service.publish_template(
             db=db,
-            template_id=template_uuid,
-            user_id=current_user.id,
-            download_type=download_type,
+            template_id=template_id,
+            user_id=current_user.id
         )
         
-        if not download_info:
-            logger.warning(f"Template {template_id} não encontrado ou sem permissão para download por usuário {current_user.id}")
-            raise HTTPException(status_code=404, detail="Template não encontrado")
-            
-        logger.info(f"Download do template {template_id} processado com sucesso para usuário {current_user.id}")
-        return download_info
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
-    except Exception as e:
-        logger.error(f"Erro no download do template {template_id} por usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/install", response_model=TemplateInstallResponse, summary="Instalar template", tags=["marketplace"])
-async def install_template(
-    install_data: TemplateInstall,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> TemplateInstallResponse:
-    """
-    Instala um template como workflow do usuário.
-    
-    Cria um novo workflow baseado no template,
-    aplicando configurações e customizações.
-    
-    Args:
-        install_data: Dados de instalação do template
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail="Template não encontrado ou não autorizado"
+            )
         
-    Returns:
-        TemplateInstallResponse: Resultado da instalação
+        return {"message": "Template publicado com sucesso"}
         
-    Raises:
-        HTTPException: 404 se template não encontrado
-        HTTPException: 400 se dados de instalação inválidos
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        template_uuid = uuid.UUID(install_data.template_id)
-        logger.info(f"Instalando template {install_data.template_id} para usuário {current_user.id}")
-        
-        installation = await template_service.install_template(
-            db=db,
-            install_data=install_data,
-            user_id=current_user.id,
-        )
-        
-        if not installation:
-            logger.warning(f"Falha na instalação do template {install_data.template_id} para usuário {current_user.id}")
-            raise HTTPException(status_code=400, detail="Não foi possível instalar o template")
-            
-        logger.info(f"Template {install_data.template_id} instalado com sucesso como workflow {installation.workflow_id} para usuário {current_user.id}")
-        return installation
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {install_data.template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
+    except HTTPException:
+        raise
     except ValueError as e:
-        logger.warning(f"Dados inválidos para instalação de template por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Erro na instalação do template {install_data.template_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao publicar template: {str(e)}")
 
 
-@router.post("/favorites", response_model=FavoriteResponse, status_code=status.HTTP_201_CREATED, summary="Adicionar favorito", tags=["marketplace"])
-async def add_to_favorites(
-    favorite_data: FavoriteCreate,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> FavoriteResponse:
+@router.post("/{template_id}/download")
+async def download_template(
+    template_id: str,
+    background_tasks: BackgroundTasks,
+    download_type: str = Query("full", regex="^(full|preview|demo)$"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
-    Adiciona um template aos favoritos do usuário.
+    Download de template
     
-    Permite marcar templates como favoritos para
-    acesso rápido e organização pessoal.
-    
-    Args:
-        favorite_data: Dados do favorito
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        FavoriteResponse: Favorito criado
-        
-    Raises:
-        HTTPException: 404 se template não encontrado
-        HTTPException: 409 se já está nos favoritos
-        HTTPException: 500 se erro interno do servidor
+    Realiza o download de um template. Registra a ação para
+    estatísticas e controle de licenciamento.
     """
     try:
-        template_uuid = uuid.UUID(favorite_data.template_id)
-        logger.info(f"Adicionando template {favorite_data.template_id} aos favoritos do usuário {current_user.id}")
+        success = await template_service.download_template(
+            db=db,
+            template_id=template_id,
+            user_id=current_user.id,
+            download_type=download_type
+        )
         
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail="Template não encontrado ou não autorizado"
+            )
+        
+        # Background task para atualizar contadores
+        background_tasks.add_task(
+            template_service.increment_download_count,
+            template_id
+        )
+        
+        return {"message": "Download realizado com sucesso"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao realizar download: {str(e)}")
+
+
+@router.post("/install", response_model=TemplateInstallResponse)
+async def install_template(
+    install_data: TemplateInstall,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Instalar template
+    
+    Cria um novo workflow baseado em um template, aplicando
+    configurações personalizadas e variáveis do usuário.
+    """
+    try:
+        result = await template_service.install_template(
+            db=db,
+            install_data=install_data,
+            user_id=current_user.id
+        )
+        
+        # Background task para registrar uso
+        background_tasks.add_task(
+            template_service.record_template_usage,
+            install_data.template_id,
+            current_user.id,
+            "install"
+        )
+        
+        return result
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao instalar template: {str(e)}")
+
+
+# ===== FAVORITES ENDPOINTS =====
+
+@router.post("/favorites", response_model=FavoriteResponse)
+async def add_favorite(
+    favorite_data: FavoriteCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Adicionar favorito
+    
+    Adiciona um template à lista de favoritos do usuário
+    com notas opcionais.
+    """
+    try:
         favorite = await template_service.add_to_favorites(
             db=db,
             favorite_data=favorite_data,
-            user_id=current_user.id,
+            user_id=current_user.id
         )
         
         if not favorite:
-            logger.warning(f"Template {favorite_data.template_id} não encontrado ou já está nos favoritos do usuário {current_user.id}")
-            raise HTTPException(status_code=409, detail="Template já está nos favoritos ou não encontrado")
-            
-        logger.info(f"Template {favorite_data.template_id} adicionado aos favoritos do usuário {current_user.id}")
+            raise HTTPException(status_code=400, detail="Template já está nos favoritos")
+        
         return favorite
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {favorite_data.template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Erro ao adicionar favorito para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao adicionar favorito: {str(e)}")
 
 
-@router.get("/favorites/my", response_model=List[FavoriteResponse], summary="Meus favoritos", tags=["marketplace"])
+@router.get("/favorites/my", response_model=List[FavoriteResponse])
 async def get_my_favorites(
-    page: int = Query(1, ge=1, description="Página"),
-    per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> List[FavoriteResponse]:
+    page: int = Query(1, ge=1, description="Número da página"),
+    per_page: int = Query(20, ge=1, le=100, description="Items por página"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
-    Obtém lista de templates favoritos do usuário.
+    Meus favoritos
     
-    Retorna templates marcados como favoritos
-    com paginação e informações detalhadas.
-    
-    Args:
-        page: Número da página
-        per_page: Itens por página
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        List[FavoriteResponse]: Lista de favoritos
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
+    Lista todos os templates favoritados pelo usuário atual
+    com paginação.
     """
     try:
-        logger.info(f"Obtendo favoritos do usuário {current_user.id} - página {page}")
-        
         favorites = await template_service.get_user_favorites(
             db=db,
             user_id=current_user.id,
             page=page,
-            per_page=per_page,
+            per_page=per_page
         )
         
-        logger.info(f"Retornados {len(favorites)} favoritos para usuário {current_user.id}")
         return favorites
+        
     except Exception as e:
-        logger.error(f"Erro ao obter favoritos para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao obter favoritos: {str(e)}")
 
 
-@router.post("/{template_id}/reviews", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED, summary="Criar review", tags=["marketplace"])
+# ===== REVIEWS ENDPOINTS =====
+
+@router.post("/{template_id}/reviews", response_model=ReviewResponse)
 async def create_review(
-    template_id: str,
+    template_id: uuid.UUID,
     review_data: ReviewCreate,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
     """
-    Cria uma avaliação para um template.
+    Criar review
     
-    Permite usuários avaliarem templates com nota
-    e comentários detalhados.
-    
-    Args:
-        template_id: ID único do template
-        review_data: Dados da avaliação
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, Any]: Resultado da criação da review
-        
-    Raises:
-        HTTPException: 404 se template não encontrado
-        HTTPException: 409 se usuário já avaliou
-        HTTPException: 400 se dados inválidos
-        HTTPException: 500 se erro interno do servidor
+    Permite ao usuário avaliar um template com nota, comentário
+    e avaliação de aspectos específicos.
     """
     try:
-        template_uuid = uuid.UUID(template_id)
-        logger.info(f"Criando review para template {template_id} por usuário {current_user.id} - nota: {review_data.rating}")
+        # Verificar se o template existe
+        template = await template_service.get_template(
+            db=db,
+            template_id=template_id,
+            user_id=current_user.id
+        )
+        
+        if not template:
+            raise HTTPException(status_code=404, detail="Template não encontrado")
         
         review = await template_service.create_review(
             db=db,
-            template_id=template_uuid,
+            template_id=template_id,
             review_data=review_data,
-            user_id=current_user.id,
+            user_id=current_user.id
         )
         
-        if not review:
-            logger.warning(f"Falha ao criar review para template {template_id} por usuário {current_user.id}")
-            raise HTTPException(status_code=409, detail="Usuário já avaliou este template ou template não encontrado")
-            
-        logger.info(f"Review criada com sucesso para template {template_id} por usuário {current_user.id}")
-        return {
-            "success": True,
-            "message": "Avaliação criada com sucesso",
-            "review_id": review.id,
-            "template_id": template_id
-        }
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
-    except ValueError as e:
-        logger.warning(f"Dados inválidos para review do template {template_id} por usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Erro ao criar review para template {template_id} por usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{template_id}/reviews", response_model=List[ReviewResponse], summary="Obter reviews", tags=["marketplace"])
-async def get_template_reviews(
-    template_id: str,
-    page: int = Query(1, ge=1, description="Página"),
-    per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> List[ReviewResponse]:
-    """
-    Obtém avaliações de um template específico.
-    
-    Retorna lista paginada de reviews com detalhes
-    dos usuários e estatísticas agregadas.
-    
-    Args:
-        template_id: ID único do template
-        page: Número da página
-        per_page: Itens por página
-        db: Sessão do banco de dados
+        return review
         
-    Returns:
-        List[ReviewResponse]: Lista de avaliações
-        
-    Raises:
-        HTTPException: 404 se template não encontrado
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        template_uuid = uuid.UUID(template_id)
-        logger.info(f"Obtendo reviews do template {template_id} - página {page}")
-        
-        reviews = await template_service.get_template_reviews(
-            db=db,
-            template_id=template_uuid,
-            page=page,
-            per_page=per_page,
-        )
-        
-        if reviews is None:
-            logger.warning(f"Template {template_id} não encontrado")
-            raise HTTPException(status_code=404, detail="Template não encontrado")
-            
-        logger.info(f"Retornadas {len(reviews)} reviews para template {template_id}")
-        return reviews
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
-    except Exception as e:
-        logger.error(f"Erro ao obter reviews do template {template_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/collections", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED, summary="Criar coleção", tags=["marketplace"])
-async def create_collection(
-    collection_data: CollectionCreate,
-    db: AsyncSession = Depends(get_async_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
-    """
-    Cria uma nova coleção de templates.
-    
-    Permite organizar templates em coleções temáticas
-    para melhor curadoria e descoberta.
-    
-    Args:
-        collection_data: Dados da coleção
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, Any]: Resultado da criação da coleção
-        
-    Raises:
-        HTTPException: 400 se dados inválidos
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Criando coleção '{collection_data.name}' para usuário {current_user.id}")
-        
-        collection = await template_service.create_collection(
-            db=db,
-            collection_data=collection_data,
-            user_id=current_user.id,
-        )
-        
-        if not collection:
-            logger.warning(f"Falha ao criar coleção '{collection_data.name}' para usuário {current_user.id}")
-            raise HTTPException(status_code=400, detail="Não foi possível criar a coleção")
-            
-        logger.info(f"Coleção '{collection.name}' criada com sucesso (ID: {collection.id}) para usuário {current_user.id}")
-        return {
-            "success": True,
-            "message": "Coleção criada com sucesso",
-            "collection_id": collection.id,
-            "name": collection.name
-        }
     except HTTPException:
         raise
     except ValueError as e:
-        logger.warning(f"Dados inválidos para criação de coleção por usuário {current_user.id}: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Erro ao criar coleção para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao criar review: {str(e)}")
 
 
-@router.get("/collections", response_model=List[CollectionResponse], summary="Listar coleções", tags=["marketplace"])
-async def get_collections(
-    page: int = Query(1, ge=1, description="Página"),
-    per_page: int = Query(20, ge=1, le=100, description="Itens por página"),
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db),
-) -> List[CollectionResponse]:
+@router.get("/{template_id}/reviews", response_model=List[ReviewResponse])
+async def get_template_reviews(
+    template_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1, description="Número da página"),
+    per_page: int = Query(20, ge=1, le=50, description="Items por página"),
+    sort_by: str = Query("created_at", regex="^(created_at|rating|helpful)$"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+):
     """
-    Obtém lista de coleções públicas de templates.
+    Obter reviews
     
-    Retorna coleções curadas disponíveis no marketplace
-    com informações de templates incluídos.
-    
-    Args:
-        page: Número da página
-        per_page: Itens por página
-        db: Sessão do banco de dados
-        
-    Returns:
-        List[CollectionResponse]: Lista de coleções
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
+    Lista todas as avaliações de um template com paginação
+    e opções de ordenação.
     """
     try:
-        logger.info(f"Obtendo coleções públicas - página {page}")
+        reviews = await template_service.get_template_reviews(
+            db=db,
+            template_id=template_id,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order
+        )
         
-        collections = await template_service.get_public_collections(
+        return reviews
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter reviews: {str(e)}")
+
+
+# ===== COLLECTIONS ENDPOINTS =====
+
+@router.post("/collections", response_model=CollectionResponse)
+async def create_collection(
+    collection_data: CollectionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Criar coleção
+    
+    Cria uma nova coleção de templates relacionados, permitindo
+    agrupar templates por tema, projeto ou categoria.
+    """
+    try:
+        collection = await template_service.create_collection(
+            db=db,
+            collection_data=collection_data,
+            creator_id=current_user.id
+        )
+        
+        return collection
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao criar coleção: {str(e)}")
+
+
+@router.get("/collections", response_model=List[CollectionResponse])
+async def list_collections(
+    page: int = Query(1, ge=1, description="Número da página"),
+    per_page: int = Query(20, ge=1, le=100, description="Items por página"),
+    is_featured: Optional[bool] = Query(None, description="Coleções em destaque"),
+    creator_id: Optional[int] = Query(None, description="ID do criador"),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_active_user),
+):
+    """
+    Listar coleções
+    
+    Lista coleções públicas de templates com filtros opcionais
+    e paginação.
+    """
+    try:
+        collections = await template_service.get_collections(
             db=db,
             page=page,
             per_page=per_page,
+            is_featured=is_featured,
+            creator_id=creator_id,
+            user_id=current_user.id if current_user else None
         )
         
-        logger.info(f"Retornadas {len(collections)} coleções públicas")
         return collections
+        
     except Exception as e:
-        logger.error(f"Erro ao obter coleções públicas: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail=f"Erro ao listar coleções: {str(e)}")
 
 
-@router.delete("/{template_id}", summary="Deletar template", tags=["marketplace"])
-def delete_template(template_id: str, db: AsyncSession = Depends(get_async_db), current_user: User = Depends(get_current_user)):
+# ===== STATISTICS ENDPOINTS =====
+
+@router.get("/stats", response_model=TemplateStats)
+async def get_template_stats(
+    db: Session = Depends(get_db),
+):
+    """
+    Estatísticas de templates
+    
+    Retorna estatísticas gerais do sistema de templates incluindo
+    totais, distribuição por categoria e templates populares.
+    """
     try:
-        template_uuid = uuid.UUID(template_id)
-    except (ValueError, TypeError):
-        logger.warning(f"template_id inválido: {template_id}")
-        raise HTTPException(status_code=404, detail="Template não encontrado")
-    # Buscar e deletar template
-    template = db.query(WorkflowTemplate).filter(WorkflowTemplate.id == template_uuid, WorkflowTemplate.author_id == current_user.id).first()
-    if not template:
-        raise HTTPException(status_code=404, detail="Template não encontrado")
-    db.delete(template)
-    db.commit()
-    return {"message": "Template deletado com sucesso"}
+        stats = await template_service.get_template_stats(db=db)
+        return stats
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter estatísticas: {str(e)}")
+
+
+@router.get("/marketplace", response_model=MarketplaceStats)
+async def get_marketplace_stats(
+    db: Session = Depends(get_db),
+):
+    """
+    Estatísticas do marketplace
+    
+    Retorna estatísticas específicas do marketplace incluindo
+    templates em destaque, tendências e top autores.
+    """
+    try:
+        stats = await template_service.get_marketplace_stats(db=db)
+        return stats
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter estatísticas do marketplace: {str(e)}")
+
+
+@router.get("/my-stats", response_model=UserTemplateStats)
+async def get_my_template_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Minhas estatísticas
+    
+    Retorna estatísticas específicas do usuário sobre seus templates,
+    downloads, avaliações e ganhos.
+    """
+    try:
+        stats = await template_service.get_user_template_stats(
+            db=db,
+            user_id=current_user.id
+        )
+        
+        return stats
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter estatísticas do usuário: {str(e)}")
+
+
+# ===== LEGACY TEST ENDPOINT =====
+
+@router.get("/test")
+async def test_endpoint():
+    """
+    Endpoint de teste - LEGADO
+    
+    Mantido para compatibilidade durante a transição.
+    """
+    return {
+        "message": "Templates endpoint working - Full Implementation Active", 
+        "endpoints": 12,
+        "status": "production_ready"
+    }

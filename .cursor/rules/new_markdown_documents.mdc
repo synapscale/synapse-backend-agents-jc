@@ -1,0 +1,324 @@
+---
+description: "Regras para gerenciamento de documentações markdown"
+globs: ["**/*.md", "**/*.mdc"]
+alwaysApply: true
+---
+# 📝 REGRA CRÍTICA - GERENCIAMENTO DE DOCUMENTAÇÕES MARKDOWN
+
+## **🚨 REGRA ABSOLUTA: REUTILIZAR ANTES DE CRIAR**
+
+**CONTEXTO**: O repositório está sendo poluído com documentações markdown duplicadas e abandonadas. Precisamos manter organização e reutilizar conteúdo existente para evitar informações contraditórias e confusão.
+
+**❌ PROIBIDO:**
+- Criar novos arquivos .md sem verificar se já existe documentação similar
+- Deixar documentações na raiz do repositório quando podem estar em `docs/`
+- Abandonar documentações após uso sem limpeza ou consolidação
+- Duplicar informações em novos arquivos markdown
+- Criar documentações pontuais sem plano de consolidação/limpeza
+
+**✅ OBRIGATÓRIO:**
+
+## 1. **VERIFICAÇÃO ANTES DE CRIAR**
+```bash
+# ✅ SEMPRE verificar documentações existentes primeiro
+ls -la *.md | grep -E "(README|GUIDE|MANUAL|DOCS|SETUP|CONFIG|API|TUTORIAL)"
+find docs/ -name "*.md" | grep -i "similar_topic"
+find . -name "*.md" -exec grep -l "keyword_related" {} \;
+```
+
+## 2. **PRIORIDADE DE REUTILIZAÇÃO**
+```markdown
+<!-- ✅ SEMPRE otimizar documentações existentes ao invés de criar novas -->
+<!-- Exemplo: Se existe API_GUIDE.md, EDITAR ele para adicionar novos endpoints -->
+<!-- ao invés de criar ENDPOINTS_DOCUMENTATION.md -->
+
+❌ ERRADO: Criar nova documentação
+create_file("NEW_API_GUIDE.md", content="# Nova documentação...")
+
+✅ CORRETO: Otimizar existente
+edit_file("docs/API_GUIDE.md", 
+          old_str="## Existing Endpoints", 
+          new_str="## Existing Endpoints\n\n## New Endpoints\n- Nova seção aqui")
+```
+
+## 3. **ORGANIZAÇÃO OBRIGATÓRIA**
+
+```text
+✅ ESTRUTURA CORRETA:
+docs/
+├── api/                     # Documentação de APIs
+├── setup/                   # Guias de instalação/configuração
+├── guides/                  # Tutoriais e guias
+├── architecture/            # Documentação de arquitetura
+├── deployment/              # Guias de deploy
+├── troubleshooting/         # Resolução de problemas
+├── reports/                 # Relatórios e análises
+└── temp/                    # Documentações temporárias
+
+❌ EVITAR NA RAIZ:
+├── SETUP_GUIDE.md          # Deve estar em docs/setup/
+├── API_DOCUMENTATION.md    # Deve estar em docs/api/
+├── TROUBLESHOOTING.md      # Deve estar em docs/troubleshooting/
+├── DEPLOYMENT_*.md         # Deve estar em docs/deployment/
+├── *_ANALYSIS_*.md         # Deve estar em docs/reports/
+```
+
+## 4. **DOCUMENTAÇÕES PONTUAIS - CONSOLIDAÇÃO OBRIGATÓRIA**
+```markdown
+<!-- ✅ Para documentações temporárias/pontuais: -->
+
+<!-- 1. Criar em local adequado -->
+docs/temp/temp_migration_guide_20250107.md
+
+<!-- 2. Usar com cabeçalho claro -->
+# DOCUMENTAÇÃO TEMPORÁRIA - CONSOLIDAR APÓS USO
+**Criado:** 2025-01-07  
+**Propósito:** Guia pontual de migração de dados  
+**Consolidar em:** docs/setup/migration.md após validação  
+**Deletar após:** Consolidação completa
+
+<!-- 3. SEMPRE consolidar ou deletar após uso -->
+<!-- TODO: Consolidar este conteúdo em documentação definitiva ✅ -->
+```
+
+## 5. **WORKFLOW OBRIGATÓRIO**
+```bash
+# ✅ Antes de criar qualquer documentação markdown:
+
+# 1. Verificar se existe similar
+echo "🔍 Verificando documentações existentes..."
+find . -name "*.md" -type f | grep -E "(README|GUIDE|MANUAL|DOCS|SETUP|CONFIG|API)" | head -15
+
+# 2. Se existe similar, EDITAR ao invés de criar novo
+echo "✏️ Editando documentação existente ao invés de criar nova..."
+
+# 3. Se não existe, criar em local correto
+echo "📁 Criando em docs/categoria_adequada/"
+
+# 4. Para docs pontuais, adicionar cabeçalho de consolidação
+echo "🗂️ Adicionando TODO para consolidação posterior..."
+
+# 5. Após uso, SEMPRE consolidar ou limpar
+echo "✅ Consolidando documentações temporárias..."
+```
+
+## 6. **DOCUMENTAÇÕES PERMITIDAS NA RAIZ (APENAS)**
+
+```markdown
+# ✅ ÚNICAS documentações permitidas na raiz (casos excepcionais):
+ALLOWED_ROOT_DOCS = [
+    "README.md",             # Apresentação principal do projeto
+    "LICENSE",               # Licença do projeto
+    "CHANGELOG.md",          # Histórico de mudanças
+    "CONTRIBUTING.md",       # Guia de contribuição
+    "SECURITY.md",           # Políticas de segurança
+    ".cursorrules",          # Regras do Cursor
+    "AGENTS.md",             # Configuração de agentes (se aplicável)
+    "CLAUDE.md",             # Documentação específica do Claude
+    "VALIDATION_REPORT.md",  # Relatórios de validação (apenas temporários)
+    "FINAL_VALIDATION_REPORT.md" # Relatórios finais (apenas temporários)
+]
+
+# ❌ Qualquer outra documentação DEVE estar em docs/
+# ⚠️  Relatórios temporários devem ser movidos para docs/reports/ após consolidação
+```
+
+## 7. **VERIFICAÇÃO PRÉ-COMMIT**
+```bash
+# ✅ Checklist obrigatório antes de commit:
+echo "📋 Verificações de documentação:"
+echo "- [ ] Não criei documentação duplicada quando já existia similar?"
+echo "- [ ] Documentações estão em docs/ e não na raiz?"
+echo "- [ ] Docs pontuais têm TODO para consolidação?"
+echo "- [ ] Reutilizei conteúdo existente ao máximo?"
+echo "- [ ] Documentações temporárias foram consolidadas após uso?"
+echo "- [ ] Não há informações contraditórias entre documentos?"
+```
+
+## 8. **PENALIDADES POR VIOLAÇÃO**
+- **1ª violação**: Refatorar/consolidar imediatamente
+- **2ª violação**: Revisar toda estrutura de documentação
+- **3ª violação**: Reorganização completa do repositório
+
+## **🎯 REGRA DE OURO:**
+> "Se existe similar, EDITE. Se não existe, crie em docs/. Se é pontual, CONSOLIDE após uso."
+
+## 9. **EXEMPLOS PRÁTICOS**
+
+### ✅ CORRETO - Reutilizando documentação existente
+```markdown
+# Cenário: Preciso documentar novas configurações
+# Encontrei: docs/setup/configuration.md
+
+# Ao invés de criar novo, EDITO o existente:
+edit_file("docs/setup/configuration.md",
+    old_str="## Database Configuration",
+    new_str="""## Database Configuration
+<!-- conteúdo existente... -->
+
+## Redis Configuration
+- REDIS_URL: URL de conexão com Redis
+- REDIS_TTL: Tempo de vida do cache (padrão: 300s)
+""")
+```
+
+### ❌ INCORRETO - Criando desnecessariamente
+```markdown
+# ❌ NÃO FAZER: Criar REDIS_CONFIG.md quando já existe configuration.md
+create_file("REDIS_CONFIG.md", content="# duplicando informações...")
+```
+
+### ✅ CORRETO - Documentação pontual com consolidação
+```markdown
+# Documentação para análise específica e temporária
+create_file("docs/temp/performance_analysis_2025_01_07.md", 
+    content="""
+# DOCUMENTAÇÃO TEMPORÁRIA - CONSOLIDAR APÓS 2025-01-07
+**Análise pontual de performance dos endpoints**  
+**TODO:** Consolidar resultados em docs/troubleshooting/performance.md
+""")
+
+# Após análise:
+# 1. Extrair insights importantes
+# 2. Consolidar em documentação definitiva
+# 3. Deletar temporária
+```
+
+### ✅ CORRETO - Consolidação de múltiplas documentações
+```markdown
+# Se existem: API_ENDPOINTS.md, ENDPOINTS_GUIDE.md, API_REFERENCE.md
+# Consolidar em: docs/api/endpoints.md
+
+# 1. Criar estrutura unificada
+# 2. Mover conteúdo não duplicado
+# 3. Remover arquivos redundantes
+# 4. Atualizar referências
+```
+
+## 10. **COMANDOS ÚTEIS PARA VERIFICAÇÃO**
+
+```bash
+# Listar todas as documentações na raiz (para limpeza)
+ls -la *.md | grep -vE "^(README|LICENSE|CHANGELOG|CONTRIBUTING|SECURITY)\.md$"
+
+# Encontrar documentações similares por conteúdo
+find . -name "*.md" -exec grep -l "similar_topic" {} \;
+
+# Verificar estrutura de docs/
+tree docs/ -I "*.tmp"
+
+# Contar documentações duplicadas/similares
+find . -name "*API*.md" -o -name "*GUIDE*.md" -o -name "*SETUP*.md" | wc -l
+
+# Buscar documentações órfãs (não referenciadas)
+grep -r "\.md" --include="*.md" docs/ | cut -d: -f2 | sort | uniq
+
+# Verificar links quebrados em documentações
+find docs/ -name "*.md" -exec grep -H "\[.*\](.*)" {} \;
+
+# Identificar documentações órfãs na raiz que deveriam estar em docs/
+find . -maxdepth 1 -name "*.md" -type f | grep -vE "^./(README|LICENSE|CHANGELOG|CONTRIBUTING|SECURITY|AGENTS|CLAUDE|.*VALIDATION.*REPORT)\.md$"
+```
+
+## 11. **PADRÕES DE NOMENCLATURA**
+
+### ✅ NOMENCLATURA CORRETA
+```
+docs/
+├── api/
+│   ├── endpoints.md         # Não "API_ENDPOINTS.md"
+│   ├── authentication.md   # Não "AUTH_GUIDE.md"
+│   └── rate-limiting.md     # Usar kebab-case
+├── setup/
+│   ├── installation.md     # Não "INSTALL_GUIDE.md"
+│   ├── configuration.md    # Não "CONFIG_SETUP.md"
+│   └── database-setup.md   # Específico e claro
+└── guides/
+    ├── getting-started.md   # Não "QUICK_START.md"
+    ├── best-practices.md    # Não "CODING_STANDARDS.md"
+    └── troubleshooting.md   # Não "ERROR_FIXES.md"
+```
+
+### ❌ NOMENCLATURA INCORRETA
+```
+# Evitar nomes genéricos ou redundantes:
+- DOCUMENTATION.md          # Muito genérico
+- NEW_FEATURES.md          # Deve estar em CHANGELOG.md
+- IMPORTANT_NOTES.md       # Deve ser específico
+- TEMP_GUIDE.md           # Usar convenção de temporários
+- BACKUP_API_DOCS.md      # Não deixar backups no repo
+```
+
+## 12. **TEMPLATE PARA NOVAS DOCUMENTAÇÕES**
+
+```markdown
+# [Nome Específico da Documentação]
+
+## Visão Geral
+Breve descrição do que esta documentação cobre.
+
+## Pré-requisitos
+- Item 1
+- Item 2
+
+## Seções Principais
+### Seção 1
+Conteúdo...
+
+### Seção 2
+Conteúdo...
+
+## Referências
+- [Documentação relacionada](link)
+- [API Reference](link)
+
+## Última Atualização
+**Data:** 2025-01-07  
+**Responsável:** [Nome]  
+**Próxima Revisão:** [Data]
+```
+
+## **🔄 PROCESSO DE MANUTENÇÃO**
+
+```bash
+# Revisão mensal de documentações
+# 1. Verificar docs órfãs
+find docs/ -name "*.md" -atime +30
+
+# 2. Consolidar temporárias
+find docs/temp/ -name "*.md" -mtime +7
+
+# 3. Atualizar referências
+grep -r "TODO.*consolidar" docs/
+
+# 4. Verificar consistência
+# Executar verificação de links e referências cruzadas
+```
+
+## 13. **PROCESSO DE LIMPEZA AUTOMÁTICA**
+
+```bash
+# Script de limpeza semanal recomendado
+#!/bin/bash
+
+echo "🧹 Iniciando limpeza de documentações..."
+
+# 1. Identificar documentações órfãs na raiz
+echo "📋 Documentações órfãs na raiz:"
+find . -maxdepth 1 -name "*.md" -type f | grep -vE "^./(README|LICENSE|CHANGELOG|CONTRIBUTING|SECURITY|AGENTS|CLAUDE|.*VALIDATION.*REPORT)\.md$"
+
+# 2. Listar documentações temporárias antigas
+echo "⏰ Documentações temporárias antigas (>7 dias):"
+find docs/temp/ -name "*.md" -mtime +7 2>/dev/null || echo "Pasta docs/temp/ não existe"
+
+# 3. Verificar relatórios que devem ser movidos
+echo "📊 Relatórios na raiz que devem ser movidos para docs/reports/:"
+find . -maxdepth 1 -name "*REPORT*.md" -o -name "*ANALYSIS*.md" -o -name "*SUMMARY*.md" 2>/dev/null
+
+# 4. Verificar duplicações
+echo "🔍 Possíveis duplicações de conteúdo:"
+find docs/ -name "*.md" -exec basename {} \; | sort | uniq -c | grep -v "1 "
+
+# 5. Sugerir consolidações
+echo "💡 Sugestões de consolidação disponíveis em .cursor/rules/new_markdown_documents.mdc"
+```

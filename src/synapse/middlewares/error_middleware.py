@@ -31,34 +31,34 @@ logger = logging.getLogger(__name__)
 
 class ErrorInterceptionMiddleware:
     """Middleware para interceptação e processamento de erros."""
-    
+
     def __init__(self, app: Callable):
         self.app = app
         self.error_count = 0
         self.start_time = time.time()
-    
+
     async def __call__(self, scope, receive, send):
         """Intercepta requisições e processa erros."""
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
-        
+
         request = Request(scope, receive)
         request_id = getattr(request.state, "request_id", "unknown")
-        
+
         try:
             # Processar requisição normalmente
             await self.app(scope, receive, send)
-            
+
         except SynapseBaseException as exc:
             # Erro customizado do SynapScale - deixar para o handler específico
             logger.info(f"SynapScale exception intercepted: {exc.__class__.__name__}")
             raise
-            
+
         except Exception as exc:
             # Erro não tratado - interceptar e processar
             self.error_count += 1
-            
+
             logger.error(
                 f"Unhandled error intercepted by middleware: {exc}",
                 extra={
@@ -69,9 +69,9 @@ class ErrorInterceptionMiddleware:
                     "error_count": self.error_count,
                     "uptime": time.time() - self.start_time,
                     "traceback": traceback.format_exc(),
-                }
+                },
             )
-            
+
             # Criar resposta de erro
             error_response = {
                 "error": {
@@ -83,25 +83,22 @@ class ErrorInterceptionMiddleware:
                     "error_count": self.error_count,
                 }
             }
-            
-            response = JSONResponse(
-                status_code=500,
-                content=error_response
-            )
-            
+
+            response = JSONResponse(status_code=500, content=error_response)
+
             await response(scope, receive, send)
 
 
 async def error_tracking_middleware(request: Request, call_next):
     """Middleware para rastreamento de erros por endpoint."""
     start_time = time.time()
-    
+
     try:
         response = await call_next(request)
-        
+
         # Log de requisições bem-sucedidas
         process_time = time.time() - start_time
-        
+
         if hasattr(request.state, "request_id"):
             logger.info(
                 f"Request completed successfully",
@@ -111,15 +108,15 @@ async def error_tracking_middleware(request: Request, call_next):
                     "url": str(request.url),
                     "status_code": response.status_code,
                     "process_time": process_time,
-                }
+                },
             )
-        
+
         return response
-        
+
     except SynapseBaseException as exc:
         # Erro customizado - adicionar contexto e repassar
         process_time = time.time() - start_time
-        
+
         logger.warning(
             f"SynapScale exception in endpoint: {exc.__class__.__name__}",
             extra={
@@ -128,14 +125,14 @@ async def error_tracking_middleware(request: Request, call_next):
                 "url": str(request.url),
                 "error_type": exc.__class__.__name__,
                 "process_time": process_time,
-            }
+            },
         )
         raise
-        
+
     except Exception as exc:
         # Erro não tratado - adicionar contexto e repassar
         process_time = time.time() - start_time
-        
+
         logger.error(
             f"Unhandled exception in endpoint: {exc}",
             extra={
@@ -145,18 +142,18 @@ async def error_tracking_middleware(request: Request, call_next):
                 "error_type": exc.__class__.__name__,
                 "process_time": process_time,
                 "traceback": traceback.format_exc(),
-            }
+            },
         )
         raise
 
 
 async def endpoint_error_categorizer_middleware(request: Request, call_next):
     """Middleware para categorizar erros por tipo de endpoint."""
-    
+
     # Identificar categoria do endpoint
     path = request.url.path
     endpoint_category = "unknown"
-    
+
     if "/workspaces" in path:
         endpoint_category = "workspaces"
     elif "/projects" in path:
@@ -173,14 +170,14 @@ async def endpoint_error_categorizer_middleware(request: Request, call_next):
         endpoint_category = "authentication"
     elif "/marketplace" in path:
         endpoint_category = "marketplace"
-    
+
     # Adicionar categoria ao request state
     request.state.endpoint_category = endpoint_category
-    
+
     try:
         response = await call_next(request)
         return response
-        
+
     except Exception as exc:
         # Log específico por categoria
         logger.error(
@@ -191,9 +188,9 @@ async def endpoint_error_categorizer_middleware(request: Request, call_next):
                 "method": request.method,
                 "url": str(request.url),
                 "error_type": exc.__class__.__name__,
-            }
+            },
         )
-        
+
         # Transformar erro genérico em erro específico da categoria
         if not isinstance(exc, SynapseBaseException):
             if endpoint_category == "workspaces":
@@ -211,20 +208,20 @@ async def endpoint_error_categorizer_middleware(request: Request, call_next):
                 raise WorkflowError(f"Erro no workflow: {str(exc)}")
             elif endpoint_category == "llm_services":
                 raise LLMServiceError(f"Erro no serviço LLM: {str(exc)}")
-        
+
         # Se não conseguiu categorizar, repassar o erro original
         raise
 
 
 def setup_error_middleware(app):
     """Configura todos os middlewares de erro na aplicação."""
-    
+
     # Middleware de rastreamento de erros
     app.middleware("http")(error_tracking_middleware)
-    
+
     # Middleware de categorização de erros por endpoint
     app.middleware("http")(endpoint_error_categorizer_middleware)
-    
+
     logger.info("Error middleware configurado com sucesso")
 
 
@@ -244,5 +241,5 @@ def get_error_stats():
             "llm_services": 0,
             "authentication": 0,
             "marketplace": 0,
-        }
-    } 
+        },
+    }

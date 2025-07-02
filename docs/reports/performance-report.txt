@@ -1,0 +1,126 @@
+================================================================================
+🏆 SYNAPSCALE DATABASE PERFORMANCE REPORT
+================================================================================
+
+📊 PERFORMANCE SUMMARY:
+----------------------------------------
+🟡 Health Check                124.82ms avg
+🟡 Schema Info                 126.01ms avg
+🟡 Workspaces Rls              125.24ms avg
+🟡 Complex Join                125.29ms avg
+🟡 Without Rls                 124.87ms avg
+🟡 With Rls                    124.88ms avg
+🟡 Count Workspaces            124.65ms avg
+🟡 Count Workflows             124.84ms avg
+🟡 Count Agents                124.76ms avg
+🟡 Count Users                 124.96ms avg
+🟡 Count Plans                 124.78ms avg
+🟡 Count Nodes                 125.32ms avg
+
+🛡️ RLS OVERHEAD ANALYSIS:
+----------------------------------------
+Without RLS: 124.87ms
+With RLS:    124.88ms
+Overhead:    0.0%
+✅ RLS overhead is acceptable
+
+📈 DETAILED RESULTS:
+----------------------------------------
+
+Health Check:
+  Mean:      124.82ms
+  Median:    124.59ms
+  Min:       123.65ms
+  Max:       130.38ms
+  Std Dev:     0.80ms
+  Rows:           1
+
+Schema Info:
+  Mean:      126.01ms
+  Median:    125.51ms
+  Min:       124.75ms
+  Max:       140.19ms
+  Std Dev:     1.93ms
+  Rows:          10
+
+Workspaces Rls:
+  Mean:      125.24ms
+  Median:    124.91ms
+  Min:       124.32ms
+  Max:       132.51ms
+  Std Dev:     1.26ms
+  Rows:           4
+
+Complex Join:
+  Mean:      125.29ms
+  Median:    125.18ms
+  Min:       124.33ms
+  Max:       127.52ms
+  Std Dev:     0.73ms
+  Rows:           0
+
+Without Rls:
+  Mean:      124.87ms
+  Median:    124.65ms
+  Min:       124.14ms
+  Max:       126.15ms
+  Std Dev:     0.53ms
+  Rows:           4
+
+With Rls:
+  Mean:      124.88ms
+  Median:    124.75ms
+  Min:       123.87ms
+  Max:       126.68ms
+  Std Dev:     0.56ms
+  Rows:           4
+
+Count Workspaces:
+  Mean:      124.65ms
+  Median:    124.58ms
+  Min:       124.30ms
+  Max:       126.00ms
+  Std Dev:     0.38ms
+  Rows:           1
+
+Count Workflows:
+  Mean:      124.84ms
+  Median:    124.78ms
+  Min:       124.00ms
+  Max:       126.16ms
+  Std Dev:     0.53ms
+  Rows:           1
+
+Count Agents:
+  Mean:      124.76ms
+  Median:    124.73ms
+  Min:       124.36ms
+  Max:       125.61ms
+  Std Dev:     0.32ms
+  Rows:           1
+
+Count Users:
+  Mean:      124.96ms
+  Median:    124.72ms
+  Min:       124.31ms
+  Max:       127.07ms
+  Std Dev:     0.70ms
+  Rows:           1
+
+Count Plans:
+  Mean:      124.78ms
+  Median:    124.73ms
+  Min:       124.20ms
+  Max:       125.56ms
+  Std Dev:     0.34ms
+  Rows:           1
+
+Count Nodes:
+  Mean:      125.32ms
+  Median:    124.60ms
+  Min:       124.10ms
+  Max:       136.96ms
+  Std Dev:     2.76ms
+  Rows:           1
+
+================================================================================

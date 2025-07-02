@@ -1,0 +1,70 @@
+ANÁLISE SIMPLES DE FK - SynapScale
+==================================================
+
+Cobertura de modelos: 61/11 (554.5%)
+Tabelas sem modelos: 45
+Total FK constraints: 236
+Issues identificados: 0
+
+TABELAS SEM MODELOS:
+
+RBAC:
+  - rbac_roles
+  - rbac_role_permissions
+  - rbac_permissions
+
+Auth Tokens:
+  - email_verification_tokens
+  - password_reset_tokens
+
+Agents:
+  - agent_configurations
+  - agent_models
+  - agent_tools
+  - agent_kbs
+  - agent_triggers
+  - agent_hierarchy
+  - agent_usage_metrics
+  - agent_error_logs
+  - agent_quotas
+  - agent_acl
+
+Audit:
+  - audit_log
+
+Payments:
+  - coupons
+  - payment_customers
+  - payment_providers
+  - invoices
+  - payment_methods
+  - subscriptions
+
+CRM/Marketing:
+  - contact_events
+  - contact_sources
+  - contacts
+  - contact_tags
+  - campaigns
+  - contact_lists
+  - campaign_contacts
+  - contact_interactions
+  - contact_notes
+  - contact_list_memberships
+
+Knowledge:
+  - knowledge_bases
+  - tools
+
+Others:
+  - alembic_version
+  - workspaces
+  - message_feedbacks
+  - node_executions
+  - node_categories
+  - conversion_journeys
+  - user_tenant_roles
+  - plan_provider_mappings
+  - webhook_logs
+  - nodes
+  - agents

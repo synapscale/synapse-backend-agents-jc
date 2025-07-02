@@ -1,0 +1,11 @@
+RELATÓRIO DE VALIDAÇÃO DE RELACIONAMENTOS RBAC
+================================================================================
+
+Total de sucessos: 17
+Total de issues: 4
+
+PROBLEMAS ENCONTRADOS:
+- ❌ RBACPermission.create_global_permission() falhou: Foreign key associated with column 'agents.user_id' could not find table 'users' with which to generate a foreign key to target column 'id'
+- ❌ RBACRole.create_system_role() falhou: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[User(users)]'. Original exception was: Foreign key associated with column 'agents.user_id' could not find table 'users' with which to generate a foreign key to target column 'id'
+- ❌ RBACRolePermission.create_assignment() falhou: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[User(users)]'. Original exception was: Foreign key associated with column 'agents.user_id' could not find table 'users' with which to generate a foreign key to target column 'id'
+- ❌ UserTenantRole.assign_role() falhou: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[User(users)]'. Original exception was: Foreign key associated with column 'agents.user_id' could not find table 'users' with which to generate a foreign key to target column 'id'

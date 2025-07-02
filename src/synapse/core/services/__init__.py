@@ -26,7 +26,7 @@ from .service_configuration import configure_services
 __all__ = [
     "BaseService",
     "ServiceContainer",
-    "ServiceLifetime", 
+    "ServiceLifetime",
     "ServiceDescriptor",
     "get_container",
     "register_singleton",
@@ -38,4 +38,4 @@ __all__ = [
     "BaseRepository",
     "UnitOfWork",
     "configure_services",
-] 
+]

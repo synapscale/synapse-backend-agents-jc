@@ -1,83 +1,107 @@
 """
-Schemas Pydantic para agents
+Schemas for Agent management.
 """
 
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, validator
-from datetime import datetime
+import datetime
+import uuid
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
-# Schemas base
+# ===== ENUMS ALINHADOS COM O BANCO =====
+
+
+class AgentStatus(str, Enum):
+    """Agent status - ALIGNED WITH THE DATABASE"""
+
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    DRAFT = "draft"
+    ARCHIVED = "archived"
+    ERROR = "error"
+
+
+class AgentEnvironment(str, Enum):
+    """Agent environment - ALIGNED WITH THE DATABASE"""
+
+    DEVELOPMENT = "development"
+    STAGING = "staging"
+    PRODUCTION = "production"
+
+
+class AgentScope(str, Enum):
+    GLOBAL = "global"
+    WORKSPACE = "workspace"
+    PRIVATE = "private"
+
+
+class TriggerType(str, Enum):
+    MANUAL = "manual"
+    SCHEDULED = "scheduled"
+    EVENT = "event"
+    WEBHOOK = "webhook"
+
+
+# ===== AGENT SCHEMAS (ALIGNED PERFECTLY WITH THE DATABASE) =====
+
+
 class AgentBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=255)
-    description: str | None = None
-    agent_type: str = Field(default="conversational")
-    personality: str | None = None
-    instructions: str | None = None
+    """Base schema for agent attributes."""
+
+    name: str = Field(..., max_length=255, description="Agent name")
+    description: Optional[str] = Field(None, description="Description")
+    is_active: bool = Field(True, description="Active agent")
+    status: AgentStatus = Field(AgentStatus.ACTIVE, description="Status")
+    priority: int = Field(1, ge=1, le=10, description="Priority (1-10)")
+    version: str = Field("1.0.0", max_length=20, description="Version")
+    environment: AgentEnvironment = Field(
+        AgentEnvironment.DEVELOPMENT, description="Environment"
+    )
+    workspace_id: Optional[uuid.UUID] = Field(None, description="Workspace ID")
+    current_config: Optional[uuid.UUID] = Field(
+        None, description="Active configuration ID"
+    )
 
 
 class AgentCreate(AgentBase):
-    model_provider: str = Field(default="openai")
-    model: str = Field(default="gpt-3.5-turbo")
-    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
-    max_tokens: int = Field(default=1000, ge=1, le=128000)
-    tools: list[str] = Field(default_factory=list)
-    knowledge_base: dict[str, Any] | None = None
-    avatar_url: str | None = None
+    """Schema for agent creation - ALIGNED WITH DATABASE"""
+
+    pass
 
 
 class AgentUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=255)
-    description: str | None = None
-    agent_type: str | None = None
-    personality: str | None = None
-    instructions: str | None = None
-    model_provider: str | None = None
-    model: str | None = None
-    temperature: float | None = Field(None, ge=0.0, le=2.0)
-    max_tokens: int | None = Field(None, ge=1, le=128000)
-    tools: list[str] | None = None
-    knowledge_base: dict[str, Any] | None = None
-    avatar_url: str | None = None
-    status: str | None = None
+    """Schema for agent updates - ALIGNED WITH DATABASE"""
+
+    name: Optional[str] = Field(None, max_length=255, description="Agent name")
+    description: Optional[str] = Field(None, description="Description")
+    is_active: Optional[bool] = Field(None, description="Active agent")
+    status: Optional[AgentStatus] = Field(None, description="Status")
+    priority: Optional[int] = Field(None, ge=1, le=10, description="Priority")
+    version: Optional[str] = Field(None, max_length=20, description="Version")
+    environment: Optional[AgentEnvironment] = Field(None, description="Environment")
+    current_config: Optional[uuid.UUID] = Field(
+        None, description="Active configuration ID"
+    )
 
 
 class AgentResponse(AgentBase):
-    id: str
-    user_id: str
-    workspace_id: str | None = None
-    model_provider: str
-    model: str
-    temperature: float
-    max_tokens: int
-    status: str
-    tools: list[str]
-    knowledge_base: dict[str, Any] | None = None
-    avatar_url: str | None = None
-    conversation_count: int
-    message_count: int
-    rating_average: float
-    rating_count: int
-    last_active_at: datetime | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    """Response schema for an agent - PERFECTLY ALIGNED WITH DATABASE"""
 
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "user_id", "workspace_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
+    id: uuid.UUID = Field(..., description="Agent ID")
+    user_id: uuid.UUID = Field(..., description="User ID")
+    tenant_id: uuid.UUID = Field(..., description="Tenant ID")
+    created_at: datetime.datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime.datetime = Field(..., description="Last update timestamp")
 
 
 class AgentListResponse(BaseModel):
-    items: list[AgentResponse]
-    total: int
-    page: int
-    size: int
-    pages: int
+    """Paginated list of agents."""
+
+    items: List[AgentResponse] = Field(..., description="List of agents")
+    total: int = Field(..., description="Total number of agents")
+
+
+# Re-export for compatibility from response_models.py
+AgentsResponse = AgentResponse

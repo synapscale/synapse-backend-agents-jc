@@ -1,116 +1,91 @@
-"""
-Modelo de atividades de workspace
-"""
-from sqlalchemy import Column, String, DateTime, JSON, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import UUID
+"""Workspace Activity Model"""
+
+from sqlalchemy import Column, String, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
 from synapse.database import Base
-from datetime import datetime, timezone
-import uuid
+
 
 class WorkspaceActivity(Base):
-    """
-    Modelo de atividade do workspace para auditoria e timeline
-    """
+    """Activity tracking within workspaces"""
+    
     __tablename__ = "workspace_activities"
     __table_args__ = {"schema": "synapscale_db"}
 
-    # Identificação
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="SET NULL"), nullable=True, index=True)
-    
-    # Dados da atividade
-    action = Column(String(100), nullable=False, index=True)  # workspace_created, member_added, etc.
-    resource_type = Column(String(50), nullable=False)  # workspace, member, project, etc.
-    resource_id = Column(String(255), nullable=True)  # ID do recurso afetado
-    description = Column(Text, nullable=False)  # Descrição legível da atividade
-    meta_data = Column(JSON, default=dict)  # Dados adicionais da atividade
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False)
+    action = Column(String(50), nullable=False)
+    resource_type = Column(String(50), nullable=False)
+    resource_id = Column(String(255), nullable=True)
+    description = Column(String(500), nullable=False)
+    activity_metadata = Column("metadata", JSONB, nullable=True)
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True)
+    updated_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
+    meta_data = Column(JSONB, nullable=True, server_default="{}")
 
-    # Relacionamentos
+    # Relationships
     workspace = relationship("Workspace", back_populates="activities")
-    user = relationship("User")
+    user = relationship("User", back_populates="workspace_activities")
+    tenant = relationship("Tenant", back_populates="workspace_activities")
 
-    def __repr__(self):
-        return f"<WorkspaceActivity(id={self.id}, action={self.action}, workspace_id={self.workspace_id})>"
+    def __str__(self):
+        return f"WorkspaceActivity(action={self.action}, resource={self.resource_type})"
 
-    def to_dict(self):
-        """Converte o modelo para dicionário"""
-        return {
-            "id": str(self.id),
-            "workspace_id": str(self.workspace_id),
-            "user_id": str(self.user_id) if self.user_id else None,
-            "action": self.action,
-            "resource_type": self.resource_type,
-            "resource_id": self.resource_id,
-            "description": self.description,
-            "meta_data": self.meta_data,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+    @property
+    def action_display(self):
+        """Get human-readable action description"""
+        action_map = {
+            "create": "Created",
+            "update": "Updated", 
+            "delete": "Deleted",
+            "view": "Viewed",
+            "share": "Shared",
+            "invite": "Invited",
+            "join": "Joined",
+            "leave": "Left",
+            "export": "Exported",
+            "import": "Imported"
         }
+        return action_map.get(self.action, self.action.title())
 
     @classmethod
-    def create_workspace_activity(
-        cls,
-        workspace_id: str,
-        user_id: str,
-        action: str,
-        description: str,
-        resource_type: str = "workspace",
-        resource_id: str = None,
-        meta_data: dict = None
-    ):
-        """Cria uma nova atividade de workspace"""
-        return cls(
+    def log_activity(cls, session, workspace_id, user_id, action, resource_type, 
+                    description, resource_id=None, metadata=None, ip_address=None, 
+                    user_agent=None, tenant_id=None):
+        """Log a new workspace activity"""
+        activity = cls(
             workspace_id=workspace_id,
             user_id=user_id,
             action=action,
             resource_type=resource_type,
-            resource_id=resource_id or workspace_id,
+            resource_id=resource_id,
             description=description,
-            meta_data=meta_data or {}
+            activity_metadata=metadata,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            tenant_id=tenant_id,
+            created_at=func.now()
         )
+        session.add(activity)
+        return activity
 
     @classmethod
-    def create_member_activity(
-        cls,
-        workspace_id: str,
-        user_id: str,
-        action: str,
-        description: str,
-        member_id: str,
-        meta_data: dict = None
-    ):
-        """Cria uma atividade relacionada a membros"""
-        return cls(
-            workspace_id=workspace_id,
-            user_id=user_id,
-            action=action,
-            resource_type="member",
-            resource_id=member_id,
-            description=description,
-            meta_data=meta_data or {}
-        )
+    def get_workspace_timeline(cls, session, workspace_id, limit=50, offset=0):
+        """Get timeline of workspace activities"""
+        return session.query(cls).filter(
+            cls.workspace_id == workspace_id
+        ).order_by(cls.created_at.desc()).limit(limit).offset(offset).all()
 
     @classmethod
-    def create_project_activity(
-        cls,
-        workspace_id: str,
-        user_id: str,
-        action: str,
-        description: str,
-        project_id: str,
-        meta_data: dict = None
-    ):
-        """Cria uma atividade relacionada a projetos"""
-        return cls(
-            workspace_id=workspace_id,
-            user_id=user_id,
-            action=action,
-            resource_type="project",
-            resource_id=project_id,
-            description=description,
-            meta_data=meta_data or {}
-        ) 
+    def get_user_activities(cls, session, user_id, workspace_id=None, limit=50):
+        """Get activities for a specific user"""
+        query = session.query(cls).filter(cls.user_id == user_id)
+        if workspace_id:
+            query = query.filter(cls.workspace_id == workspace_id)
+        return query.order_by(cls.created_at.desc()).limit(limit).all()

@@ -1,0 +1,215 @@
+---
+description: "Regras para gerenciamento de scripts de teste, validação e análise"
+globs: ["**/*.py"]
+alwaysApply: true
+---
+# 🧪 REGRA CRÍTICA - GERENCIAMENTO DE SCRIPTS DE TESTE
+
+## **🚨 REGRA ABSOLUTA: REUTILIZAR ANTES DE CRIAR**
+
+**CONTEXTO**: O repositório está sendo poluído com scripts de teste/validação/análise duplicados e abandonados. Precisamos manter organização e reutilizar código existente.
+
+**❌ PROIBIDO:**
+- Criar novos scripts de teste/validação/análise sem verificar se já existe similar
+- Deixar scripts na raiz do repositório quando podem estar em `tests/`
+- Abandonar scripts após uso sem limpeza
+- Duplicar lógica de teste em novos arquivos
+- Criar scripts pontuais sem plano de limpeza
+
+**✅ OBRIGATÓRIO:**
+
+## 1. **VERIFICAÇÃO ANTES DE CRIAR**
+```bash
+# ✅ SEMPRE verificar scripts existentes primeiro
+ls -la *.py | grep -E "(test|check|validate|verify|analyze)"
+find tests/ -name "*.py" | grep -i "similar_functionality"
+```
+
+## 2. **PRIORIDADE DE REUTILIZAÇÃO**
+```python
+# ✅ SEMPRE otimizar scripts existentes ao invés de criar novos
+# Exemplo: Se existe test_model_validation.py, EDITAR ele para adicionar novos testes
+# ao invés de criar validate_models_comprehensive.py
+
+# ❌ ERRADO: Criar novo script
+# create_file("test_new_validation.py", content="...")
+
+# ✅ CORRETO: Otimizar existente
+# edit_file("tests/test_model_validation.py", 
+#           old_str="# existing tests", 
+#           new_str="# existing tests\n# new validation logic")
+```
+
+## 3. **ORGANIZAÇÃO OBRIGATÓRIA**
+```
+✅ ESTRUTURA CORRETA:
+tests/
+├── unit/                    # Testes unitários
+├── integration/            # Testes de integração
+├── analysis/               # Scripts de análise
+├── validation/             # Scripts de validação
+└── utils/                  # Utilitários de teste
+
+❌ EVITAR NA RAIZ:
+├── test_something.py       # Deve estar em tests/
+├── check_database.py       # Deve estar em tests/analysis/
+├── validate_models.py      # Deve estar em tests/validation/
+├── analyze_*.py           # Deve estar em tests/analysis/
+```
+
+## 4. **SCRIPTS PONTUAIS - LIMPEZA OBRIGATÓRIA**
+```python
+# ✅ Para scripts temporários/pontuais:
+
+# 1. Criar em local adequado
+script_path = "tests/temp/temp_analysis_20250107.py"
+
+# 2. Usar com documentação clara
+"""
+SCRIPT TEMPORÁRIO - DELETAR APÓS USO
+Criado: 2025-01-07
+Propósito: Análise pontual de performance
+Deletar após: Análise concluída
+"""
+
+# 3. SEMPRE deletar após uso
+# TODO: Deletar este script após análise concluída ✅
+```
+
+## 5. **WORKFLOW OBRIGATÓRIO**
+```bash
+# ✅ Antes de criar qualquer script de teste/análise:
+
+# 1. Verificar se existe similar
+echo "🔍 Verificando scripts existentes..."
+find . -name "*.py" -type f | grep -E "(test|check|validate|verify|analyze)" | head -10
+
+# 2. Se existe similar, EDITAR ao invés de criar novo
+echo "✏️ Editando script existente ao invés de criar novo..."
+
+# 3. Se não existe, criar em local correto
+echo "📁 Criando em tests/categoria_adequada/"
+
+# 4. Para scripts pontuais, adicionar comentário de limpeza
+echo "🗑️ Adicionando TODO para limpeza posterior..."
+
+# 5. Após uso, SEMPRE limpar
+echo "✅ Limpando scripts temporários..."
+```
+
+## 6. **SCRIPTS PERMITIDOS NA RAIZ (APENAS)**
+
+```python
+# ✅ ÚNICOS scripts permitidos na raiz (casos excepcionais):
+ALLOWED_ROOT_SCRIPTS = [
+    "alembic.ini",           # Configuração Alembic
+    "dev.sh",                # Script de desenvolvimento
+    "prod.sh",               # Script de produção  
+    "setup.sh",              # Setup inicial do projeto
+    "pyproject.toml",        # Configuração Python
+    "requirements.txt",      # Dependências
+    "run_with_memory_bank.py" # Script específico do projeto
+]
+
+# ❌ Qualquer outro script de teste/análise DEVE estar em tests/
+```
+
+## 7. **VERIFICAÇÃO PRÉ-COMMIT**
+```bash
+# ✅ Checklist obrigatório antes de commit:
+echo "📋 Verificações de scripts:"
+echo "- [ ] Não criei script duplicado quando já existia similar?"
+echo "- [ ] Scripts de teste estão em tests/ e não na raiz?"
+echo "- [ ] Scripts pontuais têm TODO para limpeza?"
+echo "- [ ] Reutilizei código existente ao máximo?"
+echo "- [ ] Scripts temporários foram deletados após uso?"
+```
+
+## 8. **PENALIDADES POR VIOLAÇÃO**
+- **1ª violação**: Refatorar imediatamente
+- **2ª violação**: Revisar toda estrutura de testes
+- **3ª violação**: Limpeza completa do repositório
+
+## **🎯 REGRA DE OURO:**
+> "Se existe similar, EDITE. Se não existe, crie em tests/. Se é pontual, DELETE após uso."
+
+## 9. **EXEMPLOS PRÁTICOS**
+
+### ✅ CORRETO - Reutilizando script existente
+```python
+# Cenário: Preciso validar novos models
+# Encontrei: tests/validation/test_model_validation.py
+
+# Ao invés de criar novo, EDITO o existente:
+edit_file("tests/validation/test_model_validation.py",
+    old_str="def test_basic_models():",
+    new_str="""def test_basic_models():
+    # testes existentes...
+
+def test_new_models():
+    # novos testes aqui
+    pass""")
+```
+
+### ❌ INCORRETO - Criando desnecessariamente
+```python
+# ❌ NÃO FAZER: Criar validate_new_models.py quando já existe similar
+create_file("validate_new_models.py", content="# duplicando lógica...")
+```
+
+### ✅ CORRETO - Script pontual com limpeza
+```python
+# Script para análise específica e temporária
+create_file("tests/temp/analysis_performance_2025_01_07.py", 
+    content="""
+# SCRIPT TEMPORÁRIO - DELETAR APÓS 2025-01-07
+# Análise pontual de performance dos endpoints
+# TODO: Deletar após análise completa
+""")
+
+# Após uso:
+# Bash("rm tests/temp/analysis_performance_2025_01_07.py")
+```
+
+## 10. **COMANDOS ÚTEIS PARA VERIFICAÇÃO**
+
+```bash
+# Listar todos os scripts de teste na raiz (para limpeza)
+ls -la *.py | grep -E "(test|check|validate|verify|analyze|comprehensive)"
+
+# Encontrar scripts similares por funcionalidade
+find . -name "*.py" -exec grep -l "function_similar" {} \;
+
+# Verificar estrutura de tests/
+tree tests/ -I "__pycache__"
+
+# Contar scripts duplicados/similares
+find . -name "*test*.py" -o -name "*check*.py" -o -name "*validate*.py" | wc -l
+
+# Identificar scripts órfãos na raiz que deveriam estar em tests/
+find . -maxdepth 1 -name "*.py" -type f | grep -E "(test|check|validate|verify|analyze|comprehensive)" | grep -v -E "(alembic|dev|prod|setup|run_with_memory_bank)"
+```
+
+## 11. **PROCESSO DE LIMPEZA AUTOMÁTICA**
+
+```bash
+# Script de limpeza semanal recomendado
+#!/bin/bash
+
+echo "🧹 Iniciando limpeza de scripts..."
+
+# 1. Identificar scripts órfãos na raiz
+echo "📋 Scripts órfãos na raiz:"
+find . -maxdepth 1 -name "*.py" -type f | grep -E "(test|check|validate|verify|analyze|comprehensive)" | grep -v -E "(alembic|dev|prod|setup|run_with_memory_bank)"
+
+# 2. Listar scripts temporários antigos
+echo "⏰ Scripts temporários antigos (>7 dias):"
+find tests/temp/ -name "*.py" -mtime +7 2>/dev/null || echo "Pasta tests/temp/ não existe"
+
+# 3. Verificar duplicações
+echo "🔍 Possíveis duplicações:"
+find . -name "*test*.py" -o -name "*check*.py" -o -name "*validate*.py" | sort | uniq -c | grep -v "1 "
+
+# 4. Sugerir consolidações
+echo "💡 Sugestões de consolidação disponíveis em .cursor/rules/new_tests_scripts_rules.mdc"
+```

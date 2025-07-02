@@ -79,7 +79,9 @@ class CacheManager:
             await self.redis_client.ping()
             logger.info("✅ Cache Redis conectado com sucesso")
         except Exception as e:
-            logger.warning(f"⚠️  Redis não disponível, usando apenas cache em memória: {e}")
+            logger.warning(
+                f"⚠️  Redis não disponível, usando apenas cache em memória: {e}"
+            )
             self.redis_client = None
 
     def _generate_key(self, key: str) -> str:
@@ -231,9 +233,7 @@ class CacheManager:
         """Remove itens expirados do cache em memória"""
         now = datetime.now()
         expired_keys = [
-            key
-            for key, data in self.memory_cache.items()
-            if data["expires_at"] <= now
+            key for key, data in self.memory_cache.items() if data["expires_at"] <= now
         ]
 
         for key in expired_keys:
@@ -242,8 +242,7 @@ class CacheManager:
         # Se ainda está cheio, remove os mais antigos
         if len(self.memory_cache) >= self.config.max_memory_cache_size:
             sorted_items = sorted(
-                self.memory_cache.items(),
-                key=lambda x: x[1]["created_at"]
+                self.memory_cache.items(), key=lambda x: x[1]["created_at"]
             )
             # Remove 25% dos itens mais antigos
             remove_count = max(1, len(sorted_items) // 4)
@@ -254,14 +253,14 @@ class CacheManager:
     async def get_stats(self) -> CacheStats:
         """Retorna estatísticas do cache"""
         self.stats.memory_usage = len(self.memory_cache)
-        
+
         if self.redis_client:
             try:
                 info = await self.redis_client.info("memory")
                 self.stats.redis_usage = info.get("used_memory", 0)
             except Exception:
                 self.stats.redis_usage = 0
-        
+
         return self.stats
 
     async def health_check(self) -> dict[str, Any]:
@@ -312,7 +311,7 @@ async def get_cache_manager() -> CacheManager:
 def cache_result(ttl: int | None = None, key_prefix: str = ""):
     """Decorator para cache de resultados de função"""
     cache_ttl = ttl or settings.CACHE_TTL_DEFAULT
-    
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -326,16 +325,18 @@ def cache_result(ttl: int | None = None, key_prefix: str = ""):
             # Tenta buscar no cache
             cache_manager = await get_cache_manager()
             cached_result = await cache_manager.get(cache_key)
-            
+
             if cached_result is not None:
                 return cached_result
 
             # Executa função e armazena resultado
             result = await func(*args, **kwargs)
             await cache_manager.set(cache_key, result, cache_ttl)
-            
+
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -411,18 +412,22 @@ class CacheMiddleware:
             # Retorna resposta do cache
             response_body = cached_response["body"]
             response_headers = cached_response["headers"]
-            
+
             async def send_cached_response():
-                await send({
-                    "type": "http.response.start",
-                    "status": 200,
-                    "headers": response_headers,
-                })
-                await send({
-                    "type": "http.response.body",
-                    "body": response_body,
-                })
-            
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": response_headers,
+                    }
+                )
+                await send(
+                    {
+                        "type": "http.response.body",
+                        "body": response_body,
+                    }
+                )
+
             await send_cached_response()
             return
 
@@ -433,19 +438,19 @@ class CacheMiddleware:
 
         async def send_wrapper(message):
             nonlocal response_body, response_headers, response_status
-            
+
             if message["type"] == "http.response.start":
                 response_status = message["status"]
                 response_headers = message.get("headers", [])
-                
+
                 # Adiciona header de cache
                 response_headers.append((b"x-cache", b"MISS"))
-                
+
                 await send(message)
-                
+
             elif message["type"] == "http.response.body":
                 response_body += message.get("body", b"")
-                
+
                 # Se é o último chunk, armazena no cache
                 if not message.get("more_body", False):
                     if response_status == 200:
@@ -454,7 +459,7 @@ class CacheMiddleware:
                             "headers": response_headers,
                         }
                         await cache_manager.set(cache_key, cache_data, self.cache_ttl)
-                
+
                 await send(message)
 
         await self.app(scope, receive, send_wrapper)

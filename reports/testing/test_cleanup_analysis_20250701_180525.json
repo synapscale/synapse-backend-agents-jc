@@ -1,0 +1,490 @@
+{
+  "timestamp": "2025-07-01T18:05:25.873657",
+  "total_files": 54,
+  "categories": {
+    "current_functional_tests": [
+      "test_error_handling_system.py",
+      "test_endpoints_functional.py",
+      "test_endpoints_comprehensive.py",
+      "test_auth_endpoints.py",
+      "test_agents_system.py",
+      "test_llm_endpoints.py"
+    ],
+    "database_validation": [
+      "final_relationship_test.py",
+      "comprehensive_validation.py",
+      "final_database_alignment_test.py",
+      "validate_complete_structure.py",
+      "validate_models_comprehensive.py",
+      "check_database_structure.py"
+    ],
+    "model_validation": [
+      "comprehensive_model_test.py",
+      "verify_models_detailed.py",
+      "test_model_validation.py",
+      "analyze_remaining_models.py",
+      "test_models_detailed.py",
+      "check_missing_models.py"
+    ],
+    "deprecated_tests": [
+      "test_llm_endpoint.py",
+      "test_registration_debug.py",
+      "test_simple_imports.py",
+      "test_llm_endpoint_simple.py",
+      "test_simple_models.py"
+    ],
+    "analysis_reports": [
+      "database_structure_analysis_20250701_180429.json",
+      "test_cleanup_analysis_20250701_175114.json",
+      "test_cleanup_analysis_20250701_180042.json",
+      "database_structure_analysis_20250701_175004.json",
+      "database_structure_analysis_20250701_175935.json",
+      "test_cleanup_analysis_20250701_175610.json",
+      "database_structure_analysis_20250701_175510.json",
+      "synapscale_api_test_report_20250701_070113.json"
+    ],
+    "temporary_files": [
+      "temp_backup.py",
+      "decrypt_existing_data.py"
+    ],
+    "documentation": [
+      "ENDPOINTS_IMPLEMENTATION_SUMMARY.md",
+      "README.md",
+      "AGENTS_API_DOCUMENTATION.md",
+      "SECURITY_API_KEYS.md",
+      "FINAL_VALIDATION_REPORT.md",
+      "DATABASE_OPTIMIZED_RESTRUCTURING_PLAN.md",
+      "DATABASE_RESTRUCTURING_OPINION.md",
+      "CLAUDE.md",
+      "OPENAPI_AGENTS_UPDATE_SUMMARY.md",
+      "VALIDATION_REPORT.md",
+      "AGENTS.md"
+    ],
+    "config_files": [
+      "test_config.json",
+      "current_openapi.json"
+    ],
+    "other": [
+      "test_service_layer_integration.py",
+      "setup_test_user_api_keys.py",
+      "test_service_architecture.py",
+      "test_complete_llm_system.py",
+      "validate_no_hardcoded_final.py",
+      "tasks.json",
+      "setup_improved_testing.py",
+      "test_cleanup_analysis.py"
+    ]
+  },
+  "recommendations": {
+    "keep": [
+      "test_error_handling_system.py",
+      "test_endpoints_functional.py",
+      "test_endpoints_comprehensive.py",
+      "test_auth_endpoints.py",
+      "test_agents_system.py",
+      "test_llm_endpoints.py",
+      "tasks.json"
+    ],
+    "review_consolidate": [
+      "final_relationship_test.py",
+      "comprehensive_validation.py",
+      "final_database_alignment_test.py",
+      "validate_complete_structure.py",
+      "validate_models_comprehensive.py",
+      "check_database_structure.py",
+      "comprehensive_model_test.py",
+      "verify_models_detailed.py",
+      "test_model_validation.py",
+      "analyze_remaining_models.py",
+      "test_models_detailed.py",
+      "check_missing_models.py"
+    ],
+    "remove": [
+      "test_llm_endpoint.py",
+      "test_registration_debug.py",
+      "test_simple_imports.py",
+      "test_llm_endpoint_simple.py",
+      "test_simple_models.py",
+      "temp_backup.py",
+      "decrypt_existing_data.py"
+    ],
+    "archive": [
+      "database_structure_analysis_20250701_180429.json",
+      "test_cleanup_analysis_20250701_175114.json",
+      "test_cleanup_analysis_20250701_180042.json",
+      "database_structure_analysis_20250701_175004.json",
+      "database_structure_analysis_20250701_175935.json",
+      "test_cleanup_analysis_20250701_175610.json",
+      "database_structure_analysis_20250701_175510.json",
+      "synapscale_api_test_report_20250701_070113.json",
+      "ENDPOINTS_IMPLEMENTATION_SUMMARY.md",
+      "FINAL_VALIDATION_REPORT.md",
+      "OPENAPI_AGENTS_UPDATE_SUMMARY.md",
+      "VALIDATION_REPORT.md"
+    ]
+  },
+  "file_details": {
+    "ENDPOINTS_IMPLEMENTATION_SUMMARY.md": {
+      "size_bytes": 11330,
+      "size_kb": 11.1,
+      "modified": "2025-07-01T13:03:36.607693",
+      "lines": 297
+    },
+    "README.md": {
+      "size_bytes": 4937,
+      "size_kb": 4.8,
+      "modified": "2025-06-25T11:51:32.244966",
+      "lines": 138
+    },
+    "database_structure_analysis_20250701_180429.json": {
+      "size_bytes": 656450,
+      "size_kb": 641.1,
+      "modified": "2025-07-01T18:04:29.341324",
+      "lines": 20260
+    },
+    "AGENTS_API_DOCUMENTATION.md": {
+      "size_bytes": 7452,
+      "size_kb": 7.3,
+      "modified": "2025-07-01T09:47:09.078870",
+      "lines": 238
+    },
+    "test_service_layer_integration.py": {
+      "size_bytes": 10737,
+      "size_kb": 10.5,
+      "modified": "2025-07-01T13:56:42.442328",
+      "lines": 281
+    },
+    "setup_test_user_api_keys.py": {
+      "size_bytes": 7896,
+      "size_kb": 7.7,
+      "modified": "2025-07-01T13:56:40.086401",
+      "lines": 238
+    },
+    "comprehensive_model_test.py": {
+      "size_bytes": 5317,
+      "size_kb": 5.2,
+      "modified": "2025-07-01T17:07:02.352619",
+      "lines": 154
+    },
+    "test_service_architecture.py": {
+      "size_bytes": 4653,
+      "size_kb": 4.5,
+      "modified": "2025-07-01T13:56:42.395265",
+      "lines": 145
+    },
+    "test_error_handling_system.py": {
+      "size_bytes": 8827,
+      "size_kb": 8.6,
+      "modified": "2025-07-01T13:56:42.456917",
+      "lines": 294
+    },
+    "test_endpoints_functional.py": {
+      "size_bytes": 23708,
+      "size_kb": 23.2,
+      "modified": "2025-07-01T13:56:42.476268",
+      "lines": 641
+    },
+    "temp_backup.py": {
+      "size_bytes": 66643,
+      "size_kb": 65.1,
+      "modified": "2025-07-01T13:56:43.618998",
+      "lines": 1760
+    },
+    "test_cleanup_analysis_20250701_175114.json": {
+      "size_bytes": 80042,
+      "size_kb": 78.2,
+      "modified": "2025-07-01T17:51:14.731105",
+      "lines": 1672
+    },
+    "final_relationship_test.py": {
+      "size_bytes": 6486,
+      "size_kb": 6.3,
+      "modified": "2025-07-01T16:47:07.270830",
+      "lines": 175
+    },
+    "test_cleanup_analysis_20250701_180042.json": {
+      "size_bytes": 42559,
+      "size_kb": 41.6,
+      "modified": "2025-07-01T18:00:42.388390",
+      "lines": 1508
+    },
+    "comprehensive_validation.py": {
+      "size_bytes": 9676,
+      "size_kb": 9.4,
+      "modified": "2025-07-01T16:44:41.446514",
+      "lines": 273
+    },
+    "SECURITY_API_KEYS.md": {
+      "size_bytes": 3049,
+      "size_kb": 3.0,
+      "modified": "2025-06-25T18:18:57.572930",
+      "lines": 135
+    },
+    "verify_models_detailed.py": {
+      "size_bytes": 5184,
+      "size_kb": 5.1,
+      "modified": "2025-07-01T17:04:58.148333",
+      "lines": 157
+    },
+    "test_model_validation.py": {
+      "size_bytes": 7379,
+      "size_kb": 7.2,
+      "modified": "2025-07-01T16:46:20.748352",
+      "lines": 158
+    },
+    "database_structure_analysis_20250701_175004.json": {
+      "size_bytes": 1227836,
+      "size_kb": 1199.1,
+      "modified": "2025-07-01T17:50:04.832125",
+      "lines": 38698
+    },
+    "FINAL_VALIDATION_REPORT.md": {
+      "size_bytes": 4474,
+      "size_kb": 4.4,
+      "modified": "2025-07-01T17:00:33.974922",
+      "lines": 139
+    },
+    "test_llm_endpoint.py": {
+      "size_bytes": 4377,
+      "size_kb": 4.3,
+      "modified": "2025-07-01T13:56:42.268771",
+      "lines": 134
+    },
+    "final_database_alignment_test.py": {
+      "size_bytes": 5750,
+      "size_kb": 5.6,
+      "modified": "2025-07-01T17:23:53.243423",
+      "lines": 172
+    },
+    "database_structure_analysis_20250701_175935.json": {
+      "size_bytes": 505908,
+      "size_kb": 494.1,
+      "modified": "2025-07-01T17:59:35.380232",
+      "lines": 16202
+    },
+    "analyze_remaining_models.py": {
+      "size_bytes": 7255,
+      "size_kb": 7.1,
+      "modified": "2025-07-01T16:11:12.843788",
+      "lines": 139
+    },
+    "DATABASE_OPTIMIZED_RESTRUCTURING_PLAN.md": {
+      "size_bytes": 32872,
+      "size_kb": 32.1,
+      "modified": "2025-06-30T21:13:37.993017",
+      "lines": 407
+    },
+    "DATABASE_RESTRUCTURING_OPINION.md": {
+      "size_bytes": 9709,
+      "size_kb": 9.5,
+      "modified": "2025-06-30T21:16:48.885903",
+      "lines": 131
+    },
+    "test_registration_debug.py": {
+      "size_bytes": 10212,
+      "size_kb": 10.0,
+      "modified": "2025-07-01T13:56:42.467202",
+      "lines": 301
+    },
+    "test_complete_llm_system.py": {
+      "size_bytes": 11252,
+      "size_kb": 11.0,
+      "modified": "2025-07-01T13:56:41.841029",
+      "lines": 344
+    },
+    "CLAUDE.md": {
+      "size_bytes": 13404,
+      "size_kb": 13.1,
+      "modified": "2025-06-25T07:22:33.671290",
+      "lines": 417
+    },
+    "validate_no_hardcoded_final.py": {
+      "size_bytes": 8067,
+      "size_kb": 7.9,
+      "modified": "2025-07-01T13:56:43.101014",
+      "lines": 244
+    },
+    "test_models_detailed.py": {
+      "size_bytes": 2513,
+      "size_kb": 2.5,
+      "modified": "2025-07-01T16:09:32.618271",
+      "lines": 72
+    },
+    "tasks.json": {
+      "size_bytes": 21236,
+      "size_kb": 20.7,
+      "modified": "2025-07-01T15:36:38.110972",
+      "lines": 498
+    },
+    "test_endpoints_comprehensive.py": {
+      "size_bytes": 20968,
+      "size_kb": 20.5,
+      "modified": "2025-07-01T13:56:42.565735",
+      "lines": 609
+    },
+    "validate_complete_structure.py": {
+      "size_bytes": 10064,
+      "size_kb": 9.8,
+      "modified": "2025-07-01T16:51:03.193858",
+      "lines": 277
+    },
+    "test_config.json": {
+      "size_bytes": 234,
+      "size_kb": 0.2,
+      "modified": "2025-06-25T14:09:32.952885",
+      "lines": 9
+    },
+    "test_simple_imports.py": {
+      "size_bytes": 1364,
+      "size_kb": 1.3,
+      "modified": "2025-07-01T13:56:42.306726",
+      "lines": 52
+    },
+    "test_auth_endpoints.py": {
+      "size_bytes": 14022,
+      "size_kb": 13.7,
+      "modified": "2025-07-01T13:56:42.281247",
+      "lines": 358
+    },
+    "setup_improved_testing.py": {
+      "size_bytes": 3151,
+      "size_kb": 3.1,
+      "modified": "2025-07-01T13:56:40.019057",
+      "lines": 112
+    },
+    "test_llm_endpoint_simple.py": {
+      "size_bytes": 1819,
+      "size_kb": 1.8,
+      "modified": "2025-07-01T13:56:42.232308",
+      "lines": 62
+    },
+    "test_cleanup_analysis_20250701_175610.json": {
+      "size_bytes": 19180,
+      "size_kb": 18.7,
+      "modified": "2025-07-01T17:56:10.681239",
+      "lines": 796
+    },
+    "test_agents_system.py": {
+      "size_bytes": 4496,
+      "size_kb": 4.4,
+      "modified": "2025-07-01T13:56:41.639035",
+      "lines": 135
+    },
+    "OPENAPI_AGENTS_UPDATE_SUMMARY.md": {
+      "size_bytes": 5073,
+      "size_kb": 5.0,
+      "modified": "2025-07-01T09:58:55.713822",
+      "lines": 194
+    },
+    "check_missing_models.py": {
+      "size_bytes": 5387,
+      "size_kb": 5.3,
+      "modified": "2025-07-01T15:53:37.332604",
+      "lines": 134
+    },
+    "VALIDATION_REPORT.md": {
+      "size_bytes": 5348,
+      "size_kb": 5.2,
+      "modified": "2025-07-01T16:47:04.299426",
+      "lines": 143
+    },
+    "test_cleanup_analysis.py": {
+      "size_bytes": 10672,
+      "size_kb": 10.4,
+      "modified": "2025-07-01T18:05:18.999233",
+      "lines": 279
+    },
+    "database_structure_analysis_20250701_175510.json": {
+      "size_bytes": 574899,
+      "size_kb": 561.4,
+      "modified": "2025-07-01T17:55:10.281295",
+      "lines": 20827
+    },
+    "synapscale_api_test_report_20250701_070113.json": {
+      "size_bytes": 63940,
+      "size_kb": 62.4,
+      "modified": "2025-07-01T07:01:13.916226",
+      "lines": 2477
+    },
+    "test_llm_endpoints.py": {
+      "size_bytes": 16722,
+      "size_kb": 16.3,
+      "modified": "2025-07-01T13:56:42.487451",
+      "lines": 525
+    },
+    "current_openapi.json": {
+      "size_bytes": 851654,
+      "size_kb": 831.7,
+      "modified": "2025-07-01T09:57:50.837478",
+      "lines": 30008
+    },
+    "test_simple_models.py": {
+      "size_bytes": 1073,
+      "size_kb": 1.0,
+      "modified": "2025-07-01T16:05:28.807480",
+      "lines": 32
+    },
+    "validate_models_comprehensive.py": {
+      "size_bytes": 8467,
+      "size_kb": 8.3,
+      "modified": "2025-07-01T16:18:20.558617",
+      "lines": 187
+    },
+    "AGENTS.md": {
+      "size_bytes": 13404,
+      "size_kb": 13.1,
+      "modified": "2025-06-25T07:22:33.675756",
+      "lines": 417
+    },
+    "decrypt_existing_data.py": {
+      "size_bytes": 6930,
+      "size_kb": 6.8,
+      "modified": "2025-07-01T13:56:39.848926",
+      "lines": 230
+    },
+    "check_database_structure.py": {
+      "size_bytes": 9559,
+      "size_kb": 9.3,
+      "modified": "2025-07-01T18:03:49.766875",
+      "lines": 279
+    }
+  },
+  "summary": {
+    "current_functional_tests": {
+      "count": 6,
+      "total_size_kb": 86.7
+    },
+    "database_validation": {
+      "count": 6,
+      "total_size_kb": 48.7
+    },
+    "model_validation": {
+      "count": 6,
+      "total_size_kb": 32.4
+    },
+    "deprecated_tests": {
+      "count": 5,
+      "total_size_kb": 18.4
+    },
+    "analysis_reports": {
+      "count": 8,
+      "total_size_kb": 3096.6
+    },
+    "temporary_files": {
+      "count": 2,
+      "total_size_kb": 71.9
+    },
+    "documentation": {
+      "count": 11,
+      "total_size_kb": 108.6
+    },
+    "config_files": {
+      "count": 2,
+      "total_size_kb": 831.9
+    },
+    "other": {
+      "count": 8,
+      "total_size_kb": 75.8
+    }
+  }
+}

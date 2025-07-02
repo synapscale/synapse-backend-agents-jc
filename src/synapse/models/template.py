@@ -1,28 +1,27 @@
 """
-Modelo WorkflowTemplate para marketplace de templates
-Criado por José - um desenvolvedor Full Stack
-Sistema completo de templates compartilháveis
+Modelos para templates de workflows
+Sistema completo de marketplace de templates
 """
 
+from datetime import datetime
+from enum import Enum
+from typing import Optional
+import uuid
+
 from sqlalchemy import (
+    Boolean,
     Column,
+    DateTime,
+    ForeignKey,
     Integer,
     String,
     Text,
-    DateTime,
-    Boolean,
-    ForeignKey,
-    JSON,
-    Float,
     DECIMAL,
-    UUID,
+    func,
+    text,
 )
+from sqlalchemy.dialects.postgresql import UUID, JSON, JSONB
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import JSONB
-from enum import Enum
-from sqlalchemy.sql import text
-import uuid
 
 from synapse.database import Base
 
@@ -71,55 +70,64 @@ class WorkflowTemplate(Base):
     """
 
     __tablename__ = "workflow_templates"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
     description = Column(Text)
     category = Column(String(100), nullable=False)
-    tags = Column(Text)
+    tags = Column(JSONB, nullable=True)
     workflow_definition = Column(JSONB, nullable=False)
     preview_image = Column(String(500))
-    author_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
+    author_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+    )
     version = Column(String(50), nullable=False, server_default=text("'1.0.0'"))
     is_public = Column(Boolean, nullable=False, server_default=text("false"))
     is_featured = Column(Boolean, nullable=False, server_default=text("false"))
     downloads_count = Column(Integer, nullable=False, server_default=text("0"))
-    rating_average = Column(DECIMAL(3,2), nullable=False, server_default=text("0.00"))
+    rating_average = Column(DECIMAL(3, 2), nullable=False, server_default=text("0.00"))
     rating_count = Column(Integer, nullable=False, server_default=text("0"))
-    price = Column(DECIMAL(10,2), nullable=False, server_default=text("0.00"))
+    price = Column(DECIMAL(10, 2), nullable=False, server_default=text("0.00"))
     is_free = Column(Boolean, nullable=False, server_default=text("true"))
     license = Column(String(50), nullable=False, server_default=text("'MIT'"))
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     # Informações básicas
     title = Column(String(255), nullable=False)  # Título público
     short_description = Column(String(500), nullable=True)
 
     # Relacionamentos
-    original_workflow_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id"), nullable=True, index=True)
+    original_workflow_id = Column(
+        UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=True, index=True
+    )
 
-    # Categorização
-    tags = Column(JSON, nullable=True)  # Lista de tags
-
-    # Status e visibilidade
+    # Status e visibilidade (campos adicionais - mantendo apenas o que não existe no banco principal)
     status = Column(String(20), default=TemplateStatus.DRAFT.value, index=True)
     is_verified = Column(Boolean, default=False, index=True)
 
-    # Licenciamento
+    # Licenciamento (campo adicional)
     license_type = Column(String(20), default=TemplateLicense.FREE.value, index=True)
 
-    # Conteúdo do template
-    workflow_data = Column(JSON, nullable=False)  # Estrutura completa do workflow
-    nodes_data = Column(JSON, nullable=False)  # Dados dos nós
-    connections_data = Column(JSON, nullable=True)  # Conexões entre nós
+    # Conteúdo do template (campos adicionais para compatibilidade)
+    workflow_data = Column(JSONB, nullable=False)  # Estrutura completa do workflow
+    nodes_data = Column(JSONB, nullable=False)  # Dados dos nós
+    connections_data = Column(JSONB, nullable=True)  # Conexões entre nós
 
     # Configurações
-    required_variables = Column(JSON, nullable=True)  # Variáveis obrigatórias
-    optional_variables = Column(JSON, nullable=True)  # Variáveis opcionais
-    default_config = Column(JSON, nullable=True)  # Configuração padrão
+    required_variables = Column(JSONB, nullable=True)  # Variáveis obrigatórias
+    optional_variables = Column(JSONB, nullable=True)  # Variáveis opcionais
+    default_config = Column(JSONB, nullable=True)  # Configuração padrão
 
     # Metadados
     compatibility_version = Column(
@@ -128,34 +136,37 @@ class WorkflowTemplate(Base):
     estimated_duration = Column(Integer, nullable=True)  # Duração estimada em segundos
     complexity_level = Column(Integer, default=1)  # 1-5 (básico a avançado)
 
-    # Estatísticas
+    # Estatísticas (campos adicionais - download_count é para compatibilidade)
     download_count = Column(Integer, default=0, index=True)
     usage_count = Column(Integer, default=0)
     view_count = Column(Integer, default=0)
 
     # SEO e descoberta
-    keywords = Column(JSON, nullable=True)  # Palavras-chave para busca
-    use_cases = Column(JSON, nullable=True)  # Casos de uso
-    industries = Column(JSON, nullable=True)  # Indústrias aplicáveis
+    keywords = Column(JSONB, nullable=True)  # Palavras-chave para busca
+    use_cases = Column(JSONB, nullable=True)  # Casos de uso
+    industries = Column(JSONB, nullable=True)  # Indústrias aplicáveis
 
     # Recursos visuais
     thumbnail_url = Column(String(500), nullable=True)
-    preview_images = Column(JSON, nullable=True)  # URLs de imagens de preview
+    preview_images = Column(JSONB, nullable=True)  # URLs de imagens de preview
     demo_video_url = Column(String(500), nullable=True)
 
     # Documentação
     documentation = Column(Text, nullable=True)  # Documentação em Markdown
     setup_instructions = Column(Text, nullable=True)  # Instruções de configuração
-    changelog = Column(JSON, nullable=True)  # Histórico de mudanças
+    changelog = Column(JSONB, nullable=True)  # Histórico de mudanças
 
     # Suporte e manutenção
     support_email = Column(String(255), nullable=True)
     repository_url = Column(String(500), nullable=True)
     documentation_url = Column(String(500), nullable=True)
 
-    # Timestamps
+    # Timestamps adicionais
     published_at = Column(DateTime(timezone=True), nullable=True, index=True)
     last_used_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Tenant ID para multi-tenancy
+    tenant_id = Column(UUID(as_uuid=True), nullable=True)
 
     # Relacionamentos
     author = relationship("User", back_populates="created_templates")
@@ -193,16 +204,20 @@ class TemplateReview(Base):
     """
 
     __tablename__ = "template_reviews"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
     )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Avaliação
     rating = Column(Integer, nullable=False)  # 1-5 estrelas
@@ -243,16 +258,20 @@ class TemplateDownload(Base):
     """
 
     __tablename__ = "template_downloads"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
     )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Informações do download
     download_type = Column(String(20), default="full")  # full, preview, demo
@@ -281,16 +300,20 @@ class TemplateFavorite(Base):
     """
 
     __tablename__ = "template_favorites"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
     )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Metadados
     notes = Column(Text, nullable=True)  # Notas pessoais do usuário
@@ -316,7 +339,6 @@ class TemplateCollection(Base):
     """
 
     __tablename__ = "template_collections"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -327,15 +349,20 @@ class TemplateCollection(Base):
     description = Column(Text, nullable=True)
 
     # Relacionamentos
-    creator_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
+    creator_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Configurações
     is_public = Column(Boolean, default=True)
     is_featured = Column(Boolean, default=False)
 
     # Metadados
-    template_ids = Column(JSON, nullable=False)  # Lista de IDs de templates
-    tags = Column(JSON, nullable=True)
+    template_ids = Column(JSONB, nullable=False)  # Lista de IDs de templates
+    tags = Column(JSONB, nullable=True)
 
     # Recursos visuais
     thumbnail_url = Column(String(500), nullable=True)
@@ -364,17 +391,21 @@ class TemplateUsage(Base):
     """
 
     __tablename__ = "template_usage"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
     )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id"), nullable=True, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+        index=True,
+    )
+    workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable=True, index=True)
 
     # Informações de uso
     usage_type = Column(String(20), nullable=False)  # create, clone, execute, modify
@@ -382,7 +413,7 @@ class TemplateUsage(Base):
 
     # Metadados
     template_version = Column(String(20), nullable=True)
-    modifications_made = Column(JSON, nullable=True)  # Modificações feitas pelo usuário
+    modifications_made = Column(JSONB, nullable=True)  # Modificações feitas pelo usuário
     execution_time = Column(Integer, nullable=True)  # Tempo de execução em segundos
 
     # Contexto

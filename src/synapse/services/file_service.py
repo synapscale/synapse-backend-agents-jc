@@ -18,7 +18,7 @@ from synapse.core.security.file_validation import SecurityValidator, sanitize_fi
 from synapse.core.storage.storage_manager import StorageManager
 from synapse.exceptions import NotFoundError, StorageError, not_found_exception
 from synapse.models.file import File
-from synapse.schemas.file import FileCreate, FileInDB, FileUpdate
+from synapse.schemas.models import FileCreate, FileUpdate
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -197,7 +197,9 @@ class FileService:
             query = query.filter(File.category == category)
         total = query.count()
         files = query.order_by(File.created_at.desc()).offset(skip).limit(limit).all()
-        logger.info(f"Listados {len(files)} arquivos para usuário {user_id} (total: {total}, skip: {skip}, limit: {limit})")
+        logger.info(
+            f"Listados {len(files)} arquivos para usuário {user_id} (total: {total}, skip: {skip}, limit: {limit})"
+        )
         return files, total
 
     async def update_file(

@@ -15,6 +15,7 @@ DATABASE_SCHEMA = "synapscale_db"
 # Carrega variáveis do .env
 try:
     from dotenv import load_dotenv
+
     load_dotenv(os.path.join(BASE_DIR, ".env"))
 except ImportError:
     pass
@@ -66,7 +67,7 @@ def run_migrations_online() -> None:
     with connectable.connect() as connection:
         # Garantir que só trabalhamos com o schema synapscale_db
         connection.execute(text(f"SET search_path TO {DATABASE_SCHEMA}"))
-        
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
@@ -74,9 +75,12 @@ def run_migrations_online() -> None:
             include_schemas=False,  # CRÍTICO: Só trabalhar com o schema definido
             include_object=lambda obj, name, type_, reflected, compare_to: (
                 # Só incluir objetos do schema synapscale_db
-                getattr(obj, 'schema', None) == DATABASE_SCHEMA or 
-                (hasattr(obj, 'table') and getattr(obj.table, 'schema', None) == DATABASE_SCHEMA)
-            )
+                getattr(obj, "schema", None) == DATABASE_SCHEMA
+                or (
+                    hasattr(obj, "table")
+                    and getattr(obj.table, "schema", None) == DATABASE_SCHEMA
+                )
+            ),
         )
 
         with context.begin_transaction():

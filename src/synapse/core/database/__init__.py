@@ -24,7 +24,9 @@ sync_url = db_config["url"]
 if sync_url.startswith("postgresql://"):
     ASYNC_DATABASE_URL = sync_url.replace("postgresql://", "postgresql+asyncpg://")
 elif sync_url.startswith("postgresql+psycopg2://"):
-    ASYNC_DATABASE_URL = sync_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
+    ASYNC_DATABASE_URL = sync_url.replace(
+        "postgresql+psycopg2://", "postgresql+asyncpg://"
+    )
 else:
     ASYNC_DATABASE_URL = sync_url
 
@@ -43,7 +45,7 @@ async_engine = create_async_engine(
     max_overflow=db_config["max_overflow"],
     pool_timeout=db_config["pool_timeout"],
     pool_recycle=db_config["pool_recycle"],
-    echo=db_config["echo"]
+    echo=db_config["echo"],
 )
 
 # Create async session maker
@@ -52,7 +54,7 @@ AsyncSessionLocal = async_sessionmaker(
     class_=AsyncSession,
     autocommit=False,
     autoflush=False,
-    expire_on_commit=False
+    expire_on_commit=False,
 )
 
 # Create async base for models (if needed for service layer)
@@ -85,16 +87,14 @@ async def init_async_db() -> None:
             logger.info(
                 f"✅ Async database connected to schema {DATABASE_SCHEMA} - {count} users found"
             )
-        
+
         logger.info("✅ Async database connection established successfully")
     except Exception as e:
         logger.error(f"❌ Error connecting to async database: {e}")
-        
+
         # Check if in development
         if settings.ENVIRONMENT == "development":
-            logger.warning(
-                "⚠️ Continuing in development mode without async database"
-            )
+            logger.warning("⚠️ Continuing in development mode without async database")
         else:
             raise
 
@@ -124,5 +124,5 @@ def get_async_connection_info() -> dict:
         "max_overflow": db_config["max_overflow"],
         "pool_timeout": db_config["pool_timeout"],
         "pool_recycle": db_config["pool_recycle"],
-        "echo": db_config["echo"]
+        "echo": db_config["echo"],
     }

@@ -1,0 +1,120 @@
+ANÁLISE DE TIPOS DE DADOS - SynapScale
+==================================================
+
+Tipos compatíveis: 490
+Issues críticos: 0
+Issues high: 1
+Issues medium: 0
+Issues low: 106
+
+HIGH ISSUES:
+  WorkspaceActivity.description: Text → VARCHAR(500)
+
+LOW ISSUES:
+  BillingEvent.processed_at: DateTime → TIMESTAMP
+  WorkspaceMember.last_seen_at: DateTime → TIMESTAMP
+  Plan.expires_at: DateTime → TIMESTAMP
+  Plan.cancelled_at: DateTime → TIMESTAMP
+  Plan.current_period_start: DateTime → TIMESTAMP
+  Plan.current_period_end: DateTime → TIMESTAMP
+  User.created_at: DateTime → TIMESTAMP
+  User.last_login_at: DateTime → TIMESTAMP
+  User.account_locked_until: DateTime → TIMESTAMP
+  PlanEntitlement.created_at: DateTime → TIMESTAMP
+  EmailVerificationToken.expires_at: DateTime → TIMESTAMP
+  EmailVerificationToken.created_at: DateTime → TIMESTAMP
+  EmailVerificationToken.updated_at: DateTime → TIMESTAMP
+  Tenant.created_at: DateTime → TIMESTAMP
+  Tenant.enabled_features: String → ARRAY
+  Workspace.last_activity_at: DateTime → TIMESTAMP
+  WorkspaceProject.created_at: DateTime → TIMESTAMP
+  ProjectCollaborator.created_at: DateTime → TIMESTAMP
+  ProjectComment.created_at: DateTime → TIMESTAMP
+  ProjectVersion.created_at: DateTime → TIMESTAMP
+  UserSubscription.expires_at: DateTime → TIMESTAMP
+  UserSubscription.cancelled_at: DateTime → TIMESTAMP
+  UserSubscription.current_period_start: DateTime → TIMESTAMP
+  UserSubscription.current_period_end: DateTime → TIMESTAMP
+  Conversation.last_message_at: DateTime → TIMESTAMP
+  WorkspaceInvitation.message: String → TEXT
+  WorkspaceInvitation.expires_at: DateTime → TIMESTAMP
+  WorkflowExecution.completed_at: DateTime → TIMESTAMP
+  WorkflowExecution.timeout_at: DateTime → TIMESTAMP
+  WorkflowExecution.created_at: DateTime → TIMESTAMP
+  WorkflowExecution.node_id: Integer → UUID
+  WorkflowExecution.started_at: DateTime → TIMESTAMP
+  NodeExecution.created_at: DateTime → TIMESTAMP
+  ExecutionQueue.created_at: DateTime → TIMESTAMP
+  ExecutionQueue.measured_at: DateTime → TIMESTAMP
+  ExecutionMetrics.measured_at: DateTime → TIMESTAMP
+  ExecutionMetrics.created_at: DateTime → TIMESTAMP
+  UserDigitalOcean.id: String → UUID
+  UserDigitalOcean.created_at: DateTime → TIMESTAMP
+  RBACRolePermission.created_at: DateTime → TIMESTAMP
+  RBACRolePermission.updated_at: DateTime → TIMESTAMP
+  RBACPermission.created_at: DateTime → TIMESTAMP
+  RBACPermission.updated_at: DateTime → TIMESTAMP
+  UserDB.expires_at: DateTime → TIMESTAMP
+  RefreshTokenDB.expires_at: DateTime → TIMESTAMP
+  Feature.created_at: DateTime → TIMESTAMP
+  Feature.expires_at: DateTime → TIMESTAMP
+  WorkspaceFeature.expires_at: DateTime → TIMESTAMP
+  WorkspaceFeature.created_at: DateTime → TIMESTAMP
+  RefreshToken.expires_at: DateTime → TIMESTAMP
+  RefreshToken.created_at: DateTime → TIMESTAMP
+  RefreshToken.updated_at: DateTime → TIMESTAMP
+  UserBehaviorMetric.created_at: DateTime → TIMESTAMP
+  UserBehaviorMetric.last_run_at: DateTime → TIMESTAMP
+  UserBehaviorMetric.next_run_at: DateTime → TIMESTAMP
+  UserBehaviorMetric.cache_expires_at: DateTime → TIMESTAMP
+  File.last_accessed_at: DateTime → TIMESTAMP
+  PasswordResetToken.expires_at: DateTime → TIMESTAMP
+  PasswordResetToken.created_at: DateTime → TIMESTAMP
+  PasswordResetToken.updated_at: DateTime → TIMESTAMP
+  ComponentRating.created_at: DateTime → TIMESTAMP
+  ComponentDownload.created_at: DateTime → TIMESTAMP
+  ComponentDownload.deprecated_at: DateTime → TIMESTAMP
+  ComponentPurchase.created_at: DateTime → TIMESTAMP
+  ComponentPurchase.deprecated_at: DateTime → TIMESTAMP
+  ComponentVersion.created_at: DateTime → TIMESTAMP
+  ComponentVersion.deprecated_at: DateTime → TIMESTAMP
+  WorkflowTemplate.created_at: DateTime → TIMESTAMP
+  TemplateReview.created_at: DateTime → TIMESTAMP
+  TemplateDownload.created_at: DateTime → TIMESTAMP
+  TemplateDownload.workflow_id: Integer → UUID
+  TemplateDownload.used_at: DateTime → TIMESTAMP
+  TemplateFavorite.created_at: DateTime → TIMESTAMP
+  TemplateFavorite.workflow_id: Integer → UUID
+  TemplateFavorite.used_at: DateTime → TIMESTAMP
+  TemplateCollection.created_at: DateTime → TIMESTAMP
+  TemplateCollection.workflow_id: Integer → UUID
+  TemplateCollection.used_at: DateTime → TIMESTAMP
+  TemplateUsage.workflow_id: Integer → UUID
+  TemplateUsage.used_at: DateTime → TIMESTAMP
+  AnalyticsEvent.date: DateTime → TIMESTAMP
+  AnalyticsEvent.created_at: DateTime → TIMESTAMP
+  SystemPerformanceMetric.created_at: DateTime → TIMESTAMP
+  SystemPerformanceMetric.started_at: DateTime → TIMESTAMP
+  SystemPerformanceMetric.completed_at: DateTime → TIMESTAMP
+  BusinessMetric.created_at: DateTime → TIMESTAMP
+  CustomReport.created_at: DateTime → TIMESTAMP
+  ReportExecution.completed_at: DateTime → TIMESTAMP
+  ReportExecution.created_at: DateTime → TIMESTAMP
+  UserInsight.created_at: DateTime → TIMESTAMP
+  Workflow.created_at: DateTime → TIMESTAMP
+  WorkflowNode.created_at: DateTime → TIMESTAMP
+  WorkflowConnection.created_at: DateTime → TIMESTAMP
+  Node.created_at: DateTime → TIMESTAMP
+  NodeTemplate.created_at: DateTime → TIMESTAMP
+  NodeRating.created_at: DateTime → TIMESTAMP
+  RBACRole.created_at: DateTime → TIMESTAMP
+  RBACRole.updated_at: DateTime → TIMESTAMP
+  UserTenantRole.granted_at: DateTime → TIMESTAMP
+  UserTenantRole.expires_at: DateTime → TIMESTAMP
+  UserTenantRole.created_at: DateTime → TIMESTAMP
+  UserTenantRole.updated_at: DateTime → TIMESTAMP
+  PlanFeature.created_at: DateTime → TIMESTAMP
+  TenantFeature.expires_at: DateTime → TIMESTAMP
+  TenantFeature.created_at: DateTime → TIMESTAMP
+  AuditLog.changed_at: DateTime → TIMESTAMP
+

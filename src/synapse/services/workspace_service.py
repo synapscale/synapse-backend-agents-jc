@@ -3,39 +3,41 @@ Serviço de gerenciamento de workspaces com validações rigorosas e sincroniza�
 """
 
 from typing import List, Optional, Dict, Any
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, desc, asc, func
 from datetime import datetime, timedelta, timezone
 import uuid
 import secrets
 import logging
 
-from synapse.models.workspace import (
-    Workspace, WorkspaceProject, ProjectCollaborator,
-    ProjectComment, ProjectVersion,
-    PermissionLevel, WorkspaceType
+from synapse.models.workspace import Workspace, WorkspaceType
+from synapse.models.user import User
+from synapse.schemas.models import (
+    WorkspaceCreate,
+    WorkspaceUpdate,
+    MemberInvite,
+    ProjectCreate,
+    ProjectUpdate,
+    CommentCreate,
 )
+from synapse.models.subscription import UserSubscription, PlanType, SubscriptionStatus
+from synapse.models.tenant import Tenant, TenantStatus
+from synapse.models.plan import Plan
 from synapse.models.workspace_member import WorkspaceMember, WorkspaceRole
 from synapse.models.workspace_activity import WorkspaceActivity
 from synapse.models.workspace_invitation import WorkspaceInvitation
-from synapse.models.user import User
-from synapse.models.workflow import Workflow
-from synapse.schemas.workspace import (
-    WorkspaceCreate, WorkspaceUpdate, MemberInvite,
-    ProjectCreate, ProjectUpdate, CommentCreate
-)
-from synapse.models.subscription import UserSubscription, Plan, PlanType, SubscriptionStatus
 
 logger = logging.getLogger(__name__)
 
+
 class WorkspaceService:
     """Serviço para gerenciamento de workspaces com sincronização automática"""
-    
+
     def __init__(self, db: Session):
         self.db = db
-    
+
     # ==================== WORKSPACES ====================
-    
+
     def get_user_subscription(self, user_id: str) -> Optional[UserSubscription]:
         """Obtém assinatura ativa do usuário"""
         return (
@@ -44,7 +46,7 @@ class WorkspaceService:
             .filter(
                 and_(
                     UserSubscription.user_id == user_id,
-                    UserSubscription.status == SubscriptionStatus.ACTIVE
+                    UserSubscription.status == SubscriptionStatus.ACTIVE,
                 )
             )
             .first()
@@ -53,51 +55,51 @@ class WorkspaceService:
     def can_create_workspace(self, user_id: str) -> Dict[str, Any]:
         """Verifica se o usuário pode criar um novo workspace"""
         subscription = self.get_user_subscription(user_id)
-        
+
         if not subscription:
             return {
                 "can_create": False,
                 "reason": "Usuário não possui assinatura ativa",
                 "max_workspaces": 0,
-                "current_workspaces": 0
+                "current_workspaces": 0,
             }
 
         current_count = (
-            self.db.query(Workspace)
-            .filter(Workspace.owner_id == user_id)
-            .count()
+            self.db.query(Workspace).filter(Workspace.owner_id == user_id).count()
         )
 
         can_create = current_count < subscription.plan.max_workspaces
-        
+
         return {
             "can_create": can_create,
             "reason": "Limite de workspaces atingido" if not can_create else None,
             "max_workspaces": subscription.plan.max_workspaces,
             "current_workspaces": current_count,
-            "plan_name": subscription.plan.name
+            "plan_name": subscription.plan.name,
         }
 
     def can_create_collaborative_workspace(self, user_id: str) -> Dict[str, Any]:
         """Verifica se o usuário pode criar workspaces colaborativos"""
         subscription = self.get_user_subscription(user_id)
-        
+
         if not subscription:
             return {
                 "can_create": False,
-                "reason": "Usuário não possui assinatura ativa"
+                "reason": "Usuário não possui assinatura ativa",
             }
 
         if not subscription.plan.allow_collaborative_workspaces:
             return {
                 "can_create": False,
-                "reason": f"Plano {subscription.plan.name} não permite workspaces colaborativos"
+                "reason": f"Plano {subscription.plan.name} não permite workspaces colaborativos",
             }
 
         workspace_check = self.can_create_workspace(user_id)
         return workspace_check
 
-    def _create_workspace_complete(self, user_id: str, workspace_data: WorkspaceCreate) -> Workspace:
+    def _create_workspace_complete(
+        self, user_id: str, workspace_data: WorkspaceCreate
+    ) -> Workspace:
         """
         Cria um novo workspace com validações rigorosas de plano (método de instância)
         """
@@ -108,7 +110,9 @@ class WorkspaceService:
                 raise ValueError("Usuário não encontrado")
 
             # Determinar tipo do workspace
-            workspace_type = workspace_data.type if hasattr(workspace_data, 'type') else None
+            workspace_type = (
+                workspace_data.type if hasattr(workspace_data, "type") else None
+            )
             if not workspace_type:
                 # Se não especificado, determinar automaticamente
                 rules = self.get_workspace_creation_rules(user_id)
@@ -129,7 +133,7 @@ class WorkspaceService:
                 user=user,
                 name=workspace_data.name,
                 description=workspace_data.description,
-                workspace_type=workspace_type
+                workspace_type=workspace_type,
             )
 
             # Criar membership do owner
@@ -140,7 +144,7 @@ class WorkspaceService:
                 workspace=workspace,
                 user=user,
                 action="workspace_created",
-                description=f"Workspace '{workspace.name}' foi criado como {workspace_type.value}"
+                description=f"Workspace '{workspace.name}' foi criado como {workspace_type.value}",
             )
 
             # Atualizar contadores da assinatura
@@ -148,8 +152,10 @@ class WorkspaceService:
 
             # Commit da transação
             self.db.commit()
-            
-            logger.info(f"Workspace '{workspace.name}' criado com sucesso para usuário {user_id}")
+
+            logger.info(
+                f"Workspace '{workspace.name}' criado com sucesso para usuário {user_id}"
+            )
             return workspace
 
         except Exception as e:
@@ -158,141 +164,83 @@ class WorkspaceService:
             raise e
 
     @staticmethod
-    def create_workspace(db: Session, user_id: str, workspace_data: WorkspaceCreate) -> Workspace:
-        """
-        Cria um novo workspace com validações rigorosas de plano
-        """
-        try:
-            # Obter assinatura do usuário
-            user_subscription = db.query(UserSubscription).filter(
-                UserSubscription.user_id == user_id,
-                UserSubscription.status == SubscriptionStatus.ACTIVE
-            ).first()
-            
-            if not user_subscription:
-                raise ValueError("Usuário não possui assinatura ativa")
+    def create_workspace(
+        db: Session, workspace_data: WorkspaceCreate, user_id: str, tenant_id: str
+    ) -> Workspace:
+        """Criar um novo workspace"""
+        workspace = Workspace(
+            **workspace_data.dict(), user_id=user_id, tenant_id=tenant_id
+        )
+        db.add(workspace)
+        db.commit()
+        db.refresh(workspace)
+        return workspace
 
-            # Verificar regras de criação usando instância
-            service_instance = WorkspaceService(db)
-            rules = service_instance.get_workspace_creation_rules(user_id)
-            
-            # Determinar tipo do workspace
-            workspace_type = workspace_data.type if hasattr(workspace_data, 'type') else None
-            if not workspace_type:
-                if rules["can_create_individual"]:
-                    workspace_type = WorkspaceType.INDIVIDUAL
-                elif rules["can_create_collaborative"]:
-                    workspace_type = WorkspaceType.COLLABORATIVE
-                else:
-                    raise ValueError("Não é possível determinar o tipo de workspace")
+    @staticmethod
+    def get_user_workspaces(
+        db: Session, user_id: str, skip: int = 0, limit: int = 100
+    ) -> List[Workspace]:
+        """Obter workspaces do usuário"""
+        return (
+            db.query(Workspace)
+            .filter(Workspace.user_id == user_id)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
-            # Validar limites do plano
-            if workspace_type == WorkspaceType.COLLABORATIVE:
-                if not user_subscription.plan.allow_collaborative_workspaces:
-                    raise ValueError("Plano atual não permite workspaces colaborativos")
+    @staticmethod
+    def get_workspace_by_id(
+        db: Session, workspace_id: str, user_id: str
+    ) -> Optional[Workspace]:
+        """Obter workspace por ID (verificando se pertence ao usuário)"""
+        return (
+            db.query(Workspace)
+            .filter(and_(Workspace.id == workspace_id, Workspace.user_id == user_id))
+            .first()
+        )
 
-            if rules["current_workspaces"] >= user_subscription.plan.max_workspaces:
-                raise ValueError(f"Limite de workspaces atingido ({user_subscription.plan.max_workspaces})")
+    @staticmethod
+    def update_workspace(
+        db: Session, workspace: Workspace, workspace_data: WorkspaceUpdate
+    ) -> Workspace:
+        """Atualizar workspace"""
+        for field, value in workspace_data.dict(exclude_unset=True).items():
+            setattr(workspace, field, value)
 
-            # Gerar slug único
-            base_slug = WorkspaceService._generate_unique_slug(
-                db, workspace_data.name, rules["user_username"]
-            )
+        db.commit()
+        db.refresh(workspace)
+        return workspace
 
-            # Determinar plan_id baseado no tipo de workspace
-            plan_id = user_subscription.plan_id
-            if workspace_type == WorkspaceType.INDIVIDUAL:
-                # Workspace individual sempre usa o plano do usuário
-                plan_id = user_subscription.plan_id
-            else:
-                # Workspace colaborativo pode ter plano específico
-                plan_id = getattr(workspace_data, 'plan_id', user_subscription.plan_id)
+    @staticmethod
+    def delete_workspace(db: Session, workspace: Workspace) -> None:
+        """Deletar workspace"""
+        db.delete(workspace)
+        db.commit()
 
-            # Criar workspace
-            workspace = Workspace(
-                name=workspace_data.name,
-                slug=base_slug,
-                type=workspace_type,
-                description=workspace_data.description,
-                owner_id=user_id,
-                plan_id=plan_id,  # NOVO CAMPO
-                is_public=getattr(workspace_data, 'is_public', False),
-                allow_guest_access=getattr(workspace_data, 'allow_guest_access', False),
-                require_approval=getattr(workspace_data, 'require_approval', True),
-                max_members=user_subscription.plan.max_members_per_workspace,
-                max_projects=user_subscription.plan.max_projects_per_workspace,
-                max_storage_mb=user_subscription.plan.max_storage_mb,
-                enable_real_time_editing=getattr(workspace_data, 'enable_real_time_editing', True),
-                enable_comments=getattr(workspace_data, 'enable_comments', True),
-                enable_chat=getattr(workspace_data, 'enable_chat', True),
-                enable_video_calls=getattr(workspace_data, 'enable_video_calls', False),
-                notification_settings=getattr(workspace_data, 'notification_settings', {}),
-                status="active",
-                last_activity_at=datetime.now(timezone.utc)
-            )
-
-            db.add(workspace)
-            db.flush()
-
-            # Criar membership do owner
-            owner_member = WorkspaceMember.create_owner_membership(
-                workspace_id=str(workspace.id),
-                user_id=user_id
-            )
-            db.add(owner_member)
-
-            # Atualizar contador de workspaces do usuário
-            user_subscription.current_workspaces += 1
-
-            # Registrar atividade
-            activity = WorkspaceActivity(
-                workspace_id=workspace.id,
-                user_id=user_id,
-                action="workspace_created",
-                resource_type="workspace",
-                resource_id=str(workspace.id),
-                description=f"Workspace '{workspace.name}' foi criado",
-                meta_data={
-                    "workspace_type": workspace_type.value,
-                    "plan_name": user_subscription.plan.name
-                }
-            )
-            db.add(activity)
-            
-            # Incrementar contador de atividades
-            workspace.activity_count = 1
-
-            db.commit()
-            
-            logger.info(f"Workspace criado: {workspace.name} (ID: {workspace.id})")
-            return workspace
-
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Erro ao criar workspace: {str(e)}")
-            raise
-
-    def _validate_workspace_creation(self, user_id: str, workspace_type: Optional[WorkspaceType]) -> Dict[str, Any]:
+    def _validate_workspace_creation(
+        self, user_id: str, workspace_type: Optional[WorkspaceType]
+    ) -> Dict[str, Any]:
         """Validações rigorosas antes de criar workspace"""
-        
+
         # 1. Verificar assinatura ativa
         subscription = self.get_user_subscription(user_id)
         if not subscription:
             return {
                 "can_create": False,
                 "reason": "Usuário não possui assinatura ativa",
-                "error_code": "NO_SUBSCRIPTION"
+                "error_code": "NO_SUBSCRIPTION",
             }
 
         # 2. Verificar limites do plano
         plan = subscription.plan
         current_workspaces = subscription.current_workspaces or 0
-        
+
         if current_workspaces >= plan.max_workspaces:
             return {
                 "can_create": False,
                 "reason": f"Limite de workspaces atingido ({current_workspaces}/{plan.max_workspaces}). Faça upgrade do seu plano.",
-                "error_code": "WORKSPACE_LIMIT_REACHED"
+                "error_code": "WORKSPACE_LIMIT_REACHED",
             }
 
         # 3. Verificar regra de workspace individual (apenas 1 permitido)
@@ -302,7 +250,7 @@ class WorkspaceService:
                 return {
                     "can_create": False,
                     "reason": "Você já possui um workspace individual. Apenas 1 workspace individual é permitido por usuário.",
-                    "error_code": "INDIVIDUAL_LIMIT_REACHED"
+                    "error_code": "INDIVIDUAL_LIMIT_REACHED",
                 }
 
         # 4. Verificar se plano permite workspaces colaborativos
@@ -311,12 +259,14 @@ class WorkspaceService:
                 return {
                     "can_create": False,
                     "reason": f"Seu plano {plan.name} não permite workspaces colaborativos. Faça upgrade para criar workspaces de equipe.",
-                    "error_code": "COLLABORATIVE_NOT_ALLOWED"
+                    "error_code": "COLLABORATIVE_NOT_ALLOWED",
                 }
 
         return {"can_create": True, "reason": "Validação passou"}
 
-    def _determine_workspace_type(self, user_id: str, requested_type: Optional[WorkspaceType]) -> WorkspaceType:
+    def _determine_workspace_type(
+        self, user_id: str, requested_type: Optional[WorkspaceType]
+    ) -> WorkspaceType:
         """
         Determina o tipo de workspace seguindo as regras:
         1. Se é o primeiro workspace do usuário → individual (obrigatório)
@@ -325,22 +275,26 @@ class WorkspaceService:
         """
         individual_count = self._count_individual_workspaces(user_id)
         total_count = self._count_total_workspaces(user_id)
-        
+
         # Primeiro workspace sempre individual
         if total_count == 0:
             logger.info("Primeiro workspace do usuário - forçando tipo individual")
             return WorkspaceType.INDIVIDUAL
-        
+
         # Se já tem workspace individual, próximos são colaborativos
         if individual_count >= 1:
             if requested_type == WorkspaceType.INDIVIDUAL:
-                logger.warning("Usuário tentou criar segundo workspace individual - forçando collaborative")
+                logger.warning(
+                    "Usuário tentou criar segundo workspace individual - forçando collaborative"
+                )
             return WorkspaceType.COLLABORATIVE
-        
+
         # Se não tem individual ainda, pode criar
         return requested_type or WorkspaceType.INDIVIDUAL
 
-    def _get_plan_for_workspace_type(self, workspace_type: WorkspaceType) -> Optional[Plan]:
+    def _get_plan_for_workspace_type(
+        self, workspace_type: WorkspaceType
+    ) -> Optional[Plan]:
         """
         Determina o plano baseado no tipo de workspace
         - Individual: sempre plano 'free'
@@ -349,34 +303,44 @@ class WorkspaceService:
         try:
             if workspace_type == WorkspaceType.INDIVIDUAL:
                 # Workspace individual sempre usa plano free
-                plan = self.db.query(Plan).filter(
-                    Plan.type == PlanType.FREE,
-                    Plan.is_active == True
-                ).first()
-                
+                plan = (
+                    self.db.query(Plan)
+                    .filter(
+                        Plan.slug == "free",  # Busca por slug ao invés de type
+                        Plan.is_active == True,
+                    )
+                    .first()
+                )
+
                 if not plan:
                     logger.error("Plano 'free' não encontrado no banco")
                     return None
-                    
+
                 logger.info(f"Plano 'free' selecionado para workspace individual")
                 return plan
-            
+
             else:  # WorkspaceType.COLLABORATIVE
                 # Para workspace colaborativo, usar plano da assinatura
                 # Por enquanto, usar plano 'free' como padrão
                 # TODO: Implementar lógica baseada na assinatura do usuário
-                plan = self.db.query(Plan).filter(
-                    Plan.type == PlanType.FREE,
-                    Plan.is_active == True
-                ).first()
-                
+                plan = (
+                    self.db.query(Plan)
+                    .filter(
+                        Plan.slug == "free",  # Busca por slug ao invés de type
+                        Plan.is_active == True,
+                    )
+                    .first()
+                )
+
                 if not plan:
                     logger.error("Plano padrão não encontrado no banco")
                     return None
-                    
-                logger.info(f"Plano '{plan.type.value}' selecionado para workspace colaborativo")
+
+                logger.info(
+                    f"Plano '{plan.slug}' selecionado para workspace colaborativo"
+                )
                 return plan
-                
+
         except Exception as e:
             logger.error(f"Erro ao determinar plano para workspace: {e}")
             return None
@@ -387,10 +351,10 @@ class WorkspaceService:
         name: str,
         description: Optional[str],
         workspace_type: WorkspaceType,
-        **kwargs
+        **kwargs,
     ) -> Workspace:
-        """Cria o registro do workspace com configurações apropriadas"""
-        
+        """Cria o registro do workspace com configurações apropriadas (NOVA ARQUITETURA)"""
+
         # Configurações baseadas no tipo
         if workspace_type == WorkspaceType.INDIVIDUAL:
             max_members = 1
@@ -398,16 +362,19 @@ class WorkspaceService:
             enable_video_calls = False
             allow_guest_access = False
         else:  # COLLABORATIVE
-            max_members = kwargs.get('max_members', 10)
-            enable_chat = kwargs.get('enable_chat', True)
-            enable_video_calls = kwargs.get('enable_video_calls', True)
-            allow_guest_access = kwargs.get('allow_guest_access', False)
+            max_members = kwargs.get("max_members", 10)
+            enable_chat = kwargs.get("enable_chat", True)
+            enable_video_calls = kwargs.get("enable_video_calls", True)
+            allow_guest_access = kwargs.get("allow_guest_access", False)
 
-        # Obter plano para o workspace
-        plan = self._get_plan_for_workspace_type(workspace_type)
-        if not plan:
-            raise ValueError(f"Não foi possível encontrar plano para workspace tipo {workspace_type.value}")
+        # NOVA ARQUITETURA: Obter ou criar tenant para o usuário
+        tenant = self._get_or_create_user_tenant(user, workspace_type)
 
+        logger.info(
+            f"Usando tenant {tenant.id} (plan: {tenant.plan_id}) para workspace {name}"
+        )
+
+        # NOVA ARQUITETURA: Criar workspace com tenant_id ao invés de plan_id
         workspace = Workspace(
             id=uuid.uuid4(),
             name=name,
@@ -415,49 +382,112 @@ class WorkspaceService:
             description=description,
             type=workspace_type,
             owner_id=user.id,
-            plan_id=plan.id,  # CORRIGIDO: Adicionar plan_id obrigatório
-            is_public=kwargs.get('is_public', False),
+            tenant_id=tenant.id,  # ✅ NOVA ARQUITETURA: tenant_id ao invés de plan_id
+            is_public=kwargs.get("is_public", False),
             is_template=False,
             allow_guest_access=allow_guest_access,
-            require_approval=kwargs.get('require_approval', False),
+            require_approval=kwargs.get("require_approval", False),
             max_members=max_members,
-            max_projects=kwargs.get('max_projects', 20),
-            max_storage_mb=kwargs.get('max_storage_mb', 1024),
-            enable_real_time_editing=kwargs.get('enable_real_time_editing', True),
-            enable_comments=kwargs.get('enable_comments', True),
+            max_projects=kwargs.get("max_projects", 20),
+            max_storage_mb=kwargs.get("max_storage_mb", 1024),
+            enable_real_time_editing=kwargs.get("enable_real_time_editing", True),
+            enable_comments=kwargs.get("enable_comments", True),
             enable_chat=enable_chat,
             enable_video_calls=enable_video_calls,
-            notification_settings=kwargs.get('notification_settings', {"email_notifications": True}),
+            notification_settings=kwargs.get(
+                "notification_settings", {"email_notifications": True}
+            ),
             member_count=1,  # Será o owner
             project_count=0,
             activity_count=1,  # Atividade de criação
             storage_used_mb=0.0,
             status="active",
-            last_activity_at=datetime.now(timezone.utc)
+            last_activity_at=datetime.now(timezone.utc),
         )
-        
+
+        # Atualizar contador do tenant
+        tenant.workspace_count = (tenant.workspace_count or 0) + 1
+
         self.db.add(workspace)
         self.db.flush()
+
+        logger.info(
+            f"Workspace criado: {workspace.id} (tenant: {tenant.id}, plan via tenant)"
+        )
         return workspace
 
-    def _create_owner_membership(self, workspace: Workspace, user: User) -> WorkspaceMember:
+    def _get_or_create_user_tenant(
+        self, user: User, workspace_type: WorkspaceType
+    ) -> Tenant:
+        """
+        Obtém tenant existente do usuário ou cria um novo com plano apropriado
+        NOVA ARQUITETURA: tenants são o ponto central dos planos
+        """
+        # Primeiro, tentar encontrar tenant existente do usuário
+        # Para agora, vamos assumir que cada usuário pode ter apenas um tenant
+        existing_tenant = (
+            self.db.query(Tenant)
+            .join(Workspace, Tenant.id == Workspace.tenant_id)
+            .filter(Workspace.owner_id == user.id)
+            .first()
+        )
+
+        if existing_tenant:
+            logger.info(
+                f"Tenant existente encontrado: {existing_tenant.id} para usuário {user.id}"
+            )
+            return existing_tenant
+
+        # Se não encontrou, criar novo tenant
+        logger.info(f"Criando novo tenant para usuário {user.id}")
+
+        # Obter plano apropriado para o tipo de workspace
+        plan = self._get_plan_for_workspace_type(workspace_type)
+        if not plan:
+            raise ValueError(
+                f"Não foi possível encontrar plano para workspace tipo {workspace_type.value}"
+            )
+
+        # Criar tenant com plano
+        tenant = Tenant(
+            id=uuid.uuid4(),
+            name=f"Tenant de {user.full_name}",
+            slug=f"tenant-{user.username}-{uuid.uuid4().hex[:8]}",
+            status=TenantStatus.ACTIVE.value,
+            plan_id=plan.id,  # ✅ TENANT TEM O PLAN_ID
+            max_workspaces=plan.max_workspaces or 3,
+            max_storage_mb=plan.max_storage_mb or 1024,  # Já em MB no plano
+            max_api_calls_per_day=plan.max_api_calls_per_day or 1000,
+            max_members_per_workspace=plan.max_members_per_workspace or 5,
+        )
+
+        self.db.add(tenant)
+        self.db.flush()
+
+        logger.info(f"Tenant criado: {tenant.id} com plan_id: {tenant.plan_id}")
+        return tenant
+
+    def _create_owner_membership(
+        self, workspace: Workspace, user: User
+    ) -> WorkspaceMember:
         """Cria membership automática como OWNER"""
-        
+
         membership = WorkspaceMember(
             workspace_id=workspace.id,
             user_id=user.id,
             role=WorkspaceRole.OWNER,
-            status='active',
-            is_favorite=workspace.type == WorkspaceType.INDIVIDUAL,  # Individual sempre favorito
+            status="active",
+            is_favorite=workspace.type
+            == WorkspaceType.INDIVIDUAL,  # Individual sempre favorito
             notification_preferences={
                 "email_notifications": True,
                 "push_notifications": False,
-                "activity_digest": "daily"
+                "activity_digest": "daily",
             },
             last_seen_at=datetime.now(timezone.utc),
-            joined_at=datetime.now(timezone.utc)
+            joined_at=datetime.now(timezone.utc),
         )
-        
+
         self.db.add(membership)
         self.db.flush()
         return membership
@@ -469,10 +499,10 @@ class WorkspaceService:
         action: str,
         description: str,
         resource_type: str = "workspace",
-        meta_data: Optional[Dict] = None
+        meta_data: Optional[Dict] = None,
     ) -> WorkspaceActivity:
         """Registra atividade no workspace"""
-        
+
         activity = WorkspaceActivity(
             id=uuid.uuid4(),
             workspace_id=workspace.id,
@@ -482,32 +512,43 @@ class WorkspaceService:
             resource_id=str(workspace.id),
             description=description,
             meta_data=meta_data or {"workspace_type": workspace.type.value},
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
-        
+
         self.db.add(activity)
         self.db.flush()
         return activity
 
-    def _update_subscription_counters(self, user_id: str, increment_workspaces: int = 0, increment_storage: float = 0):
+    def _update_subscription_counters(
+        self, user_id: str, increment_workspaces: int = 0, increment_storage: float = 0
+    ):
         """Atualiza contadores da assinatura"""
-        
+
         subscription = self.get_user_subscription(user_id)
         if subscription:
-            subscription.current_workspaces = (subscription.current_workspaces or 0) + increment_workspaces
-            subscription.current_storage_mb = (subscription.current_storage_mb or 0) + increment_storage
+            subscription.current_workspaces = (
+                subscription.current_workspaces or 0
+            ) + increment_workspaces
+            subscription.current_storage_mb = (
+                subscription.current_storage_mb or 0
+            ) + increment_storage
             self.db.add(subscription)
 
     def delete_workspace(self, workspace_id: str, user_id: str) -> Dict[str, Any]:
         """Deleta um workspace (soft delete)"""
         try:
-            workspace = self.db.query(Workspace).filter(Workspace.id == workspace_id).first()
+            workspace = (
+                self.db.query(Workspace).filter(Workspace.id == workspace_id).first()
+            )
             if not workspace:
                 return {"success": False, "error": "Workspace não encontrado"}
 
             # Verificar se é o owner
             if str(workspace.owner_id) != str(user_id):
-                return {"success": False, "error": "Apenas o proprietário pode deletar o workspace"}
+                return {
+                    "success": False,
+                    "error": "Apenas o proprietário pode deletar o workspace",
+                }
 
             # Soft delete
             workspace.status = "deleted"
@@ -520,7 +561,7 @@ class WorkspaceService:
                 action="workspace_deleted",
                 resource_type="workspace",
                 resource_id=None,
-                description=f"Workspace '{workspace.name}' foi deletado"
+                description=f"Workspace '{workspace.name}' foi deletado",
             )
 
             self.db.commit()
@@ -532,27 +573,39 @@ class WorkspaceService:
             return {"success": False, "error": f"Erro interno: {str(e)}"}
 
     def get_workspace_by_id(self, workspace_id: str) -> Optional[Workspace]:
-        """Busca workspace por ID"""
-        return self.db.query(Workspace).filter(
-            Workspace.id == workspace_id,
-            Workspace.status != "deleted"
-        ).first()
+        """Busca workspace por ID (NOVA ARQUITETURA - com eager loading)"""
+        return (
+            self.db.query(Workspace)
+            .options(joinedload(Workspace.tenant).joinedload(Tenant.plan))
+            .filter(Workspace.id == workspace_id, Workspace.status != "deleted")
+            .first()
+        )
 
     def get_workspace_members_count(self, workspace_id: str) -> int:
         """Conta membros ativos do workspace"""
-        return self.db.query(WorkspaceMember).filter(
-            WorkspaceMember.workspace_id == workspace_id,
-            WorkspaceMember.status == "active"
-        ).count()
+        return (
+            self.db.query(WorkspaceMember)
+            .filter(
+                WorkspaceMember.workspace_id == workspace_id,
+                WorkspaceMember.status == "active",
+            )
+            .count()
+        )
 
     def get_workspace_projects_count(self, workspace_id: str) -> int:
         """Conta projetos ativos do workspace"""
-        return self.db.query(WorkspaceProject).filter(
-            WorkspaceProject.workspace_id == workspace_id,
-            WorkspaceProject.status == "active"
-        ).count()
+        return (
+            self.db.query(WorkspaceProject)
+            .filter(
+                WorkspaceProject.workspace_id == workspace_id,
+                WorkspaceProject.status == "active",
+            )
+            .count()
+        )
 
-    def update_workspace(self, workspace_id: str, workspace_data: WorkspaceUpdate, user_id: str) -> Optional[dict]:
+    def update_workspace(
+        self, workspace_id: str, workspace_data: WorkspaceUpdate, user_id: str
+    ) -> Optional[dict]:
         """Atualiza dados do workspace"""
         try:
             workspace = self.get_workspace_by_id(workspace_id)
@@ -577,7 +630,7 @@ class WorkspaceService:
                 action="workspace_updated",
                 resource_type="workspace",
                 resource_id=None,
-                description=f"Workspace '{workspace.name}' foi atualizado"
+                description=f"Workspace '{workspace.name}' foi atualizado",
             )
 
             self.db.commit()
@@ -595,57 +648,56 @@ class WorkspaceService:
 
     def get_workspace_by_slug(self, slug: str) -> Optional[Workspace]:
         """Obtém um workspace por slug"""
-        return self.db.query(Workspace).filter(
-            and_(
-                Workspace.slug == slug,
-                Workspace.status == "active"
-            )
-        ).first()
-    
-    def get_user_workspaces(
-        self, user_id: str
-    ) -> list[dict[str, Any]]:
-        """Lista workspaces do usuário"""
-        # Workspaces onde é owner
-        owned_workspaces = self.db.query(Workspace).filter(
-            Workspace.owner_id == user_id,
-            Workspace.status == "active"
-        ).all()
+        return (
+            self.db.query(Workspace)
+            .filter(and_(Workspace.slug == slug, Workspace.status == "active"))
+            .first()
+        )
 
-        # Workspaces onde é membro
+    def get_user_workspaces(self, user_id: str) -> list[dict[str, Any]]:
+        """Lista workspaces do usuário (NOVA ARQUITETURA - com eager loading)"""
+        # Workspaces onde é owner (com tenant e plan via JOIN)
+        owned_workspaces = (
+            self.db.query(Workspace)
+            .options(joinedload(Workspace.tenant).joinedload(Tenant.plan))
+            .filter(Workspace.owner_id == user_id, Workspace.status == "active")
+            .all()
+        )
+
+        # Workspaces onde é membro (com tenant e plan via JOIN)
         member_workspaces = (
             self.db.query(Workspace)
+            .options(joinedload(Workspace.tenant).joinedload(Tenant.plan))
             .join(WorkspaceMember)
             .filter(
                 WorkspaceMember.user_id == user_id,
                 WorkspaceMember.status == "active",
-                Workspace.status == "active"
+                Workspace.status == "active",
             )
             .all()
         )
 
         # Combinar e remover duplicatas
-        all_workspaces = list({w.id: w for w in owned_workspaces + member_workspaces}.values())
-        
+        all_workspaces = list(
+            {w.id: w for w in owned_workspaces + member_workspaces}.values()
+        )
+
+        # ✅ NOVA ARQUITETURA: to_dict() agora retorna plan info via workspace.tenant.plan
+        logger.info(
+            f"Retornando {len(all_workspaces)} workspaces para usuário {user_id} com plan info via tenant"
+        )
         return [workspace.to_dict() for workspace in all_workspaces]
 
     def get_workspace_limits(self, user_id: str) -> Dict[str, Any]:
         """Obtém informações sobre limites e uso atual do usuário"""
-        
+
         subscription = self.get_user_subscription(user_id)
-        
+
         if not subscription:
-            return {
-                "plan": None,
-                "limits": {},
-                "usage": {},
-                "available": {}
-            }
+            return {"plan": None, "limits": {}, "usage": {}, "available": {}}
 
         current_workspaces = (
-            self.db.query(Workspace)
-            .filter(Workspace.owner_id == user_id)
-            .count()
+            self.db.query(Workspace).filter(Workspace.owner_id == user_id).count()
         )
 
         plan = subscription.plan
@@ -653,26 +705,27 @@ class WorkspaceService:
         return {
             "plan": {
                 "name": plan.name,
-                "type": plan.type.value,
-                "allow_collaborative_workspaces": plan.allow_collaborative_workspaces
+                "slug": plan.slug,  # Usar slug ao invés de type
+                "allow_collaborative_workspaces": plan.allow_collaborative_workspaces,
             },
             "limits": {
                 "max_workspaces": plan.max_workspaces,
                 "max_members_per_workspace": plan.max_members_per_workspace,
                 "max_projects_per_workspace": plan.max_projects_per_workspace,
                 "max_storage_mb": plan.max_storage_mb,
-                "max_executions_per_month": plan.max_executions_per_month
+                "max_executions_per_month": plan.max_executions_per_month,
             },
             "usage": {
                 "current_workspaces": current_workspaces,
                 "current_storage_mb": subscription.current_storage_mb,
-                "current_executions_this_month": subscription.current_executions_this_month
+                "current_executions_this_month": subscription.current_executions_this_month,
             },
             "available": {
                 "workspaces": plan.max_workspaces - current_workspaces,
                 "storage_mb": plan.max_storage_mb - subscription.current_storage_mb,
-                "executions": plan.max_executions_per_month - subscription.current_executions_this_month
-            }
+                "executions": plan.max_executions_per_month
+                - subscription.current_executions_this_month,
+            },
         }
 
     def get_plan_limits(self, workspace_id: str) -> Dict[str, Any]:
@@ -680,25 +733,25 @@ class WorkspaceService:
         workspace = self.get_workspace_by_id(workspace_id)
         if not workspace:
             return {"error": "Workspace não encontrado"}
-        
+
         return workspace.get_plan_limits()
 
     def validate_workspace_consistency(self, user_id: str) -> Dict[str, Any]:
         """Valida a consistência dos workspaces do usuário"""
-        
+
         individual_workspaces = (
             self.db.query(Workspace)
             .filter(
                 and_(
                     Workspace.owner_id == user_id,
-                    Workspace.type == WorkspaceType.INDIVIDUAL
+                    Workspace.type == WorkspaceType.INDIVIDUAL,
                 )
             )
             .count()
         )
 
         issues = []
-        
+
         if individual_workspaces == 0:
             issues.append("Usuário não possui workspace individual obrigatório")
         elif individual_workspaces > 1:
@@ -712,16 +765,16 @@ class WorkspaceService:
             "is_consistent": len(issues) == 0,
             "issues": issues,
             "individual_workspaces": individual_workspaces,
-            "has_subscription": subscription is not None
+            "has_subscription": subscription is not None,
         }
 
     def get_workspace_creation_rules(self, user_id: str) -> Dict[str, Any]:
         """
         Obtém as regras de criação de workspaces para um usuário específico
-        
+
         Args:
             user_id: ID do usuário
-            
+
         Returns:
             Dict com as regras de criação, incluindo:
             - can_create_individual: bool
@@ -744,19 +797,21 @@ class WorkspaceService:
                 .filter(
                     and_(
                         UserSubscription.user_id == user_id,
-                        UserSubscription.status == SubscriptionStatus.ACTIVE
+                        UserSubscription.status == SubscriptionStatus.ACTIVE,
                     )
                 )
                 .first()
             )
-            
+
             # Se não tem assinatura, criar uma padrão (FREE)
             if not subscription:
                 # Buscar plano FREE padrão
-                free_plan = self.db.query(Plan).filter(
-                    Plan.type == PlanType.FREE
-                ).first()
-                
+                free_plan = (
+                    self.db.query(Plan)
+                    .filter(Plan.slug == "free")  # Busca por slug ao invés de type
+                    .first()
+                )
+
                 if free_plan:
                     subscription = UserSubscription(
                         user_id=user_id,
@@ -764,7 +819,7 @@ class WorkspaceService:
                         status=SubscriptionStatus.ACTIVE,
                         started_at=datetime.now(timezone.utc),
                         current_workspaces=0,
-                        current_storage_mb=0.0
+                        current_storage_mb=0.0,
                     )
                     self.db.add(subscription)
                     self.db.commit()
@@ -778,14 +833,12 @@ class WorkspaceService:
                         "current_workspaces": 0,
                         "max_workspaces": 0,
                         "user_username": user.username or user.email,
-                        "error": "Nenhum plano disponível"
+                        "error": "Nenhum plano disponível",
                     }
 
             # Contar workspaces atuais
             current_workspaces = (
-                self.db.query(Workspace)
-                .filter(Workspace.owner_id == user_id)
-                .count()
+                self.db.query(Workspace).filter(Workspace.owner_id == user_id).count()
             )
 
             # Verificar se tem workspace individual
@@ -794,17 +847,21 @@ class WorkspaceService:
                 .filter(
                     and_(
                         Workspace.owner_id == user_id,
-                        Workspace.type == WorkspaceType.INDIVIDUAL
+                        Workspace.type == WorkspaceType.INDIVIDUAL,
                     )
                 )
-                .count() > 0
+                .count()
+                > 0
             )
 
             # Determinar capacidades
-            can_create_individual = not has_individual and current_workspaces < subscription.plan.max_workspaces
+            can_create_individual = (
+                not has_individual
+                and current_workspaces < subscription.plan.max_workspaces
+            )
             can_create_collaborative = (
-                subscription.plan.allow_collaborative_workspaces and 
-                current_workspaces < subscription.plan.max_workspaces
+                subscription.plan.allow_collaborative_workspaces
+                and current_workspaces < subscription.plan.max_workspaces
             )
 
             return {
@@ -815,11 +872,13 @@ class WorkspaceService:
                 "max_workspaces": subscription.plan.max_workspaces,
                 "user_username": user.username or user.email,
                 "plan_name": subscription.plan.name,
-                "plan_type": subscription.plan.type.value
+                "plan_slug": subscription.plan.slug,  # Usar slug ao invés de type
             }
-            
+
         except Exception as e:
-            logger.error(f"Erro ao obter regras de criação para usuário {user_id}: {str(e)}")
+            logger.error(
+                f"Erro ao obter regras de criação para usuário {user_id}: {str(e)}"
+            )
             # Retornar valores padrão seguros
             return {
                 "can_create_individual": False,
@@ -828,12 +887,14 @@ class WorkspaceService:
                 "current_workspaces": 0,
                 "max_workspaces": 0,
                 "user_username": "unknown",
-                "error": str(e)
+                "error": str(e),
             }
 
     # ==================== MEMBROS ====================
-    
-    def invite_member(self, workspace_id: str, invite_data: MemberInvite, inviter_id: str) -> WorkspaceInvitation:
+
+    def invite_member(
+        self, workspace_id: str, invite_data: MemberInvite, inviter_id: str
+    ) -> WorkspaceInvitation:
         """Convida um membro para o workspace"""
         workspace = self.get_workspace_by_id(workspace_id)
         if not workspace:
@@ -849,7 +910,9 @@ class WorkspaceService:
 
         # Verificar se usuário já é membro
         existing_user = self._get_user_by_email(invite_data.email)
-        if existing_user and self._is_workspace_member(workspace_id, str(existing_user)):
+        if existing_user and self._is_workspace_member(
+            workspace_id, str(existing_user)
+        ):
             raise ValueError("Usuário já é membro do workspace")
 
         # Criar convite
@@ -863,7 +926,7 @@ class WorkspaceService:
             token=secrets.token_urlsafe(32),
             status="pending",
             created_at=datetime.now(timezone.utc),
-            expires_at=datetime.now(timezone.utc) + timedelta(days=7)
+            expires_at=datetime.now(timezone.utc) + timedelta(days=7),
         )
 
         self.db.add(invitation)
@@ -875,7 +938,7 @@ class WorkspaceService:
             action="member_invited",
             resource_type="invitation",
             resource_id=str(invitation.id),
-            description=f"Usuário {invite_data.email} foi convidado com role {invite_data.role.value}"
+            description=f"Usuário {invite_data.email} foi convidado com role {invite_data.role.value}",
         )
 
         self.db.commit()
@@ -883,10 +946,14 @@ class WorkspaceService:
 
     def accept_invitation(self, token: str, user_id: str) -> WorkspaceMember | None:
         """Aceita um convite para workspace"""
-        invitation = self.db.query(WorkspaceInvitation).filter(
-            WorkspaceInvitation.token == token,
-            WorkspaceInvitation.status == "pending"
-        ).first()
+        invitation = (
+            self.db.query(WorkspaceInvitation)
+            .filter(
+                WorkspaceInvitation.token == token,
+                WorkspaceInvitation.status == "pending",
+            )
+            .first()
+        )
 
         if not invitation:
             raise ValueError("Convite não encontrado ou já processado")
@@ -901,7 +968,9 @@ class WorkspaceService:
             raise ValueError("Usuário já é membro do workspace")
 
         # Criar membership
-        member = self._add_member(str(invitation.workspace_id), user_id, invitation.role)
+        member = self._add_member(
+            str(invitation.workspace_id), user_id, invitation.role
+        )
 
         # Atualizar convite
         invitation.status = "accepted"
@@ -914,7 +983,7 @@ class WorkspaceService:
             action="member_joined",
             resource_type="member",
             resource_id=str(member.id),
-            description=f"Usuário aceitou convite e se juntou ao workspace"
+            description=f"Usuário aceitou convite e se juntou ao workspace",
         )
 
         self.db.commit()
@@ -927,10 +996,14 @@ class WorkspaceService:
             if not self._has_permission(workspace_id, remover_id, "admin"):
                 raise PermissionError("Sem permissão para remover membros")
 
-            member = self.db.query(WorkspaceMember).filter(
-                WorkspaceMember.id == member_id,
-                WorkspaceMember.workspace_id == workspace_id
-            ).first()
+            member = (
+                self.db.query(WorkspaceMember)
+                .filter(
+                    WorkspaceMember.id == member_id,
+                    WorkspaceMember.workspace_id == workspace_id,
+                )
+                .first()
+            )
 
             if not member:
                 return False
@@ -954,7 +1027,7 @@ class WorkspaceService:
                 action="member_removed",
                 resource_type="member",
                 resource_id=str(member.id),
-                description=f"Membro foi removido do workspace"
+                description=f"Membro foi removido do workspace",
             )
 
             self.db.commit()
@@ -978,11 +1051,15 @@ class WorkspaceService:
             if not self._has_permission(workspace_id, updater_id, "admin"):
                 raise PermissionError("Sem permissão para alterar roles")
 
-            member = self.db.query(WorkspaceMember).filter(
-                WorkspaceMember.id == member_id,
-                WorkspaceMember.workspace_id == workspace_id,
-                WorkspaceMember.status == "active"
-            ).first()
+            member = (
+                self.db.query(WorkspaceMember)
+                .filter(
+                    WorkspaceMember.id == member_id,
+                    WorkspaceMember.workspace_id == workspace_id,
+                    WorkspaceMember.status == "active",
+                )
+                .first()
+            )
 
             if not member:
                 return None
@@ -1002,7 +1079,7 @@ class WorkspaceService:
                 action="member_role_updated",
                 resource_type="member",
                 resource_id=str(member.id),
-                description=f"Role do membro alterado de {old_role} para {new_role.value}"
+                description=f"Role do membro alterado de {old_role} para {new_role.value}",
             )
 
             self.db.commit()
@@ -1016,29 +1093,34 @@ class WorkspaceService:
     def get_workspace_members(self, workspace_id: str) -> list[dict]:
         """Lista membros do workspace com informações do usuário"""
         from synapse.models.user import User
-        
-        members = self.db.query(WorkspaceMember, User).join(
-            User, WorkspaceMember.user_id == User.id
-        ).filter(
-            WorkspaceMember.workspace_id == workspace_id,
-            WorkspaceMember.status == "active"
-        ).all()
-        
+
+        members = (
+            self.db.query(WorkspaceMember, User)
+            .join(User, WorkspaceMember.user_id == User.id)
+            .filter(
+                WorkspaceMember.workspace_id == workspace_id,
+                WorkspaceMember.status == "active",
+            )
+            .all()
+        )
+
         result = []
         for member, user in members:
-            result.append({
-                "id": member.id,
-                "workspace_id": str(member.workspace_id),
-                "user_id": str(member.user_id),
-                "user_name": user.full_name or user.username,
-                "user_email": user.email,
-                "user_avatar": getattr(user, 'avatar_url', None),
-                "role": member.role.value.lower(),  # Converter para lowercase
-                "status": member.status,
-                "joined_at": member.joined_at,
-                "last_active_at": member.last_seen_at
-            })
-        
+            result.append(
+                {
+                    "id": member.id,
+                    "workspace_id": str(member.workspace_id),
+                    "user_id": str(member.user_id),
+                    "user_name": user.full_name or user.username,
+                    "user_email": user.email,
+                    "user_avatar": getattr(user, "avatar_url", None),
+                    "role": member.role.value.lower(),  # Converter para lowercase
+                    "status": member.status,
+                    "joined_at": member.joined_at,
+                    "last_active_at": member.last_seen_at,
+                }
+            )
+
         return result
 
     # ==================== PROJETOS ====================
@@ -1064,13 +1146,14 @@ class WorkspaceService:
         if not workflow_id:
             # Criar workflow vazio
             from synapse.models.workflow import Workflow
+
             workflow = Workflow(
                 name=f"Workflow - {project_data.name}",
                 description=f"Workflow gerado para o projeto {project_data.name}",
                 user_id=creator_id,
                 workspace_id=workspace_id,
                 definition={"nodes": [], "connections": []},
-                is_active=True
+                is_active=True,
             )
             self.db.add(workflow)
             self.db.flush()
@@ -1089,7 +1172,7 @@ class WorkspaceService:
             status="active",
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
-            last_edited_at=datetime.now(timezone.utc)
+            last_edited_at=datetime.now(timezone.utc),
         )
 
         self.db.add(project)
@@ -1097,8 +1180,12 @@ class WorkspaceService:
 
         # Adicionar criador como colaborador
         self._add_project_collaborator(
-            str(project.id), creator_id,
-            can_edit=True, can_comment=True, can_share=True, can_delete=True
+            str(project.id),
+            creator_id,
+            can_edit=True,
+            can_comment=True,
+            can_share=True,
+            can_delete=True,
         )
 
         # Atualizar contador do workspace
@@ -1111,7 +1198,7 @@ class WorkspaceService:
             action="project_created",
             resource_type="project",
             resource_id=str(project.id),
-            description=f"Projeto '{project.name}' foi criado"
+            description=f"Projeto '{project.name}' foi criado",
         )
 
         self.db.commit()
@@ -1216,7 +1303,7 @@ class WorkspaceService:
         # Atualizar contador
         workspace = self.get_workspace(project.workspace_id)
         if workspace:
-            workspace['project_count'] -= 1
+            workspace["project_count"] -= 1
 
         self.db.commit()
 
@@ -1378,7 +1465,7 @@ class WorkspaceService:
                 .limit(limit)
                 .all()
             )
-            
+
             # Converter para dict
             result = []
             for activity in activities:
@@ -1386,18 +1473,20 @@ class WorkspaceService:
                     "id": activity.id,
                     "workspace_id": activity.workspace_id,
                     "user_id": activity.user_id,
-                    "user_name": activity.user.full_name if activity.user else "Unknown",
+                    "user_name": (
+                        activity.user.full_name if activity.user else "Unknown"
+                    ),
                     "action": activity.action,
                     "resource_type": activity.resource_type,
                     "resource_id": activity.resource_id,
                     "description": activity.description,
                     "meta_data": activity.meta_data,
-                    "created_at": activity.created_at.isoformat()
+                    "created_at": activity.created_at.isoformat(),
                 }
                 result.append(activity_dict)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Erro ao obter atividades do workspace: {e}")
             return []
@@ -1408,19 +1497,19 @@ class WorkspaceService:
     def _generate_unique_slug(db: Session, name: str, username: str) -> str:
         """Gera slug único para o workspace"""
         import re
-        
+
         # Limpar nome para slug
-        base_slug = re.sub(r'[^a-zA-Z0-9\s-]', '', name.lower())
-        base_slug = re.sub(r'\s+', '-', base_slug.strip())
+        base_slug = re.sub(r"[^a-zA-Z0-9\s-]", "", name.lower())
+        base_slug = re.sub(r"\s+", "-", base_slug.strip())
         base_slug = f"{username}-{base_slug}"
-        
+
         # Verificar unicidade
         counter = 1
         slug = base_slug
         while db.query(Workspace).filter(Workspace.slug == slug).first():
             slug = f"{base_slug}-{counter}"
             counter += 1
-            
+
         return slug
 
     def _add_member(
@@ -1436,10 +1525,10 @@ class WorkspaceService:
             notification_preferences={
                 "email_notifications": True,
                 "push_notifications": True,
-                "activity_digest": "daily"
+                "activity_digest": "daily",
             },
             joined_at=datetime.now(timezone.utc),
-            last_seen_at=datetime.now(timezone.utc)
+            last_seen_at=datetime.now(timezone.utc),
         )
 
         self.db.add(member)
@@ -1464,7 +1553,7 @@ class WorkspaceService:
             can_share=permissions.get("can_share", False),
             can_delete=permissions.get("can_delete", False),
             added_at=datetime.now(timezone.utc),
-            last_seen_at=datetime.now(timezone.utc)
+            last_seen_at=datetime.now(timezone.utc),
         )
 
         self.db.add(collaborator)
@@ -1478,11 +1567,15 @@ class WorkspaceService:
             return True
 
         # Verificar membership
-        member = self.db.query(WorkspaceMember).filter(
-            WorkspaceMember.workspace_id == workspace_id,
-            WorkspaceMember.user_id == user_id,
-            WorkspaceMember.status == "active"
-        ).first()
+        member = (
+            self.db.query(WorkspaceMember)
+            .filter(
+                WorkspaceMember.workspace_id == workspace_id,
+                WorkspaceMember.user_id == user_id,
+                WorkspaceMember.status == "active",
+            )
+            .first()
+        )
 
         if not member:
             return False
@@ -1491,7 +1584,7 @@ class WorkspaceService:
         permissions_map = {
             WorkspaceRole.ADMIN: ["read", "write", "admin"],
             WorkspaceRole.MEMBER: ["read", "write"],
-            WorkspaceRole.VIEWER: ["read"]
+            WorkspaceRole.VIEWER: ["read"],
         }
 
         allowed_permissions = permissions_map.get(member.role, [])
@@ -1499,19 +1592,28 @@ class WorkspaceService:
 
     def _is_workspace_member(self, workspace_id: str, user_id: str) -> bool:
         """Verifica se usuário é membro do workspace"""
-        return self.db.query(WorkspaceMember).filter(
-            WorkspaceMember.workspace_id == workspace_id,
-            WorkspaceMember.user_id == user_id,
-            WorkspaceMember.status == "active"
-        ).first() is not None
+        return (
+            self.db.query(WorkspaceMember)
+            .filter(
+                WorkspaceMember.workspace_id == workspace_id,
+                WorkspaceMember.user_id == user_id,
+                WorkspaceMember.status == "active",
+            )
+            .first()
+            is not None
+        )
 
     def _can_edit_project(self, project_id: str, user_id: str) -> bool:
         """Verifica se usuário pode editar projeto"""
-        collaborator = self.db.query(ProjectCollaborator).filter(
-            ProjectCollaborator.project_id == project_id,
-            ProjectCollaborator.user_id == user_id
-        ).first()
-        
+        collaborator = (
+            self.db.query(ProjectCollaborator)
+            .filter(
+                ProjectCollaborator.project_id == project_id,
+                ProjectCollaborator.user_id == user_id,
+            )
+            .first()
+        )
+
         return collaborator and collaborator.can_edit
 
     def _can_comment_project(self, project_id: int, user_id: int) -> bool:
@@ -1553,7 +1655,7 @@ class WorkspaceService:
         resource_type: str,
         resource_id: str | None = None,
         description: str = "",
-        meta_data: dict | None = None
+        meta_data: dict | None = None,
     ):
         """Registra atividade no workspace"""
         activity = WorkspaceActivity(
@@ -1564,7 +1666,7 @@ class WorkspaceService:
             resource_id=resource_id,
             description=description,
             meta_data=meta_data or {},
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc),
         )
 
         self.db.add(activity)
@@ -1592,7 +1694,7 @@ class WorkspaceService:
             "storage_used_mb": workspace.storage_used_mb,
             "storage_limit_mb": workspace.max_storage_mb,
             "created_at": workspace.created_at,
-            "last_activity": workspace.last_activity_at
+            "last_activity": workspace.last_activity_at,
         }
 
     def _count_individual_workspaces(self, user_id: str) -> int:
@@ -1602,7 +1704,7 @@ class WorkspaceService:
             .filter(
                 and_(
                     Workspace.owner_id == user_id,
-                    Workspace.type == WorkspaceType.INDIVIDUAL
+                    Workspace.type == WorkspaceType.INDIVIDUAL,
                 )
             )
             .count()
@@ -1610,21 +1712,21 @@ class WorkspaceService:
 
     def _count_total_workspaces(self, user_id: str) -> int:
         """Conta total de workspaces do usuário"""
-        return (
-            self.db.query(Workspace)
-            .filter(Workspace.owner_id == user_id)
-            .count()
-        )
+        return self.db.query(Workspace).filter(Workspace.owner_id == user_id).count()
 
     def change_member_role(
         self, workspace_id: str, user_id: str, role: WorkspaceRole
     ) -> bool:
         """Altera role de um membro"""
-        member = self.db.query(WorkspaceMember).filter(
-            WorkspaceMember.workspace_id == workspace_id,
-            WorkspaceMember.user_id == user_id,
-            WorkspaceMember.status == "active"
-        ).first()
+        member = (
+            self.db.query(WorkspaceMember)
+            .filter(
+                WorkspaceMember.workspace_id == workspace_id,
+                WorkspaceMember.user_id == user_id,
+                WorkspaceMember.status == "active",
+            )
+            .first()
+        )
 
         if not member:
             return False
@@ -1634,53 +1736,73 @@ class WorkspaceService:
         return True
 
     # ==================== MÉTODOS ADICIONAIS ====================
-    
-    def get_user_invitations(self, user_id: str, status: Optional[str] = None, limit: int = 20, offset: int = 0) -> List[dict]:
+
+    def get_user_invitations(
+        self,
+        user_id: str,
+        status: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> List[dict]:
         """Obtém convites recebidos pelo usuário"""
         try:
             # Import necessário
             from synapse.models.user import User
             from synapse.models.workspace_invitation import WorkspaceInvitation
-            
+
             # Buscar user por ID para obter email
             user = self.db.query(User).filter(User.id == user_id).first()
             if not user:
                 return []
-            
+
             # Query base
             query = self.db.query(WorkspaceInvitation).filter(
                 WorkspaceInvitation.email == user.email
             )
-            
+
             # Aplicar filtro de status se fornecido
             if status:
                 query = query.filter(WorkspaceInvitation.status == status)
-            
+
             # Ordenar por data de criação (mais recentes primeiro)
             query = query.order_by(WorkspaceInvitation.created_at.desc())
-            
+
             # Aplicar paginação
             invitations = query.offset(offset).limit(limit).all()
-            
+
             # Converter para dict
             result = []
             for invitation in invitations:
                 invitation_dict = {
                     "id": invitation.id,
                     "workspace_id": invitation.workspace_id,
-                    "workspace_name": invitation.workspace.name if invitation.workspace else "Unknown",
-                    "inviter_name": invitation.inviter.full_name if invitation.inviter else "Unknown",
+                    "workspace_name": (
+                        invitation.workspace.name if invitation.workspace else "Unknown"
+                    ),
+                    "inviter_name": (
+                        invitation.inviter.full_name
+                        if invitation.inviter
+                        else "Unknown"
+                    ),
                     "status": invitation.status,
                     "role": invitation.role.value,
                     "message": invitation.message,
-                    "expires_at": invitation.expires_at.isoformat() if invitation.expires_at else None,
+                    "expires_at": (
+                        invitation.expires_at.isoformat()
+                        if invitation.expires_at
+                        else None
+                    ),
                     "created_at": invitation.created_at.isoformat(),
-                    "accepted_at": invitation.accepted_at.isoformat() if invitation.accepted_at else None
+                    "accepted_at": (
+                        invitation.accepted_at.isoformat()
+                        if invitation.accepted_at
+                        else None
+                    ),
                 }
                 result.append(invitation_dict)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Erro ao obter convites: {e}")
             return []
@@ -1708,11 +1830,11 @@ class WorkspaceService:
         try:
             # Import necessário
             from synapse.models.workspace import WorkspaceProject
-            
+
             query = self.db.query(WorkspaceProject).filter(
                 WorkspaceProject.status == "active"
             )
-            
+
             # Filtrar apenas projetos de workspaces que o usuário tem acesso
             workspace_ids = []
             user_workspaces = self.get_user_workspaces(user_id)
@@ -1721,54 +1843,60 @@ class WorkspaceService:
                 workspace_id = workspace["id"]
                 if isinstance(workspace_id, str):
                     import uuid
+
                     try:
                         workspace_id = uuid.UUID(workspace_id)
                     except ValueError:
                         continue
                 workspace_ids.append(workspace_id)
-            
+
             if workspace_ids:
                 query = query.filter(WorkspaceProject.workspace_id.in_(workspace_ids))
             else:
                 return []  # Usuário não tem acesso a nenhum workspace
-            
+
             # Aplicar filtros de busca
-            if hasattr(search_params, 'query') and search_params.query:
+            if hasattr(search_params, "query") and search_params.query:
                 query = query.filter(
                     or_(
                         WorkspaceProject.name.ilike(f"%{search_params.query}%"),
-                        WorkspaceProject.description.ilike(f"%{search_params.query}%")
+                        WorkspaceProject.description.ilike(f"%{search_params.query}%"),
                     )
                 )
-            
+
             # Filtro de workspace específico
-            if hasattr(search_params, 'workspace_id') and search_params.workspace_id:
-                query = query.filter(WorkspaceProject.workspace_id == search_params.workspace_id)
-            
+            if hasattr(search_params, "workspace_id") and search_params.workspace_id:
+                query = query.filter(
+                    WorkspaceProject.workspace_id == search_params.workspace_id
+                )
+
             # Filtro de status
-            if hasattr(search_params, 'status') and search_params.status:
+            if hasattr(search_params, "status") and search_params.status:
                 query = query.filter(WorkspaceProject.status == search_params.status)
-            
+
             # Filtro de projetos com colaboradores
-            if hasattr(search_params, 'has_collaborators') and search_params.has_collaborators:
+            if (
+                hasattr(search_params, "has_collaborators")
+                and search_params.has_collaborators
+            ):
                 query = query.filter(WorkspaceProject.collaborator_count > 0)
-            
+
             # Ordenação
-            sort_by = getattr(search_params, 'sort_by', 'updated')
-            if sort_by == 'updated':
+            sort_by = getattr(search_params, "sort_by", "updated")
+            if sort_by == "updated":
                 query = query.order_by(WorkspaceProject.updated_at.desc())
-            elif sort_by == 'created':
+            elif sort_by == "created":
                 query = query.order_by(WorkspaceProject.created_at.desc())
-            elif sort_by == 'name':
+            elif sort_by == "name":
                 query = query.order_by(WorkspaceProject.name.asc())
-            elif sort_by == 'activity':
+            elif sort_by == "activity":
                 query = query.order_by(WorkspaceProject.last_edited_at.desc())
-            
+
             # Aplicar paginação
-            limit = getattr(search_params, 'limit', 20)
-            offset = getattr(search_params, 'offset', 0)
+            limit = getattr(search_params, "limit", 20)
+            offset = getattr(search_params, "offset", 0)
             projects = query.offset(offset).limit(limit).all()
-            
+
             # Converter para dict
             result = []
             for project in projects:
@@ -1787,91 +1915,106 @@ class WorkspaceService:
                     "comment_count": project.comment_count,
                     "created_at": project.created_at.isoformat(),
                     "updated_at": project.updated_at.isoformat(),
-                    "last_edited_at": project.last_edited_at.isoformat()
+                    "last_edited_at": project.last_edited_at.isoformat(),
                 }
                 result.append(project_dict)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Erro na busca de projetos: {e}")
             return []
 
     def search_workspaces(self, search_params, user_id: str) -> List[dict]:
-        """Busca workspaces com filtros"""
+        """Busca workspaces com filtros (NOVA ARQUITETURA - com eager loading)"""
         try:
-            query = self.db.query(Workspace).filter(Workspace.status == "active")
-            
+            query = (
+                self.db.query(Workspace)
+                .options(joinedload(Workspace.tenant).joinedload(Tenant.plan))
+                .filter(Workspace.status == "active")
+            )
+
             # Aplicar filtros de busca
-            if hasattr(search_params, 'query') and search_params.query:
+            if hasattr(search_params, "query") and search_params.query:
                 query = query.filter(
                     or_(
                         Workspace.name.ilike(f"%{search_params.query}%"),
-                        Workspace.description.ilike(f"%{search_params.query}%")
+                        Workspace.description.ilike(f"%{search_params.query}%"),
                     )
                 )
-            
+
             # Filtro de workspace público
-            if hasattr(search_params, 'is_public') and search_params.is_public is not None:
+            if (
+                hasattr(search_params, "is_public")
+                and search_params.is_public is not None
+            ):
                 query = query.filter(Workspace.is_public == search_params.is_public)
-            
+
             # Filtro de workspaces com projetos
-            if hasattr(search_params, 'has_projects') and search_params.has_projects:
+            if hasattr(search_params, "has_projects") and search_params.has_projects:
                 query = query.filter(Workspace.project_count > 0)
-            
+
             # Filtro de número mínimo de membros
-            if hasattr(search_params, 'min_members') and search_params.min_members:
-                query = query.filter(Workspace.member_count >= search_params.min_members)
-            
+            if hasattr(search_params, "min_members") and search_params.min_members:
+                query = query.filter(
+                    Workspace.member_count >= search_params.min_members
+                )
+
             # Filtro de número máximo de membros
-            if hasattr(search_params, 'max_members') and search_params.max_members:
-                query = query.filter(Workspace.member_count <= search_params.max_members)
-            
+            if hasattr(search_params, "max_members") and search_params.max_members:
+                query = query.filter(
+                    Workspace.member_count <= search_params.max_members
+                )
+
             # Ordenação
-            sort_by = getattr(search_params, 'sort_by', 'activity')
-            if sort_by == 'activity':
+            sort_by = getattr(search_params, "sort_by", "activity")
+            if sort_by == "activity":
                 query = query.order_by(Workspace.last_activity_at.desc())
-            elif sort_by == 'members':
+            elif sort_by == "members":
                 query = query.order_by(Workspace.member_count.desc())
-            elif sort_by == 'projects':
+            elif sort_by == "projects":
                 query = query.order_by(Workspace.project_count.desc())
-            elif sort_by == 'created':
+            elif sort_by == "created":
                 query = query.order_by(Workspace.created_at.desc())
-            elif sort_by == 'name':
+            elif sort_by == "name":
                 query = query.order_by(Workspace.name.asc())
-            
+
             # Aplicar paginação
-            limit = getattr(search_params, 'limit', 20)
-            offset = getattr(search_params, 'offset', 0)
+            limit = getattr(search_params, "limit", 20)
+            offset = getattr(search_params, "offset", 0)
             workspaces = query.offset(offset).limit(limit).all()
-            
+
             # Converter para dict
             return [workspace.to_dict() for workspace in workspaces]
-            
+
         except Exception as e:
             logger.error(f"Erro na busca: {e}")
             return []
 
-    def get_project_versions(self, project_id: int, user_id: str, limit: int = 20, offset: int = 0) -> Optional[List[dict]]:
+    def get_project_versions(
+        self, project_id: int, user_id: str, limit: int = 20, offset: int = 0
+    ) -> Optional[List[dict]]:
         """Obtém versões de um projeto"""
         try:
             # Verificar se o projeto existe e se o usuário tem permissão
             project = self.get_project(project_id)
             if not project:
                 return []
-            
+
             # Verificar se usuário pode visualizar o projeto
             if not self._can_view_project(project_id, user_id):
                 return []
-            
+
             # Buscar versões do projeto
-            query = self.db.query(ProjectVersion).filter(
-                ProjectVersion.project_id == project_id
-            ).order_by(ProjectVersion.created_at.desc())
-            
+            query = (
+                self.db.query(ProjectVersion)
+                .filter(ProjectVersion.project_id == project_id)
+                .order_by(ProjectVersion.created_at.desc())
+            )
+
             # Aplicar paginação
             versions = query.offset(offset).limit(limit).all()
-            
+
             # Converter para dict
             result = []
             for version in versions:
@@ -1885,17 +2028,19 @@ class WorkspaceService:
                     "is_auto_save": version.is_auto_save,
                     "file_size": version.file_size,
                     "created_at": version.created_at.isoformat(),
-                    "created_by": version.user.full_name if version.user else "Unknown"
+                    "created_by": version.user.full_name if version.user else "Unknown",
                 }
                 result.append(version_dict)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Erro ao obter versões: {e}")
             return []
 
-    def create_project_version(self, project_id: int, version_data, user_id: str) -> dict:
+    def create_project_version(
+        self, project_id: int, version_data, user_id: str
+    ) -> dict:
         """Cria uma nova versão do projeto"""
         try:
             # Implementação básica
@@ -1903,13 +2048,15 @@ class WorkspaceService:
                 "id": 1,
                 "version": "1.0.0",
                 "description": "Nova versão",
-                "created_at": datetime.now()
+                "created_at": datetime.now(),
             }
         except Exception as e:
             logger.error(f"Erro ao criar versão: {e}")
             raise e
 
-    def restore_project_version(self, project_id: int, version_id: int, user_id: str) -> bool:
+    def restore_project_version(
+        self, project_id: int, version_id: int, user_id: str
+    ) -> bool:
         """Restaura uma versão específica do projeto"""
         try:
             # Por enquanto retorna True - implementar quando necessário
@@ -1918,30 +2065,36 @@ class WorkspaceService:
             logger.error(f"Erro ao restaurar versão: {e}")
             return False
 
-    def get_project_activities(self, project_id: int, user_id: str, limit: int = 50, offset: int = 0) -> Optional[List[dict]]:
+    def get_project_activities(
+        self, project_id: int, user_id: str, limit: int = 50, offset: int = 0
+    ) -> Optional[List[dict]]:
         """Obtém atividades de um projeto"""
         try:
             # Verificar se o projeto existe e se o usuário tem permissão
             project = self.get_project(project_id)
             if not project:
                 return []
-            
+
             # Verificar se usuário pode visualizar o projeto
             if not self._can_view_project(project_id, user_id):
                 return []
-            
+
             # Buscar atividades relacionadas ao projeto no workspace
-            query = self.db.query(WorkspaceActivity).filter(
-                and_(
-                    WorkspaceActivity.workspace_id == project.workspace_id,
-                    WorkspaceActivity.resource_type == "project",
-                    WorkspaceActivity.resource_id == str(project_id)
+            query = (
+                self.db.query(WorkspaceActivity)
+                .filter(
+                    and_(
+                        WorkspaceActivity.workspace_id == project.workspace_id,
+                        WorkspaceActivity.resource_type == "project",
+                        WorkspaceActivity.resource_id == str(project_id),
+                    )
                 )
-            ).order_by(WorkspaceActivity.created_at.desc())
-            
+                .order_by(WorkspaceActivity.created_at.desc())
+            )
+
             # Aplicar paginação
             activities = query.offset(offset).limit(limit).all()
-            
+
             # Converter para dict
             result = []
             for activity in activities:
@@ -1949,18 +2102,20 @@ class WorkspaceService:
                     "id": activity.id,
                     "workspace_id": activity.workspace_id,
                     "user_id": activity.user_id,
-                    "user_name": activity.user.full_name if activity.user else "Unknown",
+                    "user_name": (
+                        activity.user.full_name if activity.user else "Unknown"
+                    ),
                     "action": activity.action,
                     "resource_type": activity.resource_type,
                     "resource_id": activity.resource_id,
                     "description": activity.description,
                     "meta_data": activity.meta_data,
-                    "created_at": activity.created_at.isoformat()
+                    "created_at": activity.created_at.isoformat(),
                 }
                 result.append(activity_dict)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Erro ao obter atividades: {e}")
             return []
@@ -1973,7 +2128,9 @@ class WorkspaceService:
             logger.error(f"Erro na operação em lote: {e}")
             return {"success": False, "processed": 0, "errors": [str(e)]}
 
-    def bulk_project_operation(self, workspace_id: int, operation, user_id: str) -> dict:
+    def bulk_project_operation(
+        self, workspace_id: int, operation, user_id: str
+    ) -> dict:
         """Executa operação em lote em projetos"""
         try:
             return {"success": True, "processed": 0, "errors": []}
@@ -1981,7 +2138,9 @@ class WorkspaceService:
             logger.error(f"Erro na operação em lote: {e}")
             return {"success": False, "processed": 0, "errors": [str(e)]}
 
-    def get_notification_settings(self, workspace_id: int, user_id: str) -> Optional[dict]:
+    def get_notification_settings(
+        self, workspace_id: int, user_id: str
+    ) -> Optional[dict]:
         """Obtém configurações de notificação do workspace"""
         try:
             return {"email_notifications": True, "push_notifications": True}
@@ -1989,7 +2148,9 @@ class WorkspaceService:
             logger.error(f"Erro ao obter configurações: {e}")
             return None
 
-    def update_notification_settings(self, workspace_id: int, preferences, user_id: str) -> dict:
+    def update_notification_settings(
+        self, workspace_id: int, preferences, user_id: str
+    ) -> dict:
         """Atualiza configurações de notificação"""
         try:
             return {"success": True, "message": "Configurações atualizadas"}
@@ -1997,7 +2158,9 @@ class WorkspaceService:
             logger.error(f"Erro ao atualizar configurações: {e}")
             return {"success": False, "message": str(e)}
 
-    def create_integration(self, workspace_id: int, integration_data, user_id: str) -> dict:
+    def create_integration(
+        self, workspace_id: int, integration_data, user_id: str
+    ) -> dict:
         """Cria uma nova integração"""
         try:
             return {"id": 1, "name": "Integration", "type": "generic"}
@@ -2013,7 +2176,9 @@ class WorkspaceService:
             logger.error(f"Erro ao obter integrações: {e}")
             return []
 
-    def update_integration(self, integration_id: int, integration_data, user_id: str) -> dict:
+    def update_integration(
+        self, integration_id: int, integration_data, user_id: str
+    ) -> dict:
         """Atualiza uma integração"""
         try:
             return {"id": integration_id, "name": "Integration", "type": "generic"}

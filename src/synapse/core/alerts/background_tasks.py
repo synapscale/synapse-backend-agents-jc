@@ -107,16 +107,15 @@ class BackgroundTaskManager:
 
     async def get_task_status(self) -> dict:
         """Get status of all background tasks"""
-        status = {
-            "running": self.running,
-            "tasks": {}
-        }
+        status = {"running": self.running, "tasks": {}}
 
         for task_name, task in self.tasks.items():
             status["tasks"][task_name] = {
                 "done": task.done(),
                 "cancelled": task.cancelled(),
-                "exception": str(task.exception()) if task.done() and task.exception() else None
+                "exception": (
+                    str(task.exception()) if task.done() and task.exception() else None
+                ),
             }
 
         return status
@@ -139,7 +138,7 @@ class BackgroundTaskManager:
     async def _run_metric_aggregation(self):
         """Run metric aggregation task"""
         logger.info("Starting metric aggregation task")
-        
+
         while self.running:
             try:
                 await self._aggregate_metrics()
@@ -154,7 +153,7 @@ class BackgroundTaskManager:
     async def _run_cleanup_task(self):
         """Run cleanup task for old data"""
         logger.info("Starting cleanup task")
-        
+
         while self.running:
             try:
                 await self._cleanup_old_data()
@@ -169,102 +168,129 @@ class BackgroundTaskManager:
     async def _aggregate_metrics(self):
         """Aggregate metrics for better performance"""
         try:
-            from synapse.models.analytics import AnalyticsEvent, AnalyticsMetric
+            from synapse.models.analytics_event import AnalyticsEvent
+            from synapse.models.analytics_metric import AnalyticsMetric
             from synapse.database import get_db_session
             from sqlalchemy import func, text
-            
+
             with get_db_session() as db:
                 # Aggregate events into metrics every 5 minutes
                 end_time = datetime.utcnow()
                 start_time = end_time - timedelta(minutes=5)
-                
+
                 # Count error events
-                error_count = db.query(AnalyticsEvent).filter(
-                    AnalyticsEvent.event_type == "error_occurred",
-                    AnalyticsEvent.timestamp >= start_time,
-                    AnalyticsEvent.timestamp < end_time
-                ).count()
-                
+                error_count = (
+                    db.query(AnalyticsEvent)
+                    .filter(
+                        AnalyticsEvent.event_type == "error_occurred",
+                        AnalyticsEvent.timestamp >= start_time,
+                        AnalyticsEvent.timestamp < end_time,
+                    )
+                    .count()
+                )
+
                 if error_count > 0:
                     error_metric = AnalyticsMetric(
                         metric_name="error_count",
                         metric_value=error_count,
                         dimensions={"aggregation_period": "5min"},
-                        timestamp=end_time
+                        timestamp=end_time,
                     )
                     db.add(error_metric)
-                
+
                 # Count page views
-                page_view_count = db.query(AnalyticsEvent).filter(
-                    AnalyticsEvent.event_type == "page_view",
-                    AnalyticsEvent.timestamp >= start_time,
-                    AnalyticsEvent.timestamp < end_time
-                ).count()
-                
+                page_view_count = (
+                    db.query(AnalyticsEvent)
+                    .filter(
+                        AnalyticsEvent.event_type == "page_view",
+                        AnalyticsEvent.timestamp >= start_time,
+                        AnalyticsEvent.timestamp < end_time,
+                    )
+                    .count()
+                )
+
                 if page_view_count > 0:
                     page_view_metric = AnalyticsMetric(
                         metric_name="page_view_count",
                         metric_value=page_view_count,
                         dimensions={"aggregation_period": "5min"},
-                        timestamp=end_time
+                        timestamp=end_time,
                     )
                     db.add(page_view_metric)
-                
+
                 # Calculate average response time (if available in properties)
-                response_times = db.query(AnalyticsEvent.properties).filter(
-                    AnalyticsEvent.event_type == "performance_metric",
-                    AnalyticsEvent.timestamp >= start_time,
-                    AnalyticsEvent.timestamp < end_time,
-                    AnalyticsEvent.properties.contains({"response_time": 1})  # Check if contains response_time
-                ).all()
-                
+                response_times = (
+                    db.query(AnalyticsEvent.properties)
+                    .filter(
+                        AnalyticsEvent.event_type == "performance_metric",
+                        AnalyticsEvent.timestamp >= start_time,
+                        AnalyticsEvent.timestamp < end_time,
+                        AnalyticsEvent.properties.contains(
+                            {"response_time": 1}
+                        ),  # Check if contains response_time
+                    )
+                    .all()
+                )
+
                 if response_times:
                     total_time = 0
                     count = 0
                     for event in response_times:
-                        if isinstance(event.properties, dict) and "response_time" in event.properties:
+                        if (
+                            isinstance(event.properties, dict)
+                            and "response_time" in event.properties
+                        ):
                             total_time += float(event.properties["response_time"])
                             count += 1
-                    
+
                     if count > 0:
                         avg_response_time = total_time / count
                         response_metric = AnalyticsMetric(
                             metric_name="avg_response_time",
                             metric_value=avg_response_time,
                             dimensions={"aggregation_period": "5min"},
-                            timestamp=end_time
+                            timestamp=end_time,
                         )
                         db.add(response_metric)
-                
-                logger.debug(f"Aggregated metrics for period {start_time} to {end_time}")
-            
+
+                logger.debug(
+                    f"Aggregated metrics for period {start_time} to {end_time}"
+                )
+
         except Exception as e:
             logger.error(f"Error aggregating metrics: {e}")
 
     async def _cleanup_old_data(self):
         """Clean up old analytics data"""
         try:
-            from synapse.models.analytics import AnalyticsEvent, AnalyticsMetric
+            from synapse.models.analytics_event import AnalyticsEvent
+            from synapse.models.analytics_metric import AnalyticsMetric
             from synapse.database import get_db_session
-            
+
             with get_db_session() as db:
                 # Delete events older than 90 days
                 cutoff_date = datetime.utcnow() - timedelta(days=90)
-                
-                deleted_events = db.query(AnalyticsEvent).filter(
-                    AnalyticsEvent.timestamp < cutoff_date
-                ).delete(synchronize_session=False)
-                
+
+                deleted_events = (
+                    db.query(AnalyticsEvent)
+                    .filter(AnalyticsEvent.timestamp < cutoff_date)
+                    .delete(synchronize_session=False)
+                )
+
                 # Delete metrics older than 180 days
                 metrics_cutoff = datetime.utcnow() - timedelta(days=180)
-                
-                deleted_metrics = db.query(AnalyticsMetric).filter(
-                    AnalyticsMetric.timestamp < metrics_cutoff
-                ).delete(synchronize_session=False)
-                
+
+                deleted_metrics = (
+                    db.query(AnalyticsMetric)
+                    .filter(AnalyticsMetric.timestamp < metrics_cutoff)
+                    .delete(synchronize_session=False)
+                )
+
                 if deleted_events > 0 or deleted_metrics > 0:
-                    logger.info(f"Cleaned up {deleted_events} old events and {deleted_metrics} old metrics")
-            
+                    logger.info(
+                        f"Cleaned up {deleted_events} old events and {deleted_metrics} old metrics"
+                    )
+
         except Exception as e:
             logger.error(f"Error cleaning up old data: {e}")
 
@@ -282,4 +308,4 @@ async def lifespan_manager():
         yield
     finally:
         # Stop background tasks
-        await background_task_manager.stop_all_tasks() 
+        await background_task_manager.stop_all_tasks()

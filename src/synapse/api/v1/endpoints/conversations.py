@@ -1,772 +1,608 @@
 """
-Endpoints para gerenciamento de conversações e mensagens
-Criado por José - um desenvolvedor Full Stack
-API completa para chat e comunicação com agents
+Conversations endpoints - Complete Implementation
+
+This module handles conversation management, message handling, and related operations.
+Supports creating conversations, sending messages, archiving, and conversation lifecycle management.
 """
 
-import logging
-from typing import Optional, Dict, Any
-import time
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session, selectinload
+from sqlalchemy import and_, or_, func, desc
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+import uuid
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
-from sqlalchemy.sql import func
-
-from synapse.api.deps import get_current_user
-from synapse.services.llm_service import get_llm_service, UnifiedLLMService
-from synapse.database import get_db
-from synapse.models.agent import Agent
+from synapse.api.deps import get_current_active_user, get_db
 from synapse.models.conversation import Conversation
 from synapse.models.message import Message
 from synapse.models.user import User
+from synapse.models.agent import Agent
 from synapse.schemas.conversation import (
     ConversationCreate,
-    ConversationListResponse,
     ConversationResponse,
+    ConversationListResponse,
+    ConversationTitleUpdate,
     MessageCreate,
-    MessageListResponse,
     MessageResponse,
+    MessageListResponse
 )
-
-logger = logging.getLogger(__name__)
+from fastapi import HTTPException
 
 router = APIRouter()
 
-
-@router.get(
-    "/",
-    response_model=ConversationListResponse,
-    summary="Listar conversas",
-    tags=["ai"],
-)
+@router.get("/", response_model=List[ConversationResponse])
 async def list_conversations(
-    page: int = Query(1, ge=1, description="Número da página"),
-    size: int = Query(20, ge=1, le=100, description="Itens por página"),
-    agent_id: Optional[str] = Query(None, description="Filtrar por agent específico"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> ConversationListResponse:
-    """
-    Lista todas as conversações do usuário com paginação.
-    
-    Retorna conversações ordenadas pela última mensagem,
-    com opção de filtrar por agent específico.
-    
-    Args:
-        page: Número da página (1-based)
-        size: Número de itens por página
-        agent_id: ID do agent para filtrar conversações
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        ConversationListResponse: Lista paginada de conversações
-        
-    Raises:
-        HTTPException: 500 se erro interno do servidor
-    """
+    search: Optional[str] = Query(None, description="Search in title or messages"),
+    status: Optional[str] = Query(None, description="Filter by status (active, archived, deleted)"),
+    agent_id: Optional[UUID] = Query(None, description="Filter by agent"),
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(50, ge=1, le=100, description="Page size"),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Listar conversas do usuário com filtros e paginação"""
     try:
-        logger.info(f"Listando conversações para usuário {current_user.id} - página: {page}, agent: {agent_id}")
+        # Build base query
+        query = db.query(Conversation).filter(
+            Conversation.user_id == current_user.id
+        ).options(
+            selectinload(Conversation.agent),
+            selectinload(Conversation.messages)
+        )
         
-        query = db.query(Conversation).filter(Conversation.user_id == current_user.id)
-
+        # Apply filters
+        if search:
+            search_term = f"%{search}%"
+            # Search in conversation title or message content
+            query = query.outerjoin(Message).filter(
+                or_(
+                    Conversation.title.ilike(search_term),
+                    Message.content.ilike(search_term)
+                )
+            ).distinct()
+        
+        if status:
+            query = query.filter(Conversation.status == status)
+            
         if agent_id:
             query = query.filter(Conversation.agent_id == agent_id)
-            logger.info(f"Filtrando por agent {agent_id}")
-
-        query = query.order_by(Conversation.updated_at.desc().nullslast())
-
-        # Paginação
-        total = query.count()
-        conversations = query.offset((page - 1) * size).limit(size).all()
-
-        logger.info(f"Retornadas {len(conversations)} conversações de {total} total para usuário {current_user.id}")
         
-        return ConversationListResponse(
-            items=conversations,
-            total=total,
-            page=page,
-            size=size,
-            pages=(total + size - 1) // size,
-        )
+        # Order by last activity (most recent first)
+        query = query.order_by(desc(Conversation.updated_at))
+        
+        # Pagination
+        total = query.count()
+        offset = (page - 1) * size
+        conversations = query.offset(offset).limit(size).all()
+        
+        # Convert to response model
+        response_conversations = []
+        for conv in conversations:
+            # Get latest message for preview
+            latest_message = None
+            message_count = 0
+            if conv.messages:
+                conv.messages.sort(key=lambda x: x.created_at, reverse=True)
+                latest_message = conv.messages[0] if conv.messages else None
+                message_count = len(conv.messages)
+            
+            conv_dict = {
+                "id": conv.id,
+                "user_id": conv.user_id,
+                "agent_id": conv.agent_id,
+                "workspace_id": conv.workspace_id,
+                "tenant_id": conv.tenant_id,
+                "title": conv.title,
+                "status": conv.status,
+                "message_count": conv.message_count,
+                "total_tokens_used": conv.total_tokens_used,
+                "agent_name": conv.agent.name if conv.agent else None,
+                "latest_message": {
+                    "id": latest_message.id,
+                    "content": latest_message.content[:100] + "..." if len(latest_message.content) > 100 else latest_message.content,
+                    "role": latest_message.role,
+                    "created_at": latest_message.created_at
+                } if latest_message else None,
+                "last_message_at": conv.last_message_at,
+                "created_at": conv.created_at,
+                "updated_at": conv.updated_at,
+                "context": conv.context,
+                "settings": conv.settings
+            }
+            response_conversations.append(ConversationResponse(**conv_dict))
+        
+        return response_conversations
+        
     except Exception as e:
-        logger.error(f"Erro ao listar conversações para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao listar conversas",
+            details=str(e)
+        )
 
-
-@router.post("/", response_model=ConversationResponse, summary="Criar conversação", tags=["ai"])
+@router.post("/", response_model=ConversationResponse)
 async def create_conversation(
     conversation_data: ConversationCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> ConversationResponse:
-    """
-    Cria uma nova conversação para o usuário.
-    
-    Permite iniciar uma conversa com um agent específico
-    ou criar uma conversação geral.
-    
-    Args:
-        conversation_data: Dados da conversação a ser criada
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        ConversationResponse: Conversação criada
-        
-    Raises:
-        HTTPException: 400 se dados inválidos
-        HTTPException: 500 se erro interno do servidor
-    """
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Criar nova conversação"""
     try:
-        logger.info(f"Criando conversação '{conversation_data.title}' para usuário {current_user.id}")
+        # Verify agent exists and user has access
+        if conversation_data.agent_id:
+            agent = db.query(Agent).filter(
+                and_(
+                    Agent.id == conversation_data.agent_id,
+                    or_(
+                        Agent.user_id == current_user.id,  # User owns the agent
+                        Agent.scope == "global",  # Global agent
+                        and_(
+                            Agent.scope == "workspace",
+                            # TODO: Check workspace membership
+                            Agent.workspace_id.in_(
+                                # Get user's workspaces
+                                db.query(Agent.workspace_id).filter(Agent.user_id == current_user.id)
+                            )
+                        )
+                    ),
+                    Agent.is_active == True
+                )
+            ).first()
+            
+            if not agent:
+                raise HTTPException(
+                    status_code=404,
+                    message="Agente não encontrado ou sem acesso"
+                )
         
-        conversation = Conversation(
-            title=conversation_data.title,
-            agent_id=conversation_data.agent_id,
+        # Generate title if not provided
+        title = conversation_data.title or f"Nova Conversa - {datetime.utcnow().strftime('%d/%m/%Y %H:%M')}"
+        
+        # Create conversation
+        new_conversation = Conversation(
+            title=title,
             user_id=current_user.id,
+            agent_id=conversation_data.agent_id,
+            workspace_id=conversation_data.workspace_id,
+            tenant_id=current_user.tenant_id,  # Get from current user
+            status="active",
+            context=conversation_data.context or {},
+            settings=conversation_data.settings or {}
+        )
+        
+        db.add(new_conversation)
+        db.commit()
+        db.refresh(new_conversation)
+        
+        # Load agent relationship
+        if new_conversation.agent_id:
+            new_conversation.agent = db.query(Agent).filter(Agent.id == new_conversation.agent_id).first()
+        
+        # Convert to response
+        conv_dict = {
+            "id": new_conversation.id,
+            "user_id": new_conversation.user_id,
+            "agent_id": new_conversation.agent_id,
+            "workspace_id": new_conversation.workspace_id,
+            "tenant_id": new_conversation.tenant_id,
+            "title": new_conversation.title,
+            "status": new_conversation.status,
+            "message_count": new_conversation.message_count,
+            "total_tokens_used": new_conversation.total_tokens_used,
+            "agent_name": new_conversation.agent.name if new_conversation.agent else None,
+            "latest_message": None,
+            "last_message_at": new_conversation.last_message_at,
+            "created_at": new_conversation.created_at,
+            "updated_at": new_conversation.updated_at,
+            "context": new_conversation.context,
+            "settings": new_conversation.settings
+        }
+        
+        return ConversationResponse(**conv_dict)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao criar conversação",
+            details=str(e)
         )
 
-        db.add(conversation)
-        db.commit()
-        db.refresh(conversation)
-
-        logger.info(f"Conversação '{conversation.title}' criada com sucesso (ID: {conversation.id}) para usuário {current_user.id}")
-        return {
-            "id": str(conversation.id),
-            "user_id": str(conversation.user_id),
-            "agent_id": str(conversation.agent_id) if conversation.agent_id else None,
+@router.get("/{conversation_id}", response_model=ConversationResponse)
+async def get_conversation(
+    conversation_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Obter conversação específica"""
+    try:
+        conversation = db.query(Conversation).filter(
+            and_(
+                Conversation.id == conversation_id,
+                Conversation.user_id == current_user.id
+            )
+        ).options(
+            selectinload(Conversation.agent),
+            selectinload(Conversation.messages)
+        ).first()
+        
+        if not conversation:
+            raise HTTPException(
+                status_code=404,
+                message="Conversação não encontrada"
+            )
+        
+        # Get latest message for preview
+        latest_message = None
+        message_count = len(conversation.messages) if conversation.messages else 0
+        
+        if conversation.messages:
+            conversation.messages.sort(key=lambda x: x.created_at, reverse=True)
+            latest_message = conversation.messages[0]
+        
+        # Convert to response
+        conv_dict = {
+            "id": conversation.id,
+            "user_id": conversation.user_id,
+            "agent_id": conversation.agent_id,
             "workspace_id": conversation.workspace_id,
+            "tenant_id": conversation.tenant_id,
             "title": conversation.title,
             "status": conversation.status,
             "message_count": conversation.message_count,
             "total_tokens_used": conversation.total_tokens_used,
-            "context": conversation.context,
-            "settings": conversation.settings,
+            "agent_name": conversation.agent.name if conversation.agent else None,
+            "latest_message": {
+                "id": latest_message.id,
+                "content": latest_message.content,
+                "role": latest_message.role,
+                "created_at": latest_message.created_at
+            } if latest_message else None,
             "last_message_at": conversation.last_message_at,
             "created_at": conversation.created_at,
             "updated_at": conversation.updated_at,
+            "context": conversation.context,
+            "settings": conversation.settings
         }
-    except Exception as e:
-        logger.error(f"Erro ao criar conversação para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{conversation_id}", response_model=ConversationResponse, summary="Obter conversação", tags=["ai"])
-async def get_conversation(
-    conversation_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> ConversationResponse:
-    """
-    Obtém uma conversação específica do usuário.
-    
-    Retorna dados completos da conversação se o usuário
-    for o proprietário.
-    
-    Args:
-        conversation_id: ID único da conversação
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
         
-    Returns:
-        ConversationResponse: Dados da conversação
-        
-    Raises:
-        HTTPException: 404 se conversação não encontrada
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Obtendo conversação {conversation_id} para usuário {current_user.id}")
-        
-        conversation = (
-            db.query(Conversation)
-            .filter(
-                Conversation.id == conversation_id,
-                Conversation.user_id == current_user.id,
-            )
-            .first()
-        )
-
-        if not conversation:
-            logger.warning(f"Conversação {conversation_id} não encontrada para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversação não encontrada",
-            )
-
-        logger.info(f"Conversação {conversation_id} obtida com sucesso para usuário {current_user.id}")
-        
-        # Return properly formatted response
-        return ConversationResponse(
-            id=str(conversation.id),
-            user_id=str(conversation.user_id),
-            agent_id=str(conversation.agent_id) if conversation.agent_id else None,
-            workspace_id=str(conversation.workspace_id) if conversation.workspace_id else None,
-            title=conversation.title or "",
-            status=conversation.status or "active",
-            message_count=conversation.message_count or 0,
-            total_tokens_used=conversation.total_tokens_used or 0,
-            context=conversation.context or {},
-            settings=conversation.settings or {},
-            last_message_at=conversation.last_message_at,
-            created_at=conversation.created_at,
-            updated_at=conversation.updated_at,
-        )
+        return ConversationResponse(**conv_dict)
         
     except HTTPException:
         raise
-    except ValueError as e:
-        logger.error(f"Erro de validação ao obter conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"ID de conversação inválido: {str(e)}")
     except Exception as e:
-        logger.error(f"Erro interno ao obter conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao buscar conversação",
+            details=str(e)
+        )
 
-
-@router.delete("/{conversation_id}", summary="Deletar conversação", tags=["ai"])
+@router.delete("/{conversation_id}")
 async def delete_conversation(
-    conversation_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, str]:
-    """
-    Remove uma conversação e todas suas mensagens.
-    
-    Deleta permanentemente a conversação e mensagens
-    associadas se o usuário for o proprietário.
-    
-    Args:
-        conversation_id: ID único da conversação
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, str]: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se conversação não encontrada
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
+    conversation_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Deletar conversação"""
     try:
-        logger.info(f"Deletando conversação {conversation_id} para usuário {current_user.id}")
-        
-        # Validate conversation_id
-        if not conversation_id or len(conversation_id.strip()) == 0:
-            logger.warning(f"ID de conversação vazio fornecido por usuário {current_user.id}")
-            raise HTTPException(status_code=400, detail="ID da conversação é obrigatório")
-        
-        conversation = (
-            db.query(Conversation)
-            .filter(
+        conversation = db.query(Conversation).filter(
+            and_(
                 Conversation.id == conversation_id,
-                Conversation.user_id == current_user.id,
+                Conversation.user_id == current_user.id
             )
-            .first()
+        ).first()
+        
+        if not conversation:
+            raise HTTPException(
+                status_code=404,
+                message="Conversação não encontrada"
+            )
+        
+        # Delete all messages first
+        db.query(Message).filter(Message.conversation_id == conversation_id).delete()
+        
+        # Delete conversation
+        db.delete(conversation)
+        db.commit()
+        
+        return {"message": "Conversação deletada com sucesso"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao deletar conversação",
+            details=str(e)
         )
 
-        if not conversation:
-            logger.warning(f"Conversação {conversation_id} não encontrada para usuário {current_user.id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversação não encontrada",
-            )
-
-        # Deletar mensagens associadas em uma transação
-        try:
-            message_count = db.query(Message).filter(Message.conversation_id == conversation_id).count()
-            db.query(Message).filter(Message.conversation_id == conversation_id).delete()
-
-            # Deletar conversação
-            conversation_title = conversation.title or "Sem título"
-            db.delete(conversation)
-            db.commit()
-
-            logger.info(f"Conversação '{conversation_title}' (ID: {conversation_id}) e {message_count} mensagens deletadas com sucesso para usuário {current_user.id}")
-            return {"message": "Conversação deletada com sucesso"}
-            
-        except Exception as delete_error:
-            logger.error(f"Erro ao deletar dados da conversação {conversation_id}: {str(delete_error)}")
-            db.rollback()
-            raise HTTPException(status_code=500, detail="Erro ao deletar conversação")
-            
-    except HTTPException:
-        db.rollback()
-        raise
-    except ValueError as e:
-        logger.error(f"Erro de validação ao deletar conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=400, detail=f"ID de conversação inválido: {str(e)}")
-    except Exception as e:
-        logger.error(f"Erro interno ao deletar conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.get("/{conversation_id}/messages", response_model=MessageListResponse, summary="Listar mensagens", tags=["ai"])
+# Messages endpoints
+@router.get("/{conversation_id}/messages", response_model=List[MessageResponse])
 async def list_messages(
-    conversation_id: str,
-    page: int = Query(1, ge=1, description="Número da página"),
-    size: int = Query(50, ge=1, le=100, description="Itens por página"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> MessageListResponse:
-    """
-    Lista todas as mensagens de uma conversação.
-    
-    Retorna mensagens ordenadas cronologicamente
-    com paginação eficiente.
-    
-    Args:
-        conversation_id: ID único da conversação
-        page: Número da página (1-based)
-        size: Número de itens por página
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        MessageListResponse: Lista paginada de mensagens
-        
-    Raises:
-        HTTPException: 404 se conversação não encontrada
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
+    conversation_id: UUID,
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(50, ge=1, le=100, description="Page size"),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Listar mensagens da conversação"""
     try:
-        logger.info(f"Listando mensagens da conversação {conversation_id} para usuário {current_user.id} - página: {page}")
-        
-        # Validate conversation_id
-        if not conversation_id or len(conversation_id.strip()) == 0:
-            logger.warning(f"ID de conversação vazio fornecido por usuário {current_user.id}")
-            raise HTTPException(status_code=400, detail="ID da conversação é obrigatório")
-        
-        # Verificar se conversação existe e pertence ao usuário
-        conversation = (
-            db.query(Conversation)
-            .filter(
+        # Verify conversation ownership
+        conversation = db.query(Conversation).filter(
+            and_(
                 Conversation.id == conversation_id,
-                Conversation.user_id == current_user.id,
+                Conversation.user_id == current_user.id
             )
-            .first()
-        )
-
+        ).first()
+        
         if not conversation:
-            logger.warning(f"Conversação {conversation_id} não encontrada para usuário {current_user.id}")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversação não encontrada",
+                status_code=404,
+                message="Conversação não encontrada"
             )
-
-        # Buscar mensagens com contagem total
-        try:
-            messages_query = (
-                db.query(Message)
-                .filter(Message.conversation_id == conversation_id)
-                .order_by(Message.created_at.asc())
-            )
-            
-            total = messages_query.count()
-            messages = messages_query.offset((page - 1) * size).limit(size).all()
-
-            # Convert messages to proper response format with fallback values
-            items = []
-            for msg in messages:
-                try:
-                    message_data = {
-                        "id": str(msg.id),
-                        "conversation_id": str(msg.conversation_id),
-                        "role": msg.role or "user",
-                        "content": msg.content or "",
-                        "attachments": msg.attachments if msg.attachments is not None else [],
-                        "model_used": msg.model_used,
-                        "model_provider": msg.model_provider,
-                        "tokens_used": msg.tokens_used or 0,
-                        "processing_time_ms": msg.processing_time_ms or 0,
-                        "temperature": msg.temperature,
-                        "max_tokens": msg.max_tokens,
-                        "status": msg.status or "sent",
-                        "error_message": msg.error_message,
-                        "rating": msg.rating,
-                        "feedback": msg.feedback,
-                        "created_at": msg.created_at,
-                        "updated_at": msg.updated_at,
-                    }
-                    items.append(message_data)
-                except Exception as msg_error:
-                    logger.warning(f"Erro ao converter mensagem {msg.id}: {str(msg_error)}")
-                    # Skip problematic message but continue processing others
-                    continue
-
-            logger.info(f"Retornadas {len(items)} mensagens de {total} total da conversação {conversation_id}")
-            
-            return MessageListResponse(
-                items=items,
-                total=total,
-                page=page,
-                size=size,
-                pages=(total + size - 1) // size if total > 0 else 1,
-            )
-            
-        except Exception as query_error:
-            logger.error(f"Erro na consulta de mensagens da conversação {conversation_id}: {str(query_error)}")
-            raise HTTPException(status_code=500, detail="Erro ao buscar mensagens")
-            
+        
+        # Get messages with pagination
+        query = db.query(Message).filter(
+            Message.conversation_id == conversation_id
+        ).order_by(Message.created_at)
+        
+        total = query.count()
+        offset = (page - 1) * size
+        messages = query.offset(offset).limit(size).all()
+        
+        # Convert to response
+        response_messages = []
+        for msg in messages:
+            msg_dict = {
+                "id": msg.id,
+                "conversation_id": msg.conversation_id,
+                "content": msg.content,
+                "role": msg.role,
+                "agent_id": None,  # Message model doesn't have agent_id
+                "agent_name": None,  # Message model doesn't have agent relationship
+                "metadata": msg.attachments or {},  # Use attachments as metadata
+                "tokens_used": msg.tokens_used,
+                "cost": 0.0,  # Message model doesn't have cost field
+                "created_at": msg.created_at,
+                "updated_at": msg.updated_at
+            }
+            response_messages.append(MessageResponse(**msg_dict))
+        
+        return response_messages
+        
     except HTTPException:
         raise
-    except ValueError as e:
-        logger.error(f"Erro de validação ao listar mensagens da conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Parâmetros inválidos: {str(e)}")
     except Exception as e:
-        logger.error(f"Erro interno ao listar mensagens da conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao listar mensagens",
+            details=str(e)
+        )
 
-
-@router.post("/{conversation_id}/messages", response_model=MessageResponse, summary="Enviar mensagem", tags=["ai"])
+@router.post("/{conversation_id}/messages", response_model=MessageResponse)
 async def send_message(
-    conversation_id: str,
+    conversation_id: UUID,
     message_data: MessageCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-    llm_service: UnifiedLLMService = Depends(get_llm_service),
-) -> MessageResponse:
-    """
-    Envia uma mensagem em uma conversação.
-    
-    Processa a mensagem do usuário e, se há um agent
-    configurado, gera resposta automaticamente.
-    
-    Args:
-        conversation_id: ID único da conversação
-        message_data: Dados da mensagem a ser enviada
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        MessageResponse: Mensagem enviada
-        
-    Raises:
-        HTTPException: 404 se conversação não encontrada
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 500 se erro interno do servidor
-    """
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Enviar mensagem na conversação"""
     try:
-        start_time = time.time()
-        logger.info(f"Enviando mensagem na conversação {conversation_id} para usuário {current_user.id}")
-        
-        # Verificar se conversação existe e pertence ao usuário
-        conversation = (
-            db.query(Conversation)
-            .filter(
+        # Verify conversation ownership
+        conversation = db.query(Conversation).filter(
+            and_(
                 Conversation.id == conversation_id,
-                Conversation.user_id == current_user.id,
+                Conversation.user_id == current_user.id
             )
-            .first()
-        )
-
+        ).options(selectinload(Conversation.agent)).first()
+        
         if not conversation:
-            logger.warning(f"Conversação {conversation_id} não encontrada para usuário {current_user.id}")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversação não encontrada",
+                status_code=404,
+                message="Conversação não encontrada"
             )
-
-        # Criar mensagem do usuário
-        user_message = Message(
+        
+        # Note: Message model doesn't have agent_id field
+        # Agent information is handled at conversation level
+        
+        # Create message
+        new_message = Message(
             conversation_id=conversation_id,
-            role="user",
             content=message_data.content,
-            attachments=message_data.attachments or [],
+            role=message_data.role,
+            attachments=message_data.metadata or {},  # Use attachments field for metadata
+            tokens_used=message_data.tokens_used or 0
+            # Note: Message model doesn't have cost field
         )
-
-        db.add(user_message)
-        db.flush()  # Para obter o ID
         
-        logger.info(f"Mensagem do usuário criada (ID: {user_message.id}) na conversação {conversation_id}")
-
-        # Processar resposta do agent se configurado
-        if conversation.agent_id:
-            try:
-                agent = db.query(Agent).filter(Agent.id == conversation.agent_id).first()
-                if agent and agent.is_available():
-                    logger.info(f"Processando resposta do agent {agent.id} para conversação {conversation_id}")
-                    
-                    # Buscar histórico de mensagens
-                    past_messages = (
-                        db.query(Message)
-                        .filter(Message.conversation_id == conversation_id)
-                        .order_by(Message.created_at.asc())
-                        .all()
-                    )
-
-                    chat_history = [
-                        {"role": msg.role, "content": msg.content} for msg in past_messages
-                    ]
-                    chat_history.append({"role": "user", "content": message_data.content})
-
-                    # Obter configuração do LLM
-                    llm_cfg = agent.get_llm_config()
-                    
-                    # Fazer chamada para LLM
-                    llm_response = await llm_service.chat_completion(
-                        messages=chat_history,
-                        provider=llm_cfg["provider"],
-                        model=llm_cfg["model"],
-                        temperature=llm_cfg["temperature"],
-                        max_tokens=llm_cfg["max_tokens"],
-                    )
-
-                    # Criar resposta do agent
-                    processing_time = int((time.time() - start_time) * 1000)
-                    agent_response = Message(
-                        conversation_id=conversation_id,
-                        role="assistant",
-                        content=llm_response.content,
-                        model_used=llm_cfg["model"],
-                        model_provider=llm_cfg["provider"],
-                        tokens_used=llm_response.usage.get("tokens", 0),
-                        processing_time_ms=processing_time,
-                    )
-                    db.add(agent_response)
-                    
-                    # Atualizar estatísticas
-                    conversation.total_tokens_used += agent_response.tokens_used
-                    logger.info(f"Resposta do agent criada - tokens: {agent_response.tokens_used}, tempo: {processing_time}ms")
-                else:
-                    logger.warning(f"Agent {conversation.agent_id} não disponível para conversação {conversation_id}")
-            except Exception as agent_error:
-                logger.error(f"Erro ao processar resposta do agent: {str(agent_error)}")
-                # Continuar mesmo se o agent falhar
-
-        # Atualizar estatísticas da conversação
-        conversation.message_count += 1 if not conversation.agent_id else 2
-        conversation.updated_at = func.now()
-
+        db.add(new_message)
+        
+        # Update conversation's updated_at
+        conversation.updated_at = datetime.utcnow()
+        
         db.commit()
-        db.refresh(user_message)
-
-        logger.info(f"Mensagem processada com sucesso na conversação {conversation_id}")
-        return {
-            "id": str(user_message.id),
-            "conversation_id": str(user_message.conversation_id),
-            "role": user_message.role,
-            "content": user_message.content,
-            "attachments": user_message.attachments,
-            "model_used": user_message.model_used,
-            "model_provider": user_message.model_provider,
-            "tokens_used": user_message.tokens_used,
-            "processing_time_ms": user_message.processing_time_ms,
-            "temperature": user_message.temperature,
-            "max_tokens": user_message.max_tokens,
-            "status": user_message.status,
-            "error_message": user_message.error_message,
-            "rating": user_message.rating,
-            "feedback": user_message.feedback,
-            "created_at": user_message.created_at,
-            "updated_at": user_message.updated_at,
+        db.refresh(new_message)
+        
+        # Convert to response
+        msg_dict = {
+            "id": new_message.id,
+            "conversation_id": new_message.conversation_id,
+            "content": new_message.content,
+            "role": new_message.role,
+            "agent_id": conversation.agent_id,  # Get from conversation level
+            "agent_name": conversation.agent.name if conversation.agent else None,  # Get from conversation
+            "metadata": new_message.attachments or {},
+            "tokens_used": new_message.tokens_used,
+            "cost": 0.0,  # Message model doesn't have cost field
+            "created_at": new_message.created_at,
+            "updated_at": new_message.updated_at
         }
+        
+        return MessageResponse(**msg_dict)
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao enviar mensagem na conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao enviar mensagem",
+            details=str(e)
+        )
 
-
-@router.put("/{conversation_id}/title", summary="Atualizar título", tags=["ai"])
+# Conversation management endpoints
+@router.put("/{conversation_id}/title", response_model=ConversationResponse)
 async def update_conversation_title(
-    conversation_id: str,
-    title: str = Query(..., description="Novo título da conversação"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, str]:
-    """
-    Atualiza o título de uma conversação.
-    
-    Permite personalizar o nome da conversação
-    para melhor organização.
-    
-    Args:
-        conversation_id: ID único da conversação
-        title: Novo título para a conversação
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, str]: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se conversação não encontrada
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 400 se título inválido
-        HTTPException: 500 se erro interno do servidor
-    """
+    conversation_id: UUID,
+    title_data: ConversationTitleUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Atualizar título da conversação"""
     try:
-        logger.info(f"Atualizando título da conversação {conversation_id} para '{title}' - usuário {current_user.id}")
-        
-        if not title or len(title.strip()) == 0:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Título não pode estar vazio",
-            )
-        
-        conversation = (
-            db.query(Conversation)
-            .filter(
+        conversation = db.query(Conversation).filter(
+            and_(
                 Conversation.id == conversation_id,
-                Conversation.user_id == current_user.id,
+                Conversation.user_id == current_user.id
             )
-            .first()
-        )
-
+        ).options(
+            selectinload(Conversation.agent),
+            selectinload(Conversation.messages)
+        ).first()
+        
         if not conversation:
-            logger.warning(f"Conversação {conversation_id} não encontrada para usuário {current_user.id}")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversação não encontrada",
+                status_code=404,
+                message="Conversação não encontrada"
             )
-
-        old_title = conversation.title
-        conversation.title = title.strip()
+        
+        # Update title
+        conversation.title = title_data.title
+        conversation.updated_at = datetime.utcnow()
+        
         db.commit()
-
-        logger.info(f"Título da conversação {conversation_id} atualizado de '{old_title}' para '{title}'")
-        return {"message": "Título atualizado com sucesso"}
+        db.refresh(conversation)
+        
+        # Get latest message for response
+        latest_message = None
+        message_count = len(conversation.messages) if conversation.messages else 0
+        
+        if conversation.messages:
+            conversation.messages.sort(key=lambda x: x.created_at, reverse=True)
+            latest_message = conversation.messages[0]
+        
+        # Convert to response
+        conv_dict = {
+            "id": conversation.id,
+            "user_id": conversation.user_id,
+            "agent_id": conversation.agent_id,
+            "workspace_id": conversation.workspace_id,
+            "tenant_id": conversation.tenant_id,
+            "title": conversation.title,
+            "status": conversation.status,
+            "message_count": conversation.message_count,
+            "total_tokens_used": conversation.total_tokens_used,
+            "agent_name": conversation.agent.name if conversation.agent else None,
+            "latest_message": {
+                "id": latest_message.id,
+                "content": latest_message.content[:100] + "..." if len(latest_message.content) > 100 else latest_message.content,
+                "role": latest_message.role,
+                "created_at": latest_message.created_at
+            } if latest_message else None,
+            "last_message_at": conversation.last_message_at,
+            "created_at": conversation.created_at,
+            "updated_at": conversation.updated_at,
+            "context": conversation.context,
+            "settings": conversation.settings
+        }
+        
+        return ConversationResponse(**conv_dict)
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao atualizar título da conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao atualizar título",
+            details=str(e)
+        )
 
-
-@router.post("/{conversation_id}/archive", summary="Arquivar conversação", tags=["ai"])
+@router.post("/{conversation_id}/archive")
 async def archive_conversation(
-    conversation_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, str]:
-    """
-    Arquiva uma conversação para organização.
-    
-    Move a conversação para o estado arquivado,
-    removendo-a da lista principal.
-    
-    Args:
-        conversation_id: ID único da conversação
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, str]: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se conversação não encontrada
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 400 se já arquivada
-        HTTPException: 500 se erro interno do servidor
-    """
+    conversation_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Arquivar conversação"""
     try:
-        logger.info(f"Arquivando conversação {conversation_id} para usuário {current_user.id}")
-        
-        conversation = (
-            db.query(Conversation)
-            .filter(
+        conversation = db.query(Conversation).filter(
+            and_(
                 Conversation.id == conversation_id,
-                Conversation.user_id == current_user.id,
+                Conversation.user_id == current_user.id
             )
-            .first()
-        )
-
+        ).first()
+        
         if not conversation:
-            logger.warning(f"Conversação {conversation_id} não encontrada para usuário {current_user.id}")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversação não encontrada",
+                status_code=404,
+                message="Conversação não encontrada"
             )
-
-        if conversation.status == "archived":
-            logger.warning(f"Conversação {conversation_id} já está arquivada")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Conversação já está arquivada",
-            )
-
+        
         conversation.status = "archived"
+        conversation.updated_at = datetime.utcnow()
+        
         db.commit()
-
-        logger.info(f"Conversação '{conversation.title}' (ID: {conversation_id}) arquivada com sucesso")
+        
         return {"message": "Conversação arquivada com sucesso"}
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao arquivar conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
-
-
-@router.post("/{conversation_id}/unarchive", summary="Desarquivar conversação", tags=["ai"])
-async def unarchive_conversation(
-    conversation_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> Dict[str, str]:
-    """
-    Desarquiva uma conversação arquivada.
-    
-    Retorna a conversação para o estado ativo,
-    tornando-a visível na lista principal.
-    
-    Args:
-        conversation_id: ID único da conversação
-        db: Sessão do banco de dados
-        current_user: Usuário autenticado
-        
-    Returns:
-        Dict[str, str]: Mensagem de confirmação
-        
-    Raises:
-        HTTPException: 404 se conversação não encontrada
-        HTTPException: 403 se não for o proprietário
-        HTTPException: 400 se não estiver arquivada
-        HTTPException: 500 se erro interno do servidor
-    """
-    try:
-        logger.info(f"Desarquivando conversação {conversation_id} para usuário {current_user.id}")
-        
-        conversation = (
-            db.query(Conversation)
-            .filter(
-                Conversation.id == conversation_id,
-                Conversation.user_id == current_user.id,
-            )
-            .first()
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao arquivar conversação",
+            details=str(e)
         )
 
+@router.post("/{conversation_id}/unarchive")
+async def unarchive_conversation(
+    conversation_id: UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Desarquivar conversação"""
+    try:
+        conversation = db.query(Conversation).filter(
+            and_(
+                Conversation.id == conversation_id,
+                Conversation.user_id == current_user.id
+            )
+        ).first()
+        
         if not conversation:
-            logger.warning(f"Conversação {conversation_id} não encontrada para usuário {current_user.id}")
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Conversação não encontrada",
+                status_code=404,
+                message="Conversação não encontrada"
             )
-
-        if conversation.status != "archived":
-            logger.warning(f"Conversação {conversation_id} não está arquivada")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Conversação não está arquivada",
-            )
-
+        
         conversation.status = "active"
+        conversation.updated_at = datetime.utcnow()
+        
         db.commit()
-
-        logger.info(f"Conversação '{conversation.title}' (ID: {conversation_id}) desarquivada com sucesso")
+        
         return {"message": "Conversação desarquivada com sucesso"}
+        
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro ao desarquivar conversação {conversation_id} para usuário {current_user.id}: {str(e)}")
         db.rollback()
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(
+            status_code=500,
+            message="Erro ao desarquivar conversação",
+            details=str(e)
+        )

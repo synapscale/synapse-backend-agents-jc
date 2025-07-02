@@ -101,5 +101,5 @@ curl -X POST "http://localhost:8000/api/v1/llm/tess/generate" \
 ## Recursos Adicionais
 
 Para documentação mais detalhada, consulte:
-- [Documentação Completa da API Tess AI](/docs/api/llm/tess_endpoints.md)
+- [Documentação Completa da API Tess AI](/docs/api/llm/providers/tess.md)
 - [Guia de Integração de LLMs](/docs/api/llm/integration_guide.md)

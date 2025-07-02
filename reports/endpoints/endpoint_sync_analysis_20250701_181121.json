@@ -1,0 +1,3788 @@
+{
+  "timestamp": "2025-07-01T18:11:21.333713",
+  "database_summary": {
+    "total_tables": 103,
+    "schema": "synapscale_db"
+  },
+  "api_summary": {
+    "total_resources": 79,
+    "version": "2.0.0"
+  },
+  "table_categories": {
+    "core_entities": [
+      "workflow_executions",
+      "workflow_templates",
+      "agent_quotas",
+      "user_subscriptions",
+      "user_variables",
+      "llms",
+      "user_insights",
+      "agent_kbs",
+      "workspace_projects",
+      "workflow_execution_metrics",
+      "llms_conversations_turns",
+      "agent_triggers",
+      "agent_tools",
+      "user_behavior_metrics",
+      "llms_messages",
+      "workflow_nodes",
+      "users",
+      "llms_usage_logs",
+      "workspace_invitations",
+      "user_tenant_roles",
+      "agents",
+      "agent_hierarchy",
+      "workspace_activities",
+      "workflows",
+      "agent_error_logs",
+      "llms_conversations",
+      "workspaces",
+      "workflow_execution_queue",
+      "agent_models",
+      "agent_acl",
+      "agent_configurations",
+      "agent_usage_metrics",
+      "workflow_connections",
+      "workspace_members",
+      "files",
+      "workspace_features"
+    ],
+    "relationship_tables": [
+      "contact_list_memberships",
+      "rbac_role_permissions",
+      "rbac_roles",
+      "rbac_permissions",
+      "plan_provider_mappings"
+    ],
+    "audit_logs": [
+      "webhook_logs",
+      "audit_log"
+    ],
+    "system_tables": [
+      "system_health",
+      "alembic_version",
+      "system_performance_metrics"
+    ],
+    "feature_specific": [
+      "plan_entitlements",
+      "tags",
+      "project_versions",
+      "knowledge_bases",
+      "contact_tags",
+      "contact_lists",
+      "password_reset_tokens",
+      "refresh_tokens",
+      "component_versions",
+      "component_ratings",
+      "email_verification_tokens",
+      "project_comments",
+      "marketplace_components",
+      "tools",
+      "payment_customers",
+      "campaigns",
+      "conversion_journeys",
+      "node_categories",
+      "subscriptions",
+      "plans",
+      "coupons",
+      "tenants",
+      "campaign_contacts",
+      "message_feedbacks",
+      "node_ratings",
+      "contacts",
+      "node_executions",
+      "nodes",
+      "payment_providers",
+      "project_collaborators",
+      "component_downloads",
+      "invoices",
+      "payment_methods",
+      "contact_interactions",
+      "contact_sources",
+      "component_purchases",
+      "contact_notes"
+    ],
+    "analytics": [
+      "billing_events",
+      "custom_reports",
+      "business_metrics",
+      "analytics_dashboards",
+      "report_executions",
+      "analytics_reports",
+      "analytics_exports",
+      "contact_events",
+      "analytics_events",
+      "analytics_metrics",
+      "analytics_alerts"
+    ],
+    "configuration": [
+      "features",
+      "template_reviews",
+      "node_templates",
+      "template_favorites",
+      "template_downloads",
+      "template_usage",
+      "tenant_features",
+      "plan_features",
+      "template_collections"
+    ]
+  },
+  "mapping": {
+    "mapped_tables": {
+      "workflow_executions": {
+        "endpoint_resource": "executions",
+        "potential_matches": [
+          "executions"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/executions/",
+          "/api/v1/executions/{execution_id}",
+          "/api/v1/executions/{execution_id}/control",
+          "/api/v1/executions/{execution_id}/nodes",
+          "/api/v1/executions/{execution_id}/logs",
+          "/api/v1/executions/{execution_id}/metrics"
+        ]
+      },
+      "workflow_templates": {
+        "endpoint_resource": "templates",
+        "potential_matches": [
+          "templates"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/templates/",
+          "/api/v1/templates/{template_id}",
+          "/api/v1/templates/{template_id}/publish",
+          "/api/v1/templates/{template_id}/download",
+          "/api/v1/templates/{template_id}/reviews"
+        ]
+      },
+      "tags": {
+        "endpoint_resource": "marketplace_tags",
+        "potential_matches": [
+          "marketplace_tags",
+          "llm_test-tags"
+        ],
+        "crud_coverage": {
+          "create": false,
+          "read": false,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/marketplace/tags"
+        ]
+      },
+      "system_health": {
+        "endpoint_resource": "health",
+        "potential_matches": [
+          "health"
+        ],
+        "crud_coverage": {
+          "create": false,
+          "read": false,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/health"
+        ]
+      },
+      "llms": {
+        "endpoint_resource": "llm_providers",
+        "potential_matches": [
+          "llm_providers",
+          "llm_models",
+          "llm_chat",
+          "llm_test-tags",
+          "llm_count-tokens",
+          "llm",
+          "llm_generate",
+          "llm_count-tokens-original"
+        ],
+        "crud_coverage": {
+          "create": false,
+          "read": false,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/llm/providers"
+        ]
+      },
+      "analytics_dashboards": {
+        "endpoint_resource": "analytics_dashboards",
+        "potential_matches": [
+          "analytics_dashboards",
+          "analytics_dashboards"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/analytics/dashboards",
+          "/api/v1/analytics/dashboards/{dashboard_id}",
+          "/api/v1/analytics/dashboards/{dashboard_id}/data",
+          "/api/v1/analytics/dashboards/{dashboard_id}/share"
+        ]
+      },
+      "marketplace_components": {
+        "endpoint_resource": "marketplace_components",
+        "potential_matches": [
+          "marketplace_components",
+          "marketplace_components"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/marketplace/components",
+          "/api/v1/marketplace/components/{component_id}",
+          "/api/v1/marketplace/components/{component_id}/download",
+          "/api/v1/marketplace/components/{component_id}/install",
+          "/api/v1/marketplace/components/{component_id}/ratings",
+          "/api/v1/marketplace/components/{component_id}/ratings/stats",
+          "/api/v1/marketplace/components/{component_id}/purchase",
+          "/api/v1/marketplace/components/{component_id}/versions",
+          "/api/v1/marketplace/components/{component_id}/favorite",
+          "/api/v1/marketplace/components/{component_id}/stats",
+          "/api/v1/marketplace/components/{component_id}/similar"
+        ]
+      },
+      "report_executions": {
+        "endpoint_resource": "executions",
+        "potential_matches": [
+          "executions"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/executions/",
+          "/api/v1/executions/{execution_id}",
+          "/api/v1/executions/{execution_id}/control",
+          "/api/v1/executions/{execution_id}/nodes",
+          "/api/v1/executions/{execution_id}/logs",
+          "/api/v1/executions/{execution_id}/metrics"
+        ]
+      },
+      "analytics_reports": {
+        "endpoint_resource": "analytics_reports",
+        "potential_matches": [
+          "analytics_reports",
+          "analytics_reports"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/analytics/reports",
+          "/api/v1/analytics/reports/{report_id}",
+          "/api/v1/analytics/reports/{report_id}/execute",
+          "/api/v1/analytics/reports/{report_id}/executions"
+        ]
+      },
+      "llms_conversations_turns": {
+        "endpoint_resource": "llm",
+        "potential_matches": [
+          "llm",
+          "conversations"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": false,
+          "delete": false,
+          "list": false
+        },
+        "endpoints": [
+          "/api/v1/llm/{provider}/generate",
+          "/api/v1/llm/{provider}/count-tokens",
+          "/api/v1/llm/{provider}/models"
+        ]
+      },
+      "llms_messages": {
+        "endpoint_resource": "llm",
+        "potential_matches": [
+          "llm"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": false,
+          "delete": false,
+          "list": false
+        },
+        "endpoints": [
+          "/api/v1/llm/{provider}/generate",
+          "/api/v1/llm/{provider}/count-tokens",
+          "/api/v1/llm/{provider}/models"
+        ]
+      },
+      "workflow_nodes": {
+        "endpoint_resource": "nodes",
+        "potential_matches": [
+          "nodes"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/nodes/",
+          "/api/v1/nodes/{node_id}",
+          "/api/v1/nodes/{node_id}/download",
+          "/api/v1/nodes/{node_id}/rate"
+        ]
+      },
+      "llms_usage_logs": {
+        "endpoint_resource": "llm",
+        "potential_matches": [
+          "llm"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": false,
+          "delete": false,
+          "list": false
+        },
+        "endpoints": [
+          "/api/v1/llm/{provider}/generate",
+          "/api/v1/llm/{provider}/count-tokens",
+          "/api/v1/llm/{provider}/models"
+        ]
+      },
+      "node_templates": {
+        "endpoint_resource": "templates",
+        "potential_matches": [
+          "templates"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/templates/",
+          "/api/v1/templates/{template_id}",
+          "/api/v1/templates/{template_id}/publish",
+          "/api/v1/templates/{template_id}/download",
+          "/api/v1/templates/{template_id}/reviews"
+        ]
+      },
+      "agents": {
+        "endpoint_resource": "agents",
+        "potential_matches": [
+          "agents",
+          "agents"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/agents/",
+          "/api/v1/agents/{agent_id}",
+          "/api/v1/agents/{agent_id}/activate",
+          "/api/v1/agents/{agent_id}/deactivate",
+          "/api/v1/agents/{agent_id}/stats",
+          "/api/v1/agents/{agent_id}/duplicate",
+          "/api/v1/agents/{agent_id}/tools",
+          "/api/v1/agents/{agent_id}/tools/{tool_id}",
+          "/api/v1/agents/{agent_id}/models",
+          "/api/v1/agents/{agent_id}/models/{llm_id}",
+          "/api/v1/agents/{agent_id}/configurations",
+          "/api/v1/agents/{agent_id}/acl",
+          "/api/v1/agents/{agent_id}/errors",
+          "/api/v1/agents/{agent_id}/metrics",
+          "/api/v1/agents/{agent_id}/metrics/summary",
+          "/api/v1/agents/{agent_id}/knowledge-bases"
+        ]
+      },
+      "analytics_exports": {
+        "endpoint_resource": "analytics_exports",
+        "potential_matches": [
+          "analytics_exports",
+          "analytics_export",
+          "analytics_exports"
+        ],
+        "crud_coverage": {
+          "create": false,
+          "read": true,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/analytics/exports",
+          "/api/v1/analytics/exports/{export_id}/download"
+        ]
+      },
+      "workflows": {
+        "endpoint_resource": "workflows",
+        "potential_matches": [
+          "workflows",
+          "workflows"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/workflows/",
+          "/api/v1/workflows/{workflow_id}",
+          "/api/v1/workflows/{workflow_id}/execute",
+          "/api/v1/workflows/{workflow_id}/executions",
+          "/api/v1/workflows/{workflow_id}/duplicate"
+        ]
+      },
+      "llms_conversations": {
+        "endpoint_resource": "llm",
+        "potential_matches": [
+          "llm",
+          "conversations"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": false,
+          "delete": false,
+          "list": false
+        },
+        "endpoints": [
+          "/api/v1/llm/{provider}/generate",
+          "/api/v1/llm/{provider}/count-tokens",
+          "/api/v1/llm/{provider}/models"
+        ]
+      },
+      "node_executions": {
+        "endpoint_resource": "executions",
+        "potential_matches": [
+          "executions"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/executions/",
+          "/api/v1/executions/{execution_id}",
+          "/api/v1/executions/{execution_id}/control",
+          "/api/v1/executions/{execution_id}/nodes",
+          "/api/v1/executions/{execution_id}/logs",
+          "/api/v1/executions/{execution_id}/metrics"
+        ]
+      },
+      "workspaces": {
+        "endpoint_resource": "workspaces",
+        "potential_matches": [
+          "workspaces",
+          "workspaces_invitations",
+          "workspaces_integrations",
+          "workspaces_projects",
+          "workspaces_creation-rules",
+          "workspaces_search",
+          "workspaces",
+          "workspaces_workspaces"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/workspaces/",
+          "/api/v1/workspaces/{workspace_id}",
+          "/api/v1/workspaces/{workspace_id}/stats",
+          "/api/v1/workspaces/{workspace_id}/members",
+          "/api/v1/workspaces/{workspace_id}/members/invite",
+          "/api/v1/workspaces/{workspace_id}/members/{member_id}",
+          "/api/v1/workspaces/{workspace_id}/members/{member_id}/role",
+          "/api/v1/workspaces/{workspace_id}/projects",
+          "/api/v1/workspaces/{workspace_id}/activities"
+        ]
+      },
+      "nodes": {
+        "endpoint_resource": "nodes",
+        "potential_matches": [
+          "nodes",
+          "nodes_categories",
+          "nodes",
+          "nodes_types"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": true,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/nodes/",
+          "/api/v1/nodes/{node_id}",
+          "/api/v1/nodes/{node_id}/download",
+          "/api/v1/nodes/{node_id}/rate"
+        ]
+      },
+      "analytics_events": {
+        "endpoint_resource": "analytics_events",
+        "potential_matches": [
+          "analytics_events",
+          "analytics_events"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": false,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/analytics/events",
+          "/api/v1/analytics/events/batch"
+        ]
+      },
+      "files": {
+        "endpoint_resource": "files",
+        "potential_matches": [
+          "files",
+          "files_upload",
+          "files"
+        ],
+        "crud_coverage": {
+          "create": false,
+          "read": true,
+          "update": false,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/files/",
+          "/api/v1/files/{file_id}",
+          "/api/v1/files/{file_id}/download"
+        ]
+      },
+      "analytics_metrics": {
+        "endpoint_resource": "analytics_metrics",
+        "potential_matches": [
+          "analytics_metrics",
+          "analytics_metrics"
+        ],
+        "crud_coverage": {
+          "create": false,
+          "read": false,
+          "update": false,
+          "delete": false,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/analytics/metrics/user-behavior",
+          "/api/v1/analytics/metrics/system-performance",
+          "/api/v1/analytics/metrics/business",
+          "/api/v1/analytics/metrics/real-time"
+        ]
+      },
+      "analytics_alerts": {
+        "endpoint_resource": "analytics_alerts",
+        "potential_matches": [
+          "analytics_alerts",
+          "analytics_alerts"
+        ],
+        "crud_coverage": {
+          "create": true,
+          "read": false,
+          "update": true,
+          "delete": true,
+          "list": true
+        },
+        "endpoints": [
+          "/api/v1/analytics/alerts",
+          "/api/v1/analytics/alerts/{alert_id}",
+          "/api/v1/analytics/alerts/{alert_id}/pause",
+          "/api/v1/analytics/alerts/{alert_id}/resume"
+        ]
+      }
+    },
+    "unmapped_tables": "{'plan_entitlements', 'agent_quotas', 'billing_events', 'user_subscriptions', 'project_versions', 'contact_list_memberships', 'rbac_role_permissions', 'user_variables', 'knowledge_bases', 'custom_reports', 'features', 'business_metrics', 'contact_tags', 'contact_lists', 'password_reset_tokens', 'template_reviews', 'refresh_tokens', 'user_insights', 'component_versions', 'component_ratings', 'email_verification_tokens', 'project_comments', 'tools', 'agent_kbs', 'workspace_projects', 'workflow_execution_metrics', 'alembic_version', 'agent_triggers', 'agent_tools', 'payment_customers', 'user_behavior_metrics', 'rbac_roles', 'users', 'system_performance_metrics', 'campaigns', 'conversion_journeys', 'node_categories', 'template_favorites', 'template_downloads', 'workspace_invitations', 'user_tenant_roles', 'subscriptions', 'plans', 'coupons', 'tenants', 'agent_hierarchy', 'workspace_activities', 'campaign_contacts', 'message_feedbacks', 'node_ratings', 'agent_error_logs', 'contacts', 'template_usage', 'tenant_features', 'rbac_permissions', 'workflow_execution_queue', 'agent_models', 'contact_events', 'payment_providers', 'webhook_logs', 'audit_log', 'plan_features', 'project_collaborators', 'agent_acl', 'component_downloads', 'invoices', 'payment_methods', 'agent_configurations', 'agent_usage_metrics', 'contact_interactions', 'contact_sources', 'template_collections', 'workflow_connections', 'workspace_members', 'plan_provider_mappings', 'component_purchases', 'contact_notes', 'workspace_features'}",
+    "endpoint_only_resources": "{'analytics_admin', 'auth_logout', 'nodes_categories', 'user-variables_debug', 'templates_stats', 'marketplace_purchases', 'llm_chat', 'auth_resend-verification', 'templates_install', 'marketplace_stats', 'auth_forgot-password', 'analytics_analysis', 'executions_validate-workflow', 'executions_admin', 'executions_queue', 'llm_test-tags', 'analytics_export', 'user-variables', 'marketplace_ratings', 'templates_favorites', 'templates_collections', 'auth_account', 'workspaces_invitations', 'marketplace_my-components', 'workspaces_integrations', 'workspaces_search', 'auth_refresh', 'llm_count-tokens', 'auth_login', 'auth_change-password', 'user-variables_api-keys', 'marketplace_favorites', 'nodes_types', 'auth_logout-all', 'workspaces_projects', 'analytics_overview', 'conversations', 'templates_marketplace', 'llm_models', 'auth_docs-login', 'ws_status', 'marketplace_recommendations', 'workspaces_workspaces', 'auth_register', 'llm_generate', 'auth_test-token', 'files_upload', 'auth_verify-email', 'auth_reset-password', 'marketplace_admin', 'auth_test-hybrid-auth', 'executions_stats', 'workspaces_creation-rules', 'analytics_insights', 'ws_stats', 'executions_batch', 'llm_count-tokens-original', 'auth_me', 'marketplace_categories', 'analytics_queries', 'templates_my-stats'}",
+    "mapping_quality": {
+      "workflow_executions": {
+        "crud_coverage_score": 0.6,
+        "missing_operations": [
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "workflow_templates": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "tags": {
+        "crud_coverage_score": 0.2,
+        "missing_operations": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "system_health": {
+        "crud_coverage_score": 0.2,
+        "missing_operations": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "llms": {
+        "crud_coverage_score": 0.2,
+        "missing_operations": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "analytics_dashboards": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "marketplace_components": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "report_executions": {
+        "crud_coverage_score": 0.6,
+        "missing_operations": [
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "analytics_reports": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "llms_conversations_turns": {
+        "crud_coverage_score": 0.4,
+        "missing_operations": [
+          "update",
+          "delete",
+          "list"
+        ],
+        "has_full_crud": false
+      },
+      "llms_messages": {
+        "crud_coverage_score": 0.4,
+        "missing_operations": [
+          "update",
+          "delete",
+          "list"
+        ],
+        "has_full_crud": false
+      },
+      "workflow_nodes": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "llms_usage_logs": {
+        "crud_coverage_score": 0.4,
+        "missing_operations": [
+          "update",
+          "delete",
+          "list"
+        ],
+        "has_full_crud": false
+      },
+      "node_templates": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "agents": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "analytics_exports": {
+        "crud_coverage_score": 0.4,
+        "missing_operations": [
+          "create",
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "workflows": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "llms_conversations": {
+        "crud_coverage_score": 0.4,
+        "missing_operations": [
+          "update",
+          "delete",
+          "list"
+        ],
+        "has_full_crud": false
+      },
+      "node_executions": {
+        "crud_coverage_score": 0.6,
+        "missing_operations": [
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "workspaces": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "nodes": {
+        "crud_coverage_score": 1.0,
+        "missing_operations": [],
+        "has_full_crud": true
+      },
+      "analytics_events": {
+        "crud_coverage_score": 0.4,
+        "missing_operations": [
+          "read",
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "files": {
+        "crud_coverage_score": 0.6,
+        "missing_operations": [
+          "create",
+          "update"
+        ],
+        "has_full_crud": false
+      },
+      "analytics_metrics": {
+        "crud_coverage_score": 0.2,
+        "missing_operations": [
+          "create",
+          "read",
+          "update",
+          "delete"
+        ],
+        "has_full_crud": false
+      },
+      "analytics_alerts": {
+        "crud_coverage_score": 0.8,
+        "missing_operations": [
+          "read"
+        ],
+        "has_full_crud": true
+      }
+    },
+    "recommendations": []
+  },
+  "sync_metrics": {
+    "coverage_percentage": 24.271844660194176,
+    "mapped_count": 25,
+    "unmapped_count": 78,
+    "full_crud_count": 11
+  },
+  "recommendations": [
+    "\ud83d\udea8 CRITICAL: Add API endpoints for core entities: agent_quotas, user_subscriptions, user_variables, user_insights, agent_kbs, workspace_projects, workflow_execution_metrics, agent_triggers, agent_tools, user_behavior_metrics, users, workspace_invitations, user_tenant_roles, agent_hierarchy, workspace_activities, agent_error_logs, workflow_execution_queue, agent_models, agent_acl, agent_configurations, agent_usage_metrics, workflow_connections, workspace_members, workspace_features",
+    "\u26a0\ufe0f  Add missing CRUD operations for: workflow_executions (missing: update, delete); llms (missing: create, read, update, delete); llms_conversations_turns (missing: update, delete, list); llms_messages (missing: update, delete, list); llms_usage_logs (missing: update, delete, list); llms_conversations (missing: update, delete, list); files (missing: create, update)",
+    "\ud83d\udccb Consider adding endpoints for feature tables: plan_entitlements, project_versions, knowledge_bases, contact_tags, contact_lists",
+    "\ud83d\udd0d Review endpoints without corresponding tables: analytics_admin, auth_logout, nodes_categories",
+    "\ud83d\udcca Consider analytics endpoints for: billing_events, custom_reports, business_metrics"
+  ],
+  "endpoints_detail": {
+    "auth_docs-login": {
+      "paths": [
+        "/api/v1/auth/docs-login"
+      ],
+      "operations": {
+        "POST /api/v1/auth/docs-login": {
+          "summary": "\ud83d\udd10 Login para Documenta\u00e7\u00e3o Swagger",
+          "description": "**Endpoint especial para facilitar o login na documenta\u00e7\u00e3o Swagger**\n    \n    ## \ud83d\udcdd Como usar na documenta\u00e7\u00e3o:\n    \n    ### \u2705 M\u00e9todo Recomendado (2 passos):\n    \n    #### Passo 1: Obter Token\n    1. **Clique no bot\u00e3o \"Authorize\"** \ud83d\udd13 no topo da documenta\u00e7\u00e3o\n    2. **No modal de autoriza\u00e7\u00e3o**:\n       - Encontre a se\u00e7\u00e3o **\"HTTPBasic\"**\n       - Digite seu **email** no campo \"Username\"\n       - Digite sua **senha** no campo \"Password\"  \n       - Clique em **\"Authorize\"** nesta se\u00e7\u00e3o\n    3. **Execute este endpoint** (/auth/docs-login) para obter o token JWT\n    \n    #### Passo 2: Usar Token\n    4. **Copie o `access_token`** da resposta\n    5. **No modal de autoriza\u00e7\u00e3o**:\n       - Encontre a se\u00e7\u00e3o **\"HTTPBearer\"**\n       - Cole o token no campo \"Value\"\n       - Clique em **\"Authorize\"** nesta se\u00e7\u00e3o\n    6. **Pronto!** Agora voc\u00ea pode usar todos os endpoints\n    \n    ## \ud83d\udd04 Fluxo Alternativo:\n    \n    Use diretamente o endpoint `/auth/login` com form data se preferir.\n    \n    ## \u26a0\ufe0f Importante:\n    \n    - Use **HTTPBasic** apenas para este endpoint\n    - Use **HTTPBearer** para todos os outros endpoints\n    - O token expira em 30 minutos",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_register": {
+      "paths": [
+        "/api/v1/auth/register"
+      ],
+      "operations": {
+        "POST /api/v1/auth/register": {
+          "summary": "Registrar novo usu\u00e1rio",
+          "description": "Registra um novo usu\u00e1rio na plataforma.\n\n- **email**: Email do usu\u00e1rio (\u00fanico)\n- **username**: Nome de usu\u00e1rio (\u00fanico)\n- **full_name**: Nome completo\n- **password**: Senha forte\n\nExemplo de corpo de requisi\u00e7\u00e3o:\n```json\n{\n  \"email\": \"usuario@exemplo.com\",\n  \"username\": \"joao_silva\",\n  \"full_name\": \"Jo\u00e3o Silva\",\n  \"password\": \"SenhaForte123!\"\n}\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_login": {
+      "paths": [
+        "/api/v1/auth/login"
+      ],
+      "operations": {
+        "POST /api/v1/auth/login": {
+          "summary": "Login do usu\u00e1rio",
+          "description": "Autentica o usu\u00e1rio e retorna tokens de acesso e refresh.\n\n- **username**: Email do usu\u00e1rio\n- **password**: Senha do usu\u00e1rio\n\nExemplo de corpo (x-www-form-urlencoded):\n```\nusername=usuario@exemplo.com&password=SenhaForte123!\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_refresh": {
+      "paths": [
+        "/api/v1/auth/refresh"
+      ],
+      "operations": {
+        "POST /api/v1/auth/refresh": {
+          "summary": "Renovar token de acesso",
+          "description": "Renova o token de acesso usando um refresh token v\u00e1lido.\n\n- **refresh_token**: Token de atualiza\u00e7\u00e3o v\u00e1lido\n\nExemplo de corpo de requisi\u00e7\u00e3o:\n```json\n{\n  \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_logout": {
+      "paths": [
+        "/api/v1/auth/logout"
+      ],
+      "operations": {
+        "POST /api/v1/auth/logout": {
+          "summary": "Logout do usu\u00e1rio",
+          "description": "Faz logout do usu\u00e1rio revogando o refresh token informado.\n\n- **refresh_token**: Token de atualiza\u00e7\u00e3o a ser revogado\n\nExemplo de corpo de requisi\u00e7\u00e3o:\n```json\n{\n  \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_logout-all": {
+      "paths": [
+        "/api/v1/auth/logout-all"
+      ],
+      "operations": {
+        "POST /api/v1/auth/logout-all": {
+          "summary": "Logout de todos os dispositivos",
+          "description": "Faz logout de todos os dispositivos revogando todos os refresh tokens do usu\u00e1rio autenticado.\n\nN\u00e3o requer corpo de requisi\u00e7\u00e3o.",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_me": {
+      "paths": [
+        "/api/v1/auth/me"
+      ],
+      "operations": {
+        "GET /api/v1/auth/me": {
+          "summary": "Obter informa\u00e7\u00f5es do usu\u00e1rio autenticado",
+          "description": "Retorna as informa\u00e7\u00f5es do usu\u00e1rio atualmente autenticado.\n\nN\u00e3o requer corpo de requisi\u00e7\u00e3o.",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "auth_verify-email": {
+      "paths": [
+        "/api/v1/auth/verify-email"
+      ],
+      "operations": {
+        "POST /api/v1/auth/verify-email": {
+          "summary": "Verificar email do usu\u00e1rio",
+          "description": "Verifica o email do usu\u00e1rio usando o token de verifica\u00e7\u00e3o enviado por email.\n\n- **token**: Token de verifica\u00e7\u00e3o recebido por email\n\nExemplo de corpo de requisi\u00e7\u00e3o:\n```json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_resend-verification": {
+      "paths": [
+        "/api/v1/auth/resend-verification"
+      ],
+      "operations": {
+        "POST /api/v1/auth/resend-verification": {
+          "summary": "Reenviar email de verifica\u00e7\u00e3o",
+          "description": "Reenvia o email de verifica\u00e7\u00e3o para o usu\u00e1rio autenticado.\n\nN\u00e3o requer corpo de requisi\u00e7\u00e3o.",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_forgot-password": {
+      "paths": [
+        "/api/v1/auth/forgot-password"
+      ],
+      "operations": {
+        "POST /api/v1/auth/forgot-password": {
+          "summary": "Solicitar redefini\u00e7\u00e3o de senha",
+          "description": "Solicita redefini\u00e7\u00e3o de senha para o email informado.\n\n- **email**: Email do usu\u00e1rio\n\nExemplo de corpo de requisi\u00e7\u00e3o:\n```json\n{\n  \"email\": \"usuario@exemplo.com\"\n}\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_reset-password": {
+      "paths": [
+        "/api/v1/auth/reset-password"
+      ],
+      "operations": {
+        "POST /api/v1/auth/reset-password": {
+          "summary": "Redefinir senha do usu\u00e1rio",
+          "description": "Redefine a senha do usu\u00e1rio usando o token de redefini\u00e7\u00e3o enviado por email.\n\n- **token**: Token de redefini\u00e7\u00e3o recebido por email\n- **new_password**: Nova senha\n\nExemplo de corpo de requisi\u00e7\u00e3o:\n```json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"new_password\": \"NovaSenhaForte123!\"\n}\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_change-password": {
+      "paths": [
+        "/api/v1/auth/change-password"
+      ],
+      "operations": {
+        "POST /api/v1/auth/change-password": {
+          "summary": "Alterar senha do usu\u00e1rio autenticado",
+          "description": "Altera a senha do usu\u00e1rio autenticado.\n\n- **current_password**: Senha atual\n- **new_password**: Nova senha\n\nExemplo de corpo (x-www-form-urlencoded):\n```\ncurrent_password=SenhaAtual123!&new_password=NovaSenhaForte123!\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "auth_account": {
+      "paths": [
+        "/api/v1/auth/account"
+      ],
+      "operations": {
+        "DELETE /api/v1/auth/account": {
+          "summary": "Excluir conta do usu\u00e1rio autenticado",
+          "description": "Exclui a conta do usu\u00e1rio autenticado.\n\n- **password**: Senha do usu\u00e1rio para confirma\u00e7\u00e3o\n\nExemplo de corpo (x-www-form-urlencoded):\n```\npassword=SenhaForte123!\n```",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": true,
+        "list": false
+      }
+    },
+    "auth_test-token": {
+      "paths": [
+        "/api/v1/auth/test-token"
+      ],
+      "operations": {
+        "GET /api/v1/auth/test-token": {
+          "summary": "\ud83e\uddea Teste de Token JWT",
+          "description": "**Endpoint para testar se a autentica\u00e7\u00e3o JWT est\u00e1 funcionando**\n    \n    Use este endpoint para verificar se:\n    - Seu token JWT est\u00e1 v\u00e1lido\n    - A autentica\u00e7\u00e3o est\u00e1 funcionando corretamente\n    - O usu\u00e1rio est\u00e1 sendo identificado\n    \n    ## \ud83d\udcdd Como usar:\n    1. Fa\u00e7a login com `/auth/docs-login` ou `/auth/login`\n    2. Configure o token Bearer no bot\u00e3o \"Authorize\"\n    3. Execute este endpoint para testar\n    \n    Se estiver funcionando, voc\u00ea ver\u00e1 suas informa\u00e7\u00f5es de usu\u00e1rio.",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "auth_test-hybrid-auth": {
+      "paths": [
+        "/api/v1/auth/test-hybrid-auth"
+      ],
+      "operations": {
+        "GET /api/v1/auth/test-hybrid-auth": {
+          "summary": "\ud83e\uddea Teste de Autentica\u00e7\u00e3o H\u00edbrida",
+          "description": "**Endpoint para testar se a autentica\u00e7\u00e3o h\u00edbrida est\u00e1 funcionando**\n    \n    Este endpoint aceita **AMBOS** os m\u00e9todos de autentica\u00e7\u00e3o:\n    - **HTTPBearer**: Token JWT no header Authorization\n    - **HTTPBasic**: Email/senha diretamente no modal de autoriza\u00e7\u00e3o\n    \n    ## \ud83d\udcdd Como usar:\n    \n    ### Op\u00e7\u00e3o 1: HTTPBearer (Token JWT)\n    1. Fa\u00e7a login com `/auth/login` ou `/auth/docs-login`\n    2. No modal \"Authorize\", se\u00e7\u00e3o **HTTPBearer**:\n       - Cole o token JWT no campo \"Value\"\n       - Clique \"Authorize\"\n    3. Execute este endpoint\n    \n    ### Op\u00e7\u00e3o 2: HTTPBasic (Email/Senha)\n    1. No modal \"Authorize\", se\u00e7\u00e3o **HTTPBasic**:\n       - Digite seu **email** no campo \"Username\"\n       - Digite sua **senha** no campo \"Password\"\n       - Clique \"Authorize\"\n    2. Execute este endpoint\n    \n    ## \u2705 Resultado:\n    Se funcionando corretamente, voc\u00ea ver\u00e1 suas informa\u00e7\u00f5es de usu\u00e1rio\n    independente do m\u00e9todo de autentica\u00e7\u00e3o usado.",
+          "tags": [
+            "authentication"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "user-variables": {
+      "paths": [
+        "/api/v1/user-variables/",
+        "/api/v1/user-variables/{variable_id}"
+      ],
+      "operations": {
+        "GET /api/v1/user-variables/": {
+          "summary": "Listar vari\u00e1veis do usu\u00e1rio",
+          "description": "Lista todas as vari\u00e1veis do usu\u00e1rio com pagina\u00e7\u00e3o e filtros.",
+          "tags": [
+            "user-variables"
+          ]
+        },
+        "POST /api/v1/user-variables/": {
+          "summary": "Criar nova vari\u00e1vel do usu\u00e1rio",
+          "description": "Cria uma nova vari\u00e1vel para o usu\u00e1rio.",
+          "tags": [
+            "user-variables"
+          ]
+        },
+        "GET /api/v1/user-variables/{variable_id}": {
+          "summary": "Get Variable",
+          "description": "Obt\u00e9m uma vari\u00e1vel espec\u00edfica do usu\u00e1rio por ID.",
+          "tags": [
+            "user-variables"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "user-variables_debug": {
+      "paths": [
+        "/api/v1/user-variables/debug/masking"
+      ],
+      "operations": {
+        "GET /api/v1/user-variables/debug/masking": {
+          "summary": "Test Masking",
+          "description": "Endpoint de teste para verificar o mascaramento de valores",
+          "tags": [
+            "user-variables"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "user-variables_api-keys": {
+      "paths": [
+        "/api/v1/user-variables/api-keys/{provider}",
+        "/api/v1/user-variables/api-keys",
+        "/api/v1/user-variables/api-keys/providers"
+      ],
+      "operations": {
+        "POST /api/v1/user-variables/api-keys/{provider}": {
+          "summary": "Create User Api Key",
+          "description": "Configura uma API key espec\u00edfica do usu\u00e1rio para um provedor LLM\n\nUsa a tabela user_variables existente com categoria 'api_keys'",
+          "tags": [
+            "user-variables"
+          ]
+        },
+        "DELETE /api/v1/user-variables/api-keys/{provider}": {
+          "summary": "Delete User Api Key",
+          "description": "Remove uma API key espec\u00edfica do usu\u00e1rio",
+          "tags": [
+            "user-variables"
+          ]
+        },
+        "GET /api/v1/user-variables/api-keys": {
+          "summary": "List User Api Keys",
+          "description": "Lista todas as API keys configuradas pelo usu\u00e1rio\n\nRetorna valores completos sem mascaramento",
+          "tags": [
+            "user-variables"
+          ]
+        },
+        "GET /api/v1/user-variables/api-keys/providers": {
+          "summary": "Get Supported Providers",
+          "description": "Lista todos os provedores LLM suportados",
+          "tags": [
+            "user-variables"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": true,
+        "list": true
+      }
+    },
+    "workflows": {
+      "paths": [
+        "/api/v1/workflows/",
+        "/api/v1/workflows/{workflow_id}",
+        "/api/v1/workflows/{workflow_id}/execute",
+        "/api/v1/workflows/{workflow_id}/executions",
+        "/api/v1/workflows/{workflow_id}/duplicate"
+      ],
+      "operations": {
+        "GET /api/v1/workflows/": {
+          "summary": "Listar workflows",
+          "description": "Lista workflows do usu\u00e1rio com filtros e pagina\u00e7\u00e3o.\n\nRetorna workflows pr\u00f3prios ou p\u00fablicos dependendo dos filtros,\ncom suporte a busca textual e pagina\u00e7\u00e3o.\n\nArgs:\n    page: N\u00famero da p\u00e1gina (1-based)\n    size: N\u00famero de itens por p\u00e1gina\n    category: Categoria espec\u00edfica para filtrar\n    is_public: Se True, mostra apenas workflows p\u00fablicos\n    search: Termo para buscar em nome e descri\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    WorkflowListResponse: Lista paginada de workflows\n    \nRaises:\n    HTTPException: 400 se par\u00e2metros inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "workflows"
+          ]
+        },
+        "POST /api/v1/workflows/": {
+          "summary": "Criar workflow",
+          "description": "Cria um novo workflow para o usu\u00e1rio.\n\nCria um workflow com os dados fornecidos e associa\nao usu\u00e1rio autenticado.\n\nArgs:\n    workflow_data: Dados do workflow a ser criado\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    WorkflowResponse: Workflow criado\n    \nRaises:\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "workflows"
+          ]
+        },
+        "GET /api/v1/workflows/{workflow_id}": {
+          "summary": "Obter workflow",
+          "description": "Obt\u00e9m um workflow espec\u00edfico por ID.\n\nRetorna dados completos do workflow se o usu\u00e1rio\ntiver permiss\u00e3o de acesso.\n\nArgs:\n    workflow_id: ID \u00fanico do workflow\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    WorkflowResponse: Dados do workflow\n    \nRaises:\n    HTTPException: 404 se workflow n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "workflows"
+          ]
+        },
+        "PUT /api/v1/workflows/{workflow_id}": {
+          "summary": "Atualizar workflow",
+          "description": "Atualiza um workflow existente do usu\u00e1rio.\n\nPermite modificar dados do workflow se o usu\u00e1rio\nfor o propriet\u00e1rio.\n\nArgs:\n    workflow_id: ID \u00fanico do workflow\n    workflow_data: Dados atualizados do workflow\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    WorkflowResponse: Workflow atualizado\n    \nRaises:\n    HTTPException: 404 se workflow n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "workflows"
+          ]
+        },
+        "DELETE /api/v1/workflows/{workflow_id}": {
+          "summary": "Deletar workflow",
+          "description": "Remove um workflow do usu\u00e1rio.\n\nDeleta permanentemente o workflow se o usu\u00e1rio\nfor o propriet\u00e1rio.\n\nArgs:\n    workflow_id: ID \u00fanico do workflow\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se workflow n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "workflows"
+          ]
+        },
+        "POST /api/v1/workflows/{workflow_id}/execute": {
+          "summary": "Executar workflow",
+          "description": "Executa um workflow com dados de entrada.\n\nCria uma nova execu\u00e7\u00e3o do workflow com os dados\nfornecidos e inicia o processamento.\n\nArgs:\n    workflow_id: ID \u00fanico do workflow\n    execution_data: Dados de entrada para execu\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    WorkflowExecutionResponse: Detalhes da execu\u00e7\u00e3o criada\n    \nRaises:\n    HTTPException: 404 se workflow n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de execu\u00e7\u00e3o\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "workflows",
+            "execution"
+          ]
+        },
+        "GET /api/v1/workflows/{workflow_id}/executions": {
+          "summary": "Listar execu\u00e7\u00f5es",
+          "description": "Lista execu\u00e7\u00f5es de um workflow espec\u00edfico.\n\nRetorna hist\u00f3rico de execu\u00e7\u00f5es do workflow\ncom pagina\u00e7\u00e3o e detalhes de status.\n\nArgs:\n    workflow_id: ID \u00fanico do workflow\n    page: N\u00famero da p\u00e1gina\n    size: Itens por p\u00e1gina\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    ExecutionListResponse: Lista paginada de execu\u00e7\u00f5es\n    \nRaises:\n    HTTPException: 404 se workflow n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "workflows",
+            "execution"
+          ]
+        },
+        "POST /api/v1/workflows/{workflow_id}/duplicate": {
+          "summary": "Duplicar workflow",
+          "description": "Cria uma c\u00f3pia de um workflow existente.\n\nDuplica um workflow p\u00fablico ou pr\u00f3prio, criando\numa nova inst\u00e2ncia para o usu\u00e1rio.\n\nArgs:\n    workflow_id: ID \u00fanico do workflow a ser duplicado\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    WorkflowResponse: Workflow duplicado\n    \nRaises:\n    HTTPException: 404 se workflow n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "workflows"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "executions": {
+      "paths": [
+        "/api/v1/executions/",
+        "/api/v1/executions/{execution_id}",
+        "/api/v1/executions/{execution_id}/control",
+        "/api/v1/executions/{execution_id}/nodes",
+        "/api/v1/executions/{execution_id}/logs",
+        "/api/v1/executions/{execution_id}/metrics"
+      ],
+      "operations": {
+        "POST /api/v1/executions/": {
+          "summary": "Criar execu\u00e7\u00e3o de workflow",
+          "description": "Cria uma nova execu\u00e7\u00e3o de workflow com configura\u00e7\u00f5es personalizadas.\n\nPermite criar e opcionalmente iniciar uma execu\u00e7\u00e3o de workflow\ncom dados de entrada, vari\u00e1veis e prioridade espec\u00edficos.\n\nArgs:\n    execution_data: Dados da execu\u00e7\u00e3o a ser criada\n    start_immediately: Se deve iniciar a execu\u00e7\u00e3o imediatamente\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    ExecutionResponse: Dados da execu\u00e7\u00e3o criada\n    \nRaises:\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions"
+          ]
+        },
+        "GET /api/v1/executions/": {
+          "summary": "Listar execu\u00e7\u00f5es do usu\u00e1rio",
+          "description": "Lista execu\u00e7\u00f5es do usu\u00e1rio com filtros avan\u00e7ados e pagina\u00e7\u00e3o.\n\nPermite filtrar por status, workflows, datas, tags e aplicar\nordena\u00e7\u00e3o e pagina\u00e7\u00e3o para navega\u00e7\u00e3o eficiente.\n\nArgs:\n    status: Lista de status para filtrar (opcional)\n    workflow_ids: IDs de workflows para filtrar (opcional)\n    created_after: Data m\u00ednima de cria\u00e7\u00e3o (opcional)\n    created_before: Data m\u00e1xima de cria\u00e7\u00e3o (opcional)\n    tags: Tags para filtrar (opcional)\n    limit: Limite de resultados por p\u00e1gina\n    offset: Offset para pagina\u00e7\u00e3o\n    order_by: Campo para ordena\u00e7\u00e3o\n    order_direction: Dire\u00e7\u00e3o da ordena\u00e7\u00e3o (asc/desc)\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    List[ExecutionResponse]: Lista de execu\u00e7\u00f5es\n    \nRaises:\n    HTTPException: 400 se filtros inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions"
+          ]
+        },
+        "GET /api/v1/executions/{execution_id}": {
+          "summary": "Obter execu\u00e7\u00e3o espec\u00edfica",
+          "description": "Obt\u00e9m detalhes completos de uma execu\u00e7\u00e3o espec\u00edfica.\n\nRetorna informa\u00e7\u00f5es detalhadas sobre status, progresso,\ndados de entrada/sa\u00edda e m\u00e9tricas da execu\u00e7\u00e3o.\n\nArgs:\n    execution_id: ID \u00fanico da execu\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    ExecutionResponse: Dados completos da execu\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se execu\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions"
+          ]
+        },
+        "POST /api/v1/executions/{execution_id}/control": {
+          "summary": "Controlar execu\u00e7\u00e3o",
+          "description": "Controla uma execu\u00e7\u00e3o atrav\u00e9s de a\u00e7\u00f5es espec\u00edficas.\n\nPermite executar a\u00e7\u00f5es de controle como iniciar, pausar, resumir,\ncancelar ou reiniciar uma execu\u00e7\u00e3o espec\u00edfica.\n\nArgs:\n    execution_id: ID \u00fanico da execu\u00e7\u00e3o\n    control: Configura\u00e7\u00e3o da a\u00e7\u00e3o de controle\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    Dict[str, Any]: Resultado da a\u00e7\u00e3o de controle\n    \nRaises:\n    HTTPException: 404 se execu\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 400 se a\u00e7\u00e3o inv\u00e1lida ou n\u00e3o permitida\n    HTTPException: 403 se sem permiss\u00e3o de controle\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions-control"
+          ]
+        },
+        "GET /api/v1/executions/{execution_id}/nodes": {
+          "summary": "Obter n\u00f3s da execu\u00e7\u00e3o",
+          "description": "Obt\u00e9m informa\u00e7\u00f5es de execu\u00e7\u00e3o de todos os n\u00f3s de uma execu\u00e7\u00e3o.\n\nRetorna status, dados de entrada/sa\u00edda, dura\u00e7\u00e3o e\nm\u00e9tricas para cada n\u00f3 executado no workflow.\n\nArgs:\n    execution_id: ID \u00fanico da execu\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    List[NodeExecutionResponse]: Lista de execu\u00e7\u00f5es de n\u00f3s\n    \nRaises:\n    HTTPException: 404 se execu\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions",
+            "nodes"
+          ]
+        },
+        "GET /api/v1/executions/{execution_id}/logs": {
+          "summary": "Obter logs da execu\u00e7\u00e3o",
+          "description": "Obt\u00e9m logs completos de uma execu\u00e7\u00e3o e seus n\u00f3s.\n\nRetorna logs estruturados da execu\u00e7\u00e3o principal e\nopcionalmente de todos os n\u00f3s executados.\n\nArgs:\n    execution_id: ID \u00fanico da execu\u00e7\u00e3o\n    include_nodes: Se deve incluir logs dos n\u00f3s individuais\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    Dict[str, Any]: Logs estruturados da execu\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se execu\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions-monitoring"
+          ]
+        },
+        "GET /api/v1/executions/{execution_id}/metrics": {
+          "summary": "Obter m\u00e9tricas da execu\u00e7\u00e3o",
+          "description": "Obt\u00e9m m\u00e9tricas detalhadas de performance de uma execu\u00e7\u00e3o.\n\nRetorna m\u00e9tricas de tempo, mem\u00f3ria, CPU e outras m\u00e9tricas\nde performance coletadas durante a execu\u00e7\u00e3o.\n\nArgs:\n    execution_id: ID \u00fanico da execu\u00e7\u00e3o\n    metric_types: Tipos espec\u00edficos de m\u00e9tricas para filtrar\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    Dict[str, Any]: M\u00e9tricas de performance da execu\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se execu\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "executions_stats": {
+      "paths": [
+        "/api/v1/executions/stats"
+      ],
+      "operations": {
+        "GET /api/v1/executions/stats": {
+          "summary": "Estat\u00edsticas de execu\u00e7\u00e3o",
+          "description": "Obt\u00e9m estat\u00edsticas completas de execu\u00e7\u00e3o do usu\u00e1rio.\n\nRetorna m\u00e9tricas agregadas incluindo contadores, taxas de sucesso,\ndura\u00e7\u00f5es m\u00e9dias e tend\u00eancias de performance.\n\nArgs:\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    ExecutionStats: Estat\u00edsticas de execu\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "executions_batch": {
+      "paths": [
+        "/api/v1/executions/batch"
+      ],
+      "operations": {
+        "POST /api/v1/executions/batch": {
+          "summary": "Controle em lote de execu\u00e7\u00f5es",
+          "description": "Executa a\u00e7\u00f5es de controle em m\u00faltiplas execu\u00e7\u00f5es simultaneamente.\n\nPermite aplicar a mesma a\u00e7\u00e3o (cancelar, pausar, etc.) em\nv\u00e1rias execu\u00e7\u00f5es de uma s\u00f3 vez para opera\u00e7\u00f5es em lote.\n\nArgs:\n    batch: Configura\u00e7\u00e3o da opera\u00e7\u00e3o em lote\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    Dict[str, Any]: Resultado das opera\u00e7\u00f5es em lote\n    \nRaises:\n    HTTPException: 400 se configura\u00e7\u00e3o inv\u00e1lida\n    HTTPException: 403 se sem permiss\u00e3o para algumas execu\u00e7\u00f5es\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions-control"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "executions_validate-workflow": {
+      "paths": [
+        "/api/v1/executions/validate-workflow"
+      ],
+      "operations": {
+        "POST /api/v1/executions/validate-workflow": {
+          "summary": "Validar workflow para execu\u00e7\u00e3o",
+          "description": "Valida se um workflow est\u00e1 pronto para execu\u00e7\u00e3o.\n\nVerifica configura\u00e7\u00f5es, depend\u00eancias, vari\u00e1veis obrigat\u00f3rias\ne recursos necess\u00e1rios antes de iniciar uma execu\u00e7\u00e3o.\n\nArgs:\n    workflow_id: ID do workflow a ser validado\n    variables: Vari\u00e1veis personalizadas para valida\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    WorkflowValidation: Resultado da valida\u00e7\u00e3o com detalhes\n    \nRaises:\n    HTTPException: 404 se workflow n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "executions_queue": {
+      "paths": [
+        "/api/v1/executions/queue/status"
+      ],
+      "operations": {
+        "GET /api/v1/executions/queue/status": {
+          "summary": "Status da fila de execu\u00e7\u00e3o",
+          "description": "Obt\u00e9m status detalhado da fila de execu\u00e7\u00e3o do usu\u00e1rio.\n\nRetorna informa\u00e7\u00f5es sobre execu\u00e7\u00f5es pendentes, em andamento,\nposi\u00e7\u00e3o na fila e estimativas de tempo.\n\nArgs:\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, Any]: Status completo da fila de execu\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions-monitoring"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "executions_admin": {
+      "paths": [
+        "/api/v1/executions/admin/engine-status",
+        "/api/v1/executions/admin/engine/start",
+        "/api/v1/executions/admin/engine/stop"
+      ],
+      "operations": {
+        "GET /api/v1/executions/admin/engine-status": {
+          "summary": "Status do engine de execu\u00e7\u00e3o",
+          "description": "Obt\u00e9m status detalhado do engine de execu\u00e7\u00e3o (admin only).\n\nRetorna informa\u00e7\u00f5es sobre performance, sa\u00fade, recursos\ne estat\u00edsticas operacionais do engine.\n\nArgs:\n    current_user: Usu\u00e1rio autenticado (deve ser admin)\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    Dict[str, Any]: Status completo do engine\n    \nRaises:\n    HTTPException: 403 se n\u00e3o for admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions",
+            "admin"
+          ]
+        },
+        "POST /api/v1/executions/admin/engine/start": {
+          "summary": "Iniciar engine de execu\u00e7\u00e3o",
+          "description": "Inicia o engine de execu\u00e7\u00e3o de workflows (admin only).\n\nAtiva o engine para processar execu\u00e7\u00f5es pendentes\ne aceitar novas solicita\u00e7\u00f5es de execu\u00e7\u00e3o.\n\nArgs:\n    current_user: Usu\u00e1rio autenticado (deve ser admin)\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    Dict[str, Any]: Resultado da opera\u00e7\u00e3o de inicializa\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 403 se n\u00e3o for admin\n    HTTPException: 400 se engine j\u00e1 estiver rodando\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions",
+            "admin"
+          ]
+        },
+        "POST /api/v1/executions/admin/engine/stop": {
+          "summary": "Parar engine de execu\u00e7\u00e3o",
+          "description": "Para o engine de execu\u00e7\u00e3o de workflows (admin only).\n\nInterrompe o processamento de novas execu\u00e7\u00f5es e\nfinaliza execu\u00e7\u00f5es em andamento de forma segura.\n\nArgs:\n    current_user: Usu\u00e1rio autenticado (deve ser admin)\n    service: Servi\u00e7o de execu\u00e7\u00e3o\n    \nReturns:\n    Dict[str, Any]: Resultado da opera\u00e7\u00e3o de parada\n    \nRaises:\n    HTTPException: 403 se n\u00e3o for admin\n    HTTPException: 400 se engine j\u00e1 estiver parado\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "executions",
+            "admin"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "templates": {
+      "paths": [
+        "/api/v1/templates/",
+        "/api/v1/templates/{template_id}",
+        "/api/v1/templates/{template_id}/publish",
+        "/api/v1/templates/{template_id}/download",
+        "/api/v1/templates/{template_id}/reviews"
+      ],
+      "operations": {
+        "POST /api/v1/templates/": {
+          "summary": "Criar template",
+          "description": "Cria um novo template de workflow no marketplace.\n\nPermite aos usu\u00e1rios criar templates personalizados a partir\nde workflows existentes ou do zero, com metadados completos.\n\nArgs:\n    template_data: Dados do template a ser criado\n    workflow_id: ID do workflow base (opcional)\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    TemplateResponse: Template criado com detalhes\n    \nRaises:\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 403 se sem permiss\u00e3o\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "GET /api/v1/templates/": {
+          "summary": "Buscar templates",
+          "description": "Busca templates no marketplace com filtros avan\u00e7ados.\n\nPermite busca textual combinada com m\u00faltiplos filtros\nincluindo categoria, pre\u00e7o, rating, complexidade e mais.\n\nArgs:\n    search: Termo de busca em nome e descri\u00e7\u00e3o\n    category: Lista de categorias para filtrar\n    tags: Lista de tags para filtrar\n    license_type: Tipos de licen\u00e7a (free, premium, etc.)\n    price_min: Pre\u00e7o m\u00ednimo para filtrar\n    price_max: Pre\u00e7o m\u00e1ximo para filtrar\n    rating_min: Rating m\u00ednimo (0-5)\n    complexity_min: Complexidade m\u00ednima (1-5)\n    complexity_max: Complexidade m\u00e1xima (1-5)\n    is_featured: Filtrar apenas templates em destaque\n    is_verified: Filtrar apenas templates verificados\n    author_id: ID do autor espec\u00edfico\n    industries: Lista de ind\u00fastrias\n    use_cases: Lista de casos de uso\n    page: N\u00famero da p\u00e1gina\n    per_page: Itens por p\u00e1gina\n    sort_by: Campo para ordena\u00e7\u00e3o\n    sort_order: Ordem de ordena\u00e7\u00e3o (asc/desc)\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado (opcional)\n    \nReturns:\n    TemplateListResponse: Lista paginada de templates\n    \nRaises:\n    HTTPException: 400 se filtros inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "GET /api/v1/templates/{template_id}": {
+          "summary": "Obter template",
+          "description": "Obt\u00e9m detalhes completos de um template espec\u00edfico.\n\nRetorna informa\u00e7\u00f5es detalhadas incluindo metadados,\nreviews, estat\u00edsticas e dados de compatibilidade.\n\nArgs:\n    template_id: ID \u00fanico do template\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado (opcional)\n    \nReturns:\n    TemplateDetailResponse: Detalhes completos do template\n    \nRaises:\n    HTTPException: 404 se template n\u00e3o encontrado\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "PUT /api/v1/templates/{template_id}": {
+          "summary": "Atualizar template",
+          "description": "Atualiza um template existente do usu\u00e1rio.\n\nPermite modificar metadados, descri\u00e7\u00e3o, configura\u00e7\u00f5es\ne outros dados de templates pr\u00f3prios.\n\nArgs:\n    template_id: ID \u00fanico do template\n    template_data: Dados atualizados do template\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    TemplateResponse: Template atualizado\n    \nRaises:\n    HTTPException: 404 se template n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "DELETE /api/v1/templates/{template_id}": {
+          "summary": "Deletar template",
+          "description": "",
+          "tags": [
+            "templates"
+          ]
+        },
+        "POST /api/v1/templates/{template_id}/publish": {
+          "summary": "Publicar template",
+          "description": "Publica um template no marketplace p\u00fablico.\n\nSubmete o template para revis\u00e3o e publica\u00e7\u00e3o,\ntornando-o dispon\u00edvel para outros usu\u00e1rios.\n\nArgs:\n    template_id: ID \u00fanico do template\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, Any]: Status da publica\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se template n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 400 se template inv\u00e1lido para publica\u00e7\u00e3o\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "POST /api/v1/templates/{template_id}/download": {
+          "summary": "Download de template",
+          "description": "Registra e processa download de um template.\n\nSuporta diferentes tipos de download incluindo\nvers\u00e3o completa, preview e demo.\n\nArgs:\n    template_id: ID \u00fanico do template\n    download_type: Tipo de download (full, preview, demo)\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, Any]: Informa\u00e7\u00f5es do download\n    \nRaises:\n    HTTPException: 404 se template n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o para download\n    HTTPException: 400 se tipo de download inv\u00e1lido\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "POST /api/v1/templates/{template_id}/reviews": {
+          "summary": "Criar review",
+          "description": "Cria uma avalia\u00e7\u00e3o para um template.\n\nPermite usu\u00e1rios avaliarem templates com nota\ne coment\u00e1rios detalhados.\n\nArgs:\n    template_id: ID \u00fanico do template\n    review_data: Dados da avalia\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, Any]: Resultado da cria\u00e7\u00e3o da review\n    \nRaises:\n    HTTPException: 404 se template n\u00e3o encontrado\n    HTTPException: 409 se usu\u00e1rio j\u00e1 avaliou\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "GET /api/v1/templates/{template_id}/reviews": {
+          "summary": "Obter reviews",
+          "description": "Obt\u00e9m avalia\u00e7\u00f5es de um template espec\u00edfico.\n\nRetorna lista paginada de reviews com detalhes\ndos usu\u00e1rios e estat\u00edsticas agregadas.\n\nArgs:\n    template_id: ID \u00fanico do template\n    page: N\u00famero da p\u00e1gina\n    per_page: Itens por p\u00e1gina\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[ReviewResponse]: Lista de avalia\u00e7\u00f5es\n    \nRaises:\n    HTTPException: 404 se template n\u00e3o encontrado\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "templates_stats": {
+      "paths": [
+        "/api/v1/templates/stats"
+      ],
+      "operations": {
+        "GET /api/v1/templates/stats": {
+          "summary": "Estat\u00edsticas de templates",
+          "description": "Obt\u00e9m estat\u00edsticas gerais de templates do marketplace.\n\nRetorna m\u00e9tricas agregadas incluindo totais, m\u00e9dias,\ntemplates populares e estat\u00edsticas de engajamento.\n\nArgs:\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    TemplateStats: Estat\u00edsticas completas do marketplace\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "templates_marketplace": {
+      "paths": [
+        "/api/v1/templates/marketplace"
+      ],
+      "operations": {
+        "GET /api/v1/templates/marketplace": {
+          "summary": "Estat\u00edsticas do marketplace",
+          "description": "Obt\u00e9m estat\u00edsticas espec\u00edficas do marketplace de templates.\n\nRetorna dados curados para exibi\u00e7\u00e3o no marketplace\nincluindo destaques, tend\u00eancias e rankings.\n\nArgs:\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    MarketplaceStats: Estat\u00edsticas do marketplace\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "templates_my-stats": {
+      "paths": [
+        "/api/v1/templates/my-stats"
+      ],
+      "operations": {
+        "GET /api/v1/templates/my-stats": {
+          "summary": "Minhas estat\u00edsticas",
+          "description": "Obt\u00e9m estat\u00edsticas de templates do usu\u00e1rio autenticado.\n\nRetorna m\u00e9tricas pessoais incluindo templates criados,\ndownloads, reviews e performance.\n\nArgs:\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    UserTemplateStats: Estat\u00edsticas pessoais do usu\u00e1rio\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "templates_install": {
+      "paths": [
+        "/api/v1/templates/install"
+      ],
+      "operations": {
+        "POST /api/v1/templates/install": {
+          "summary": "Instalar template",
+          "description": "Instala um template como workflow do usu\u00e1rio.\n\nCria um novo workflow baseado no template,\naplicando configura\u00e7\u00f5es e customiza\u00e7\u00f5es.\n\nArgs:\n    install_data: Dados de instala\u00e7\u00e3o do template\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    TemplateInstallResponse: Resultado da instala\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se template n\u00e3o encontrado\n    HTTPException: 400 se dados de instala\u00e7\u00e3o inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "templates_favorites": {
+      "paths": [
+        "/api/v1/templates/favorites",
+        "/api/v1/templates/favorites/my"
+      ],
+      "operations": {
+        "POST /api/v1/templates/favorites": {
+          "summary": "Adicionar favorito",
+          "description": "Adiciona um template aos favoritos do usu\u00e1rio.\n\nPermite marcar templates como favoritos para\nacesso r\u00e1pido e organiza\u00e7\u00e3o pessoal.\n\nArgs:\n    favorite_data: Dados do favorito\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    FavoriteResponse: Favorito criado\n    \nRaises:\n    HTTPException: 404 se template n\u00e3o encontrado\n    HTTPException: 409 se j\u00e1 est\u00e1 nos favoritos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "GET /api/v1/templates/favorites/my": {
+          "summary": "Meus favoritos",
+          "description": "Obt\u00e9m lista de templates favoritos do usu\u00e1rio.\n\nRetorna templates marcados como favoritos\ncom pagina\u00e7\u00e3o e informa\u00e7\u00f5es detalhadas.\n\nArgs:\n    page: N\u00famero da p\u00e1gina\n    per_page: Itens por p\u00e1gina\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    List[FavoriteResponse]: Lista de favoritos\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "templates_collections": {
+      "paths": [
+        "/api/v1/templates/collections"
+      ],
+      "operations": {
+        "POST /api/v1/templates/collections": {
+          "summary": "Criar cole\u00e7\u00e3o",
+          "description": "Cria uma nova cole\u00e7\u00e3o de templates.\n\nPermite organizar templates em cole\u00e7\u00f5es tem\u00e1ticas\npara melhor curadoria e descoberta.\n\nArgs:\n    collection_data: Dados da cole\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, Any]: Resultado da cria\u00e7\u00e3o da cole\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        },
+        "GET /api/v1/templates/collections": {
+          "summary": "Listar cole\u00e7\u00f5es",
+          "description": "Obt\u00e9m lista de cole\u00e7\u00f5es p\u00fablicas de templates.\n\nRetorna cole\u00e7\u00f5es curadas dispon\u00edveis no marketplace\ncom informa\u00e7\u00f5es de templates inclu\u00eddos.\n\nArgs:\n    page: N\u00famero da p\u00e1gina\n    per_page: Itens por p\u00e1gina\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[CollectionResponse]: Lista de cole\u00e7\u00f5es\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "templates"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "nodes": {
+      "paths": [
+        "/api/v1/nodes/",
+        "/api/v1/nodes/{node_id}",
+        "/api/v1/nodes/{node_id}/download",
+        "/api/v1/nodes/{node_id}/rate"
+      ],
+      "operations": {
+        "GET /api/v1/nodes/": {
+          "summary": "Listar nodes",
+          "description": "Lista nodes dispon\u00edveis com filtros e pagina\u00e7\u00e3o.\n\nRetorna nodes pr\u00f3prios ou p\u00fablicos dependendo dos filtros,\nordenados por popularidade (downloads).\n\nArgs:\n    page: N\u00famero da p\u00e1gina (1-based)\n    size: N\u00famero de itens por p\u00e1gina\n    type: Tipo espec\u00edfico de node para filtrar\n    category: Categoria espec\u00edfica para filtrar\n    is_public: Se True, mostra apenas nodes p\u00fablicos\n    search: Termo para buscar em nome e descri\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    NodeListResponse: Lista paginada de nodes\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes"
+          ]
+        },
+        "POST /api/v1/nodes/": {
+          "summary": "Criar node",
+          "description": "Cria um novo node personalizado.\n\nPermite criar nodes customizados com l\u00f3gica espec\u00edfica\npara uso em workflows.\n\nArgs:\n    node_data: Dados do node a ser criado\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    NodeResponse: Node criado\n    \nRaises:\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes"
+          ]
+        },
+        "GET /api/v1/nodes/{node_id}": {
+          "summary": "Obter node",
+          "description": "Obt\u00e9m um node espec\u00edfico por ID.\n\nRetorna dados completos do node se o usu\u00e1rio\ntiver permiss\u00e3o de acesso.\n\nArgs:\n    node_id: ID \u00fanico do node\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    NodeResponse: Dados do node\n    \nRaises:\n    HTTPException: 404 se node n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes"
+          ]
+        },
+        "PUT /api/v1/nodes/{node_id}": {
+          "summary": "Atualizar node",
+          "description": "Atualiza um node existente do usu\u00e1rio.\n\nPermite modificar propriedades do node se o usu\u00e1rio\nfor o propriet\u00e1rio.\n\nArgs:\n    node_id: ID \u00fanico do node\n    node_data: Dados atualizados do node\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    NodeResponse: Node atualizado\n    \nRaises:\n    HTTPException: 404 se node n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes"
+          ]
+        },
+        "DELETE /api/v1/nodes/{node_id}": {
+          "summary": "Deletar node",
+          "description": "Remove um node do usu\u00e1rio.\n\nDeleta permanentemente o node se o usu\u00e1rio\nfor o propriet\u00e1rio.\n\nArgs:\n    node_id: ID \u00fanico do node\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se node n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes"
+          ]
+        },
+        "POST /api/v1/nodes/{node_id}/download": {
+          "summary": "Download/instalar node",
+          "description": "Faz download/instala\u00e7\u00e3o de um node p\u00fablico.\n\nRegistra download e incrementa contador de popularidade\npara nodes p\u00fablicos dispon\u00edveis.\n\nArgs:\n    node_id: ID \u00fanico do node\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, Any]: Informa\u00e7\u00f5es do download\n    \nRaises:\n    HTTPException: 404 se node n\u00e3o encontrado ou n\u00e3o p\u00fablico\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes-download"
+          ]
+        },
+        "POST /api/v1/nodes/{node_id}/rate": {
+          "summary": "Avaliar node",
+          "description": "Avalia um node p\u00fablico com nota de 1 a 5.\n\nPermite usu\u00e1rios avaliarem nodes p\u00fablicos para\nmelhorar a descoberta e qualidade.\n\nArgs:\n    node_id: ID \u00fanico do node\n    rating: Nota de 1 a 5\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, Any]: Resultado da avalia\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se node n\u00e3o encontrado ou n\u00e3o p\u00fablico\n    HTTPException: 400 se rating inv\u00e1lido\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes-rating"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "nodes_categories": {
+      "paths": [
+        "/api/v1/nodes/categories/"
+      ],
+      "operations": {
+        "GET /api/v1/nodes/categories/": {
+          "summary": "Listar categorias",
+          "description": "Lista todas as categorias de nodes dispon\u00edveis.\n\nRetorna lista \u00fanica de categorias existentes\nno sistema para facilitar filtros.\n\nArgs:\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[str]: Lista de categorias \u00fanicas\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes-categories"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "nodes_types": {
+      "paths": [
+        "/api/v1/nodes/types/"
+      ],
+      "operations": {
+        "GET /api/v1/nodes/types/": {
+          "summary": "Listar tipos",
+          "description": "Lista todos os tipos de nodes dispon\u00edveis.\n\nRetorna lista \u00fanica de tipos existentes\nno sistema para facilitar filtros.\n\nArgs:\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[str]: Lista de tipos \u00fanicos\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "nodes-types"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "agents": {
+      "paths": [
+        "/api/v1/agents/",
+        "/api/v1/agents/{agent_id}",
+        "/api/v1/agents/{agent_id}/activate",
+        "/api/v1/agents/{agent_id}/deactivate",
+        "/api/v1/agents/{agent_id}/stats",
+        "/api/v1/agents/{agent_id}/duplicate",
+        "/api/v1/agents/{agent_id}/tools",
+        "/api/v1/agents/{agent_id}/tools/{tool_id}",
+        "/api/v1/agents/{agent_id}/models",
+        "/api/v1/agents/{agent_id}/models/{llm_id}",
+        "/api/v1/agents/{agent_id}/configurations",
+        "/api/v1/agents/{agent_id}/acl",
+        "/api/v1/agents/{agent_id}/errors",
+        "/api/v1/agents/{agent_id}/metrics",
+        "/api/v1/agents/{agent_id}/metrics/summary",
+        "/api/v1/agents/{agent_id}/knowledge-bases"
+      ],
+      "operations": {
+        "GET /api/v1/agents/": {
+          "summary": "Listar agentes",
+          "description": "Lista todos os agentes do usu\u00e1rio com filtros e pagina\u00e7\u00e3o.\n\nRetorna agentes ordenados por atividade recente,\ncom op\u00e7\u00f5es de filtro por tipo e busca textual.\n\nArgs:\n    page: N\u00famero da p\u00e1gina (1-based)\n    size: N\u00famero de itens por p\u00e1gina\n    agent_type: Tipo espec\u00edfico de agente para filtrar\n    search: Termo para buscar em nome e descri\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    AgentListResponse: Lista paginada de agentes\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents"
+          ]
+        },
+        "POST /api/v1/agents/": {
+          "summary": "Criar agente",
+          "description": "Cria um novo agente de IA personalizado.\n\nPermite criar agentes com configura\u00e7\u00f5es espec\u00edficas\nde personalidade e modelo de linguagem.\n\nArgs:\n    agent_data: Dados do agente a ser criado\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    AgentResponse: Agente criado\n    \nRaises:\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}": {
+          "summary": "Obter agente",
+          "description": "Obt\u00e9m um agente espec\u00edfico por ID.\n\nRetorna dados completos do agente se o usu\u00e1rio\nfor o propriet\u00e1rio.\n\nArgs:\n    agent_id: ID \u00fanico do agente\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    AgentResponse: Dados do agente\n    \nRaises:\n    HTTPException: 404 se agente n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents"
+          ]
+        },
+        "PUT /api/v1/agents/{agent_id}": {
+          "summary": "Atualizar agente",
+          "description": "Atualiza um agente existente.\n\nPermite modificar configura\u00e7\u00f5es do agente se o usu\u00e1rio\nfor o propriet\u00e1rio.\n\nArgs:\n    agent_id: ID \u00fanico do agente\n    agent_data: Dados atualizados do agente\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    AgentResponse: Agente atualizado\n    \nRaises:\n    HTTPException: 404 se agente n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents"
+          ]
+        },
+        "DELETE /api/v1/agents/{agent_id}": {
+          "summary": "Deletar agente",
+          "description": "Remove um agente do usu\u00e1rio.\n\nDeleta permanentemente o agente se o usu\u00e1rio\nfor o propriet\u00e1rio.\n\nArgs:\n    agent_id: ID \u00fanico do agente\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se agente n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio  \n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/activate": {
+          "summary": "Ativar agente",
+          "description": "Ativa um agente para uso em conversa\u00e7\u00f5es.\n\nColoca o agente em estado ativo, permitindo\nseu uso em chats e workflows.\n\nArgs:\n    agent_id: ID \u00fanico do agente\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se agente n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 400 se j\u00e1 estiver ativo\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/deactivate": {
+          "summary": "Desativar agente",
+          "description": "Desativa um agente temporariamente.\n\nColoca o agente em estado inativo, impedindo\nseu uso at\u00e9 ser reativado.\n\nArgs:\n    agent_id: ID \u00fanico do agente\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se agente n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 400 se j\u00e1 estiver inativo\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/stats": {
+          "summary": "Estat\u00edsticas do agente",
+          "description": "Obt\u00e9m estat\u00edsticas de uso de um agente.\n\nRetorna m\u00e9tricas de performance e uso do agente,\nincluindo conversas, mensagens e avalia\u00e7\u00f5es.\n\nArgs:\n    agent_id: ID \u00fanico do agente\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, Any]: Estat\u00edsticas do agente\n    \nRaises:\n    HTTPException: 404 se agente n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents",
+            "statistics"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/duplicate": {
+          "summary": "Duplicar agente",
+          "description": "Duplica um agente existente.\n\nCria uma c\u00f3pia do agente com todas as configura\u00e7\u00f5es,\npermitindo usar como base para novos agentes.\n\nArgs:\n    agent_id: ID \u00fanico do agente a ser duplicado\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    AgentResponse: Agente duplicado\n    \nRaises:\n    HTTPException: 404 se agente n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "agents"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/tools": {
+          "summary": "Listar ferramentas do agent",
+          "description": "Lista todas as ferramentas associadas a um agent",
+          "tags": [
+            "agent-tools"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/tools": {
+          "summary": "Adicionar ferramenta ao agent",
+          "description": "Adiciona uma ferramenta a um agent",
+          "tags": [
+            "agent-tools"
+          ]
+        },
+        "PUT /api/v1/agents/{agent_id}/tools/{tool_id}": {
+          "summary": "Atualizar configura\u00e7\u00e3o da ferramenta",
+          "description": "Atualiza a configura\u00e7\u00e3o de uma ferramenta do agent",
+          "tags": [
+            "agent-tools"
+          ]
+        },
+        "DELETE /api/v1/agents/{agent_id}/tools/{tool_id}": {
+          "summary": "Remover ferramenta do agent",
+          "description": "Remove uma ferramenta de um agent",
+          "tags": [
+            "agent-tools"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/models": {
+          "summary": "Listar modelos do agent",
+          "description": "Lista todos os modelos LLM associados a um agent",
+          "tags": [
+            "agent-models"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/models": {
+          "summary": "Adicionar modelo ao agent",
+          "description": "Adiciona um modelo LLM a um agent",
+          "tags": [
+            "agent-models"
+          ]
+        },
+        "PUT /api/v1/agents/{agent_id}/models/{llm_id}": {
+          "summary": "Atualizar configura\u00e7\u00e3o do modelo",
+          "description": "Atualiza as configura\u00e7\u00f5es de override de um modelo do agent",
+          "tags": [
+            "agent-models"
+          ]
+        },
+        "DELETE /api/v1/agents/{agent_id}/models/{llm_id}": {
+          "summary": "Remover modelo do agent",
+          "description": "Remove um modelo LLM de um agent",
+          "tags": [
+            "agent-models"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/configurations": {
+          "summary": "Listar configura\u00e7\u00f5es do agent",
+          "description": "Lista todas as configura\u00e7\u00f5es versionadas de um agent",
+          "tags": [
+            "agent-configurations"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/configurations": {
+          "summary": "Criar nova configura\u00e7\u00e3o",
+          "description": "Cria uma nova vers\u00e3o de configura\u00e7\u00e3o para um agent",
+          "tags": [
+            "agent-configurations"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/acl": {
+          "summary": "Listar permiss\u00f5es do agent",
+          "description": "Lista todas as permiss\u00f5es de acesso de um agent",
+          "tags": [
+            "agent-advanced"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/acl": {
+          "summary": "Adicionar permiss\u00e3o",
+          "description": "Adiciona permiss\u00e3o de acesso para um usu\u00e1rio ao agent",
+          "tags": [
+            "agent-advanced"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/errors": {
+          "summary": "Listar logs de erro",
+          "description": "Lista logs de erro de um agent com filtros",
+          "tags": [
+            "agent-advanced"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/errors": {
+          "summary": "Registrar erro",
+          "description": "Registra um novo log de erro para o agent",
+          "tags": [
+            "agent-advanced"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/metrics": {
+          "summary": "Listar m\u00e9tricas de uso",
+          "description": "Lista m\u00e9tricas de uso de um agent",
+          "tags": [
+            "agent-advanced"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/metrics/summary": {
+          "summary": "Resumo de m\u00e9tricas",
+          "description": "Obt\u00e9m resumo das m\u00e9tricas de uso do agent",
+          "tags": [
+            "agent-advanced"
+          ]
+        },
+        "GET /api/v1/agents/{agent_id}/knowledge-bases": {
+          "summary": "Listar knowledge bases",
+          "description": "Lista knowledge bases associadas ao agent",
+          "tags": [
+            "agent-advanced"
+          ]
+        },
+        "POST /api/v1/agents/{agent_id}/knowledge-bases": {
+          "summary": "Associar knowledge base",
+          "description": "Associa uma knowledge base ao agent",
+          "tags": [
+            "agent-advanced"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "llm_generate": {
+      "paths": [
+        "/api/v1/llm/generate"
+      ],
+      "operations": {
+        "POST /api/v1/llm/generate": {
+          "summary": "Generate Text",
+          "description": "Gera texto usando LLM com API key espec\u00edfica do usu\u00e1rio (se dispon\u00edvel)\n\nAutomaticamente usa API keys pessoais do usu\u00e1rio quando configuradas,\ncom fallback para API keys globais do sistema.",
+          "tags": [
+            "llm"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "llm_chat": {
+      "paths": [
+        "/api/v1/llm/chat"
+      ],
+      "operations": {
+        "POST /api/v1/llm/chat": {
+          "summary": "Chat Completion",
+          "description": "Chat completion usando API key espec\u00edfica do usu\u00e1rio (se dispon\u00edvel)\n\nAutomaticamente usa API keys pessoais do usu\u00e1rio quando configuradas,\ncom fallback para API keys globais do sistema.",
+          "tags": [
+            "llm"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "llm_test-tags": {
+      "paths": [
+        "/api/v1/llm/test-tags"
+      ],
+      "operations": {
+        "GET /api/v1/llm/test-tags": {
+          "summary": "Teste de tags",
+          "description": "Endpoint de teste para verificar tags",
+          "tags": [
+            "llm-tokens"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "llm_count-tokens": {
+      "paths": [
+        "/api/v1/llm/count-tokens"
+      ],
+      "operations": {
+        "POST /api/v1/llm/count-tokens": {
+          "summary": "Contar tokens de texto",
+          "description": "Endpoint de teste para verificar tags",
+          "tags": [
+            "llm-tokens"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "llm_count-tokens-original": {
+      "paths": [
+        "/api/v1/llm/count-tokens-original"
+      ],
+      "operations": {
+        "POST /api/v1/llm/count-tokens-original": {
+          "summary": "Contar tokens de texto",
+          "description": "Conta o n\u00famero de tokens em um texto usando o tokenizador do provedor especificado.\n\n## Fun\u00e7\u00e3o\nEste endpoint calcula quantos tokens existem em um texto, usando o mesmo tokenizador\nque o modelo de LLM utilizaria. Isso \u00e9 \u00fatil para estimar custos e verificar limites.\n\n## Quando Usar\n- Antes de enviar textos muito longos para verificar se est\u00e3o dentro dos limites do modelo\n- Para estimar custos de uso de APIs de LLM que cobram por token\n- Para otimizar prompts e garantir que caibam no contexto do modelo\n\nArgs:\n    text: Texto para contar tokens\n    provider: Provedor de LLM para tokeniza\u00e7\u00e3o\n    model: Modelo espec\u00edfico para tokeniza\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    CountTokensResponse: N\u00famero de tokens e metadados\n    \nRaises:\n    HTTPException: 400 se par\u00e2metros inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "llm-tokens"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "llm_models": {
+      "paths": [
+        "/api/v1/llm/models"
+      ],
+      "operations": {
+        "GET /api/v1/llm/models": {
+          "summary": "Listar modelos",
+          "description": "Lista todos os modelos de LLM dispon\u00edveis na plataforma.\n\nRetorna uma lista de modelos com informa\u00e7\u00f5es sobre\ncapacidades e limites de cada um.\n\nArgs:\n    provider: Filtrar por provedor espec\u00edfico\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    ListModelsResponse: Lista de modelos dispon\u00edveis\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "llm"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "llm_providers": {
+      "paths": [
+        "/api/v1/llm/providers"
+      ],
+      "operations": {
+        "GET /api/v1/llm/providers": {
+          "summary": "Listar provedores",
+          "description": "Lista todos os provedores de LLM dispon\u00edveis na plataforma.\n\nRetorna informa\u00e7\u00f5es sobre cada provedor incluindo\nstatus de disponibilidade e modelos suportados.\n\nReturns:\n    ListProvidersResponse: Lista de provedores dispon\u00edveis\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "llm-providers"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "llm": {
+      "paths": [
+        "/api/v1/llm/{provider}/generate",
+        "/api/v1/llm/{provider}/count-tokens",
+        "/api/v1/llm/{provider}/models"
+      ],
+      "operations": {
+        "POST /api/v1/llm/{provider}/generate": {
+          "summary": "Gerar texto com provedor espec\u00edfico",
+          "description": "Gera texto usando um provedor espec\u00edfico de LLM.\n\nEste endpoint for\u00e7a o uso de um provedor espec\u00edfico,\n\u00fatil quando voc\u00ea precisa de recursos exclusivos de um modelo.\n\nArgs:\n    provider: Provedor espec\u00edfico a ser usado\n    prompt: Texto de entrada para gera\u00e7\u00e3o\n    model: Modelo espec\u00edfico do provedor\n    max_tokens: Limite m\u00e1ximo de tokens\n    temperature: Controle de aleatoriedade\n    presence_penalty: Penalidade de presen\u00e7a (OpenAI)\n    frequency_penalty: Penalidade de frequ\u00eancia (OpenAI)\n    top_p: Probabilidade acumulada para amostragem\n    top_k: N\u00famero de tokens mais prov\u00e1veis\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    GenerateTextResponse: Texto gerado e metadados\n    \nRaises:\n    HTTPException: 400 se par\u00e2metros inv\u00e1lidos\n    HTTPException: 404 se provedor n\u00e3o encontrado\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "llm"
+          ]
+        },
+        "POST /api/v1/llm/{provider}/count-tokens": {
+          "summary": "Contar tokens com provedor espec\u00edfico",
+          "description": "Conta tokens usando o tokenizador de um provedor espec\u00edfico.\n\n\u00datil quando voc\u00ea precisa da contagem exata de tokens\npara um provedor/modelo espec\u00edfico.\n\nArgs:\n    provider: Provedor espec\u00edfico para tokeniza\u00e7\u00e3o\n    text: Texto para contar tokens\n    model: Modelo espec\u00edfico para tokeniza\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    CountTokensResponse: N\u00famero de tokens e metadados\n    \nRaises:\n    HTTPException: 400 se par\u00e2metros inv\u00e1lidos\n    HTTPException: 404 se provedor n\u00e3o encontrado\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "llm-tokens"
+          ]
+        },
+        "GET /api/v1/llm/{provider}/models": {
+          "summary": "Listar modelos de provedor espec\u00edfico",
+          "description": "Lista todos os modelos dispon\u00edveis para um provedor espec\u00edfico.\n\nRetorna informa\u00e7\u00f5es detalhadas sobre modelos de um\nprovedor espec\u00edfico, incluindo capacidades e limita\u00e7\u00f5es.\n\nArgs:\n    provider: Provedor espec\u00edfico\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    ListModelsResponse: Lista de modelos do provedor\n    \nRaises:\n    HTTPException: 404 se provedor n\u00e3o encontrado\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "llm"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "conversations": {
+      "paths": [
+        "/api/v1/conversations/",
+        "/api/v1/conversations/{conversation_id}",
+        "/api/v1/conversations/{conversation_id}/messages",
+        "/api/v1/conversations/{conversation_id}/title",
+        "/api/v1/conversations/{conversation_id}/archive",
+        "/api/v1/conversations/{conversation_id}/unarchive"
+      ],
+      "operations": {
+        "GET /api/v1/conversations/": {
+          "summary": "Listar conversas",
+          "description": "Lista todas as conversa\u00e7\u00f5es do usu\u00e1rio com pagina\u00e7\u00e3o.\n\nRetorna conversa\u00e7\u00f5es ordenadas pela \u00faltima mensagem,\ncom op\u00e7\u00e3o de filtrar por agent espec\u00edfico.\n\nArgs:\n    page: N\u00famero da p\u00e1gina (1-based)\n    size: N\u00famero de itens por p\u00e1gina\n    agent_id: ID do agent para filtrar conversa\u00e7\u00f5es\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    ConversationListResponse: Lista paginada de conversa\u00e7\u00f5es\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        },
+        "POST /api/v1/conversations/": {
+          "summary": "Criar conversa\u00e7\u00e3o",
+          "description": "Cria uma nova conversa\u00e7\u00e3o para o usu\u00e1rio.\n\nPermite iniciar uma conversa com um agent espec\u00edfico\nou criar uma conversa\u00e7\u00e3o geral.\n\nArgs:\n    conversation_data: Dados da conversa\u00e7\u00e3o a ser criada\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    ConversationResponse: Conversa\u00e7\u00e3o criada\n    \nRaises:\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        },
+        "GET /api/v1/conversations/{conversation_id}": {
+          "summary": "Obter conversa\u00e7\u00e3o",
+          "description": "Obt\u00e9m uma conversa\u00e7\u00e3o espec\u00edfica do usu\u00e1rio.\n\nRetorna dados completos da conversa\u00e7\u00e3o se o usu\u00e1rio\nfor o propriet\u00e1rio.\n\nArgs:\n    conversation_id: ID \u00fanico da conversa\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    ConversationResponse: Dados da conversa\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se conversa\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        },
+        "DELETE /api/v1/conversations/{conversation_id}": {
+          "summary": "Deletar conversa\u00e7\u00e3o",
+          "description": "Remove uma conversa\u00e7\u00e3o e todas suas mensagens.\n\nDeleta permanentemente a conversa\u00e7\u00e3o e mensagens\nassociadas se o usu\u00e1rio for o propriet\u00e1rio.\n\nArgs:\n    conversation_id: ID \u00fanico da conversa\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se conversa\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        },
+        "GET /api/v1/conversations/{conversation_id}/messages": {
+          "summary": "Listar mensagens",
+          "description": "Lista todas as mensagens de uma conversa\u00e7\u00e3o.\n\nRetorna mensagens ordenadas cronologicamente\ncom pagina\u00e7\u00e3o eficiente.\n\nArgs:\n    conversation_id: ID \u00fanico da conversa\u00e7\u00e3o\n    page: N\u00famero da p\u00e1gina (1-based)\n    size: N\u00famero de itens por p\u00e1gina\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    MessageListResponse: Lista paginada de mensagens\n    \nRaises:\n    HTTPException: 404 se conversa\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        },
+        "POST /api/v1/conversations/{conversation_id}/messages": {
+          "summary": "Enviar mensagem",
+          "description": "Envia uma mensagem em uma conversa\u00e7\u00e3o.\n\nProcessa a mensagem do usu\u00e1rio e, se h\u00e1 um agent\nconfigurado, gera resposta automaticamente.\n\nArgs:\n    conversation_id: ID \u00fanico da conversa\u00e7\u00e3o\n    message_data: Dados da mensagem a ser enviada\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    MessageResponse: Mensagem enviada\n    \nRaises:\n    HTTPException: 404 se conversa\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        },
+        "PUT /api/v1/conversations/{conversation_id}/title": {
+          "summary": "Atualizar t\u00edtulo",
+          "description": "Atualiza o t\u00edtulo de uma conversa\u00e7\u00e3o.\n\nPermite personalizar o nome da conversa\u00e7\u00e3o\npara melhor organiza\u00e7\u00e3o.\n\nArgs:\n    conversation_id: ID \u00fanico da conversa\u00e7\u00e3o\n    title: Novo t\u00edtulo para a conversa\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se conversa\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 400 se t\u00edtulo inv\u00e1lido\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        },
+        "POST /api/v1/conversations/{conversation_id}/archive": {
+          "summary": "Arquivar conversa\u00e7\u00e3o",
+          "description": "Arquiva uma conversa\u00e7\u00e3o para organiza\u00e7\u00e3o.\n\nMove a conversa\u00e7\u00e3o para o estado arquivado,\nremovendo-a da lista principal.\n\nArgs:\n    conversation_id: ID \u00fanico da conversa\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se conversa\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 400 se j\u00e1 arquivada\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        },
+        "POST /api/v1/conversations/{conversation_id}/unarchive": {
+          "summary": "Desarquivar conversa\u00e7\u00e3o",
+          "description": "Desarquiva uma conversa\u00e7\u00e3o arquivada.\n\nRetorna a conversa\u00e7\u00e3o para o estado ativo,\ntornando-a vis\u00edvel na lista principal.\n\nArgs:\n    conversation_id: ID \u00fanico da conversa\u00e7\u00e3o\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se conversa\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 400 se n\u00e3o estiver arquivada\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "conversations"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "files_upload": {
+      "paths": [
+        "/api/v1/files/upload"
+      ],
+      "operations": {
+        "POST /api/v1/files/upload": {
+          "summary": "Upload de arquivo",
+          "description": "Realiza o upload de um arquivo para o servidor.\n\n## Fun\u00e7\u00e3o\nEste endpoint permite enviar arquivos para o servidor, categorizando-os\npara facilitar a organiza\u00e7\u00e3o e recupera\u00e7\u00e3o posterior.\n\n## Quando Usar\n- Quando precisar armazenar arquivos no servidor\n- Para enviar documentos, imagens ou outros tipos de arquivos\n- Quando precisar associar arquivos a categorias espec\u00edficas\n\n## Par\u00e2metros Importantes\n- **category**: Categoria do arquivo (ex: \"imagem\", \"documento\", \"audio\")\n- **file**: O arquivo a ser enviado\n\n## Resultado Esperado\nRetorna um objeto JSON contendo:\n- ID \u00fanico do arquivo enviado\n- Nome original do arquivo\n- Tamanho em bytes\n- Tipo MIME\n- URL para download\n- Timestamp de upload\n- Categoria associada\n\n## Exemplo de Uso\n```python\nimport requests\n\nurl = \"https://api.synapscale.com/api/v1/files/upload\"\nheaders = {\"Authorization\": \"Bearer seu_token\"}\n\n# Preparar o arquivo e categoria\nfiles = {\"file\": open(\"documento.pdf\", \"rb\")}\ndata = {\"category\": \"documento\"}\n\nresponse = requests.post(url, files=files, data=data, headers=headers)\nprint(f\"Arquivo enviado com ID: {response.json()['id']}\")\n```\n\nArgs:\n    category: Categoria para classificar o arquivo\n    file: Arquivo a ser enviado\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    _rate_limit: Middleware de rate limiting\n    \nReturns:\n    FileUploadResponse: Resposta com dados do arquivo enviado\n    \nRaises:\n    HTTPException: 400 se categoria inv\u00e1lida\n    HTTPException: 413 se arquivo muito grande\n    HTTPException: 415 se tipo de arquivo n\u00e3o suportado\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "files"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "files": {
+      "paths": [
+        "/api/v1/files/",
+        "/api/v1/files/{file_id}",
+        "/api/v1/files/{file_id}/download"
+      ],
+      "operations": {
+        "GET /api/v1/files/": {
+          "summary": "Listar arquivos",
+          "description": "Lista os arquivos do usu\u00e1rio com pagina\u00e7\u00e3o e filtro por categoria.\n\n## Fun\u00e7\u00e3o\nEste endpoint retorna uma lista paginada dos arquivos do usu\u00e1rio atual,\ncom op\u00e7\u00e3o de filtrar por categoria espec\u00edfica.\n\n## Quando Usar\n- Para visualizar todos os arquivos enviados pelo usu\u00e1rio\n- Quando precisar listar arquivos de uma categoria espec\u00edfica\n- Para implementar uma interface de gerenciamento de arquivos\n\n## Par\u00e2metros Importantes\n- **page**: N\u00famero da p\u00e1gina para pagina\u00e7\u00e3o (come\u00e7a em 1)\n- **size**: Quantidade de itens por p\u00e1gina (entre 1 e 100)\n- **category**: Filtrar por categoria espec\u00edfica (opcional)\n\n## Resultado Esperado\nRetorna um objeto JSON contendo:\n- Lista de arquivos com seus metadados\n- Informa\u00e7\u00f5es de pagina\u00e7\u00e3o (p\u00e1gina atual, total de p\u00e1ginas)\n- Total de arquivos encontrados\n\n## Exemplo de Uso\n```python\nimport requests\n\nurl = \"https://api.synapscale.com/api/v1/files/\"\nheaders = {\"Authorization\": \"Bearer seu_token\"}\n\n# Listar todos os arquivos (primeira p\u00e1gina, 10 itens por p\u00e1gina)\nresponse = requests.get(url, headers=headers)\n\n# Ou filtrar por categoria e p\u00e1gina espec\u00edfica\nparams = {\"category\": \"imagem\", \"page\": 2, \"size\": 20}\nresponse = requests.get(url, params=params, headers=headers)\n\nfor file in response.json()[\"items\"]:\n    print(f\"{file['filename']} - {file['category']} - {file['size']} bytes\")\n```\n\nArgs:\n    page: N\u00famero da p\u00e1gina (1-based)\n    size: N\u00famero de itens por p\u00e1gina\n    category: Categoria para filtrar arquivos\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    FileListResponse: Lista paginada de arquivos\n    \nRaises:\n    HTTPException: 400 se categoria inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "files"
+          ]
+        },
+        "GET /api/v1/files/{file_id}": {
+          "summary": "Obter arquivo",
+          "description": "Obt\u00e9m informa\u00e7\u00f5es detalhadas sobre um arquivo espec\u00edfico.\n\n## Fun\u00e7\u00e3o\nEste endpoint retorna metadados detalhados sobre um arquivo espec\u00edfico,\nidentificado pelo seu ID \u00fanico.\n\n## Quando Usar\n- Quando precisar verificar detalhes de um arquivo espec\u00edfico\n- Para obter metadados como tamanho, tipo e data de upload\n- Antes de fazer o download, para verificar se \u00e9 o arquivo correto\n\n## Par\u00e2metros Importantes\n- **file_id**: ID \u00fanico do arquivo (UUID)\n\n## Resultado Esperado\nRetorna um objeto JSON contendo:\n- ID do arquivo\n- Nome original do arquivo\n- Tamanho em bytes\n- Tipo MIME\n- URL para download\n- Timestamp de upload\n- Categoria associada\n\n## Exemplo de Uso\n```python\nimport requests\n\nfile_id = \"550e8400-e29b-41d4-a716-446655440000\"  # Exemplo de UUID\nurl = f\"https://api.synapscale.com/api/v1/files/{file_id}\"\nheaders = {\"Authorization\": \"Bearer seu_token\"}\n\nresponse = requests.get(url, headers=headers)\nfile_info = response.json()\n\nprint(f\"Nome: {file_info['filename']}\")\nprint(f\"Tipo: {file_info['mime_type']}\")\nprint(f\"Tamanho: {file_info['size']} bytes\")\nprint(f\"URL de download: {file_info['download_url']}\")\n```\n\nArgs:\n    file_id: ID \u00fanico do arquivo\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    FileResponse: Dados do arquivo\n    \nRaises:\n    HTTPException: 404 se arquivo n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "files"
+          ]
+        },
+        "DELETE /api/v1/files/{file_id}": {
+          "summary": "Deletar arquivo",
+          "description": "Remove permanentemente um arquivo do servidor.\n\n## Fun\u00e7\u00e3o\nEste endpoint exclui um arquivo espec\u00edfico do servidor, identificado pelo seu ID \u00fanico.\nA opera\u00e7\u00e3o \u00e9 permanente e n\u00e3o pode ser desfeita.\n\n## Quando Usar\n- Quando precisar remover arquivos desnecess\u00e1rios\n- Para liberar espa\u00e7o de armazenamento\n- Para implementar funcionalidade de exclus\u00e3o em uma interface de gerenciamento\n\n## Par\u00e2metros Importantes\n- **file_id**: ID \u00fanico do arquivo (UUID)\n\n## Resultado Esperado\nRetorna um objeto JSON contendo:\n- Mensagem de confirma\u00e7\u00e3o da exclus\u00e3o\n\n## Exemplo de Uso\n```python\nimport requests\n\nfile_id = \"550e8400-e29b-41d4-a716-446655440000\"  # Exemplo de UUID\nurl = f\"https://api.synapscale.com/api/v1/files/{file_id}\"\nheaders = {\"Authorization\": \"Bearer seu_token\"}\n\nresponse = requests.delete(url, headers=headers)\n\nif response.status_code == 200:\n    print(\"Arquivo exclu\u00eddo com sucesso!\")\nelse:\n    print(f\"Erro ao excluir arquivo: {response.json()['detail']}\")\n```\n\nArgs:\n    file_id: ID \u00fanico do arquivo\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    Dict[str, str]: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se arquivo n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "files"
+          ]
+        },
+        "GET /api/v1/files/{file_id}/download": {
+          "summary": "Download de arquivo",
+          "description": "Gera um link de download para um arquivo espec\u00edfico.\n\n## Fun\u00e7\u00e3o\nEste endpoint gera um URL tempor\u00e1rio para download direto de um arquivo,\nidentificado pelo seu ID \u00fanico.\n\n## Quando Usar\n- Quando precisar baixar um arquivo espec\u00edfico\n- Para compartilhar um link de download tempor\u00e1rio\n- Para implementar funcionalidade de download em uma interface\n\n## Par\u00e2metros Importantes\n- **file_id**: ID \u00fanico do arquivo (UUID)\n\n## Resultado Esperado\nRetorna um objeto JSON contendo:\n- URL de download direto para o arquivo\n- Tempo de expira\u00e7\u00e3o do link (se aplic\u00e1vel)\n- Informa\u00e7\u00f5es b\u00e1sicas do arquivo (nome, tipo, tamanho)\n\n## Exemplo de Uso\n```python\nimport requests\nimport webbrowser\n\nfile_id = \"550e8400-e29b-41d4-a716-446655440000\"  # Exemplo de UUID\nurl = f\"https://api.synapscale.com/api/v1/files/{file_id}/download\"\nheaders = {\"Authorization\": \"Bearer seu_token\"}\n\nresponse = requests.get(url, headers=headers)\ndownload_url = response.json()[\"download_url\"]\n\n# Abrir o link de download no navegador\nwebbrowser.open(download_url)\n\n# Ou baixar diretamente\nfile_content = requests.get(download_url).content\nwith open(response.json()[\"filename\"], \"wb\") as f:\n    f.write(file_content)\n```\n\nArgs:\n    file_id: ID \u00fanico do arquivo\n    db: Sess\u00e3o do banco de dados\n    current_user: Usu\u00e1rio autenticado\n    \nReturns:\n    FileDownloadResponse: URL de download e metadados\n    \nRaises:\n    HTTPException: 404 se arquivo n\u00e3o encontrado\n    HTTPException: 403 se n\u00e3o for o propriet\u00e1rio\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "files"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": true,
+        "list": true
+      }
+    },
+    "ws_status": {
+      "paths": [
+        "/api/v1/ws/status"
+      ],
+      "operations": {
+        "GET /api/v1/ws/status": {
+          "summary": "Status do WebSocket",
+          "description": "Obt\u00e9m estat\u00edsticas globais das conex\u00f5es WebSocket.\n\nRetorna informa\u00e7\u00f5es sobre todas as conex\u00f5es WebSocket\nativas no sistema. Dispon\u00edvel apenas para admins.\n\nArgs:\n    current_user: Usu\u00e1rio autenticado (admin required)\n    \nReturns:\n    Dict[str, Any]: Estat\u00edsticas das conex\u00f5es WebSocket\n    \nRaises:\n    HTTPException: 403 se n\u00e3o for admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "websockets"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "ws_stats": {
+      "paths": [
+        "/api/v1/ws/stats/execution/{execution_id}"
+      ],
+      "operations": {
+        "GET /api/v1/ws/stats/execution/{execution_id}": {
+          "summary": "Estat\u00edsticas WebSocket de execu\u00e7\u00e3o",
+          "description": "Obt\u00e9m estat\u00edsticas das conex\u00f5es WebSocket de uma execu\u00e7\u00e3o espec\u00edfica.\n\nRetorna informa\u00e7\u00f5es sobre conex\u00f5es WebSocket ativas\npara uma execu\u00e7\u00e3o espec\u00edfica.\n\nArgs:\n    execution_id: ID da execu\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    Dict[str, Any]: Estat\u00edsticas das conex\u00f5es da execu\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se execu\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se n\u00e3o tiver acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "websockets",
+            "statistics"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "marketplace_components": {
+      "paths": [
+        "/api/v1/marketplace/components",
+        "/api/v1/marketplace/components/{component_id}",
+        "/api/v1/marketplace/components/{component_id}/download",
+        "/api/v1/marketplace/components/{component_id}/install",
+        "/api/v1/marketplace/components/{component_id}/ratings",
+        "/api/v1/marketplace/components/{component_id}/ratings/stats",
+        "/api/v1/marketplace/components/{component_id}/purchase",
+        "/api/v1/marketplace/components/{component_id}/versions",
+        "/api/v1/marketplace/components/{component_id}/favorite",
+        "/api/v1/marketplace/components/{component_id}/stats",
+        "/api/v1/marketplace/components/{component_id}/similar"
+      ],
+      "operations": {
+        "POST /api/v1/marketplace/components": {
+          "summary": "Criar componente",
+          "description": "Cria um novo componente no marketplace",
+          "tags": [
+            "marketplace",
+            "components"
+          ]
+        },
+        "GET /api/v1/marketplace/components": {
+          "summary": "Buscar componentes",
+          "description": "Busca componentes no marketplace",
+          "tags": [
+            "marketplace",
+            "components"
+          ]
+        },
+        "GET /api/v1/marketplace/components/{component_id}": {
+          "summary": "Obter componente",
+          "description": "Obt\u00e9m detalhes de um componente",
+          "tags": [
+            "marketplace",
+            "components"
+          ]
+        },
+        "PUT /api/v1/marketplace/components/{component_id}": {
+          "summary": "Atualizar componente",
+          "description": "Atualiza um componente",
+          "tags": [
+            "marketplace",
+            "components"
+          ]
+        },
+        "DELETE /api/v1/marketplace/components/{component_id}": {
+          "summary": "Deletar componente",
+          "description": "Remove um componente",
+          "tags": [
+            "marketplace",
+            "components"
+          ]
+        },
+        "POST /api/v1/marketplace/components/{component_id}/download": {
+          "summary": "Download componente",
+          "description": "Faz download de um componente",
+          "tags": [
+            "marketplace",
+            "components"
+          ]
+        },
+        "POST /api/v1/marketplace/components/{component_id}/install": {
+          "summary": "Instalar componente",
+          "description": "Instala um componente no workspace",
+          "tags": [
+            "marketplace",
+            "components"
+          ]
+        },
+        "POST /api/v1/marketplace/components/{component_id}/ratings": {
+          "summary": "Criar avalia\u00e7\u00e3o",
+          "description": "Cria uma avalia\u00e7\u00e3o para um componente",
+          "tags": [
+            "marketplace",
+            "ratings"
+          ]
+        },
+        "GET /api/v1/marketplace/components/{component_id}/ratings": {
+          "summary": "Listar avalia\u00e7\u00f5es",
+          "description": "Obt\u00e9m avalia\u00e7\u00f5es de um componente",
+          "tags": [
+            "marketplace",
+            "ratings"
+          ]
+        },
+        "GET /api/v1/marketplace/components/{component_id}/ratings/stats": {
+          "summary": "Obter estat\u00edsticas de avalia\u00e7\u00f5es",
+          "description": "Obt\u00e9m estat\u00edsticas de avalia\u00e7\u00f5es",
+          "tags": [
+            "marketplace-ratings",
+            "statistics"
+          ]
+        },
+        "POST /api/v1/marketplace/components/{component_id}/purchase": {
+          "summary": "Comprar componente",
+          "description": "Compra um componente premium",
+          "tags": [
+            "marketplace-purchases"
+          ]
+        },
+        "GET /api/v1/marketplace/components/{component_id}/versions": {
+          "summary": "Listar vers\u00f5es do componente",
+          "description": "Obt\u00e9m vers\u00f5es de um componente",
+          "tags": [
+            "marketplace-versions"
+          ]
+        },
+        "POST /api/v1/marketplace/components/{component_id}/versions": {
+          "summary": "Criar nova vers\u00e3o do componente",
+          "description": "Cria uma nova vers\u00e3o do componente",
+          "tags": [
+            "marketplace-versions"
+          ]
+        },
+        "POST /api/v1/marketplace/components/{component_id}/favorite": {
+          "summary": "Adicionar aos favoritos",
+          "description": "Adiciona componente aos favoritos",
+          "tags": [
+            "marketplace-favorites"
+          ]
+        },
+        "DELETE /api/v1/marketplace/components/{component_id}/favorite": {
+          "summary": "Remover dos favoritos",
+          "description": "Remove componente dos favoritos",
+          "tags": [
+            "marketplace-favorites"
+          ]
+        },
+        "GET /api/v1/marketplace/components/{component_id}/stats": {
+          "summary": "Obter estat\u00edsticas do componente",
+          "description": "Obt\u00e9m estat\u00edsticas de um componente",
+          "tags": [
+            "marketplace-components",
+            "statistics"
+          ]
+        },
+        "GET /api/v1/marketplace/components/{component_id}/similar": {
+          "summary": "Obter componentes similares",
+          "description": "Obt\u00e9m componentes similares",
+          "tags": [
+            "marketplace-recommendations"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "marketplace_ratings": {
+      "paths": [
+        "/api/v1/marketplace/ratings/{rating_id}",
+        "/api/v1/marketplace/ratings/{rating_id}/helpful"
+      ],
+      "operations": {
+        "PUT /api/v1/marketplace/ratings/{rating_id}": {
+          "summary": "Atualizar avalia\u00e7\u00e3o",
+          "description": "Atualiza uma avalia\u00e7\u00e3o",
+          "tags": [
+            "marketplace-ratings"
+          ]
+        },
+        "DELETE /api/v1/marketplace/ratings/{rating_id}": {
+          "summary": "Remover avalia\u00e7\u00e3o",
+          "description": "Remove uma avalia\u00e7\u00e3o",
+          "tags": [
+            "marketplace-ratings"
+          ]
+        },
+        "POST /api/v1/marketplace/ratings/{rating_id}/helpful": {
+          "summary": "Marcar avalia\u00e7\u00e3o como \u00fatil",
+          "description": "Marca uma avalia\u00e7\u00e3o como \u00fatil",
+          "tags": [
+            "marketplace-ratings"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": true,
+        "delete": true,
+        "list": false
+      }
+    },
+    "marketplace_purchases": {
+      "paths": [
+        "/api/v1/marketplace/purchases",
+        "/api/v1/marketplace/purchases/{purchase_id}"
+      ],
+      "operations": {
+        "GET /api/v1/marketplace/purchases": {
+          "summary": "Listar minhas compras",
+          "description": "Obt\u00e9m compras do usu\u00e1rio",
+          "tags": [
+            "marketplace-purchases"
+          ]
+        },
+        "GET /api/v1/marketplace/purchases/{purchase_id}": {
+          "summary": "Obter detalhes da compra",
+          "description": "Obt\u00e9m detalhes de uma compra",
+          "tags": [
+            "marketplace-purchases"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "marketplace_favorites": {
+      "paths": [
+        "/api/v1/marketplace/favorites"
+      ],
+      "operations": {
+        "GET /api/v1/marketplace/favorites": {
+          "summary": "Listar favoritos",
+          "description": "Lista componentes favoritos do usu\u00e1rio",
+          "tags": [
+            "marketplace-favorites"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "marketplace_stats": {
+      "paths": [
+        "/api/v1/marketplace/stats"
+      ],
+      "operations": {
+        "GET /api/v1/marketplace/stats": {
+          "summary": "Estat\u00edsticas marketplace",
+          "description": "Obt\u00e9m estat\u00edsticas do marketplace",
+          "tags": [
+            "marketplace",
+            "statistics"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "marketplace_my-components": {
+      "paths": [
+        "/api/v1/marketplace/my-components/stats"
+      ],
+      "operations": {
+        "GET /api/v1/marketplace/my-components/stats": {
+          "summary": "Obter minhas estat\u00edsticas como autor",
+          "description": "Obt\u00e9m estat\u00edsticas dos componentes do autor",
+          "tags": [
+            "marketplace",
+            "statistics"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "marketplace_categories": {
+      "paths": [
+        "/api/v1/marketplace/categories"
+      ],
+      "operations": {
+        "GET /api/v1/marketplace/categories": {
+          "summary": "Obter categorias",
+          "description": "Obt\u00e9m categorias dispon\u00edveis",
+          "tags": [
+            "marketplace"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "marketplace_tags": {
+      "paths": [
+        "/api/v1/marketplace/tags"
+      ],
+      "operations": {
+        "GET /api/v1/marketplace/tags": {
+          "summary": "Obter tags populares",
+          "description": "Obt\u00e9m tags populares",
+          "tags": [
+            "marketplace"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "marketplace_recommendations": {
+      "paths": [
+        "/api/v1/marketplace/recommendations"
+      ],
+      "operations": {
+        "GET /api/v1/marketplace/recommendations": {
+          "summary": "Recomenda\u00e7\u00f5es",
+          "description": "Obt\u00e9m recomenda\u00e7\u00f5es personalizadas para o usu\u00e1rio",
+          "tags": [
+            "marketplace-recommendations"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "marketplace_admin": {
+      "paths": [
+        "/api/v1/marketplace/admin/moderation",
+        "/api/v1/marketplace/admin/components/{component_id}/moderate",
+        "/api/v1/marketplace/admin/components/bulk",
+        "/api/v1/marketplace/admin/components/{component_id}/feature",
+        "/api/v1/marketplace/admin/reports/revenue",
+        "/api/v1/marketplace/admin/reports/downloads",
+        "/api/v1/marketplace/admin/reports/top-components"
+      ],
+      "operations": {
+        "GET /api/v1/marketplace/admin/moderation": {
+          "summary": "Modera\u00e7\u00e3o pendente",
+          "description": "Lista componentes pendentes de modera\u00e7\u00e3o",
+          "tags": [
+            "marketplace",
+            "admin"
+          ]
+        },
+        "POST /api/v1/marketplace/admin/components/{component_id}/moderate": {
+          "summary": "Moderar componente",
+          "description": "Executa a\u00e7\u00e3o de modera\u00e7\u00e3o em um componente",
+          "tags": [
+            "marketplace",
+            "admin"
+          ]
+        },
+        "POST /api/v1/marketplace/admin/components/bulk": {
+          "summary": "Opera\u00e7\u00e3o em lote com componentes",
+          "description": "Opera\u00e7\u00e3o em lote em componentes",
+          "tags": [
+            "system-bulk"
+          ]
+        },
+        "POST /api/v1/marketplace/admin/components/{component_id}/feature": {
+          "summary": "Destacar componente",
+          "description": "Destaca ou remove destaque de um componente",
+          "tags": [
+            "marketplace-admin"
+          ]
+        },
+        "GET /api/v1/marketplace/admin/reports/revenue": {
+          "summary": "Relat\u00f3rio de receitas",
+          "description": "Relat\u00f3rio de receita",
+          "tags": [
+            "analytics-reports"
+          ]
+        },
+        "GET /api/v1/marketplace/admin/reports/downloads": {
+          "summary": "Relat\u00f3rio de downloads",
+          "description": "Relat\u00f3rio de downloads",
+          "tags": [
+            "analytics-reports"
+          ]
+        },
+        "GET /api/v1/marketplace/admin/reports/top-components": {
+          "summary": "Relat\u00f3rio de top componentes",
+          "description": "Relat\u00f3rio de top componentes",
+          "tags": [
+            "analytics-reports"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "workspaces": {
+      "paths": [
+        "/api/v1/workspaces/",
+        "/api/v1/workspaces/{workspace_id}",
+        "/api/v1/workspaces/{workspace_id}/stats",
+        "/api/v1/workspaces/{workspace_id}/members",
+        "/api/v1/workspaces/{workspace_id}/members/invite",
+        "/api/v1/workspaces/{workspace_id}/members/{member_id}",
+        "/api/v1/workspaces/{workspace_id}/members/{member_id}/role",
+        "/api/v1/workspaces/{workspace_id}/projects",
+        "/api/v1/workspaces/{workspace_id}/activities"
+      ],
+      "operations": {
+        "POST /api/v1/workspaces/": {
+          "summary": "Criar workspace",
+          "description": "Cria um novo workspace para o usu\u00e1rio autenticado",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "GET /api/v1/workspaces/": {
+          "summary": "Listar workspaces",
+          "description": "Obt\u00e9m todos os workspaces do usu\u00e1rio autenticado, com pagina\u00e7\u00e3o",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "GET /api/v1/workspaces/{workspace_id}": {
+          "summary": "Obter workspace",
+          "description": "Obt\u00e9m detalhes de um workspace",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "PUT /api/v1/workspaces/{workspace_id}": {
+          "summary": "Atualizar workspace",
+          "description": "Atualiza um workspace",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "DELETE /api/v1/workspaces/{workspace_id}": {
+          "summary": "Deletar workspace",
+          "description": "Deleta um workspace",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "GET /api/v1/workspaces/{workspace_id}/stats": {
+          "summary": "Obter estat\u00edsticas do workspace",
+          "description": "Obt\u00e9m estat\u00edsticas do workspace",
+          "tags": [
+            "workspace-stats"
+          ]
+        },
+        "GET /api/v1/workspaces/{workspace_id}/members": {
+          "summary": "Listar membros do workspace",
+          "description": "Lista membros do workspace",
+          "tags": [
+            "workspace-members"
+          ]
+        },
+        "POST /api/v1/workspaces/{workspace_id}/members/invite": {
+          "summary": "Convidar membro para workspace",
+          "description": "Convida um membro para o workspace",
+          "tags": [
+            "workspace-members"
+          ]
+        },
+        "DELETE /api/v1/workspaces/{workspace_id}/members/{member_id}": {
+          "summary": "Remover membro do workspace",
+          "description": "Remove um membro do workspace",
+          "tags": [
+            "workspace-members"
+          ]
+        },
+        "PUT /api/v1/workspaces/{workspace_id}/members/{member_id}/role": {
+          "summary": "Atualizar role de membro",
+          "description": "Atualiza o role de um membro",
+          "tags": [
+            "workspace-members"
+          ]
+        },
+        "POST /api/v1/workspaces/{workspace_id}/projects": {
+          "summary": "Criar projeto no workspace",
+          "description": "Cria um novo projeto no workspace",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "GET /api/v1/workspaces/{workspace_id}/projects": {
+          "summary": "Listar projetos",
+          "description": "Lista projetos do workspace",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "GET /api/v1/workspaces/{workspace_id}/activities": {
+          "summary": "Listar atividades do workspace",
+          "description": "Lista atividades do workspace",
+          "tags": [
+            "workspace-activities"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "workspaces_creation-rules": {
+      "paths": [
+        "/api/v1/workspaces/creation-rules"
+      ],
+      "operations": {
+        "GET /api/v1/workspaces/creation-rules": {
+          "summary": "Obter regras de cria\u00e7\u00e3o",
+          "description": "Obt\u00e9m as regras e limita\u00e7\u00f5es para cria\u00e7\u00e3o de workspaces do usu\u00e1rio",
+          "tags": [
+            "workspaces"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "workspaces_search": {
+      "paths": [
+        "/api/v1/workspaces/search"
+      ],
+      "operations": {
+        "GET /api/v1/workspaces/search": {
+          "summary": "Buscar workspaces",
+          "description": "Busca workspaces p\u00fablicos com filtros avan\u00e7ados e pagina\u00e7\u00e3o",
+          "tags": [
+            "workspaces"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "workspaces_projects": {
+      "paths": [
+        "/api/v1/workspaces/projects/search",
+        "/api/v1/workspaces/projects/{project_id}",
+        "/api/v1/workspaces/projects/{project_id}/versions",
+        "/api/v1/workspaces/projects/{project_id}/versions/{version_id}/restore",
+        "/api/v1/workspaces/projects/{project_id}/activities"
+      ],
+      "operations": {
+        "GET /api/v1/workspaces/projects/search": {
+          "summary": "Buscar projetos",
+          "description": "Busca projetos com filtros avan\u00e7ados",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "GET /api/v1/workspaces/projects/{project_id}": {
+          "summary": "Obter projeto",
+          "description": "Obt\u00e9m detalhes de um projeto",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "PUT /api/v1/workspaces/projects/{project_id}": {
+          "summary": "Atualizar projeto",
+          "description": "Atualiza um projeto",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "DELETE /api/v1/workspaces/projects/{project_id}": {
+          "summary": "Deletar projeto",
+          "description": "Remove um projeto",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "GET /api/v1/workspaces/projects/{project_id}/versions": {
+          "summary": "Listar vers\u00f5es do projeto",
+          "description": "Obt\u00e9m vers\u00f5es do projeto",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "POST /api/v1/workspaces/projects/{project_id}/versions": {
+          "summary": "Criar vers\u00e3o do projeto",
+          "description": "Cria uma nova vers\u00e3o do projeto",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "POST /api/v1/workspaces/projects/{project_id}/versions/{version_id}/restore": {
+          "summary": "Restaurar vers\u00e3o do projeto",
+          "description": "Restaura uma vers\u00e3o do projeto",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "GET /api/v1/workspaces/projects/{project_id}/activities": {
+          "summary": "Listar atividades do projeto",
+          "description": "Obt\u00e9m atividades do projeto",
+          "tags": [
+            "workspace-activities"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "workspaces_invitations": {
+      "paths": [
+        "/api/v1/workspaces/invitations",
+        "/api/v1/workspaces/invitations/{invitation_id}/accept",
+        "/api/v1/workspaces/invitations/{invitation_id}/decline"
+      ],
+      "operations": {
+        "GET /api/v1/workspaces/invitations": {
+          "summary": "Listar convites recebidos",
+          "description": "Lista todos os convites recebidos pelo usu\u00e1rio autenticado, com pagina\u00e7\u00e3o.",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "POST /api/v1/workspaces/invitations/{invitation_id}/accept": {
+          "summary": "Aceitar convite de workspace",
+          "description": "Aceita um convite de workspace para o usu\u00e1rio autenticado.",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "POST /api/v1/workspaces/invitations/{invitation_id}/decline": {
+          "summary": "Recusar convite de workspace",
+          "description": "Recusa um convite de workspace para o usu\u00e1rio autenticado.",
+          "tags": [
+            "workspaces"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "workspaces_workspaces": {
+      "paths": [
+        "/api/v1/workspaces/workspaces/{workspace_id}/members/bulk",
+        "/api/v1/workspaces/workspaces/{workspace_id}/projects/bulk",
+        "/api/v1/workspaces/workspaces/{workspace_id}/notifications",
+        "/api/v1/workspaces/workspaces/{workspace_id}/integrations"
+      ],
+      "operations": {
+        "POST /api/v1/workspaces/workspaces/{workspace_id}/members/bulk": {
+          "summary": "Opera\u00e7\u00e3o em lote com membros",
+          "description": "Opera\u00e7\u00e3o em lote em membros",
+          "tags": [
+            "workspace-members"
+          ]
+        },
+        "POST /api/v1/workspaces/workspaces/{workspace_id}/projects/bulk": {
+          "summary": "Opera\u00e7\u00e3o em lote com projetos",
+          "description": "Opera\u00e7\u00e3o em lote em projetos",
+          "tags": [
+            "workspace-projects"
+          ]
+        },
+        "GET /api/v1/workspaces/workspaces/{workspace_id}/notifications": {
+          "summary": "Obter configura\u00e7\u00f5es de notifica\u00e7\u00e3o",
+          "description": "Obt\u00e9m configura\u00e7\u00f5es de notifica\u00e7\u00e3o do workspace",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "PUT /api/v1/workspaces/workspaces/{workspace_id}/notifications": {
+          "summary": "Atualizar configura\u00e7\u00f5es de notifica\u00e7\u00e3o",
+          "description": "Atualiza configura\u00e7\u00f5es de notifica\u00e7\u00e3o do workspace",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "POST /api/v1/workspaces/workspaces/{workspace_id}/integrations": {
+          "summary": "Criar integra\u00e7\u00e3o do workspace",
+          "description": "Cria uma integra\u00e7\u00e3o no workspace",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "GET /api/v1/workspaces/workspaces/{workspace_id}/integrations": {
+          "summary": "Listar integra\u00e7\u00f5es do workspace",
+          "description": "Obt\u00e9m integra\u00e7\u00f5es do workspace",
+          "tags": [
+            "workspaces"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": false,
+        "list": false
+      }
+    },
+    "workspaces_integrations": {
+      "paths": [
+        "/api/v1/workspaces/integrations/{integration_id}"
+      ],
+      "operations": {
+        "PUT /api/v1/workspaces/integrations/{integration_id}": {
+          "summary": "Atualizar integra\u00e7\u00e3o",
+          "description": "Atualiza uma integra\u00e7\u00e3o",
+          "tags": [
+            "workspaces"
+          ]
+        },
+        "DELETE /api/v1/workspaces/integrations/{integration_id}": {
+          "summary": "Deletar integra\u00e7\u00e3o",
+          "description": "Remove uma integra\u00e7\u00e3o",
+          "tags": [
+            "workspaces"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": true,
+        "delete": true,
+        "list": false
+      }
+    },
+    "analytics_events": {
+      "paths": [
+        "/api/v1/analytics/events",
+        "/api/v1/analytics/events/batch"
+      ],
+      "operations": {
+        "POST /api/v1/analytics/events": {
+          "summary": "Registrar evento de analytics",
+          "description": "Registra um evento de analytics no sistema.\n\nEste endpoint permite rastrear eventos espec\u00edficos do usu\u00e1rio para an\u00e1lise posterior.\nOs eventos s\u00e3o fundamentais para entender o comportamento dos usu\u00e1rios e gerar insights.\n\nArgs:\n    event_data: Dados do evento a ser registrado\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    EventResponse: Dados do evento registrado\n    \nRaises:\n    HTTPException: 400 se os dados do evento s\u00e3o inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        },
+        "GET /api/v1/analytics/events": {
+          "summary": "Listar eventos do usu\u00e1rio",
+          "description": "Obt\u00e9m eventos do usu\u00e1rio com filtros opcionais.\n\nPermite filtrar eventos por tipo, per\u00edodo e aplicar pagina\u00e7\u00e3o\npara an\u00e1lise detalhada do comportamento do usu\u00e1rio.\n\nArgs:\n    event_type: Filtro por tipo de evento (opcional)\n    start_date: Data de in\u00edcio do per\u00edodo (opcional)\n    end_date: Data de fim do per\u00edodo (opcional)\n    limit: Limite de resultados por p\u00e1gina\n    offset: Offset para pagina\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[EventResponse]: Lista de eventos do usu\u00e1rio\n    \nRaises:\n    HTTPException: 400 se as datas s\u00e3o inv\u00e1lidas\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        },
+        "POST /api/v1/analytics/events/batch": {
+          "summary": "Registrar m\u00faltiplos eventos",
+          "description": "Registra m\u00faltiplos eventos em lote para melhor performance.\n\nEste endpoint \u00e9 otimizado para registrar v\u00e1rios eventos simultaneamente,\nreduzindo a lat\u00eancia e melhorando a efici\u00eancia quando h\u00e1 muitos eventos.\n\nArgs:\n    events: Lista de eventos a serem registrados\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Quantidade de eventos processados e falhados\n    \nRaises:\n    HTTPException: 400 se algum evento \u00e9 inv\u00e1lido\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "analytics_metrics": {
+      "paths": [
+        "/api/v1/analytics/metrics/user-behavior",
+        "/api/v1/analytics/metrics/system-performance",
+        "/api/v1/analytics/metrics/business",
+        "/api/v1/analytics/metrics/real-time"
+      ],
+      "operations": {
+        "GET /api/v1/analytics/metrics/user-behavior": {
+          "summary": "M\u00e9tricas de comportamento do usu\u00e1rio",
+          "description": "Obt\u00e9m m\u00e9tricas de comportamento do usu\u00e1rio no per\u00edodo especificado.\n\nAnalisa padr\u00f5es de uso, frequ\u00eancia de a\u00e7\u00f5es e outros indicadores\ncomportamentais para o usu\u00e1rio autenticado.\n\nArgs:\n    start_date: Data de in\u00edcio da an\u00e1lise\n    end_date: Data de fim da an\u00e1lise\n    granularity: Granularidade dos dados (hour, day, week, month)\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: M\u00e9tricas de comportamento do usu\u00e1rio\n    \nRaises:\n    HTTPException: 400 se as datas s\u00e3o inv\u00e1lidas\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        },
+        "GET /api/v1/analytics/metrics/system-performance": {
+          "summary": "M\u00e9tricas de performance do sistema",
+          "description": "Obt\u00e9m m\u00e9tricas de performance do sistema (apenas para administradores).\n\nAnalisa performance, lat\u00eancia, throughput e outros indicadores\nt\u00e9cnicos do sistema para monitoramento operacional.\n\nArgs:\n    start_date: Data de in\u00edcio da an\u00e1lise\n    end_date: Data de fim da an\u00e1lise\n    granularity: Granularidade dos dados (minute, hour, day)\n    current_admin: Usu\u00e1rio administrador autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: M\u00e9tricas de performance do sistema\n    \nRaises:\n    HTTPException: 400 se as datas s\u00e3o inv\u00e1lidas\n    HTTPException: 403 se usu\u00e1rio n\u00e3o \u00e9 admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics",
+            "admin"
+          ]
+        },
+        "GET /api/v1/analytics/metrics/business": {
+          "summary": "M\u00e9tricas de neg\u00f3cio",
+          "description": "Obt\u00e9m m\u00e9tricas de neg\u00f3cio (apenas para administradores).\n\nAnalisa indicadores de performance de neg\u00f3cio como receita,\nconvers\u00f5es, reten\u00e7\u00e3o e outros KPIs importantes.\n\nArgs:\n    start_date: Data de in\u00edcio da an\u00e1lise\n    end_date: Data de fim da an\u00e1lise\n    granularity: Granularidade dos dados (day, week, month)\n    current_admin: Usu\u00e1rio administrador autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: M\u00e9tricas de neg\u00f3cio\n    \nRaises:\n    HTTPException: 400 se as datas s\u00e3o inv\u00e1lidas\n    HTTPException: 403 se usu\u00e1rio n\u00e3o \u00e9 admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics",
+            "admin"
+          ]
+        },
+        "GET /api/v1/analytics/metrics/real-time": {
+          "summary": "M\u00e9tricas em tempo real",
+          "description": "Obt\u00e9m m\u00e9tricas em tempo real do usu\u00e1rio.\n\nRetorna estat\u00edsticas atualizadas sobre atividade recente,\nsessions ativas e outros indicadores em tempo real.\n\nArgs:\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    RealTimeStats: Estat\u00edsticas em tempo real\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "analytics_queries": {
+      "paths": [
+        "/api/v1/analytics/queries",
+        "/api/v1/analytics/queries/validate",
+        "/api/v1/analytics/queries/saved",
+        "/api/v1/analytics/queries/save"
+      ],
+      "operations": {
+        "POST /api/v1/analytics/queries": {
+          "summary": "Executar consulta customizada",
+          "description": "Executa uma consulta customizada de analytics.\n\nPermite executar consultas personalizadas para an\u00e1lises\nespec\u00edficas que n\u00e3o est\u00e3o cobertas pelos endpoints padr\u00e3o.\n\nArgs:\n    query: Dados da consulta a ser executada\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    QueryResponse: Resultado da consulta\n    \nRaises:\n    HTTPException: 400 se a consulta \u00e9 inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        },
+        "POST /api/v1/analytics/queries/validate": {
+          "summary": "Validar consulta",
+          "description": "Valida uma consulta de analytics sem execut\u00e1-la.\n\nVerifica se a sintaxe e estrutura da consulta est\u00e3o corretas\nantes da execu\u00e7\u00e3o, permitindo debug e valida\u00e7\u00e3o pr\u00e9via.\n\nArgs:\n    query: Consulta a ser validada\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Resultado da valida\u00e7\u00e3o (valid, errors)\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        },
+        "GET /api/v1/analytics/queries/saved": {
+          "summary": "Listar consultas salvas",
+          "description": "Obt\u00e9m consultas salvas do usu\u00e1rio.\n\nRetorna lista de consultas que o usu\u00e1rio salvou para reutiliza\u00e7\u00e3o,\nfacilitando an\u00e1lises recorrentes.\n\nArgs:\n    limit: Limite de resultados por p\u00e1gina\n    offset: Offset para pagina\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Lista de consultas salvas\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        },
+        "POST /api/v1/analytics/queries/save": {
+          "summary": "Salvar consulta",
+          "description": "Salva uma consulta para reutiliza\u00e7\u00e3o.\n\nPermite armazenar consultas customizadas com nome e descri\u00e7\u00e3o\npara facilitar an\u00e1lises recorrentes.\n\nArgs:\n    query: Consulta a ser salva\n    name: Nome da consulta\n    description: Descri\u00e7\u00e3o opcional\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Dados da consulta salva\n    \nRaises:\n    HTTPException: 400 se nome j\u00e1 existe\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "analytics_dashboards": {
+      "paths": [
+        "/api/v1/analytics/dashboards",
+        "/api/v1/analytics/dashboards/{dashboard_id}",
+        "/api/v1/analytics/dashboards/{dashboard_id}/data",
+        "/api/v1/analytics/dashboards/{dashboard_id}/share"
+      ],
+      "operations": {
+        "POST /api/v1/analytics/dashboards": {
+          "summary": "Criar dashboard",
+          "description": "Cria um novo dashboard personalizado.\n\nPermite criar dashboards customizados com widgets e visualiza\u00e7\u00f5es\nespec\u00edficas para an\u00e1lises personalizadas.\n\nArgs:\n    dashboard_data: Dados do dashboard a ser criado\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    DashboardResponse: Dashboard criado\n    \nRaises:\n    HTTPException: 400 se dados s\u00e3o inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "dashboards"
+          ]
+        },
+        "GET /api/v1/analytics/dashboards": {
+          "summary": "Listar dashboards do usu\u00e1rio",
+          "description": "Obt\u00e9m dashboards do usu\u00e1rio com pagina\u00e7\u00e3o.\n\nRetorna lista de todos os dashboards criados pelo usu\u00e1rio,\npermitindo navega\u00e7\u00e3o paginada.\n\nArgs:\n    limit: Limite de resultados por p\u00e1gina\n    offset: Offset para pagina\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[DashboardResponse]: Lista de dashboards do usu\u00e1rio\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "dashboards"
+          ]
+        },
+        "GET /api/v1/analytics/dashboards/{dashboard_id}": {
+          "summary": "Obter dashboard espec\u00edfico",
+          "description": "Obt\u00e9m detalhes de um dashboard espec\u00edfico.\n\nRetorna todas as informa\u00e7\u00f5es de um dashboard, incluindo\nwidgets, configura\u00e7\u00f5es e dados associados.\n\nArgs:\n    dashboard_id: ID do dashboard\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    DashboardResponse: Dados do dashboard\n    \nRaises:\n    HTTPException: 404 se dashboard n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "dashboards"
+          ]
+        },
+        "PUT /api/v1/analytics/dashboards/{dashboard_id}": {
+          "summary": "Atualizar dashboard",
+          "description": "Atualiza um dashboard existente.\n\nPermite modificar nome, descri\u00e7\u00e3o, widgets e configura\u00e7\u00f5es\nde um dashboard existente do usu\u00e1rio.\n\nArgs:\n    dashboard_id: ID do dashboard\n    dashboard_data: Dados atualizados do dashboard\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    DashboardResponse: Dashboard atualizado\n    \nRaises:\n    HTTPException: 404 se dashboard n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de edi\u00e7\u00e3o\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "dashboards"
+          ]
+        },
+        "DELETE /api/v1/analytics/dashboards/{dashboard_id}": {
+          "summary": "Deletar dashboard",
+          "description": "Remove um dashboard do usu\u00e1rio.\n\nExclui permanentemente um dashboard e todos os seus dados\nassociados (widgets, configura\u00e7\u00f5es, etc.).\n\nArgs:\n    dashboard_id: ID do dashboard\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se dashboard n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de exclus\u00e3o\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "dashboards"
+          ]
+        },
+        "GET /api/v1/analytics/dashboards/{dashboard_id}/data": {
+          "summary": "Obter dados do dashboard",
+          "description": "Obt\u00e9m dados atualizados de um dashboard.\n\nRetorna os dados processados de todos os widgets do dashboard,\ncom op\u00e7\u00e3o de for\u00e7ar atualiza\u00e7\u00e3o do cache.\n\nArgs:\n    dashboard_id: ID do dashboard\n    refresh: Se deve for\u00e7ar atualiza\u00e7\u00e3o dos dados\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    DashboardData: Dados do dashboard\n    \nRaises:\n    HTTPException: 404 se dashboard n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "dashboards"
+          ]
+        },
+        "POST /api/v1/analytics/dashboards/{dashboard_id}/share": {
+          "summary": "Compartilhar dashboard",
+          "description": "Configura compartilhamento de um dashboard.\n\nPermite tornar um dashboard p\u00fablico ou privado,\ngerando links de compartilhamento quando necess\u00e1rio.\n\nArgs:\n    dashboard_id: ID do dashboard\n    public: Se deve tornar o dashboard p\u00fablico\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Status do compartilhamento e link p\u00fablico (se aplic\u00e1vel)\n    \nRaises:\n    HTTPException: 404 se dashboard n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de compartilhamento\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "dashboards"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "analytics_reports": {
+      "paths": [
+        "/api/v1/analytics/reports",
+        "/api/v1/analytics/reports/{report_id}",
+        "/api/v1/analytics/reports/{report_id}/execute",
+        "/api/v1/analytics/reports/{report_id}/executions"
+      ],
+      "operations": {
+        "POST /api/v1/analytics/reports": {
+          "summary": "Criar relat\u00f3rio",
+          "description": "Cria um novo relat\u00f3rio personalizado.\n\nPermite criar relat\u00f3rios automatizados com agendamento\ne configura\u00e7\u00f5es espec\u00edficas de an\u00e1lise.\n\nArgs:\n    report_data: Dados do relat\u00f3rio a ser criado\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    ReportResponse: Relat\u00f3rio criado\n    \nRaises:\n    HTTPException: 400 se dados s\u00e3o inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "reports"
+          ]
+        },
+        "GET /api/v1/analytics/reports": {
+          "summary": "Listar relat\u00f3rios do usu\u00e1rio",
+          "description": "Obt\u00e9m relat\u00f3rios do usu\u00e1rio com filtros.\n\nLista relat\u00f3rios criados pelo usu\u00e1rio com op\u00e7\u00e3o de\nfiltrar por status e aplicar pagina\u00e7\u00e3o.\n\nArgs:\n    status: Filtro por status do relat\u00f3rio (opcional)\n    limit: Limite de resultados por p\u00e1gina\n    offset: Offset para pagina\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[ReportResponse]: Lista de relat\u00f3rios\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "reports"
+          ]
+        },
+        "GET /api/v1/analytics/reports/{report_id}": {
+          "summary": "Obter relat\u00f3rio espec\u00edfico",
+          "description": "Obt\u00e9m detalhes de um relat\u00f3rio espec\u00edfico.\n\nRetorna informa\u00e7\u00f5es completas sobre um relat\u00f3rio,\nincluindo configura\u00e7\u00f5es, status e hist\u00f3rico.\n\nArgs:\n    report_id: ID do relat\u00f3rio\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    ReportResponse: Dados do relat\u00f3rio\n    \nRaises:\n    HTTPException: 404 se relat\u00f3rio n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "reports"
+          ]
+        },
+        "PUT /api/v1/analytics/reports/{report_id}": {
+          "summary": "Atualizar relat\u00f3rio",
+          "description": "Atualiza um relat\u00f3rio existente.\n\nPermite modificar configura\u00e7\u00f5es, agendamento e\npar\u00e2metros de um relat\u00f3rio existente.\n\nArgs:\n    report_id: ID do relat\u00f3rio\n    report_data: Dados atualizados do relat\u00f3rio\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    ReportResponse: Relat\u00f3rio atualizado\n    \nRaises:\n    HTTPException: 404 se relat\u00f3rio n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de edi\u00e7\u00e3o\n    HTTPException: 400 se dados inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "reports"
+          ]
+        },
+        "DELETE /api/v1/analytics/reports/{report_id}": {
+          "summary": "Deletar relat\u00f3rio",
+          "description": "Remove um relat\u00f3rio do usu\u00e1rio.\n\nExclui permanentemente um relat\u00f3rio e seu hist\u00f3rico\nde execu\u00e7\u00f5es, cancelando agendamentos futuros.\n\nArgs:\n    report_id: ID do relat\u00f3rio\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se relat\u00f3rio n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de exclus\u00e3o\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "reports"
+          ]
+        },
+        "POST /api/v1/analytics/reports/{report_id}/execute": {
+          "summary": "Executar relat\u00f3rio",
+          "description": "Executa um relat\u00f3rio em background.\n\nInicia a execu\u00e7\u00e3o de um relat\u00f3rio configurado, processando\nem background para n\u00e3o bloquear a resposta da API.\n\nArgs:\n    report_id: ID do relat\u00f3rio\n    background_tasks: Tarefas em background do FastAPI\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    ReportExecutionResponse: Dados da execu\u00e7\u00e3o iniciada\n    \nRaises:\n    HTTPException: 404 se relat\u00f3rio n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de execu\u00e7\u00e3o\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "reports"
+          ]
+        },
+        "GET /api/v1/analytics/reports/{report_id}/executions": {
+          "summary": "Hist\u00f3rico de execu\u00e7\u00f5es",
+          "description": "Obt\u00e9m hist\u00f3rico de execu\u00e7\u00f5es de um relat\u00f3rio.\n\nLista todas as execu\u00e7\u00f5es passadas de um relat\u00f3rio espec\u00edfico\ncom informa\u00e7\u00f5es de status, dura\u00e7\u00e3o e resultados.\n\nArgs:\n    report_id: ID do relat\u00f3rio\n    limit: Limite de resultados por p\u00e1gina\n    offset: Offset para pagina\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[ReportExecutionResponse]: Lista de execu\u00e7\u00f5es\n    \nRaises:\n    HTTPException: 404 se relat\u00f3rio n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de acesso\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "reports"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "analytics_insights": {
+      "paths": [
+        "/api/v1/analytics/insights",
+        "/api/v1/analytics/insights/system",
+        "/api/v1/analytics/insights/user",
+        "/api/v1/analytics/insights/trends"
+      ],
+      "operations": {
+        "POST /api/v1/analytics/insights": {
+          "summary": "Gerar insights personalizados",
+          "description": "Gera insights personalizados baseados em dados do usu\u00e1rio.\n\nAnalisa dados do usu\u00e1rio para gerar insights inteligentes\ne recomenda\u00e7\u00f5es baseadas em padr\u00f5es identificados.\n\nArgs:\n    insight_request: Configura\u00e7\u00e3o do insight a ser gerado\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    InsightResponse: Insights gerados\n    \nRaises:\n    HTTPException: 400 se configura\u00e7\u00e3o inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analysis"
+          ]
+        },
+        "GET /api/v1/analytics/insights/system": {
+          "summary": "Insights do sistema",
+          "description": "Obt\u00e9m insights do sistema (apenas para administradores).\n\nAnalisa m\u00e9tricas globais do sistema para identificar\ntend\u00eancias, problemas e oportunidades de melhoria.\n\nArgs:\n    days: Per\u00edodo de an\u00e1lise em dias\n    current_admin: Usu\u00e1rio administrador autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    SystemInsights: Insights do sistema\n    \nRaises:\n    HTTPException: 403 se usu\u00e1rio n\u00e3o \u00e9 admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics-insights",
+            "admin"
+          ]
+        },
+        "GET /api/v1/analytics/insights/user": {
+          "summary": "Insights do usu\u00e1rio",
+          "description": "Obt\u00e9m insights personalizados do usu\u00e1rio.\n\nAnalisa comportamento e padr\u00f5es espec\u00edficos do usu\u00e1rio\npara gerar insights e recomenda\u00e7\u00f5es personalizadas.\n\nArgs:\n    days: Per\u00edodo de an\u00e1lise em dias\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Insights do usu\u00e1rio\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analysis"
+          ]
+        },
+        "GET /api/v1/analytics/insights/trends": {
+          "summary": "Insights de tend\u00eancias",
+          "description": "Obt\u00e9m insights sobre tend\u00eancias e padr\u00f5es emergentes.\n\nIdentifica tend\u00eancias e padr\u00f5es interessantes nos dados\nque podem ser relevantes para o usu\u00e1rio.\n\nArgs:\n    category: Categoria espec\u00edfica de insights (opcional)\n    limit: Limite de insights retornados\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Insights de tend\u00eancias\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analysis"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "analytics_analysis": {
+      "paths": [
+        "/api/v1/analytics/analysis/funnel",
+        "/api/v1/analytics/analysis/cohort",
+        "/api/v1/analytics/analysis/ab-test",
+        "/api/v1/analytics/analysis/correlation",
+        "/api/v1/analytics/analysis/anomalies"
+      ],
+      "operations": {
+        "POST /api/v1/analytics/analysis/funnel": {
+          "summary": "An\u00e1lise de funil",
+          "description": "Executa an\u00e1lise de funil de convers\u00e3o.\n\nAnalisa a jornada do usu\u00e1rio atrav\u00e9s de diferentes etapas\npara identificar pontos de convers\u00e3o e abandono.\n\nArgs:\n    funnel_config: Configura\u00e7\u00e3o da an\u00e1lise de funil\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    FunnelResult: Resultados da an\u00e1lise de funil\n    \nRaises:\n    HTTPException: 400 se configura\u00e7\u00e3o inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analysis"
+          ]
+        },
+        "POST /api/v1/analytics/analysis/cohort": {
+          "summary": "An\u00e1lise de coorte",
+          "description": "Executa an\u00e1lise de coorte para reten\u00e7\u00e3o de usu\u00e1rios.\n\nAnalisa grupos de usu\u00e1rios baseados em per\u00edodos espec\u00edficos\npara entender padr\u00f5es de reten\u00e7\u00e3o e comportamento.\n\nArgs:\n    cohort_config: Configura\u00e7\u00e3o da an\u00e1lise de coorte\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    CohortResult: Resultados da an\u00e1lise de coorte\n    \nRaises:\n    HTTPException: 400 se configura\u00e7\u00e3o inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analysis"
+          ]
+        },
+        "POST /api/v1/analytics/analysis/ab-test": {
+          "summary": "An\u00e1lise de teste A/B",
+          "description": "Executa an\u00e1lise de teste A/B.\n\nAnalisa resultados de testes A/B para determinar\nsignific\u00e2ncia estat\u00edstica e performance de variantes.\n\nArgs:\n    test_config: Configura\u00e7\u00e3o do teste A/B\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    ABTestResult: Resultados da an\u00e1lise A/B\n    \nRaises:\n    HTTPException: 400 se configura\u00e7\u00e3o inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analysis"
+          ]
+        },
+        "GET /api/v1/analytics/analysis/correlation": {
+          "summary": "An\u00e1lise de correla\u00e7\u00e3o",
+          "description": "Executa an\u00e1lise de correla\u00e7\u00e3o entre duas m\u00e9tricas.\n\nCalcula a correla\u00e7\u00e3o estat\u00edstica entre duas m\u00e9tricas\nno per\u00edodo especificado para identificar relacionamentos.\n\nArgs:\n    metric1: Nome da primeira m\u00e9trica\n    metric2: Nome da segunda m\u00e9trica\n    start_date: Data de in\u00edcio da an\u00e1lise\n    end_date: Data de fim da an\u00e1lise\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Resultados da an\u00e1lise de correla\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 400 se par\u00e2metros inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analysis"
+          ]
+        },
+        "GET /api/v1/analytics/analysis/anomalies": {
+          "summary": "Detec\u00e7\u00e3o de anomalias",
+          "description": "Detecta anomalias em uma m\u00e9trica espec\u00edfica.\n\nUtiliza algoritmos de detec\u00e7\u00e3o de anomalias para identificar\npontos de dados incomuns que podem indicar problemas ou oportunidades.\n\nArgs:\n    metric: Nome da m\u00e9trica para an\u00e1lise\n    days: Per\u00edodo de an\u00e1lise em dias\n    sensitivity: Sensibilidade da detec\u00e7\u00e3o (0.8-0.99)\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Anomalias detectadas\n    \nRaises:\n    HTTPException: 400 se par\u00e2metros inv\u00e1lidos\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analysis"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "analytics_export": {
+      "paths": [
+        "/api/v1/analytics/export"
+      ],
+      "operations": {
+        "POST /api/v1/analytics/export": {
+          "summary": "Exportar dados",
+          "description": "Inicia exporta\u00e7\u00e3o de dados em background.\n\nCria uma tarefa de exporta\u00e7\u00e3o que ser\u00e1 processada em background,\npermitindo gerar arquivos grandes sem bloquear a API.\n\nArgs:\n    export_request: Configura\u00e7\u00e3o da exporta\u00e7\u00e3o\n    background_tasks: Tarefas em background do FastAPI\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    ExportResponse: Dados da exporta\u00e7\u00e3o iniciada\n    \nRaises:\n    HTTPException: 400 se configura\u00e7\u00e3o inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "export"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": false
+      }
+    },
+    "analytics_exports": {
+      "paths": [
+        "/api/v1/analytics/exports",
+        "/api/v1/analytics/exports/{export_id}/download"
+      ],
+      "operations": {
+        "GET /api/v1/analytics/exports": {
+          "summary": "Listar exporta\u00e7\u00f5es do usu\u00e1rio",
+          "description": "Obt\u00e9m hist\u00f3rico de exporta\u00e7\u00f5es do usu\u00e1rio.\n\nLista todas as exporta\u00e7\u00f5es criadas pelo usu\u00e1rio com op\u00e7\u00e3o\nde filtrar por status e aplicar pagina\u00e7\u00e3o.\n\nArgs:\n    status: Filtro por status da exporta\u00e7\u00e3o (opcional)\n    limit: Limite de resultados por p\u00e1gina\n    offset: Offset para pagina\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[ExportResponse]: Lista de exporta\u00e7\u00f5es\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "export"
+          ]
+        },
+        "GET /api/v1/analytics/exports/{export_id}/download": {
+          "summary": "Download de exporta\u00e7\u00e3o",
+          "description": "Faz download de uma exporta\u00e7\u00e3o conclu\u00edda.\n\nPermite baixar o arquivo gerado por uma exporta\u00e7\u00e3o,\nverificando permiss\u00f5es e disponibilidade do arquivo.\n\nArgs:\n    export_id: ID da exporta\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    FileResponse: Arquivo da exporta\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se exporta\u00e7\u00e3o n\u00e3o encontrada\n    HTTPException: 403 se sem permiss\u00e3o de download\n    HTTPException: 400 se exporta\u00e7\u00e3o n\u00e3o conclu\u00edda\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "export"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": true,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "analytics_alerts": {
+      "paths": [
+        "/api/v1/analytics/alerts",
+        "/api/v1/analytics/alerts/{alert_id}",
+        "/api/v1/analytics/alerts/{alert_id}/pause",
+        "/api/v1/analytics/alerts/{alert_id}/resume"
+      ],
+      "operations": {
+        "POST /api/v1/analytics/alerts": {
+          "summary": "Criar alerta",
+          "description": "Cria um novo alerta personalizado.\n\nConfigura alertas autom\u00e1ticos baseados em m\u00e9tricas espec\u00edficas\npara notificar quando condi\u00e7\u00f5es s\u00e3o atingidas.\n\nArgs:\n    alert_rule: Configura\u00e7\u00e3o da regra de alerta\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    AlertResponse: Alerta criado\n    \nRaises:\n    HTTPException: 400 se configura\u00e7\u00e3o inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "alerts"
+          ]
+        },
+        "GET /api/v1/analytics/alerts": {
+          "summary": "Listar alertas do usu\u00e1rio",
+          "description": "Obt\u00e9m alertas do usu\u00e1rio com filtros.\n\nLista alertas criados pelo usu\u00e1rio com op\u00e7\u00e3o de filtrar\npor status e aplicar pagina\u00e7\u00e3o.\n\nArgs:\n    status: Filtro por status do alerta (opcional)\n    limit: Limite de resultados por p\u00e1gina\n    offset: Offset para pagina\u00e7\u00e3o\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    List[AlertResponse]: Lista de alertas\n    \nRaises:\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "alerts"
+          ]
+        },
+        "PUT /api/v1/analytics/alerts/{alert_id}": {
+          "summary": "Atualizar alerta",
+          "description": "Atualiza configura\u00e7\u00e3o de um alerta existente.\n\nPermite modificar regras, condi\u00e7\u00f5es e configura\u00e7\u00f5es\nde notifica\u00e7\u00e3o de um alerta existente.\n\nArgs:\n    alert_id: ID do alerta\n    alert_rule: Nova configura\u00e7\u00e3o do alerta\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    AlertResponse: Alerta atualizado\n    \nRaises:\n    HTTPException: 404 se alerta n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de edi\u00e7\u00e3o\n    HTTPException: 400 se configura\u00e7\u00e3o inv\u00e1lida\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "alerts"
+          ]
+        },
+        "DELETE /api/v1/analytics/alerts/{alert_id}": {
+          "summary": "Deletar alerta",
+          "description": "Remove um alerta do usu\u00e1rio.\n\nExclui permanentemente um alerta e para todas as\nnotifica\u00e7\u00f5es associadas a ele.\n\nArgs:\n    alert_id: ID do alerta\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se alerta n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de exclus\u00e3o\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "alerts"
+          ]
+        },
+        "POST /api/v1/analytics/alerts/{alert_id}/pause": {
+          "summary": "Pausar alerta",
+          "description": "Pausa temporariamente um alerta.\n\nDesativa as notifica\u00e7\u00f5es de um alerta sem remov\u00ea-lo,\npermitindo reativa\u00e7\u00e3o posterior.\n\nArgs:\n    alert_id: ID do alerta\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se alerta n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de controle\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "alerts"
+          ]
+        },
+        "POST /api/v1/analytics/alerts/{alert_id}/resume": {
+          "summary": "Reativar alerta",
+          "description": "Reativa um alerta pausado.\n\nRetoma as notifica\u00e7\u00f5es de um alerta que estava pausado,\nvoltando ao monitoramento normal.\n\nArgs:\n    alert_id: ID do alerta\n    current_user: Usu\u00e1rio autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Mensagem de confirma\u00e7\u00e3o\n    \nRaises:\n    HTTPException: 404 se alerta n\u00e3o encontrado\n    HTTPException: 403 se sem permiss\u00e3o de controle\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "alerts"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": true,
+        "delete": true,
+        "list": true
+      }
+    },
+    "analytics_admin": {
+      "paths": [
+        "/api/v1/analytics/admin/stats",
+        "/api/v1/analytics/admin/cleanup",
+        "/api/v1/analytics/admin/recompute-metrics"
+      ],
+      "operations": {
+        "GET /api/v1/analytics/admin/stats": {
+          "summary": "Estat\u00edsticas administrativas",
+          "description": "Obt\u00e9m estat\u00edsticas administrativas do sistema analytics.\n\nRetorna m\u00e9tricas globais sobre uso, performance e recursos\ndo sistema analytics para administradores.\n\nArgs:\n    current_admin: Usu\u00e1rio administrador autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Estat\u00edsticas administrativas\n    \nRaises:\n    HTTPException: 403 se usu\u00e1rio n\u00e3o \u00e9 admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics",
+            "admin"
+          ]
+        },
+        "POST /api/v1/analytics/admin/cleanup": {
+          "summary": "Limpeza de dados antigos",
+          "description": "Remove dados antigos do sistema analytics.\n\nExecuta limpeza de dados antigos baseado no per\u00edodo especificado\npara manter performance e controlar uso de armazenamento.\n\nArgs:\n    days: Manter dados dos \u00faltimos N dias\n    current_admin: Usu\u00e1rio administrador autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Resultado da limpeza (registros removidos)\n    \nRaises:\n    HTTPException: 403 se usu\u00e1rio n\u00e3o \u00e9 admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics",
+            "admin"
+          ]
+        },
+        "POST /api/v1/analytics/admin/recompute-metrics": {
+          "summary": "Recomputar m\u00e9tricas",
+          "description": "For\u00e7a recomputa\u00e7\u00e3o de m\u00e9tricas para um per\u00edodo.\n\nRecalcula todas as m\u00e9tricas agregadas para o per\u00edodo especificado,\n\u00fatil para corre\u00e7\u00e3o de dados ou ap\u00f3s mudan\u00e7as na l\u00f3gica de c\u00e1lculo.\n\nArgs:\n    background_tasks: Tarefas em background do FastAPI\n    start_date: Data de in\u00edcio do reprocessamento\n    end_date: Data de fim do reprocessamento\n    current_admin: Usu\u00e1rio administrador autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    dict: Confirma\u00e7\u00e3o de in\u00edcio do reprocessamento\n    \nRaises:\n    HTTPException: 400 se datas inv\u00e1lidas\n    HTTPException: 403 se usu\u00e1rio n\u00e3o \u00e9 admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics",
+            "admin"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": true,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "analytics_overview": {
+      "paths": [
+        "/api/v1/analytics/overview"
+      ],
+      "operations": {
+        "GET /api/v1/analytics/overview": {
+          "summary": "Vis\u00e3o geral de analytics",
+          "description": "Obt\u00e9m uma vis\u00e3o geral de analytics para o sistema.\n\nRetorna informa\u00e7\u00f5es sobre o uso, performance e recursos\ndo sistema analytics para administradores.\n\nArgs:\n    current_admin: Usu\u00e1rio administrador autenticado\n    db: Sess\u00e3o do banco de dados\n    \nReturns:\n    AnalyticsOverview: Vis\u00e3o geral de analytics\n    \nRaises:\n    HTTPException: 403 se usu\u00e1rio n\u00e3o \u00e9 admin\n    HTTPException: 500 se erro interno do servidor",
+          "tags": [
+            "analytics"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    },
+    "health": {
+      "paths": [
+        "/api/v1/health"
+      ],
+      "operations": {
+        "GET /api/v1/health": {
+          "summary": "Health Check",
+          "description": "Endpoint de verifica\u00e7\u00e3o de sa\u00fade da API\nRetorna status da aplica\u00e7\u00e3o",
+          "tags": [
+            "health"
+          ]
+        }
+      },
+      "crud_operations": {
+        "create": false,
+        "read": false,
+        "update": false,
+        "delete": false,
+        "list": true
+      }
+    }
+  }
+}

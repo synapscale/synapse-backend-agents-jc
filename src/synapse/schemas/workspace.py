@@ -1,549 +1,129 @@
 """
-Schemas Pydantic para Workspaces
-Criado por José - um desenvolvedor Full Stack
-Validação e serialização para workspaces colaborativos
+Schemas for Workspace management.
 """
 
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, validator
-from datetime import datetime
+import datetime
+import uuid
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from synapse.models.workspace import WorkspaceType
-
-# ==================== ENUMS ====================
-
-
-class WorkspaceRole(str, Enum):
-    OWNER = "owner"
-    ADMIN = "admin"
-    MEMBER = "member"
-    GUEST = "guest"
+from pydantic import BaseModel, Field
 
 
-class PermissionLevel(str, Enum):
-    READ = "read"
-    WRITE = "write"
-    ADMIN = "admin"
+# ===== ENUMS ALINHADOS COM O BANCO =====
 
 
-class InvitationStatus(str, Enum):
-    PENDING = "pending"
-    ACCEPTED = "accepted"
-    DECLINED = "declined"
-    EXPIRED = "expired"
+class WorkspaceType(str, Enum):
+    """Workspace type - ALIGNED WITH THE DATABASE"""
+
+    INDIVIDUAL = "individual"
+    COLLABORATIVE = "collaborative"
 
 
-class ProjectStatus(str, Enum):
+class WorkspaceStatus(str, Enum):
+    """Workspace status - ALIGNED WITH THE DATABASE"""
+
     ACTIVE = "active"
-    ARCHIVED = "archived"
+    INACTIVE = "inactive"
+    SUSPENDED = "suspended"
     DELETED = "deleted"
 
 
-# ==================== WORKSPACE SCHEMAS ====================
+# ===== WORKSPACE SCHEMAS (ALIGNED PERFECTLY WITH THE DATABASE) =====
 
 
 class WorkspaceBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    description: str | None = Field(None, max_length=500)
-    avatar_url: str | None = None
-    color: str | None = Field("#3B82F6", pattern="^#[0-9A-Fa-f]{6}$")
-    is_public: bool = False
-    allow_guest_access: bool = False
-    require_approval: bool = True
-    max_members: int = Field(10, ge=1, le=1000)
-    max_projects: int = Field(50, ge=1, le=10000)
-    max_storage_mb: int = Field(1000, ge=100, le=100000)
-    enable_real_time_editing: bool = True
-    enable_comments: bool = True
-    enable_chat: bool = True
-    enable_video_calls: bool = False
-    notification_settings: dict[str, Any] | None = Field(default_factory=dict)
+    """Base schema for workspace attributes."""
+
+    name: str = Field(..., max_length=255, description="Workspace name")
+    slug: str = Field(..., max_length=120, description="Unique slug")
+    description: Optional[str] = Field(None, description="Description")
+    avatar_url: Optional[str] = Field(None, max_length=500, description="Avatar URL")
+    color: Optional[str] = Field(None, max_length=7, description="Color (hex)")
+    is_public: bool = Field(False, description="Public workspace")
+    is_template: bool = Field(False, description="Is a template")
+    allow_guest_access: bool = Field(False, description="Allows guest access")
+    require_approval: bool = Field(True, description="Requires approval")
+    max_members: Optional[int] = Field(None, description="Maximum members")
+    max_projects: Optional[int] = Field(None, description="Maximum projects")
+    max_storage_mb: Optional[int] = Field(None, description="Maximum storage in MB")
+    enable_real_time_editing: bool = Field(True, description="Real-time editing")
+    enable_comments: bool = Field(True, description="Comments")
+    enable_chat: bool = Field(True, description="Chat")
+    enable_video_calls: bool = Field(True, description="Video calls")
+    email_notifications: bool = Field(True, description="Email notifications")
+    push_notifications: bool = Field(False, description="Push notifications")
+    type: WorkspaceType = Field(WorkspaceType.INDIVIDUAL, description="Workspace type")
 
 
 class WorkspaceCreate(WorkspaceBase):
-    type: WorkspaceType = WorkspaceType.INDIVIDUAL
-    plan_id: str | None = None  # UUID como string
-    is_public: bool = False
-    allow_guest_access: bool = False
-    require_approval: bool = True
-    enable_real_time_editing: bool = True
-    enable_comments: bool = True
-    enable_chat: bool = True
-    enable_video_calls: bool = False
-    notification_settings: dict[str, Any] | None = None
+    """Schema for workspace creation - ALIGNED WITH DATABASE"""
+
+    pass
 
 
 class WorkspaceUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=100)
-    description: str | None = Field(None, max_length=500)
-    avatar_url: str | None = None
-    color: str | None = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
-    is_public: bool | None = None
-    allow_guest_access: bool | None = None
-    require_approval: bool | None = None
-    max_members: int | None = Field(None, ge=1, le=1000)
-    max_projects: int | None = Field(None, ge=1, le=10000)
-    max_storage_mb: int | None = Field(None, ge=100, le=100000)
-    enable_real_time_editing: bool | None = None
-    enable_comments: bool | None = None
-    enable_chat: bool | None = None
-    enable_video_calls: bool | None = None
-    notification_settings: dict[str, Any] | None = None
+    """Schema for workspace updates - ALIGNED WITH DATABASE"""
+
+    name: Optional[str] = Field(None, max_length=255, description="Workspace name")
+    description: Optional[str] = Field(None, description="Description")
+    avatar_url: Optional[str] = Field(None, max_length=500, description="Avatar URL")
+    color: Optional[str] = Field(None, max_length=7, description="Color (hex)")
+    is_public: Optional[bool] = Field(None, description="Public workspace")
+    is_template: Optional[bool] = Field(None, description="Is a template")
+    allow_guest_access: Optional[bool] = Field(None, description="Allows guest access")
+    require_approval: Optional[bool] = Field(None, description="Requires approval")
+    max_members: Optional[int] = Field(None, description="Maximum members")
+    max_projects: Optional[int] = Field(None, description="Maximum projects")
+    max_storage_mb: Optional[int] = Field(None, description="Maximum storage in MB")
+    enable_real_time_editing: Optional[bool] = Field(
+        None, description="Real-time editing"
+    )
+    enable_comments: Optional[bool] = Field(None, description="Comments")
+    enable_chat: Optional[bool] = Field(None, description="Chat")
+    enable_video_calls: Optional[bool] = Field(None, description="Video calls")
+    email_notifications: Optional[bool] = Field(None, description="Email notifications")
+    push_notifications: Optional[bool] = Field(None, description="Push notifications")
+    status: Optional[WorkspaceStatus] = Field(None, description="Status")
 
 
 class WorkspaceResponse(WorkspaceBase):
-    id: str
-    slug: str
-    type: WorkspaceType
-    owner_id: str  # UUID como string
-    owner_name: str | None = None
-    plan_id: str  # UUID como string
-    plan_name: str | None = None
-    plan_type: str | None = None
-    is_public: bool = False
-    is_template: bool = False
-    allow_guest_access: bool = False
-    require_approval: bool = True
-    max_members: int | None = None
-    max_projects: int | None = None
-    max_storage_mb: int | None = None
-    enable_real_time_editing: bool = True
-    enable_comments: bool = True
-    enable_chat: bool = True
-    enable_video_calls: bool = False
-    notification_settings: dict[str, Any] | None = None
-    member_count: int = 0
-    project_count: int = 0
-    activity_count: int = 0
-    storage_used_mb: float = 0.0
-    status: str = "active"
-    last_activity_at: datetime | None = None
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "owner_id", "plan_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-
-# ==================== MEMBER SCHEMAS ====================
-
-
-class MemberInvite(BaseModel):
-    email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
-    role: WorkspaceRole = WorkspaceRole.MEMBER
-    message: str | None = Field(None, max_length=500)
-
-
-class MemberResponse(BaseModel):
-    id: int
-    workspace_id: str
-    user_id: str
-    user_name: str
-    user_email: str
-    user_avatar: str | None = None
-    role: WorkspaceRole
-    status: str = "active"
-    joined_at: datetime
-    last_active_at: datetime | None = None
-
-    class Config:
-        from_attributes = True
-    
-    @validator("workspace_id", "user_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-
-class MemberUpdate(BaseModel):
-    role: WorkspaceRole
-
-
-# ==================== INVITATION SCHEMAS ====================
-
-
-class InvitationResponse(BaseModel):
-    id: str
-    workspace_id: str
-    workspace_name: str
-    inviter_id: str
-    inviter_name: str
-    email: str
-    role: WorkspaceRole
-    message: str | None = None
-    token: str
-    status: InvitationStatus
-    expires_at: datetime
-    created_at: datetime
-    responded_at: datetime | None = None
-
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "workspace_id", "inviter_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-
-# ==================== PROJECT SCHEMAS ====================
-
-
-class ProjectBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    description: str | None = Field(None, max_length=500)
-    color: str | None = Field("#10B981", pattern="^#[0-9A-Fa-f]{6}$")
-    allow_concurrent_editing: bool = True
-    auto_save_interval: int = Field(30, ge=5, le=300)
-    version_control_enabled: bool = True
-
-
-class ProjectCreate(ProjectBase):
-    workflow_id: str | None = None
-
-
-class ProjectUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=100)
-    description: str | None = Field(None, max_length=500)
-    color: str | None = Field(None, pattern="^#[0-9A-Fa-f]{6}$")
-    allow_concurrent_editing: bool | None = None
-    auto_save_interval: int | None = Field(None, ge=5, le=300)
-    version_control_enabled: bool | None = None
-
-
-class ProjectResponse(ProjectBase):
-    id: str
-    workspace_id: str
-    workflow_id: str
-    collaborator_count: int = 0
-    comment_count: int = 0
-    version_count: int = 0
-    status: ProjectStatus = ProjectStatus.ACTIVE
-    last_edited_at: datetime | None = None
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "workspace_id", "workflow_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-
-# ==================== COLLABORATOR SCHEMAS ====================
-
-
-class CollaboratorPermissions(BaseModel):
-    can_edit: bool = True
-    can_comment: bool = True
-    can_share: bool = False
-    can_delete: bool = False
-
-
-class CollaboratorAdd(BaseModel):
-    user_id: str
-    permissions: CollaboratorPermissions
-
-
-class CollaboratorResponse(BaseModel):
-    id: str
-    project_id: str
-    user_id: str
-    user_name: str
-    user_email: str
-    user_avatar: str | None = None
-    can_edit: bool
-    can_comment: bool
-    can_share: bool
-    can_delete: bool
-    added_at: datetime
-
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "project_id", "user_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-
-# ==================== COMMENT SCHEMAS ====================
-
-
-class CommentBase(BaseModel):
-    content: str = Field(..., min_length=1, max_length=2000)
-    content_type: str = Field("text", pattern="^(text|markdown)$")
-    node_id: str | None = Field(None, max_length=50)
-    position_x: float | None = None
-    position_y: float | None = None
-
-
-class CommentCreate(CommentBase):
-    parent_id: str | None = None
-
-
-class CommentUpdate(BaseModel):
-    content: str | None = Field(None, min_length=1, max_length=2000)
-    content_type: str | None = Field(None, pattern="^(text|markdown)$")
-
-
-class CommentResponse(CommentBase):
-    id: str
-    project_id: str
-    user_id: str
-    user_name: str
-    user_avatar: str | None = None
-    parent_id: str | None = None
-    reply_count: int = 0
-    is_resolved: bool = False
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "project_id", "user_id", "parent_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-
-# ==================== ACTIVITY SCHEMAS ====================
-
-
-class ActivityResponse(BaseModel):
-    id: str
-    workspace_id: str
-    user_id: str
-    user_name: str
-    user_avatar: str | None = None
-    action: str
-    resource_type: str
-    resource_id: int | None = None
-    description: str
-    metadata: dict[str, Any] | None = Field(default_factory=dict)
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "workspace_id", "user_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-
-# ==================== VERSION SCHEMAS ====================
-
-
-class ProjectVersionResponse(BaseModel):
-    id: str
-    project_id: str
-    version_number: int
-    name: str | None = None
-    description: str | None = None
-    workflow_data: dict[str, Any]
-    created_by: str
-    creator_name: str
-    is_current: bool = False
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "project_id", "created_by", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-
-class VersionCreate(BaseModel):
-    name: str | None = Field(None, max_length=100)
-    description: str | None = Field(None, max_length=500)
-
-
-# ==================== WORKSPACE STATS ====================
-
-
-class WorkspaceStats(BaseModel):
-    member_count: int
-    project_count: int
-    activity_count: int
-    storage_used_mb: float
-    storage_limit_mb: int
-    storage_usage_percent: float
-    recent_activity_count: int
-    active_projects: int
-
-
-# ==================== SEARCH SCHEMAS ====================
-
-
-class WorkspaceSearch(BaseModel):
-    query: str | None = None
-    is_public: bool | None = None
-    has_projects: bool | None = None
-    min_members: int | None = Field(None, ge=1)
-    max_members: int | None = Field(None, ge=1)
-    sort_by: str | None = Field(
-        "activity", pattern="^(activity|members|projects|created|name)$"
+    """Response schema for a workspace - PERFECTLY ALIGNED WITH DATABASE"""
+
+    id: uuid.UUID = Field(..., description="Workspace ID")
+    owner_id: uuid.UUID = Field(..., description="Owner ID")
+    tenant_id: uuid.UUID = Field(..., description="Tenant ID")
+    member_count: int = Field(..., description="Number of members")
+    project_count: int = Field(..., description="Number of projects")
+    activity_count: int = Field(..., description="Number of activities")
+    storage_used_mb: float = Field(..., description="Storage used in MB")
+    api_calls_today: Optional[int] = Field(None, description="API calls today")
+    api_calls_this_month: Optional[int] = Field(
+        None, description="API calls this month"
     )
-    limit: int = Field(20, ge=1, le=100)
-    offset: int = Field(0, ge=0)
-
-
-class ProjectSearch(BaseModel):
-    query: str | None = None
-    workspace_id: str | None = None
-    status: ProjectStatus | None = None
-    has_collaborators: bool | None = None
-    sort_by: str | None = Field("updated", pattern="^(updated|created|name|activity)$")
-    limit: int = Field(20, ge=1, le=100)
-    offset: int = Field(0, ge=0)
-
-
-# ==================== BULK OPERATIONS ====================
-
-
-class BulkMemberOperation(BaseModel):
-    action: str = Field(..., pattern="^(remove|change_role|send_reminder)$")
-    member_ids: list[int] = Field(..., min_items=1, max_items=50)
-    new_role: WorkspaceRole | None = None
-    reason: str | None = Field(None, max_length=500)
-
-
-class BulkProjectOperation(BaseModel):
-    action: str = Field(..., pattern="^(archive|delete|move_workspace)$")
-    project_ids: list[str] = Field(..., min_items=1, max_items=50)
-    target_workspace_id: str | None = None
-    reason: str | None = Field(None, max_length=500)
-
-
-class BulkOperationResponse(BaseModel):
-    success_count: int
-    error_count: int
-    errors: list[dict[str, Any]]
-
-
-# ==================== REAL-TIME SCHEMAS ====================
-
-
-class RealTimeEvent(BaseModel):
-    event_type: str
-    workspace_id: str  # UUID como string
-    project_id: str | None = None  # UUID como string
-    user_id: str  # UUID como string
-    user_name: str
-    data: dict[str, Any]
-    timestamp: datetime
-
-
-class CursorPosition(BaseModel):
-    user_id: str  # UUID como string
-    user_name: str
-    user_color: str
-    x: float
-    y: float
-    node_id: str | None = None
-    timestamp: datetime
-
-
-class EditOperation(BaseModel):
-    operation_type: str = Field(..., pattern="^(insert|delete|update|move)$")
-    node_id: str | None = None
-    data: dict[str, Any]
-    user_id: str  # UUID como string
-    timestamp: datetime
-
-
-# ==================== NOTIFICATION SCHEMAS ====================
-
-
-class NotificationSettings(BaseModel):
-    email_notifications: bool = True
-    push_notifications: bool = True
-    desktop_notifications: bool = True
-    digest_frequency: str = Field(
-        "daily", pattern="^(immediate|hourly|daily|weekly|never)$"
+    last_api_reset_daily: Optional[datetime.datetime] = Field(
+        None, description="Last daily API reset"
     )
-    notify_on_mention: bool = True
-    notify_on_comment: bool = True
-    notify_on_project_update: bool = True
-    notify_on_member_join: bool = True
-    notify_on_invitation: bool = True
+    last_api_reset_monthly: Optional[datetime.datetime] = Field(
+        None, description="Last monthly API reset"
+    )
+    feature_usage_count: Optional[Dict[str, Any]] = Field(
+        None, description="Feature usage count"
+    )
+    status: str = Field(..., description="Status")
+    created_at: datetime.datetime = Field(..., description="Creation timestamp")
+    updated_at: datetime.datetime = Field(..., description="Last update timestamp")
+    last_activity_at: datetime.datetime = Field(
+        ..., description="Last activity timestamp"
+    )
 
 
-class NotificationPreferences(BaseModel):
-    workspace_id: str  # UUID como string
-    settings: NotificationSettings
+class WorkspaceListResponse(BaseModel):
+    """Paginated list of workspaces."""
+
+    items: List[WorkspaceResponse] = Field(..., description="List of workspaces")
+    total: int = Field(..., description="Total number of workspaces")
 
 
-# ==================== INTEGRATION SCHEMAS ====================
-
-
-class WorkspaceIntegration(BaseModel):
-    integration_type: str = Field(..., max_length=50)
-    config: dict[str, Any]
-    is_enabled: bool = True
-
-
-class IntegrationResponse(BaseModel):
-    id: str
-    workspace_id: str
-    integration_type: str
-    config: dict[str, Any]
-    is_enabled: bool
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-    
-    @validator("id", "workspace_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
+# Re-export for compatibility from response_models.py
+WorkspacesResponse = WorkspaceResponse

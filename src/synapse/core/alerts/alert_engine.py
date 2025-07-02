@@ -15,7 +15,9 @@ from enum import Enum
 
 from synapse.core.email.service import EmailService
 from synapse.core.websockets.manager import ConnectionManager
-from synapse.models.analytics import AnalyticsAlert, AnalyticsEvent, AnalyticsMetric
+from synapse.models.analytics_alert import AnalyticsAlert
+from synapse.models.analytics_event import AnalyticsEvent
+from synapse.models.analytics_metric import AnalyticsMetric
 from synapse.models.user import User
 
 
@@ -24,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class AlertSeverity(Enum):
     """Alert severity levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -32,6 +35,7 @@ class AlertSeverity(Enum):
 
 class AlertCondition(Enum):
     """Alert condition types"""
+
     GREATER_THAN = "greater_than"
     LESS_THAN = "less_than"
     EQUALS = "equals"
@@ -42,6 +46,7 @@ class AlertCondition(Enum):
 
 class NotificationChannel(Enum):
     """Available notification channels"""
+
     EMAIL = "email"
     WEBSOCKET = "websocket"
     WEBHOOK = "webhook"
@@ -51,6 +56,7 @@ class NotificationChannel(Enum):
 @dataclass
 class AlertTrigger:
     """Represents an alert trigger event"""
+
     alert_id: str
     metric_name: str
     current_value: float
@@ -80,7 +86,7 @@ class AlertEvaluationEngine:
         """Start the alert evaluation engine"""
         self.running = True
         logger.info("Alert evaluation engine started")
-        
+
         while self.running:
             try:
                 await self._evaluate_all_alerts()
@@ -97,13 +103,15 @@ class AlertEvaluationEngine:
     async def _evaluate_all_alerts(self):
         """Evaluate all active alerts"""
         from synapse.database import get_db_session
-        
+
         try:
             with get_db_session() as db:
                 # Get all active alerts
-                active_alerts = db.query(AnalyticsAlert).filter(
-                    AnalyticsAlert.is_active == True
-                ).all()
+                active_alerts = (
+                    db.query(AnalyticsAlert)
+                    .filter(AnalyticsAlert.is_active == True)
+                    .all()
+                )
 
                 logger.debug(f"Evaluating {len(active_alerts)} active alerts")
 
@@ -126,7 +134,9 @@ class AlertEvaluationEngine:
             time_window = condition.get("time_window_minutes", 5)
 
             if not all([metric_name, threshold, condition_type]):
-                logger.warning(f"Alert {alert.id} has incomplete condition configuration")
+                logger.warning(
+                    f"Alert {alert.id} has incomplete condition configuration"
+                )
                 return
 
             # Get recent metric data
@@ -134,11 +144,17 @@ class AlertEvaluationEngine:
             start_time = end_time - timedelta(minutes=time_window)
 
             current_value = await self._get_metric_value(
-                db, metric_name, start_time, end_time, condition.get("aggregation", "avg")
+                db,
+                metric_name,
+                start_time,
+                end_time,
+                condition.get("aggregation", "avg"),
             )
 
             if current_value is None:
-                logger.debug(f"No metric data found for {metric_name} in alert {alert.id}")
+                logger.debug(
+                    f"No metric data found for {metric_name} in alert {alert.id}"
+                )
                 return
 
             # Evaluate condition
@@ -155,7 +171,9 @@ class AlertEvaluationEngine:
         except Exception as e:
             logger.error(f"Error evaluating alert {alert.id}: {e}")
 
-    def _evaluate_condition(self, current_value: float, threshold: float, condition_type: str) -> bool:
+    def _evaluate_condition(
+        self, current_value: float, threshold: float, condition_type: str
+    ) -> bool:
         """Evaluate if alert condition is met"""
         if condition_type == AlertCondition.GREATER_THAN.value:
             return current_value > threshold
@@ -170,12 +188,12 @@ class AlertEvaluationEngine:
             return False
 
     async def _get_metric_value(
-        self, 
-        db: Session, 
-        metric_name: str, 
-        start_time: datetime, 
+        self,
+        db: Session,
+        metric_name: str,
+        start_time: datetime,
         end_time: datetime,
-        aggregation: str = "avg"
+        aggregation: str = "avg",
     ) -> Optional[float]:
         """Get aggregated metric value for the specified time window"""
         try:
@@ -183,22 +201,32 @@ class AlertEvaluationEngine:
                 and_(
                     AnalyticsMetric.metric_name == metric_name,
                     AnalyticsMetric.timestamp >= start_time,
-                    AnalyticsMetric.timestamp <= end_time
+                    AnalyticsMetric.timestamp <= end_time,
                 )
             )
 
             if aggregation == "avg":
-                result = query.with_entities(func.avg(AnalyticsMetric.metric_value)).scalar()
+                result = query.with_entities(
+                    func.avg(AnalyticsMetric.metric_value)
+                ).scalar()
             elif aggregation == "sum":
-                result = query.with_entities(func.sum(AnalyticsMetric.metric_value)).scalar()
+                result = query.with_entities(
+                    func.sum(AnalyticsMetric.metric_value)
+                ).scalar()
             elif aggregation == "max":
-                result = query.with_entities(func.max(AnalyticsMetric.metric_value)).scalar()
+                result = query.with_entities(
+                    func.max(AnalyticsMetric.metric_value)
+                ).scalar()
             elif aggregation == "min":
-                result = query.with_entities(func.min(AnalyticsMetric.metric_value)).scalar()
+                result = query.with_entities(
+                    func.min(AnalyticsMetric.metric_value)
+                ).scalar()
             elif aggregation == "count":
                 result = query.count()
             else:
-                result = query.with_entities(func.avg(AnalyticsMetric.metric_value)).scalar()
+                result = query.with_entities(
+                    func.avg(AnalyticsMetric.metric_value)
+                ).scalar()
 
             return float(result) if result is not None else None
 
@@ -207,17 +235,13 @@ class AlertEvaluationEngine:
             return None
 
     async def _trigger_alert(
-        self, 
-        db: Session, 
-        alert: AnalyticsAlert, 
-        current_value: float, 
-        threshold: float
+        self, db: Session, alert: AnalyticsAlert, current_value: float, threshold: float
     ):
         """Trigger alert and send notifications"""
         try:
             # Check if alert was recently triggered (avoid spam)
             cooldown_minutes = alert.condition.get("cooldown_minutes", 15)
-            
+
             if alert.last_triggered_at:
                 time_since_last = datetime.utcnow() - alert.last_triggered_at
                 if time_since_last.total_seconds() < (cooldown_minutes * 60):
@@ -225,7 +249,9 @@ class AlertEvaluationEngine:
                     return
 
             # Determine severity
-            severity = self._determine_severity(current_value, threshold, alert.condition)
+            severity = self._determine_severity(
+                current_value, threshold, alert.condition
+            )
 
             # Create alert trigger
             trigger = AlertTrigger(
@@ -237,7 +263,7 @@ class AlertEvaluationEngine:
                 severity=severity,
                 message=self._generate_alert_message(alert, current_value, threshold),
                 triggered_at=datetime.utcnow(),
-                user_id=str(alert.owner_id)
+                user_id=str(alert.owner_id),
             )
 
             # Update alert last triggered time
@@ -252,12 +278,14 @@ class AlertEvaluationEngine:
         except Exception as e:
             logger.error(f"Error triggering alert {alert.id}: {e}")
 
-    def _determine_severity(self, current_value: float, threshold: float, condition: Dict) -> AlertSeverity:
+    def _determine_severity(
+        self, current_value: float, threshold: float, condition: Dict
+    ) -> AlertSeverity:
         """Determine alert severity based on how much the threshold is exceeded"""
         try:
             # Get severity thresholds from condition or use defaults
             severity_config = condition.get("severity", {})
-            
+
             # Calculate how much the threshold is exceeded (as percentage)
             if threshold == 0:
                 excess_percentage = 100.0
@@ -278,16 +306,18 @@ class AlertEvaluationEngine:
             logger.error(f"Error determining severity: {e}")
             return AlertSeverity.MEDIUM
 
-    def _generate_alert_message(self, alert: AnalyticsAlert, current_value: float, threshold: float) -> str:
+    def _generate_alert_message(
+        self, alert: AnalyticsAlert, current_value: float, threshold: float
+    ) -> str:
         """Generate human-readable alert message"""
         condition_type = alert.condition.get("condition")
         metric_name = alert.condition.get("metric_name")
-        
+
         condition_text = {
             "greater_than": "exceeded",
             "less_than": "fell below",
             "equals": "equals",
-            "not_equals": "does not equal"
+            "not_equals": "does not equal",
         }.get(condition_type, "met condition for")
 
         return (
@@ -295,7 +325,9 @@ class AlertEvaluationEngine:
             f"Current value: {current_value:.2f}, Threshold: {threshold:.2f}"
         )
 
-    async def _send_notifications(self, db: Session, alert: AnalyticsAlert, trigger: AlertTrigger):
+    async def _send_notifications(
+        self, db: Session, alert: AnalyticsAlert, trigger: AlertTrigger
+    ):
         """Send notifications through configured channels"""
         notification_config = alert.notification_config
         channels = notification_config.get("channels", ["email"])
@@ -307,13 +339,19 @@ class AlertEvaluationEngine:
                 elif channel == NotificationChannel.WEBSOCKET.value:
                     await self._send_websocket_notification(alert, trigger)
                 elif channel == NotificationChannel.WEBHOOK.value:
-                    await self._send_webhook_notification(alert, trigger, notification_config)
+                    await self._send_webhook_notification(
+                        alert, trigger, notification_config
+                    )
                 else:
                     logger.warning(f"Unknown notification channel: {channel}")
             except Exception as e:
-                logger.error(f"Error sending {channel} notification for alert {alert.id}: {e}")
+                logger.error(
+                    f"Error sending {channel} notification for alert {alert.id}: {e}"
+                )
 
-    async def _send_email_notification(self, db: Session, alert: AnalyticsAlert, trigger: AlertTrigger):
+    async def _send_email_notification(
+        self, db: Session, alert: AnalyticsAlert, trigger: AlertTrigger
+    ):
         """Send email notification"""
         try:
             # Get user email
@@ -323,7 +361,7 @@ class AlertEvaluationEngine:
                 return
 
             subject = f"🚨 Alert Triggered: {alert.name}"
-            
+
             content = f"""
             <div style="margin-bottom: 20px;">
                 <h3>Alert Details</h3>
@@ -350,7 +388,7 @@ class AlertEvaluationEngine:
                 title="Alert Triggered",
                 content=content,
                 user_name=user.full_name or user.email,
-                subject=subject
+                subject=subject,
             )
 
             logger.info(f"Email notification sent for alert {alert.id} to {user.email}")
@@ -358,7 +396,9 @@ class AlertEvaluationEngine:
         except Exception as e:
             logger.error(f"Error sending email notification: {e}")
 
-    async def _send_websocket_notification(self, alert: AnalyticsAlert, trigger: AlertTrigger):
+    async def _send_websocket_notification(
+        self, alert: AnalyticsAlert, trigger: AlertTrigger
+    ):
         """Send real-time websocket notification"""
         try:
             notification_data = {
@@ -370,12 +410,11 @@ class AlertEvaluationEngine:
                 "current_value": trigger.current_value,
                 "threshold": trigger.threshold,
                 "message": trigger.message,
-                "triggered_at": trigger.triggered_at.isoformat()
+                "triggered_at": trigger.triggered_at.isoformat(),
             }
 
             await self.websocket_manager.send_to_user(
-                str(alert.owner_id), 
-                notification_data
+                str(alert.owner_id), notification_data
             )
 
             logger.info(f"WebSocket notification sent for alert {alert.id}")
@@ -383,11 +422,13 @@ class AlertEvaluationEngine:
         except Exception as e:
             logger.error(f"Error sending WebSocket notification: {e}")
 
-    async def _send_webhook_notification(self, alert: AnalyticsAlert, trigger: AlertTrigger, config: Dict):
+    async def _send_webhook_notification(
+        self, alert: AnalyticsAlert, trigger: AlertTrigger, config: Dict
+    ):
         """Send webhook notification"""
         try:
             import aiohttp
-            
+
             webhook_url = config.get("webhook_url")
             if not webhook_url:
                 logger.warning(f"No webhook URL configured for alert {alert.id}")
@@ -403,26 +444,32 @@ class AlertEvaluationEngine:
                 "condition": trigger.condition,
                 "message": trigger.message,
                 "triggered_at": trigger.triggered_at.isoformat(),
-                "user_id": trigger.user_id
+                "user_id": trigger.user_id,
             }
 
             headers = {"Content-Type": "application/json"}
-            
+
             # Add custom headers if configured
             custom_headers = config.get("webhook_headers", {})
             headers.update(custom_headers)
 
             async with aiohttp.ClientSession() as session:
-                async with session.post(webhook_url, json=payload, headers=headers) as response:
+                async with session.post(
+                    webhook_url, json=payload, headers=headers
+                ) as response:
                     if response.status == 200:
                         logger.info(f"Webhook notification sent for alert {alert.id}")
                     else:
-                        logger.error(f"Webhook failed with status {response.status} for alert {alert.id}")
+                        logger.error(
+                            f"Webhook failed with status {response.status} for alert {alert.id}"
+                        )
 
         except Exception as e:
             logger.error(f"Error sending webhook notification: {e}")
 
-    async def _check_alert_resolution(self, db: Session, alert: AnalyticsAlert, current_value: float):
+    async def _check_alert_resolution(
+        self, db: Session, alert: AnalyticsAlert, current_value: float
+    ):
         """Check if a previously triggered alert should be resolved"""
         try:
             # This is a placeholder for alert resolution logic
@@ -437,11 +484,15 @@ class AlertEvaluationEngine:
     async def test_alert_evaluation(self, alert_id: str) -> Dict[str, Any]:
         """Test alert evaluation for a specific alert (for debugging)"""
         from synapse.database import get_db_session
-        
+
         try:
             with get_db_session() as db:
-                alert = db.query(AnalyticsAlert).filter(AnalyticsAlert.id == alert_id).first()
-                
+                alert = (
+                    db.query(AnalyticsAlert)
+                    .filter(AnalyticsAlert.id == alert_id)
+                    .first()
+                )
+
                 if not alert:
                     return {"error": "Alert not found"}
 
@@ -454,7 +505,11 @@ class AlertEvaluationEngine:
                 start_time = end_time - timedelta(minutes=time_window)
 
                 current_value = await self._get_metric_value(
-                    db, metric_name, start_time, end_time, condition.get("aggregation", "avg")
+                    db,
+                    metric_name,
+                    start_time,
+                    end_time,
+                    condition.get("aggregation", "avg"),
                 )
 
                 should_trigger = False
@@ -472,7 +527,7 @@ class AlertEvaluationEngine:
                     "condition": condition.get("condition"),
                     "should_trigger": should_trigger,
                     "time_window": time_window,
-                    "evaluation_time": datetime.utcnow().isoformat()
+                    "evaluation_time": datetime.utcnow().isoformat(),
                 }
 
         except Exception as e:
@@ -481,4 +536,4 @@ class AlertEvaluationEngine:
 
 
 # Global instance
-alert_engine = AlertEvaluationEngine() 
+alert_engine = AlertEvaluationEngine()

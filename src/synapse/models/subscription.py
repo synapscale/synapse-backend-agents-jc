@@ -1,224 +1,153 @@
-"""
-Modelos de Planos e Assinaturas
-Sistema de planos para controle de permissões multi-workspace
-"""
+"""Subscription Model"""
 
-from sqlalchemy import (
-    Column,
-    Integer,
-    String,
-    Text,
-    Boolean,
-    DateTime,
-    Float,
-    ForeignKey,
-    JSON,
-    Enum,
-    text,
-)
+from sqlalchemy import Column, String, DateTime, Boolean, Integer, ForeignKey, Numeric
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
-from datetime import datetime
-from enum import Enum as PyEnum
-from synapse.database import Base
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
+
+from synapse.database import Base
 
 
-class PlanType(PyEnum):
-    """Tipos de plano"""
-    FREE = "free"
-    BASIC = "basic"
-    PRO = "pro"
-    ENTERPRISE = "enterprise"
-
-
-class SubscriptionStatus(PyEnum):
-    """Status de assinatura"""
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    CANCELLED = "cancelled"
-    EXPIRED = "expired"
-    TRIAL = "trial"
-
-
-class Plan(Base):
-    """
-    Modelo para planos de assinatura
-    """
-    __tablename__ = "plans"
-
-    # Identificação
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(100), nullable=False)
-    slug = Column(String(50), unique=True, nullable=False)
-    type = Column(Enum(PlanType, values_callable=lambda x: [e.value for e in x]), nullable=False)
-
-    # Informações básicas
-    description = Column(Text)
-    price_monthly = Column(Float, default=0.0, nullable=False)
-    price_yearly = Column(Float, default=0.0, nullable=False)
-
-    # Limites e permissões
-    max_workspaces = Column(Integer, default=1, nullable=False)
-    max_members_per_workspace = Column(Integer, default=1, nullable=False)
-    max_projects_per_workspace = Column(Integer, default=10, nullable=False)
-    max_storage_mb = Column(Integer, default=100, nullable=False)
-    max_executions_per_month = Column(Integer, default=100, nullable=False)
+class Subscription(Base):
+    """Tenant subscriptions to plans"""
     
-    # Recursos
-    allow_collaborative_workspaces = Column(Boolean, default=False, nullable=False)
-    allow_custom_domains = Column(Boolean, default=False, nullable=False)
-    allow_api_access = Column(Boolean, default=False, nullable=False)
-    allow_advanced_analytics = Column(Boolean, default=False, nullable=False)
-    allow_priority_support = Column(Boolean, default=False, nullable=False)
-    
-    # Configurações avançadas
-    features = Column(JSON, default=dict)  # Features específicas do plano
-    restrictions = Column(JSON, default=dict)  # Restrições específicas
+    __tablename__ = "subscriptions"
+    __table_args__ = {"schema": "synapscale_db"}
 
-    # Status
-    is_active = Column(Boolean, default=True, nullable=False)
-    is_public = Column(Boolean, default=True, nullable=False)  # Visível para novos usuários
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=False)
+    plan_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.plans.id"), nullable=False)
+    provider_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.payment_providers.id"), nullable=True)
+    external_subscription_id = Column(String(255), nullable=True)
+    status = Column(String(50), nullable=False, server_default="active")
+    current_period_start = Column(DateTime(timezone=True), nullable=True)
+    current_period_end = Column(DateTime(timezone=True), nullable=True)
+    trial_start = Column(DateTime(timezone=True), nullable=True)
+    trial_end = Column(DateTime(timezone=True), nullable=True)
+    cancel_at_period_end = Column(Boolean, nullable=True, server_default="false")
+    canceled_at = Column(DateTime(timezone=True), nullable=True)
+    ended_at = Column(DateTime(timezone=True), nullable=True)
+    payment_method_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.payment_methods.id"), nullable=True)
+    coupon_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.coupons.id"), nullable=True)
+    quantity = Column(Integer, nullable=True, server_default="1")
+    discount_amount = Column(Numeric, nullable=True, server_default="0")
+    tax_percent = Column(Numeric, nullable=True, server_default="0")
+    subscription_metadata = Column("metadata", JSONB, nullable=True, server_default="{}")
+    created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
+    updated_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
 
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
-    # Relacionamentos
-    subscriptions = relationship("UserSubscription", back_populates="plan")
-
-    def __repr__(self):
-        return f"<Plan(id={self.id}, name='{self.name}', type={self.type})>"
-
-    def to_dict(self) -> dict:
-        return {
-            "id": str(self.id) if self.id else None,
-            "name": self.name,
-            "slug": self.slug,
-            "type": self.type.value if self.type else None,
-            "description": self.description,
-            "price_monthly": self.price_monthly,
-            "price_yearly": self.price_yearly,
-            "max_workspaces": self.max_workspaces,
-            "max_members_per_workspace": self.max_members_per_workspace,
-            "max_projects_per_workspace": self.max_projects_per_workspace,
-            "max_storage_mb": self.max_storage_mb,
-            "max_executions_per_month": self.max_executions_per_month,
-            "allow_collaborative_workspaces": self.allow_collaborative_workspaces,
-            "allow_custom_domains": self.allow_custom_domains,
-            "allow_api_access": self.allow_api_access,
-            "allow_advanced_analytics": self.allow_advanced_analytics,
-            "allow_priority_support": self.allow_priority_support,
-            "features": self.features,
-            "restrictions": self.restrictions,
-            "is_active": self.is_active,
-            "is_public": self.is_public,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-        }
-
-
-class UserSubscription(Base):
-    """
-    Modelo para assinaturas de usuários
-    """
-    __tablename__ = "user_subscriptions"
-
-    # Identificação
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE"), nullable=False)
-    plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=False)
-
-    # Status da assinatura
-    status = Column(Enum(SubscriptionStatus, values_callable=lambda x: [e.value for e in x]), nullable=False, default=SubscriptionStatus.ACTIVE)
-    
-    # Datas importantes
-    started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    expires_at = Column(DateTime(timezone=True))
-    cancelled_at = Column(DateTime(timezone=True))
-    
-    # Informações de pagamento
-    payment_method = Column(String(50))  # credit_card, paypal, bank_transfer, etc.
-    payment_provider = Column(String(50))  # stripe, paypal, etc.
-    external_subscription_id = Column(String(255))  # ID da assinatura no provedor
-    
-    # Billing
-    billing_cycle = Column(String(20), default="monthly")  # monthly, yearly
-    current_period_start = Column(DateTime(timezone=True))
-    current_period_end = Column(DateTime(timezone=True))
-    
-    # Uso atual (para controle de limites)
-    current_workspaces = Column(Integer, default=0, nullable=False)
-    current_storage_mb = Column(Float, default=0.0, nullable=False)
-    current_executions_this_month = Column(Integer, default=0, nullable=False)
-    
-    # Metadata
-    subscription_metadata = Column(JSON, default=dict)
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
-    # Relacionamentos
-    user = relationship("User", back_populates="subscription")
+    # Relationships
+    tenant = relationship("Tenant", back_populates="subscriptions")
     plan = relationship("Plan", back_populates="subscriptions")
+    provider = relationship("PaymentProvider", back_populates="subscriptions")
+    payment_method = relationship("PaymentMethod", back_populates="subscriptions")
+    coupon = relationship("Coupon", back_populates="subscriptions")
 
-    def __repr__(self):
-        return f"<UserSubscription(id={self.id}, user_id={self.user_id}, plan_id={self.plan_id}, status={self.status})>"
-
-    @property
-    def is_active(self) -> bool:
-        """Verifica se a assinatura está ativa"""
-        if self.status != SubscriptionStatus.ACTIVE:
-            return False
-        
-        if self.expires_at and self.expires_at < datetime.now():
-            return False
-            
-        return True
+    def __str__(self):
+        return f"Subscription(tenant_id={self.tenant_id}, plan_id={self.plan_id}, status={self.status})"
 
     @property
-    def days_until_expiry(self) -> int:
-        """Dias até a expiração"""
-        if not self.expires_at:
-            return -1
+    def meta_data(self):
+        """Alias for subscription_metadata for API compatibility"""
+        return self.subscription_metadata
+
+    @meta_data.setter
+    def meta_data(self, value):
+        """Setter for meta_data that updates subscription_metadata"""
+        self.subscription_metadata = value
+
+    @property
+    def is_active(self):
+        """Check if subscription is currently active"""
+        return self.status == "active" and not self.is_canceled
+
+    @property
+    def is_canceled(self):
+        """Check if subscription is canceled"""
+        return self.canceled_at is not None or self.ended_at is not None
+
+    @property
+    def is_in_trial(self):
+        """Check if subscription is in trial period"""
+        if not self.trial_start or not self.trial_end:
+            return False
+        now = func.now()
+        return self.trial_start <= now <= self.trial_end
+
+    @property
+    def days_until_renewal(self):
+        """Get days until next renewal"""
+        if not self.current_period_end:
+            return None
         
-        delta = self.expires_at - datetime.now()
-        return delta.days
+        from datetime import datetime
+        if isinstance(self.current_period_end, datetime):
+            return (self.current_period_end - datetime.now()).days
+        return None
 
-    def can_create_workspace(self) -> bool:
-        """Verifica se pode criar mais workspaces"""
-        return self.current_workspaces < self.plan.max_workspaces
+    @property
+    def total_amount(self):
+        """Calculate total amount including discounts and taxes"""
+        if not hasattr(self, 'plan') or not self.plan:
+            return 0
+        
+        base_amount = float(self.plan.price or 0) * (self.quantity or 1)
+        discount = float(self.discount_amount or 0)
+        tax_rate = float(self.tax_percent or 0) / 100
+        
+        subtotal = base_amount - discount
+        tax_amount = subtotal * tax_rate
+        
+        return subtotal + tax_amount
 
-    def can_use_storage(self, additional_mb: float) -> bool:
-        """Verifica se pode usar mais armazenamento"""
-        return (self.current_storage_mb + additional_mb) <= self.plan.max_storage_mb
+    def cancel(self, immediate=False):
+        """Cancel subscription"""
+        if immediate:
+            self.status = "canceled"
+            self.canceled_at = func.current_timestamp()
+            self.ended_at = func.current_timestamp()
+        else:
+            self.cancel_at_period_end = True
+            self.canceled_at = func.current_timestamp()
 
-    def can_execute_workflow(self) -> bool:
-        """Verifica se pode executar mais workflows este mês"""
-        return self.current_executions_this_month < self.plan.max_executions_per_month
+    def reactivate(self):
+        """Reactivate a canceled subscription"""
+        self.status = "active"
+        self.cancel_at_period_end = False
+        self.canceled_at = None
+        self.ended_at = None
+        self.updated_at = func.current_timestamp()
 
-    def to_dict(self) -> dict:
+    @classmethod
+    def get_active_subscription(cls, session, tenant_id):
+        """Get active subscription for tenant"""
+        return session.query(cls).filter(
+            cls.tenant_id == tenant_id,
+            cls.status == "active"
+        ).first()
+
+    def to_dict(self):
+        """Convert subscription to dictionary"""
         return {
-            "id": str(self.id) if self.id else None,
-            "user_id": str(self.user_id) if self.user_id else None,
-            "plan_id": str(self.plan_id) if self.plan_id else None,
-            "plan": self.plan.to_dict() if self.plan else None,
-            "status": self.status.value if self.status else None,
-            "started_at": self.started_at,
-            "expires_at": self.expires_at,
-            "cancelled_at": self.cancelled_at,
-            "payment_method": self.payment_method,
-            "payment_provider": self.payment_provider,
-            "billing_cycle": self.billing_cycle,
-            "current_period_start": self.current_period_start,
-            "current_period_end": self.current_period_end,
-            "current_workspaces": self.current_workspaces,
-            "current_storage_mb": self.current_storage_mb,
-            "current_executions_this_month": self.current_executions_this_month,
-            "is_active": self.is_active,
-            "days_until_expiry": self.days_until_expiry,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-        } 
+            "id": str(self.id),
+            "tenant_id": str(self.tenant_id),
+            "plan_id": str(self.plan_id),
+            "provider_id": str(self.provider_id) if self.provider_id else None,
+            "external_subscription_id": self.external_subscription_id,
+            "status": self.status,
+            "current_period_start": self.current_period_start.isoformat() if self.current_period_start else None,
+            "current_period_end": self.current_period_end.isoformat() if self.current_period_end else None,
+            "trial_start": self.trial_start.isoformat() if self.trial_start else None,
+            "trial_end": self.trial_end.isoformat() if self.trial_end else None,
+            "cancel_at_period_end": self.cancel_at_period_end,
+            "canceled_at": self.canceled_at.isoformat() if self.canceled_at else None,
+            "ended_at": self.ended_at.isoformat() if self.ended_at else None,
+            "payment_method_id": str(self.payment_method_id) if self.payment_method_id else None,
+            "coupon_id": str(self.coupon_id) if self.coupon_id else None,
+            "quantity": self.quantity,
+            "discount_amount": float(self.discount_amount) if self.discount_amount else 0,
+            "tax_percent": float(self.tax_percent) if self.tax_percent else 0,
+            "metadata": self.subscription_metadata,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }

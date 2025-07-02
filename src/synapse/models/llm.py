@@ -2,7 +2,18 @@
 Modelo LLM para catálogo de modelos LLM disponíveis
 """
 
-from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, JSON, UUID, text
+from sqlalchemy import (
+    Column,
+    String,
+    Float,
+    Integer,
+    Boolean,
+    DateTime,
+    JSON,
+    UUID,
+    text,
+    ForeignKey,
+)
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
@@ -21,27 +32,46 @@ class LLM(Base):
     model_version = Column(String(50), nullable=True)
 
     # Custos
-    cost_per_token_input = Column(Float, nullable=False, server_default=text('0.0'))
-    cost_per_token_output = Column(Float, nullable=False, server_default=text('0.0'))
+    cost_per_token_input = Column(Float, nullable=False, server_default=text("0.0"))
+    cost_per_token_output = Column(Float, nullable=False, server_default=text("0.0"))
 
     # Capacidades
     max_tokens_supported = Column(Integer, nullable=True)
-    supports_function_calling = Column(Boolean, server_default=text('false'))
-    supports_vision = Column(Boolean, server_default=text('false'))
-    supports_streaming = Column(Boolean, server_default=text('true'))
+    supports_function_calling = Column(Boolean, server_default=text("false"))
+    supports_vision = Column(Boolean, server_default=text("false"))
+    supports_streaming = Column(Boolean, server_default=text("true"))
     context_window = Column(Integer, nullable=True)
 
     # Status e metadata
-    is_active = Column(Boolean, server_default=text('true'), index=True)
-    llm_metadata = Column(JSON, nullable=True)
+    is_active = Column(Boolean, server_default=text("true"), index=True)
+    llm_metadata = Column("metadata", JSON, nullable=True)
+    
+    # Campos adicionais da estrutura real do banco
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=False,
+    )
+    status = Column(String(20), default="active")
+    health_status = Column(String(20), default="healthy")
+    response_time_avg_ms = Column(Integer, default=0)
+    availability_percentage = Column(Integer, default=100)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     # Relacionamentos
     llms_conversations_turns = relationship("ConversationLLM", back_populates="llm")
     usage_logs = relationship("UsageLog", back_populates="llm")
+    agent_models = relationship("AgentModel", back_populates="llm", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<LLM(name={self.name}, provider={self.provider})>"
@@ -63,7 +93,9 @@ class LLM(Base):
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """Calcula o custo total para determinado uso"""
-        return (input_tokens * self.cost_per_token_input) + (output_tokens * self.cost_per_token_output)
+        return (input_tokens * self.cost_per_token_input) + (
+            output_tokens * self.cost_per_token_output
+        )
 
     def to_dict(self):
         """Converte para dicionário"""
@@ -91,11 +123,11 @@ class LLM(Base):
     @classmethod
     def get_by_provider_and_name(cls, db_session, provider: str, name: str):
         """Busca LLM por provedor e nome"""
-        return db_session.query(cls).filter(
-            cls.provider == provider,
-            cls.name == name,
-            cls.is_active == True
-        ).first()
+        return (
+            db_session.query(cls)
+            .filter(cls.provider == provider, cls.name == name, cls.is_active == True)
+            .first()
+        )
 
     @classmethod
     def get_active_llms(cls, db_session, provider: str = None):
@@ -111,4 +143,4 @@ class LLM(Base):
         query = db_session.query(cls).filter(cls.is_active == True)
         if provider:
             query = query.filter(cls.provider == provider)
-        return query.order_by(cls.cost_per_token_input.asc()).first() 
+        return query.order_by(cls.cost_per_token_input.asc()).first()

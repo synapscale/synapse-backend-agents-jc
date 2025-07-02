@@ -1,90 +1,94 @@
-"""
-Modelo MessageFeedback para feedback de mensagens
-"""
+"""Message Feedback Model"""
 
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, JSON, ForeignKey, text
-from sqlalchemy.sql import func
+from sqlalchemy import Column, String, Text, Integer, Boolean, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
-import uuid
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
 
 from synapse.database import Base
 
 
 class MessageFeedback(Base):
-    __tablename__ = "llms_message_feedbacks"
+    """User feedback on LLM messages"""
+    
+    __tablename__ = "message_feedbacks"
     __table_args__ = {"schema": "synapscale_db"}
 
-    # Identificação
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms_messages.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE"), nullable=False, index=True)
-
-    # Tipo e valor do rating
-    rating_type = Column(String(20), nullable=False, index=True)  # thumbs_up, thumbs_down, star_rating
-    rating_value = Column(Integer, nullable=True)  # 1-5 para stars, 1/-1 para thumbs
-
-    # Feedback textual
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    message_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms_messages.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False)
+    rating_type = Column(String(20), nullable=False)  # thumbs_up, thumbs_down, star_rating, etc.
+    rating_value = Column(Integer, nullable=True)  # 1-5 for star ratings, null for thumbs
     feedback_text = Column(Text, nullable=True)
-    feedback_category = Column(String(50), nullable=True, index=True)  # helpful, accurate, creative, etc
+    feedback_category = Column(String(50), nullable=True)  # accuracy, helpfulness, clarity, etc.
     improvement_suggestions = Column(Text, nullable=True)
+    is_public = Column(Boolean, nullable=True, server_default="false")
+    feedback_metadata = Column("feedback_metadata", JSONB, nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True)
 
-    # Configurações
-    is_public = Column(Boolean, server_default=text('false'))
-    feedback_metadata = Column(JSON, nullable=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-
-    # Relacionamentos
-    message = relationship("Message", back_populates="message_feedbacks")
+    # Relationships
+    message = relationship("Message", back_populates="feedbacks")
     user = relationship("User", back_populates="message_feedbacks")
+    tenant = relationship("Tenant", back_populates="message_feedbacks")
 
-    def __repr__(self):
-        return f"<MessageFeedback(message_id={self.message_id}, rating_type={self.rating_type}, rating_value={self.rating_value})>"
+    def __str__(self):
+        return f"MessageFeedback(message_id={self.message_id}, rating={self.rating_type})"
 
     @property
     def is_positive(self):
-        """Verifica se o feedback é positivo"""
+        """Check if feedback is positive"""
         if self.rating_type == "thumbs_up":
-            return self.rating_value == 1
-        elif self.rating_type == "star_rating":
+            return True
+        elif self.rating_type == "thumbs_down":
+            return False
+        elif self.rating_type == "star_rating" and self.rating_value:
             return self.rating_value >= 4
-        return False
+        return None
 
     @property
-    def is_negative(self):
-        """Verifica se o feedback é negativo"""
-        if self.rating_type == "thumbs_down":
-            return self.rating_value == -1
-        elif self.rating_type == "star_rating":
-            return self.rating_value <= 2
-        return False
+    def rating_display(self):
+        """Get human-readable rating display"""
+        if self.rating_type == "thumbs_up":
+            return "👍 Positive"
+        elif self.rating_type == "thumbs_down":
+            return "👎 Negative"
+        elif self.rating_type == "star_rating" and self.rating_value:
+            return f"⭐ {self.rating_value}/5"
+        return self.rating_type
 
-    @property
-    def is_neutral(self):
-        """Verifica se o feedback é neutro"""
-        if self.rating_type == "star_rating":
-            return self.rating_value == 3
-        return False
+    def update_feedback(self, rating_value=None, feedback_text=None, category=None):
+        """Update feedback details"""
+        if rating_value is not None:
+            self.rating_value = rating_value
+        if feedback_text is not None:
+            self.feedback_text = feedback_text
+        if category is not None:
+            self.feedback_category = category
+        self.updated_at = func.now()
 
-    def to_dict(self):
-        """Converte para dicionário"""
+    @classmethod
+    def get_message_feedback_summary(cls, session, message_id):
+        """Get feedback summary for a message"""
+        feedbacks = session.query(cls).filter(cls.message_id == message_id).all()
+        
+        if not feedbacks:
+            return {"total": 0}
+        
+        positive = sum(1 for f in feedbacks if f.is_positive)
+        negative = sum(1 for f in feedbacks if f.is_positive is False)
+        neutral = len(feedbacks) - positive - negative
+        
+        avg_rating = None
+        star_ratings = [f.rating_value for f in feedbacks if f.rating_type == "star_rating" and f.rating_value]
+        if star_ratings:
+            avg_rating = sum(star_ratings) / len(star_ratings)
+        
         return {
-            "id": str(self.id),
-            "message_id": str(self.message_id),
-            "user_id": str(self.user_id),
-            "rating_type": self.rating_type,
-            "rating_value": self.rating_value,
-            "feedback_text": self.feedback_text,
-            "feedback_category": self.feedback_category,
-            "improvement_suggestions": self.improvement_suggestions,
-            "is_public": self.is_public,
-            "feedback_metadata": self.feedback_metadata,
-            "is_positive": self.is_positive,
-            "is_negative": self.is_negative,
-            "is_neutral": self.is_neutral,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-        } 
+            "total": len(feedbacks),
+            "positive": positive,
+            "negative": negative,
+            "neutral": neutral,
+            "average_rating": avg_rating
+        }

@@ -14,13 +14,13 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
     """
     Middleware de Rate Limiting para FastAPI
     """
-    
+
     def __init__(self, app, max_requests: int = 100, window_seconds: int = 60):
         super().__init__(app)
         self.max_requests = max_requests
         self.window_seconds = window_seconds
         self.request_log: Dict[str, List[float]] = {}
-    
+
     async def dispatch(self, request: Request, call_next):
         # Por enquanto apenas um passthrough
         # TODO: Implementar lógica de rate limiting real

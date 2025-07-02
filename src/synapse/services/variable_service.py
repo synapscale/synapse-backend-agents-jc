@@ -23,7 +23,11 @@ from synapse.schemas.user_variable import (
     UserVariableStats,
     UserVariableValidation,
 )
-from synapse.exceptions import NotFoundException, ForbiddenException, BadRequestException
+from synapse.exceptions import (
+    NotFoundException,
+    ForbiddenException,
+    BadRequestException,
+)
 
 logger = logging.getLogger(__name__)
 

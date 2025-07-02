@@ -4,8 +4,12 @@ Módulo de integração com LLMs do SynapScale
 
 # Import services from the main services module
 try:
-    from synapse.services.llm_service import UnifiedLLMService, get_llm_service, get_llm_service_direct
-    
+    from synapse.services.llm_service import (
+        UnifiedLLMService,
+        get_llm_service,
+        get_llm_service_direct,
+    )
+
     # Use UnifiedLLMService as the main service
     llm_service = get_llm_service_direct
     print("✅ UnifiedLLMService loaded successfully (with full LLM capabilities)")
@@ -15,8 +19,8 @@ except ImportError as e:
 
 # Export services for flexibility
 __all__ = [
-    "llm_service", 
+    "llm_service",
     "UnifiedLLMService",
     "get_llm_service",
-    "get_llm_service_direct"
+    "get_llm_service_direct",
 ]

@@ -17,15 +17,6 @@ echo -e "${BLUE}===============================================${NC}"
 # Modo de setup
 MODO="basic"  # basic ou complete
 
-# Verificar argumentos
-if [ "$1" == "--complete" ] || [ "$1" == "-c" ]; then
-    MODO="complete"
-    echo -e "${YELLOW}Executando setup completo e automatizado...${NC}"
-else
-    echo -e "${YELLOW}Executando setup básico...${NC}"
-    echo -e "Para setup completo use: ${BLUE}./setup.sh --complete${NC}"
-fi
-
 # Setup básico
 if [ "$MODO" == "basic" ]; then
     # Verificar ambiente virtual

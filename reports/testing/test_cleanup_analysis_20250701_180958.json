@@ -1,0 +1,1704 @@
+{
+  "timestamp": "2025-07-01T18:09:58.312590",
+  "summary": {
+    "total_files": 31,
+    "total_size_kb": 310.49999999999994,
+    "categories": {
+      "KEEP": 6,
+      "REMOVE": 6,
+      "REVIEW": 19
+    }
+  },
+  "files": {
+    "test_llm_endpoints.py": {
+      "category": "KEEP",
+      "reason": "Core functionality test",
+      "recommendations": [
+        "Keep - tests core functionality"
+      ],
+      "file_info": {
+        "size_bytes": 16722,
+        "size_kb": 16.3,
+        "lines": 525,
+        "last_modified": "2025-07-01T13:56:42.487451",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTest SynapScale LLM Endpoints - Vers\u00e3o Corrigida\nTesta todos os endpoints LLM com sistema de user_variables para API keys\n\"\"\"\n\nimport asyncio\nimport aiohttp\nimport json\nimport sys\nimport os\nimport time\nfrom pathlib import Path\nfrom typing import Dict, Any, Optional\n\n# Add src to Python path\nsys.path.insert(0, str(Path(__file__).parent / \"src\"))\n\n# Configurar vari\u00e1veis de ambiente para teste\nos.environ.setdefault(\"ENVIRONMENT\", \"development\")\nos.environ.setdefault(\"DEBU..."
+      },
+      "python_analysis": {
+        "functions": [
+          "print_header",
+          "print_success",
+          "print_error",
+          "print_warning",
+          "print_info"
+        ],
+        "classes": [
+          "Colors"
+        ],
+        "imports": [
+          "asyncio",
+          "aiohttp",
+          "json",
+          "sys",
+          "os",
+          "time",
+          "pathlib.Path",
+          "typing.Dict",
+          "typing.Any",
+          "typing.Optional",
+          "synapse.services.llm_service.get_llm_service",
+          "synapse.logger_config.get_logger",
+          "traceback"
+        ],
+        "function_count": 5,
+        "class_count": 1,
+        "import_count": 13,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": true,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": true
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_registration_debug.py": {
+      "category": "REMOVE",
+      "reason": "Debug/temporary file",
+      "recommendations": [
+        "Delete - appears to be debug/temporary file"
+      ],
+      "file_info": {
+        "size_bytes": 10212,
+        "size_kb": 10.0,
+        "lines": 301,
+        "last_modified": "2025-07-01T13:56:42.467202",
+        "content_preview": "\"\"\"\nDebug script para identificar problemas no registro de usu\u00e1rio\nFoco no problema do plan_id sendo None durante cria\u00e7\u00e3o de workspace\n\"\"\"\n\nimport requests\nimport json\nimport os\nimport sys\nfrom datetime import datetime\n\n# Configura\u00e7\u00f5es\nBASE_URL = \"http://localhost:8000\"\nTEST_USER = {\n    \"email\": f\"debug_user_{datetime.now().strftime('%Y%m%d_%H%M%S')}@test.com\",\n    \"username\": f\"debug_user_{datetime.now().strftime('%Y%m%d_%H%M%S')}\",\n    \"full_name\": \"Debug User Test\",\n    \"password\": \"TestPass..."
+      },
+      "python_analysis": {
+        "functions": [
+          "test_server_status",
+          "test_database_connection",
+          "test_registration",
+          "test_login",
+          "test_user_info",
+          "test_workspaces",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "requests",
+          "json",
+          "os",
+          "sys",
+          "datetime.datetime"
+        ],
+        "function_count": 7,
+        "class_count": 0,
+        "import_count": 5,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_agents_system.py": {
+      "category": "REVIEW",
+      "reason": "Test file",
+      "recommendations": [
+        "Review - assess if needed or can be consolidated"
+      ],
+      "file_info": {
+        "size_bytes": 4496,
+        "size_kb": 4.4,
+        "lines": 135,
+        "last_modified": "2025-07-01T13:56:41.639035",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTeste r\u00e1pido para verificar se o sistema de agents est\u00e1 funcionando\n\"\"\"\n\nimport os\nimport sys\n\n# Configurar vari\u00e1veis de ambiente m\u00ednimas para teste\nos.environ.setdefault(\"SECRET_KEY\", \"test-key-123\")\nos.environ.setdefault(\"JWT_SECRET_KEY\", \"test-jwt-key-123\")\nos.environ.setdefault(\"DATABASE_URL\", \"postgresql://test:test@localhost/test\")\n\n# Adicionar src ao path\nsys.path.insert(0, \"src\")\n\n\ndef test_imports():\n    \"\"\"Testa se todos os imports est\u00e3o funcionando\"\"\"\n    tr..."
+      },
+      "python_analysis": {
+        "functions": [
+          "test_imports",
+          "test_enums",
+          "test_schemas_validation",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "sys",
+          "synapse.models.agent.Agent",
+          "synapse.models.agent_tools.AgentTool",
+          "synapse.models.agent_models.AgentModel",
+          "synapse.models.agent_configurations.AgentConfiguration",
+          "synapse.models.agent_acl.AgentACL",
+          "synapse.models.agent_error_logs.AgentErrorLog",
+          "synapse.models.agent_hierarchy.AgentHierarchy",
+          "synapse.models.agent_kbs.AgentKB",
+          "synapse.models.agent_quotas.AgentQuota",
+          "synapse.models.agent_triggers.AgentTrigger",
+          "synapse.models.agent_triggers.TriggerType",
+          "synapse.models.agent_usage_metrics.AgentUsageMetric",
+          "synapse.schemas.agent_tools.AgentToolCreate",
+          "synapse.schemas.agent_tools.AgentToolResponse",
+          "synapse.schemas.agent_models.AgentModelCreate",
+          "synapse.schemas.agent_models.AgentModelResponse",
+          "synapse.schemas.agent_configurations.AgentConfigurationCreate",
+          "synapse.schemas.agent_configurations.AgentConfigurationResponse",
+          "synapse.schemas.agent_acl.AgentACLCreate",
+          "synapse.schemas.agent_acl.AgentACLResponse",
+          "synapse.schemas.agent_error_logs.AgentErrorLogCreate",
+          "synapse.schemas.agent_error_logs.AgentErrorLogResponse",
+          "synapse.schemas.agent_hierarchy.AgentHierarchyCreate",
+          "synapse.schemas.agent_hierarchy.AgentHierarchyResponse",
+          "synapse.schemas.agent_kbs.AgentKBCreate",
+          "synapse.schemas.agent_kbs.AgentKBResponse",
+          "synapse.schemas.agent_quotas.AgentQuotaCreate",
+          "synapse.schemas.agent_quotas.AgentQuotaResponse",
+          "synapse.schemas.agent_triggers.AgentTriggerCreate",
+          "synapse.schemas.agent_triggers.AgentTriggerResponse",
+          "synapse.schemas.agent_usage_metrics.AgentUsageMetricResponse",
+          "synapse.schemas.agent_usage_metrics.AgentUsageMetricSummary",
+          "synapse.models.agent_triggers.TriggerType",
+          "synapse.schemas.agent_triggers.TriggerTypeEnum",
+          "synapse.schemas.agent_tools.AgentToolCreate",
+          "uuid.uuid4"
+        ],
+        "function_count": 4,
+        "class_count": 0,
+        "import_count": 38,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "setup_test_user_api_keys.py": {
+      "category": "REVIEW",
+      "reason": "Other script",
+      "recommendations": [
+        "Review - assess purpose and necessity"
+      ],
+      "file_info": {
+        "size_bytes": 7896,
+        "size_kb": 7.7,
+        "lines": 238,
+        "last_modified": "2025-07-01T13:56:40.086401",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript para configurar um usu\u00e1rio de teste com API keys no banco de dados\nDemonstra como o sistema funciona com API keys reais armazenadas no banco\n\"\"\"\n\nimport asyncio\nimport sys\nimport os\nfrom pathlib import Path\n\n# Add src to Python path\nsys.path.insert(0, str(Path(__file__).parent / \"src\"))\n\nfrom sqlalchemy.orm import Session\nfrom synapse.database import get_db_session\nfrom synapse.services.llm_service import get_llm_service\nfrom synapse.models.user import User\nfrom..."
+      },
+      "python_analysis": {
+        "functions": [
+          "create_test_user",
+          "setup_user_api_keys",
+          "list_user_api_keys",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "asyncio",
+          "sys",
+          "os",
+          "pathlib.Path",
+          "sqlalchemy.orm.Session",
+          "synapse.database.get_db_session",
+          "synapse.services.llm_service.get_llm_service",
+          "synapse.models.user.User",
+          "synapse.models.user_variable.UserVariable",
+          "synapse.logger_config.get_logger"
+        ],
+        "function_count": 4,
+        "class_count": 0,
+        "import_count": 10,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": true,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "temp_backup.py": {
+      "category": "REMOVE",
+      "reason": "Temporary/backup file",
+      "recommendations": [
+        "Delete - temporary or backup file"
+      ],
+      "file_info": {
+        "size_bytes": 66643,
+        "size_kb": 65.1,
+        "lines": 1760,
+        "last_modified": "2025-07-01T13:56:43.618998",
+        "content_preview": "from pydantic import BaseModel, Field\nfrom typing import Optional\nimport datetime, uuid\n\n\nclass AgentConfigurations(BaseModel):\n    config_id: uuid.UUID = Field(...)\n    agent_id: uuid.UUID = Field(...)\n    version_num: int = Field(...)\n    params: dict = Field(...)\n    created_by: uuid.UUID = Field(...)\n    created_at: datetime.datetime = Field(...)\n\n\nclass Agents(BaseModel):\n    id: uuid.UUID = Field(...)\n    name: str = Field(...)\n    description: Optional[str] = Field(None)\n    is_active: bo..."
+      },
+      "python_analysis": {
+        "functions": [],
+        "classes": [
+          "AgentConfigurations",
+          "Agents",
+          "AlembicVersion",
+          "Features",
+          "KnowledgeBases",
+          "Plans",
+          "Tools",
+          "AgentErrorLogs",
+          "AgentHierarchy",
+          "AgentKbs",
+          "AgentTools",
+          "AgentTriggers",
+          "AgentUsageMetrics",
+          "PlanFeatures",
+          "Tenants",
+          "AgentQuotas",
+          "AnalyticsMetrics",
+          "BusinessMetrics",
+          "ContactLists",
+          "ContactSources",
+          "ContactTags",
+          "Llms",
+          "NodeCategories",
+          "NodeTemplates",
+          "PaymentProviders",
+          "PlanEntitlements",
+          "RbacPermissions",
+          "RbacRoles",
+          "SystemPerformanceMetrics",
+          "TenantFeatures",
+          "Users",
+          "WorkflowExecutionMetrics",
+          "AgentAcl",
+          "AgentModels",
+          "AnalyticsAlerts",
+          "AnalyticsDashboards",
+          "AnalyticsExports",
+          "AnalyticsReports",
+          "AuditLog",
+          "Campaigns",
+          "Contacts",
+          "Coupons",
+          "EmailVerificationTokens",
+          "Files",
+          "MarketplaceComponents",
+          "PasswordResetTokens",
+          "PaymentCustomers",
+          "PlanProviderMappings",
+          "ProjectCollaborators",
+          "ProjectComments",
+          "RbacRolePermissions",
+          "RefreshTokens",
+          "Tags",
+          "TemplateCollections",
+          "UserBehaviorMetrics",
+          "UserInsights",
+          "UserSubscriptions",
+          "UserTenantRoles",
+          "UserVariables",
+          "WebhookLogs",
+          "Workspaces",
+          "CampaignContacts",
+          "ComponentDownloads",
+          "ComponentPurchases",
+          "ComponentRatings",
+          "ComponentVersions",
+          "ContactEvents",
+          "ContactInteractions",
+          "ContactListMemberships",
+          "ContactNotes",
+          "ConversionJourneys",
+          "CustomReports",
+          "LlmsConversations",
+          "Nodes",
+          "PaymentMethods",
+          "Workflows",
+          "WorkspaceActivities",
+          "WorkspaceFeatures",
+          "WorkspaceInvitations",
+          "WorkspaceMembers",
+          "LlmsConversationsTurns",
+          "LlmsMessages",
+          "NodeRatings",
+          "ReportExecutions",
+          "Subscriptions",
+          "WorkflowExecutions",
+          "WorkflowNodes",
+          "WorkflowTemplates",
+          "WorkspaceProjects",
+          "AnalyticsEvents",
+          "Invoices",
+          "LlmsUsageLogs",
+          "MessageFeedbacks",
+          "NodeExecutions",
+          "ProjectVersions",
+          "TemplateDownloads",
+          "TemplateFavorites",
+          "TemplateReviews",
+          "TemplateUsage",
+          "WorkflowConnections",
+          "WorkflowExecutionQueue",
+          "BillingEvents"
+        ],
+        "imports": [
+          "pydantic.BaseModel",
+          "pydantic.Field",
+          "typing.Optional",
+          "datetime",
+          "uuid"
+        ],
+        "function_count": 0,
+        "class_count": 102,
+        "import_count": 5,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": false,
+        "has_docstrings": false
+      }
+    },
+    "validate_models_comprehensive.py": {
+      "category": "REVIEW",
+      "reason": "Validation/analysis script",
+      "recommendations": [
+        "Review - might be useful for validation"
+      ],
+      "file_info": {
+        "size_bytes": 8467,
+        "size_kb": 8.3,
+        "lines": 187,
+        "last_modified": "2025-07-01T16:18:20.558617",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nComprehensive Model Validation Script\nValidates SQLAlchemy models against database schema and checks for issues.\n\"\"\"\n\nimport sys\nimport os\nsys.path.append('/Users/joaovictormiranda/backend/synapse-backend-agents-jc')\n\nimport inspect\nfrom sqlalchemy.inspection import inspect as sqlalchemy_inspect\nfrom src.synapse.models import *\n\nclass ModelValidator:\n    def __init__(self):\n        self.issues = []\n        self.warnings = []\n        self.models = self._get_all_models()..."
+      },
+      "python_analysis": {
+        "functions": [
+          "__init__",
+          "_get_all_models",
+          "validate_table_names",
+          "validate_relationships",
+          "validate_foreign_keys",
+          "check_import_completeness",
+          "run_validation"
+        ],
+        "classes": [
+          "ModelValidator"
+        ],
+        "imports": [
+          "sys",
+          "os",
+          "inspect",
+          "sqlalchemy.inspection.inspect",
+          "src.synapse.models.*",
+          "src.synapse.models",
+          "src.synapse.models"
+        ],
+        "function_count": 7,
+        "class_count": 1,
+        "import_count": 7,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "analyze_remaining_models.py": {
+      "category": "REVIEW",
+      "reason": "Analysis script",
+      "recommendations": [
+        "Review - analysis tool that might be useful"
+      ],
+      "file_info": {
+        "size_bytes": 7255,
+        "size_kb": 7.1,
+        "lines": 139,
+        "last_modified": "2025-07-01T16:11:12.843788",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nAn\u00e1lise e prioriza\u00e7\u00e3o dos modelos restantes por categoria\n\"\"\"\n\n# Todos os 103 tabelas no banco\nALL_TABLES = [\n    'agent_acl', 'agent_configurations', 'agent_error_logs', 'agent_hierarchy', 'agent_kbs',\n    'agent_models', 'agent_quotas', 'agent_tools', 'agent_triggers', 'agent_usage_metrics',\n    'agents', 'alembic_version', 'analytics_alerts', 'analytics_dashboards', 'analytics_events',\n    'analytics_exports', 'analytics_metrics', 'analytics_reports', 'audit_log', '..."
+      },
+      "python_analysis": {
+        "functions": [
+          "categorize_remaining_models",
+          "main"
+        ],
+        "classes": [],
+        "imports": [],
+        "function_count": 2,
+        "class_count": 0,
+        "import_count": 0,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_simple_imports.py": {
+      "category": "REMOVE",
+      "reason": "Simple/basic test file",
+      "recommendations": [
+        "Delete - likely superseded by comprehensive tests"
+      ],
+      "file_info": {
+        "size_bytes": 1364,
+        "size_kb": 1.3,
+        "lines": 52,
+        "last_modified": "2025-07-01T13:56:42.306726",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTeste simples de imports sem depend\u00eancias externas\n\"\"\"\n\nimport sys\n\nsys.path.insert(0, \"src\")\n\n\ndef test_basic_imports():\n    \"\"\"Testa imports b\u00e1sicos sem inicializar database\"\"\"\n    try:\n        # Testar enums b\u00e1sicos\n        import enum\n\n        class TriggerType(enum.Enum):\n            SCHEDULE = \"schedule\"\n            EVENT = \"event\"\n            WEBHOOK = \"webhook\"\n\n        assert TriggerType.SCHEDULE.value == \"schedule\"\n        print(\"\u2705 Enums b\u00e1sicos funcionando!\"..."
+      },
+      "python_analysis": {
+        "functions": [
+          "test_basic_imports"
+        ],
+        "classes": [
+          "TriggerType",
+          "TestSchema"
+        ],
+        "imports": [
+          "sys",
+          "enum",
+          "pydantic.BaseModel",
+          "pydantic.Field",
+          "typing.Dict",
+          "typing.Any",
+          "uuid.uuid4"
+        ],
+        "function_count": 1,
+        "class_count": 2,
+        "import_count": 7,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "comprehensive_model_test.py": {
+      "category": "REVIEW",
+      "reason": "Analysis script",
+      "recommendations": [
+        "Review - analysis tool that might be useful"
+      ],
+      "file_info": {
+        "size_bytes": 5317,
+        "size_kb": 5.2,
+        "lines": 154,
+        "last_modified": "2025-07-01T17:07:02.352619",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTeste abrangente para detectar todos os problemas de modelos\n\"\"\"\n\nimport os\nimport sys\nimport glob\nimport importlib\nsys.path.insert(0, '/Users/joaovictormiranda/backend/synapse-backend-agents-jc')\n\n# Configurar env m\u00ednimas\nos.environ.setdefault('SECRET_KEY', 'test-secret-key')\nos.environ.setdefault('JWT_SECRET_KEY', 'test-jwt-secret')\nos.environ.setdefault('DATABASE_URL', 'postgresql://test:test@localhost/test')\n\ndef test_individual_model_imports():\n    \"\"\"Testar impor..."
+      },
+      "python_analysis": {
+        "functions": [
+          "test_individual_model_imports",
+          "test_reserved_words_in_action",
+          "test_relationship_conflicts",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "sys",
+          "glob",
+          "importlib",
+          "src.synapse.models.user.User",
+          "src.synapse.models.workspace.Workspace",
+          "src.synapse.models.agent.Agent",
+          "src.synapse.models.workflow.Workflow",
+          "src.synapse.models.node.Node",
+          "traceback"
+        ],
+        "function_count": 4,
+        "class_count": 0,
+        "import_count": 10,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_llm_endpoint_simple.py": {
+      "category": "REMOVE",
+      "reason": "Simple/basic test file",
+      "recommendations": [
+        "Delete - likely superseded by comprehensive tests"
+      ],
+      "file_info": {
+        "size_bytes": 1819,
+        "size_kb": 1.8,
+        "lines": 62,
+        "last_modified": "2025-07-01T13:56:42.232308",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript simples para testar o endpoint LLM models sem autentica\u00e7\u00e3o\n\"\"\"\n\nimport asyncio\nimport aiohttp\nimport json\n\nBASE_URL = \"http://localhost:8000\"\n\n\nasync def test_llm_models_simple():\n    \"\"\"Testa o endpoint /api/v1/llm/models sem autentica\u00e7\u00e3o\"\"\"\n\n    async with aiohttp.ClientSession() as session:\n        print(\"\ud83e\udd16 Testando endpoint /api/v1/llm/models...\")\n\n        async with session.get(f\"{BASE_URL}/api/v1/llm/models\") as response:\n            print(f\"Status: {respo..."
+      },
+      "python_analysis": {
+        "functions": [],
+        "classes": [],
+        "imports": [
+          "asyncio",
+          "aiohttp",
+          "json"
+        ],
+        "function_count": 0,
+        "class_count": 0,
+        "import_count": 3,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": true,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_model_validation.py": {
+      "category": "REVIEW",
+      "reason": "Model validation test",
+      "recommendations": [
+        "Review - might be consolidated with other model tests"
+      ],
+      "file_info": {
+        "size_bytes": 7379,
+        "size_kb": 7.2,
+        "lines": 158,
+        "last_modified": "2025-07-01T16:46:20.748352",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript para validar se os modelos est\u00e3o alinhados com a estrutura real do banco\n\"\"\"\n\nimport sys\nimport os\nsys.path.insert(0, '/Users/joaovictormiranda/backend/synapse-backend-agents-jc')\n\n# Configurar vari\u00e1veis de ambiente m\u00ednimas\nos.environ.setdefault('SECRET_KEY', 'test-secret-key')\nos.environ.setdefault('JWT_SECRET_KEY', 'test-jwt-secret')\nos.environ.setdefault('DATABASE_URL', 'postgresql://test:test@localhost/test')\n\nfrom sqlalchemy import create_engine, text\nfrom ..."
+      },
+      "python_analysis": {
+        "functions": [
+          "validate_model",
+          "main"
+        ],
+        "classes": [
+          "User",
+          "Tenant",
+          "Agent"
+        ],
+        "imports": [
+          "sys",
+          "os",
+          "sqlalchemy.create_engine",
+          "sqlalchemy.text",
+          "sqlalchemy.ext.declarative.declarative_base",
+          "sqlalchemy.Column",
+          "sqlalchemy.String",
+          "sqlalchemy.Boolean",
+          "sqlalchemy.DateTime",
+          "sqlalchemy.Integer",
+          "sqlalchemy.ForeignKey",
+          "sqlalchemy.ARRAY",
+          "sqlalchemy.dialects.postgresql.UUID",
+          "sqlalchemy.dialects.postgresql.JSONB",
+          "sqlalchemy.sql.func",
+          "uuid"
+        ],
+        "function_count": 2,
+        "class_count": 3,
+        "import_count": 16,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "verify_models_detailed.py": {
+      "category": "REVIEW",
+      "reason": "Other script",
+      "recommendations": [
+        "Review - assess purpose and necessity"
+      ],
+      "file_info": {
+        "size_bytes": 5184,
+        "size_kb": 5.1,
+        "lines": 157,
+        "last_modified": "2025-07-01T17:04:58.148333",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nVerifica\u00e7\u00e3o detalhada dos modelos principais vs estrutura real do banco\n\"\"\"\n\nimport sys\nimport os\nsys.path.insert(0, '/Users/joaovictormiranda/backend/synapse-backend-agents-jc')\nos.chdir('/Users/joaovictormiranda/backend/synapse-backend-agents-jc')\n\nfrom src.synapse.database import sync_engine, DATABASE_SCHEMA\nfrom sqlalchemy import text\n\ndef get_table_columns(table_name):\n    \"\"\"Obt\u00e9m colunas reais de uma tabela do banco\"\"\"\n    with sync_engine.connect() as conn:\n   ..."
+      },
+      "python_analysis": {
+        "functions": [
+          "get_table_columns",
+          "check_model_columns",
+          "compare_table_model",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "sys",
+          "os",
+          "src.synapse.database.sync_engine",
+          "src.synapse.database.DATABASE_SCHEMA",
+          "sqlalchemy.text",
+          "re",
+          "traceback"
+        ],
+        "function_count": 4,
+        "class_count": 0,
+        "import_count": 7,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "check_database_structure.py": {
+      "category": "REVIEW",
+      "reason": "Validation/analysis script",
+      "recommendations": [
+        "Review - might be useful for validation"
+      ],
+      "file_info": {
+        "size_bytes": 10091,
+        "size_kb": 9.9,
+        "lines": 301,
+        "last_modified": "2025-07-01T18:08:22.787701",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nSynapScale Database Structure Analysis\n\nThis script analyzes the PostgreSQL database structure to verify:\n1. Database connectivity using environment variables\n2. Schema structure (synapscale_db)\n3. Table structure and relationships\n4. Index status\n5. Foreign key constraints\n\"\"\"\n\nimport os\nimport json\nimport psycopg2\nfrom datetime import datetime\nfrom typing import Dict, List, Any\nfrom dotenv import load_dotenv\n\n\ndef load_environment():\n    \"\"\"Load environment variables..."
+      },
+      "python_analysis": {
+        "functions": [
+          "load_environment",
+          "connect_to_database",
+          "get_schema_tables",
+          "get_table_columns",
+          "get_foreign_keys",
+          "get_indexes",
+          "get_table_statistics",
+          "analyze_database_structure"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "json",
+          "psycopg2",
+          "datetime.datetime",
+          "typing.Dict",
+          "typing.List",
+          "typing.Any",
+          "dotenv.load_dotenv"
+        ],
+        "function_count": 8,
+        "class_count": 0,
+        "import_count": 8,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_complete_llm_system.py": {
+      "category": "KEEP",
+      "reason": "Core functionality test",
+      "recommendations": [
+        "Keep - tests core functionality"
+      ],
+      "file_info": {
+        "size_bytes": 11252,
+        "size_kb": 11.0,
+        "lines": 344,
+        "last_modified": "2025-07-01T13:56:41.841029",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTeste Completo do Sistema LLM SynapScale - VERS\u00c3O FINAL\nDemonstra o sistema funcionando perfeitamente com todas as corre\u00e7\u00f5es aplicadas\n\"\"\"\n\nimport asyncio\nimport sys\nimport os\nimport time\nfrom pathlib import Path\n\n# Add src to Python path\nsys.path.insert(0, str(Path(__file__).parent / \"src\"))\n\n# Configurar vari\u00e1veis de ambiente\nos.environ.setdefault(\"ENVIRONMENT\", \"development\")\nos.environ.setdefault(\"DEBUG\", \"true\")\n\nfrom synapse.services.llm_service import get_llm_se..."
+      },
+      "python_analysis": {
+        "functions": [
+          "print_header",
+          "print_success",
+          "print_error",
+          "print_warning",
+          "print_info",
+          "show_architecture_summary",
+          "show_final_summary"
+        ],
+        "classes": [
+          "Colors"
+        ],
+        "imports": [
+          "asyncio",
+          "sys",
+          "os",
+          "time",
+          "pathlib.Path",
+          "synapse.services.llm_service.get_llm_service",
+          "synapse.logger_config.get_logger"
+        ],
+        "function_count": 7,
+        "class_count": 1,
+        "import_count": 7,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": true,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": true
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_cleanup_analysis.py": {
+      "category": "REVIEW",
+      "reason": "Test file",
+      "recommendations": [
+        "Review - assess if needed or can be consolidated"
+      ],
+      "file_info": {
+        "size_bytes": 14222,
+        "size_kb": 13.9,
+        "lines": 370,
+        "last_modified": "2025-07-01T18:09:50.827178",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTest Scripts Cleanup Analysis for SynapScale\n\nThis script analyzes all test files in the repository root and provides:\n1. Categorization of test files (keep, remove, consolidate)\n2. File size and complexity analysis\n3. Cleanup recommendations\n4. Generate cleanup script\n\"\"\"\n\nimport os\nimport re\nimport json\nimport ast\nfrom datetime import datetime\nfrom typing import Dict, List, Any, Tuple\nfrom pathlib import Path\n\n\ndef get_file_info(filepath: str) -> Dict[str, Any]:\n    ..."
+      },
+      "python_analysis": {
+        "functions": [
+          "get_file_info",
+          "analyze_python_file",
+          "categorize_test_file",
+          "generate_cleanup_script",
+          "analyze_test_cleanup"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "re",
+          "json",
+          "ast",
+          "datetime.datetime",
+          "typing.Dict",
+          "typing.List",
+          "typing.Any",
+          "typing.Tuple",
+          "pathlib.Path"
+        ],
+        "function_count": 5,
+        "class_count": 0,
+        "import_count": 10,
+        "test_patterns": {
+          "pytest": true,
+          "unittest": true,
+          "async_tests": true,
+          "fastapi_client": true,
+          "database_tests": true,
+          "mock_tests": true
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "final_database_alignment_test.py": {
+      "category": "REVIEW",
+      "reason": "Other script",
+      "recommendations": [
+        "Review - assess purpose and necessity"
+      ],
+      "file_info": {
+        "size_bytes": 5750,
+        "size_kb": 5.6,
+        "lines": 172,
+        "last_modified": "2025-07-01T17:23:53.243423",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript de valida\u00e7\u00e3o final - ALINHAMENTO TOTAL COM BANCO DE DADOS\nVerifica se todos os modelos est\u00e3o perfeitamente alinhados com a estrutura real do banco\n\"\"\"\n\nimport os\nimport sys\nfrom dotenv import load_dotenv\nload_dotenv('.env')\n\n# Add src to path\nsys.path.insert(0, './src')\n\ndef test_critical_models():\n    \"\"\"Testa modelos cr\u00edticos para verificar alinhamento\"\"\"\n    print(\"\ud83d\udd0d TESTE DE ALINHAMENTO COM BANCO DE DADOS\")\n    print(\"=\" * 60)\n    \n    critical_models = [\n  ..."
+      },
+      "python_analysis": {
+        "functions": [
+          "test_critical_models",
+          "test_database_connection",
+          "verify_model_table_alignment",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "sys",
+          "dotenv.load_dotenv",
+          "synapse.database.test_database_connection",
+          "synapse.database.get_database_info",
+          "psycopg2",
+          "urllib.parse.urlparse"
+        ],
+        "function_count": 4,
+        "class_count": 0,
+        "import_count": 7,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_models_detailed.py": {
+      "category": "REVIEW",
+      "reason": "Model validation test",
+      "recommendations": [
+        "Review - might be consolidated with other model tests"
+      ],
+      "file_info": {
+        "size_bytes": 2513,
+        "size_kb": 2.5,
+        "lines": 72,
+        "last_modified": "2025-07-01T16:09:32.618271",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTeste detalhado de importa\u00e7\u00e3o de modelos\n\"\"\"\n\nimport os\nimport traceback\n\n# Set required environment variables\nos.environ[\"SECRET_KEY\"] = \"test-secret-key-for-model-testing\"\nos.environ[\"JWT_SECRET_KEY\"] = \"test-jwt-secret-key-for-model-testing\"\nos.environ[\"DATABASE_URL\"] = \"postgresql://user:pass@localhost/test\"\n\ndef test_individual_import(module_name, class_name):\n    \"\"\"Test importing a single model\"\"\"\n    try:\n        # Clear any cached modules to avoid conflicts\n  ..."
+      },
+      "python_analysis": {
+        "functions": [
+          "test_individual_import",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "traceback",
+          "sys",
+          "synapse.models.AgentUsageMetric",
+          "synapse.models.UserSubscription",
+          "synapse.models.UserVariable",
+          "synapse.models.UserInsight",
+          "synapse.models.RBACPermission",
+          "synapse.models.RBACRolePermission",
+          "synapse.models.RefreshToken",
+          "synapse.models.PasswordResetToken",
+          "synapse.models.KnowledgeBase",
+          "synapse.models.MessageFeedback",
+          "synapse.models.Subscription",
+          "synapse.models.WorkspaceMember"
+        ],
+        "function_count": 2,
+        "class_count": 0,
+        "import_count": 15,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_service_architecture.py": {
+      "category": "REMOVE",
+      "reason": "Small/minimal test",
+      "recommendations": [
+        "Delete - minimal test that might be redundant"
+      ],
+      "file_info": {
+        "size_bytes": 4653,
+        "size_kb": 4.5,
+        "lines": 145,
+        "last_modified": "2025-07-01T13:56:42.395265",
+        "content_preview": "\"\"\"\nSimple Service Layer Architecture Test.\n\nThis test validates that all the service layer components are properly\nstructured and can be imported without errors.\n\"\"\"\n\nimport sys\nfrom pathlib import Path\n\n# Add src to path\nproject_root = Path(__file__).resolve().parent\nsrc_path = project_root / \"src\"\nsys.path.insert(0, str(src_path))\n\n\ndef test_service_layer_imports():\n    \"\"\"Test that all service layer components can be imported.\"\"\"\n\n    print(\"\ud83e\uddea Testing Service Layer Architecture...\")\n\n    try..."
+      },
+      "python_analysis": {
+        "functions": [
+          "test_service_layer_imports",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "sys",
+          "pathlib.Path",
+          "synapse.core.services.base_service.BaseService",
+          "synapse.core.services.repository.IRepository",
+          "synapse.core.services.repository.BaseRepository",
+          "synapse.core.services.repository.UnitOfWork",
+          "synapse.core.services.dependency_container.ServiceContainer",
+          "synapse.core.services.dependency_container.ServiceLifetime",
+          "synapse.core.services.dependency_container.ServiceDescriptor",
+          "synapse.core.services.service_configuration.configure_services",
+          "synapse.core.services.BaseService",
+          "synapse.core.services.get_container",
+          "synapse.core.services.configure_services",
+          "synapse.services.user_service.UserService",
+          "traceback"
+        ],
+        "function_count": 2,
+        "class_count": 0,
+        "import_count": 15,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_simple_models.py": {
+      "category": "REMOVE",
+      "reason": "Simple/basic test file",
+      "recommendations": [
+        "Delete - likely superseded by comprehensive tests"
+      ],
+      "file_info": {
+        "size_bytes": 1073,
+        "size_kb": 1.0,
+        "lines": 32,
+        "last_modified": "2025-07-01T16:05:28.807480",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTeste de modelos simplificados para verificar importa\u00e7\u00e3o b\u00e1sica\n\"\"\"\n\nimport os\nos.environ[\"SECRET_KEY\"] = \"test-key\"\nos.environ[\"JWT_SECRET_KEY\"] = \"test-jwt\"\nos.environ[\"DATABASE_URL\"] = \"postgresql://user:pass@localhost/test\"\n\nfrom sqlalchemy import Column, String, DateTime, BigInteger, Numeric, ForeignKey\nfrom sqlalchemy.dialects.postgresql import UUID\nfrom sqlalchemy.orm import relationship\nfrom sqlalchemy.sql import func\nfrom synapse.database import Base\n\n# Simple..."
+      },
+      "python_analysis": {
+        "functions": [
+          "__str__"
+        ],
+        "classes": [
+          "TestAgentUsageMetric"
+        ],
+        "imports": [
+          "os",
+          "sqlalchemy.Column",
+          "sqlalchemy.String",
+          "sqlalchemy.DateTime",
+          "sqlalchemy.BigInteger",
+          "sqlalchemy.Numeric",
+          "sqlalchemy.ForeignKey",
+          "sqlalchemy.dialects.postgresql.UUID",
+          "sqlalchemy.orm.relationship",
+          "sqlalchemy.sql.func",
+          "synapse.database.Base"
+        ],
+        "function_count": 1,
+        "class_count": 1,
+        "import_count": 11,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": false,
+        "has_docstrings": true
+      }
+    },
+    "test_llm_endpoint.py": {
+      "category": "KEEP",
+      "reason": "Core functionality test",
+      "recommendations": [
+        "Keep - tests core functionality"
+      ],
+      "file_info": {
+        "size_bytes": 4377,
+        "size_kb": 4.3,
+        "lines": 134,
+        "last_modified": "2025-07-01T13:56:42.268771",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript para testar especificamente o endpoint LLM que estava falhando\n\"\"\"\n\nimport asyncio\nimport aiohttp\nimport json\nfrom typing import Dict, Any\n\nBASE_URL = \"http://localhost:8000\"\n\n\nasync def test_llm_models_endpoint():\n    \"\"\"Testa o endpoint /api/v1/llm/models\"\"\"\n\n    async with aiohttp.ClientSession() as session:\n        # Primeiro, fazer login para obter o token\n        login_data = {\"username\": \"test@test.com\", \"password\": \"test123\"}\n\n        print(\"\ud83d\udd10 Fazendo lo..."
+      },
+      "python_analysis": {
+        "functions": [],
+        "classes": [],
+        "imports": [
+          "asyncio",
+          "aiohttp",
+          "json",
+          "typing.Dict",
+          "typing.Any"
+        ],
+        "function_count": 0,
+        "class_count": 0,
+        "import_count": 5,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": true,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_error_handling_system.py": {
+      "category": "REVIEW",
+      "reason": "Test file",
+      "recommendations": [
+        "Review - assess if needed or can be consolidated"
+      ],
+      "file_info": {
+        "size_bytes": 8827,
+        "size_kb": 8.6,
+        "lines": 294,
+        "last_modified": "2025-07-01T13:56:42.456917",
+        "content_preview": "\"\"\"\nTeste do Sistema de Error Handling e Logging do SynapScale\n\nEste teste verifica se o sistema de tratamento de erros globais,\nlogging estruturado e exce\u00e7\u00f5es customizadas est\u00e1 funcionando corretamente.\n\"\"\"\n\nimport os\nimport sys\nimport asyncio\nimport logging\nimport traceback\nimport time\nfrom pathlib import Path\n\n# Adicionar src ao path\nproject_root = Path(__file__).resolve().parent\nsrc_path = project_root / \"src\"\nif str(src_path) not in sys.path:\n    sys.path.insert(0, str(src_path))\n\nfrom syna..."
+      },
+      "python_analysis": {
+        "functions": [
+          "__init__",
+          "__init__",
+          "__init__",
+          "__str__",
+          "__init__"
+        ],
+        "classes": [
+          "MockClient",
+          "MockRequest",
+          "MockURL",
+          "MockState"
+        ],
+        "imports": [
+          "os",
+          "sys",
+          "asyncio",
+          "logging",
+          "traceback",
+          "time",
+          "pathlib.Path",
+          "synapse.exceptions.SynapseBaseException",
+          "synapse.exceptions.ServiceError",
+          "synapse.exceptions.DatabaseError",
+          "synapse.exceptions.AuthenticationError",
+          "synapse.exceptions.AuthorizationError",
+          "synapse.exceptions.NotFoundError",
+          "synapse.exceptions.ValidationError",
+          "synapse.exceptions.WorkspaceError",
+          "synapse.logger_config.get_logger",
+          "synapse.logger_config.get_error_stats",
+          "synapse.error_handlers.create_error_response",
+          "synapse.error_handlers.synapse_exception_handler",
+          "synapse.middlewares.error_middleware.ErrorInterceptionMiddleware",
+          "json",
+          "json",
+          "urllib.parse.urlparse"
+        ],
+        "function_count": 5,
+        "class_count": 4,
+        "import_count": 23,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": true,
+          "fastapi_client": true,
+          "database_tests": false,
+          "mock_tests": true
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "validate_complete_structure.py": {
+      "category": "REVIEW",
+      "reason": "Validation/analysis script",
+      "recommendations": [
+        "Review - might be useful for validation"
+      ],
+      "file_info": {
+        "size_bytes": 10064,
+        "size_kb": 9.8,
+        "lines": 277,
+        "last_modified": "2025-07-01T16:51:03.193858",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nValida\u00e7\u00e3o COMPLETA da estrutura do banco vs modelos\nVerifica TODAS as 103 tabelas e seus modelos correspondentes\n\"\"\"\n\nimport sys\nimport os\nsys.path.insert(0, '/Users/joaovictormiranda/backend/synapse-backend-agents-jc')\n\n# Configurar env m\u00ednimas\nos.environ.setdefault('SECRET_KEY', 'test-secret-key')\nos.environ.setdefault('JWT_SECRET_KEY', 'test-jwt-secret')\nos.environ.setdefault('DATABASE_URL', 'postgresql://test:test@localhost/test')\n\nfrom src.synapse.database import ..."
+      },
+      "python_analysis": {
+        "functions": [
+          "get_real_table_structure",
+          "get_model_files",
+          "find_model_for_table",
+          "validate_table_vs_model",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "sys",
+          "os",
+          "src.synapse.database.sync_engine",
+          "src.synapse.database.DATABASE_SCHEMA",
+          "sqlalchemy.text",
+          "glob",
+          "importlib",
+          "traceback"
+        ],
+        "function_count": 5,
+        "class_count": 0,
+        "import_count": 8,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_service_layer_integration.py": {
+      "category": "REVIEW",
+      "reason": "Test file",
+      "recommendations": [
+        "Review - assess if needed or can be consolidated"
+      ],
+      "file_info": {
+        "size_bytes": 10737,
+        "size_kb": 10.5,
+        "lines": 281,
+        "last_modified": "2025-07-01T13:56:42.442328",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nService Layer Integration Test.\n\nThis script tests the complete service layer architecture including:\n- Dependency injection container integration\n- BaseService and repository pattern functionality\n- Database access through service layer\n- CRUD operations end-to-end\n- Transaction management and rollback\n- Error handling and logging\n\nRun this script to verify that the service layer foundation is working correctly.\n\"\"\"\n\nimport asyncio\nimport logging\nimport sys\nimport os\n..."
+      },
+      "python_analysis": {
+        "functions": [],
+        "classes": [],
+        "imports": [
+          "asyncio",
+          "logging",
+          "sys",
+          "os",
+          "pathlib.Path",
+          "uuid.uuid4",
+          "datetime.datetime",
+          "synapse.core.services.configure_services",
+          "synapse.core.services.get_container",
+          "synapse.database.init_db",
+          "synapse.database.get_db",
+          "synapse.services.sample_test_service.SampleTestService",
+          "synapse.services.sample_test_service.UserCreateRequest",
+          "synapse.services.sample_test_service.UserUpdateRequest",
+          "traceback"
+        ],
+        "function_count": 0,
+        "class_count": 0,
+        "import_count": 15,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": true,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "setup_improved_testing.py": {
+      "category": "REVIEW",
+      "reason": "Other script",
+      "recommendations": [
+        "Review - assess purpose and necessity"
+      ],
+      "file_info": {
+        "size_bytes": 3151,
+        "size_kb": 3.1,
+        "lines": 112,
+        "last_modified": "2025-07-01T13:56:40.019057",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript para configurar ambiente de teste melhorado\nInstala depend\u00eancias e valida configura\u00e7\u00e3o\n\"\"\"\nimport subprocess\nimport sys\nimport os\n\n\ndef install_dependencies():\n    \"\"\"Instala depend\u00eancias necess\u00e1rias\"\"\"\n    print(\"\ud83d\udd27 Instalando depend\u00eancias para teste melhorado...\")\n\n    dependencies = [\"jsonschema>=4.0.0\", \"requests>=2.25.0\"]\n\n    for dep in dependencies:\n        try:\n            print(f\"   Instalando {dep}...\")\n            subprocess.check_call(\n               ..."
+      },
+      "python_analysis": {
+        "functions": [
+          "install_dependencies",
+          "validate_environment",
+          "create_test_config",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "subprocess",
+          "sys",
+          "os",
+          "jsonschema",
+          "requests",
+          "json"
+        ],
+        "function_count": 4,
+        "class_count": 0,
+        "import_count": 6,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "comprehensive_validation.py": {
+      "category": "REVIEW",
+      "reason": "Analysis script",
+      "recommendations": [
+        "Review - analysis tool that might be useful"
+      ],
+      "file_info": {
+        "size_bytes": 9676,
+        "size_kb": 9.4,
+        "lines": 273,
+        "last_modified": "2025-07-01T16:44:41.446514",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript de valida\u00e7\u00e3o abrangente para verificar todos os modelos SQLAlchemy\ncontra a estrutura real do banco de dados.\n\"\"\"\n\nimport os\nimport sys\nfrom pathlib import Path\n\n# Adicionar o src ao path\nsys.path.append(str(Path(__file__).parent / \"src\"))\n\nimport logging\nfrom sqlalchemy import create_engine, text, inspect\nfrom sqlalchemy.orm import sessionmaker\nfrom dotenv import load_dotenv\n\n# Carregar vari\u00e1veis de ambiente\nload_dotenv()\n\n# Configurar logging\nlogging.basicConf..."
+      },
+      "python_analysis": {
+        "functions": [
+          "get_database_url",
+          "test_model_imports",
+          "test_database_connection",
+          "test_model_metadata",
+          "verify_key_tables_exist",
+          "test_workspace_model_alignment",
+          "test_relationships",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "sys",
+          "pathlib.Path",
+          "logging",
+          "sqlalchemy.create_engine",
+          "sqlalchemy.text",
+          "sqlalchemy.inspect",
+          "sqlalchemy.orm.sessionmaker",
+          "dotenv.load_dotenv",
+          "synapse.models.workspace.Workspace",
+          "synapse.models.user.User",
+          "synapse.models.tenant.Tenant",
+          "synapse.models.plan.Plan",
+          "synapse.models.agent.Agent",
+          "synapse.models.workflow.Workflow",
+          "synapse.models.node.Node",
+          "synapse.models.feature.Feature",
+          "synapse.models.workspace.Workspace",
+          "synapse.models.user.User",
+          "synapse.models.tenant.Tenant",
+          "synapse.models.plan.Plan",
+          "synapse.models.workspace.Workspace",
+          "synapse.models.workspace.Workspace",
+          "synapse.models.user.User",
+          "synapse.models.tenant.Tenant"
+        ],
+        "function_count": 8,
+        "class_count": 0,
+        "import_count": 25,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_auth_endpoints.py": {
+      "category": "KEEP",
+      "reason": "Core functionality test",
+      "recommendations": [
+        "Keep - tests core functionality"
+      ],
+      "file_info": {
+        "size_bytes": 14022,
+        "size_kb": 13.7,
+        "lines": 358,
+        "last_modified": "2025-07-01T13:56:42.281247",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript de teste rigoroso para verificar autentica\u00e7\u00e3o obrigat\u00f3ria\nS\u00f3 considera sucesso quando h\u00e1 autentica\u00e7\u00e3o v\u00e1lida E resposta 2xx\n\"\"\"\n\nimport requests\nimport json\nfrom urllib.parse import urljoin\nfrom typing import Dict, List, Optional\nimport time\n\n# Configura\u00e7\u00f5es\nAPI_BASE_URL = \"http://localhost:8000\"\nAPI_V1_PREFIX = \"/api/v1\"\n\n# Endpoints que DEVEM ser p\u00fablicos (sem autentica\u00e7\u00e3o)\nPUBLIC_ENDPOINTS = {\n    \"/\",\n    \"/health\",\n    \"/api/v1/health\",\n    \"/info\",\n    \"/a..."
+      },
+      "python_analysis": {
+        "functions": [
+          "main",
+          "__init__",
+          "setup_authentication",
+          "discover_endpoints",
+          "test_endpoint_without_auth",
+          "test_endpoint_with_auth",
+          "run_authentication_tests",
+          "print_final_report"
+        ],
+        "classes": [
+          "AuthenticationTester"
+        ],
+        "imports": [
+          "requests",
+          "json",
+          "urllib.parse.urljoin",
+          "typing.Dict",
+          "typing.List",
+          "typing.Optional",
+          "time"
+        ],
+        "function_count": 8,
+        "class_count": 1,
+        "import_count": 7,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": true
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_endpoints_comprehensive.py": {
+      "category": "KEEP",
+      "reason": "Comprehensive test suite",
+      "recommendations": [
+        "Keep - appears to be main test suite"
+      ],
+      "file_info": {
+        "size_bytes": 20968,
+        "size_kb": 20.5,
+        "lines": 609,
+        "last_modified": "2025-07-01T13:56:42.565735",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nSCRIPT ABRANGENTE DE TESTE DE ENDPOINTS - SYNAPSCALE API\nVers\u00e3o otimizada com testes paralelos, autentica\u00e7\u00e3o robusta e relat\u00f3rios detalhados\n\"\"\"\nimport argparse\nimport asyncio\nimport aiohttp\nimport json\nimport time\nimport uuid\nfrom datetime import datetime\nfrom typing import Dict, List, Any, Optional\nfrom urllib.parse import urljoin\nimport re\nimport concurrent.futures\nfrom dataclasses import dataclass\nimport os\nimport sys\n\n# Configura\u00e7\u00f5es\nAPI_BASE_URL = \"http://localho..."
+      },
+      "python_analysis": {
+        "functions": [
+          "main",
+          "__init__",
+          "log",
+          "check_server_health",
+          "discover_endpoints",
+          "_categorize",
+          "setup_auth",
+          "_try_register_login",
+          "_try_existing_user",
+          "_try_demo_user",
+          "_resolve_path_params",
+          "test_endpoints_sync",
+          "_get_test_data",
+          "_is_success",
+          "analyze_results",
+          "print_report",
+          "save_report",
+          "run"
+        ],
+        "classes": [
+          "EndpointResult",
+          "TestConfig",
+          "ComprehensiveEndpointTester"
+        ],
+        "imports": [
+          "argparse",
+          "asyncio",
+          "aiohttp",
+          "json",
+          "time",
+          "uuid",
+          "datetime.datetime",
+          "typing.Dict",
+          "typing.List",
+          "typing.Any",
+          "typing.Optional",
+          "urllib.parse.urljoin",
+          "re",
+          "concurrent.futures",
+          "dataclasses.dataclass",
+          "os",
+          "sys",
+          "requests",
+          "requests",
+          "requests",
+          "requests",
+          "requests"
+        ],
+        "function_count": 18,
+        "class_count": 3,
+        "import_count": 22,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": true
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "check_missing_models.py": {
+      "category": "REVIEW",
+      "reason": "Validation/analysis script",
+      "recommendations": [
+        "Review - might be useful for validation"
+      ],
+      "file_info": {
+        "size_bytes": 5387,
+        "size_kb": 5.3,
+        "lines": 134,
+        "last_modified": "2025-07-01T15:53:37.332604",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript para verificar quais tabelas do banco n\u00e3o possuem modelos SQLAlchemy correspondentes\n\"\"\"\n\nimport psycopg2\nimport os\nfrom pathlib import Path\n\n# Tabelas no banco (103 tabelas)\nDATABASE_TABLES = [\n    'agent_acl', 'agent_configurations', 'agent_error_logs', 'agent_hierarchy', 'agent_kbs',\n    'agent_models', 'agent_quotas', 'agent_tools', 'agent_triggers', 'agent_usage_metrics',\n    'agents', 'alembic_version', 'analytics_alerts', 'analytics_dashboards', 'analytic..."
+      },
+      "python_analysis": {
+        "functions": [
+          "table_to_model_file",
+          "check_model_files",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "psycopg2",
+          "os",
+          "pathlib.Path"
+        ],
+        "function_count": 3,
+        "class_count": 0,
+        "import_count": 3,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "validate_no_hardcoded_final.py": {
+      "category": "REVIEW",
+      "reason": "Validation/analysis script",
+      "recommendations": [
+        "Review - might be useful for validation"
+      ],
+      "file_info": {
+        "size_bytes": 8067,
+        "size_kb": 7.9,
+        "lines": 244,
+        "last_modified": "2025-07-01T13:56:43.101014",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nScript para validar que n\u00e3o h\u00e1 valores hardcoded no sistema\nGarante que tudo vem do .env\n\"\"\"\n\nimport os\nimport re\nimport glob\nfrom typing import List, Tuple\n\n\ndef scan_for_hardcoded_values() -> List[Tuple[str, str, int, str]]:\n    \"\"\"\n    Escaneia arquivos Python em busca de valores hardcoded\n    Retorna lista de (arquivo, padr\u00e3o, linha, conte\u00fado)\n    \"\"\"\n\n    findings = []\n\n    # Padr\u00f5es a procurar (valores hardcoded suspeitos)\n    patterns = {\n        \"api_keys\": r\"(..."
+      },
+      "python_analysis": {
+        "functions": [
+          "scan_for_hardcoded_values",
+          "is_valid_usage",
+          "check_env_usage",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "re",
+          "glob",
+          "typing.List",
+          "typing.Tuple"
+        ],
+        "function_count": 4,
+        "class_count": 0,
+        "import_count": 5,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": false,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "test_endpoints_functional.py": {
+      "category": "KEEP",
+      "reason": "Core functionality test",
+      "recommendations": [
+        "Keep - tests core functionality"
+      ],
+      "file_info": {
+        "size_bytes": 23708,
+        "size_kb": 23.2,
+        "lines": 641,
+        "last_modified": "2025-07-01T13:56:42.476268",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTESTE FUNCIONAL ESPEC\u00cdFICO DE ENDPOINTS - SYNAPSCALE API\nFoca em testes funcionais detalhados por categoria\n\"\"\"\nimport requests\nimport json\nimport uuid\nimport time\nfrom datetime import datetime\nfrom typing import Dict, List, Any, Optional\nimport argparse\n\n# Configura\u00e7\u00f5es\nAPI_BASE_URL = \"http://localhost:8000\"\nAPI_V1_PREFIX = \"/api/v1\"\n\n\nclass FunctionalEndpointTester:\n    def __init__(self, base_url: str = API_BASE_URL, verbose: bool = False):\n        self.base_url = b..."
+      },
+      "python_analysis": {
+        "functions": [
+          "main",
+          "__init__",
+          "log",
+          "setup_test_environment",
+          "test_authentication_flow",
+          "_test_user_registration",
+          "_test_user_login",
+          "_test_user_profile",
+          "test_system_endpoints",
+          "_test_health_check",
+          "_test_root_endpoint",
+          "_test_info_endpoint",
+          "test_tenant_functionality",
+          "_test_tenant_list",
+          "_test_tenant_settings",
+          "_test_tenant_analytics",
+          "test_user_profile_functionality",
+          "_test_user_profile_update",
+          "_test_user_preferences",
+          "_test_user_stats",
+          "test_workspace_enhanced_functionality",
+          "_test_workspace_notifications",
+          "_test_workspace_api_stats",
+          "_test_workspace_analytics",
+          "run_all_tests"
+        ],
+        "classes": [
+          "FunctionalEndpointTester"
+        ],
+        "imports": [
+          "requests",
+          "json",
+          "uuid",
+          "time",
+          "datetime.datetime",
+          "typing.Dict",
+          "typing.List",
+          "typing.Any",
+          "typing.Optional",
+          "argparse"
+        ],
+        "function_count": 25,
+        "class_count": 1,
+        "import_count": 10,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    },
+    "final_relationship_test.py": {
+      "category": "REVIEW",
+      "reason": "Other script",
+      "recommendations": [
+        "Review - assess purpose and necessity"
+      ],
+      "file_info": {
+        "size_bytes": 6486,
+        "size_kb": 6.3,
+        "lines": 175,
+        "last_modified": "2025-07-01T16:47:07.270830",
+        "content_preview": "#!/usr/bin/env python3\n\"\"\"\nTeste final para verificar relacionamentos SQLAlchemy e registry.\n\"\"\"\n\nimport os\nimport sys\nfrom pathlib import Path\n\n# Adicionar o src ao path\nsys.path.append(str(Path(__file__).parent / \"src\"))\n\nimport logging\nfrom sqlalchemy import create_engine\nfrom sqlalchemy.orm import sessionmaker\nfrom dotenv import load_dotenv\n\n# Carregar vari\u00e1veis de ambiente\nload_dotenv()\n\n# Configurar logging\nlogging.basicConfig(level=logging.INFO)\nlogger = logging.getLogger(__name__)\n\ndef t..."
+      },
+      "python_analysis": {
+        "functions": [
+          "test_full_model_registry",
+          "test_database_query",
+          "main"
+        ],
+        "classes": [],
+        "imports": [
+          "os",
+          "sys",
+          "pathlib.Path",
+          "logging",
+          "sqlalchemy.create_engine",
+          "sqlalchemy.orm.sessionmaker",
+          "dotenv.load_dotenv",
+          "synapse.models.workspace.Workspace",
+          "synapse.models.workspace_project.WorkspaceProject",
+          "synapse.models.workspace_member.WorkspaceMember",
+          "synapse.models.workspace_activity.WorkspaceActivity",
+          "synapse.models.workspace_invitation.WorkspaceInvitation",
+          "synapse.models.user.User",
+          "synapse.models.tenant.Tenant",
+          "synapse.models.plan.Plan",
+          "synapse.models.agent.Agent",
+          "synapse.models.workflow.Workflow",
+          "synapse.models.node.Node",
+          "synapse.models.feature.Feature",
+          "synapse.models.file.File",
+          "synapse.models.llm.LLM",
+          "synapse.database.Base",
+          "traceback",
+          "synapse.models.workspace.Workspace",
+          "synapse.models.user.User",
+          "synapse.models.tenant.Tenant",
+          "traceback"
+        ],
+        "function_count": 3,
+        "class_count": 0,
+        "import_count": 27,
+        "test_patterns": {
+          "pytest": false,
+          "unittest": false,
+          "async_tests": false,
+          "fastapi_client": false,
+          "database_tests": true,
+          "mock_tests": false
+        },
+        "has_main": true,
+        "has_docstrings": true
+      }
+    }
+  },
+  "recommendations": [
+    "Remove 6 deprecated/temporary files (83.7 KB)",
+    "Review 19 files for consolidation",
+    "Keep 6 core test files",
+    "Consider consolidating model validation scripts into a single comprehensive test",
+    "Move analysis reports to archive directory",
+    "Create backup before any file deletion"
+  ]
+}

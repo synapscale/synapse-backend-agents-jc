@@ -1,14 +1,16 @@
 """
 Adiciona coluna 'status' na tabela nodes
 """
+
 from alembic import op
 import sqlalchemy as sa
 import enum
 
-revision = '009addstatuscolnodes'
-down_revision = '008addtypecolnodes'
+revision = "009addstatuscolnodes"
+down_revision = "008addtypecolnodes"
 branch_labels = None
 depends_on = None
+
 
 class NodeStatus(enum.Enum):
     DRAFT = "draft"
@@ -16,12 +18,14 @@ class NodeStatus(enum.Enum):
     DEPRECATED = "deprecated"
     PRIVATE = "private"
 
+
 def upgrade():
     op.execute("ALTER TYPE nodestatus ADD VALUE IF NOT EXISTS 'draft';")
     op.execute("ALTER TYPE nodestatus ADD VALUE IF NOT EXISTS 'published';")
     op.execute("ALTER TYPE nodestatus ADD VALUE IF NOT EXISTS 'deprecated';")
     op.execute("ALTER TYPE nodestatus ADD VALUE IF NOT EXISTS 'private';")
-    op.execute('''
+    op.execute(
+        """
     DO $$
     BEGIN
         IF NOT EXISTS (
@@ -31,7 +35,9 @@ def upgrade():
             ALTER TABLE synapscale_db.nodes ADD COLUMN status nodestatus DEFAULT 'draft' NOT NULL;
         END IF;
     END$$;
-    ''')
+    """
+    )
+
 
 def downgrade():
-    op.drop_column('nodes', 'status', schema='synapscale_db') 
+    op.drop_column("nodes", "status", schema="synapscale_db")

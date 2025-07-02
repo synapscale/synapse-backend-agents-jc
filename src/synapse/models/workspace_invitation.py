@@ -1,167 +1,152 @@
-"""
-Modelo de convites de workspace
-"""
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Enum as SQLEnum
+"""Workspace Invitation Model"""
+
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from synapse.database import Base
-from datetime import datetime, timezone, timedelta
-from enum import Enum
-import uuid
-import secrets
+from sqlalchemy.sql import func
 
-class InvitationStatus(Enum):
-    """Status do convite"""
-    PENDING = "pending"
-    ACCEPTED = "accepted"
-    DECLINED = "declined"
-    EXPIRED = "expired"
-    CANCELLED = "cancelled"
+from synapse.database import Base
+
 
 class WorkspaceInvitation(Base):
-    """
-    Modelo de convite para workspace
-    """
+    """Workspace invitation management"""
+    
     __tablename__ = "workspace_invitations"
     __table_args__ = {"schema": "synapscale_db"}
 
-    # Identificação
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
-    inviter_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE"), nullable=False)
-    invited_user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE"), nullable=True)  # Pode ser null se convidado por email
-    
-    # Dados do convite
-    email = Column(String(255), nullable=False, index=True)  # Email do convidado
-    token = Column(String(255), nullable=False, unique=True, index=True)  # Token único para aceitar convite
-    role = Column(String(20), nullable=False, default="member")  # Role que será atribuído
-    message = Column(String(500), nullable=True)  # Mensagem personalizada
-    
-    # Status e controle
-    status = Column(SQLEnum(InvitationStatus), nullable=False, default=InvitationStatus.PENDING, index=True)
-    is_active = Column(Boolean, default=True)
-    
-    # Timestamps
-    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
-    accepted_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=False)
+    inviter_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False)
+    invited_user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=True)
+    email = Column(String(255), nullable=False)
+    message = Column(Text, nullable=True)
+    token = Column(String(100), nullable=False, unique=True)
+    status = Column(String(20), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    responded_at = Column(DateTime(timezone=True), nullable=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True)
+    updated_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
 
-    # Relacionamentos
+    # Relationships
     workspace = relationship("Workspace", back_populates="invitations")
     inviter = relationship("User", foreign_keys=[inviter_id], back_populates="workspace_invitations_sent")
     invited_user = relationship("User", foreign_keys=[invited_user_id], back_populates="workspace_invitations_received")
+    tenant = relationship("Tenant", back_populates="workspace_invitations")
 
-    def __repr__(self):
-        return f"<WorkspaceInvitation(id={self.id}, email={self.email}, status={self.status.value})>"
+    def __str__(self):
+        return f"WorkspaceInvitation(email={self.email}, status={self.status})"
 
-    def to_dict(self):
-        """Converte o modelo para dicionário"""
-        return {
-            "id": str(self.id),
-            "workspace_id": str(self.workspace_id),
-            "inviter_id": str(self.inviter_id),
-            "invited_user_id": str(self.invited_user_id) if self.invited_user_id else None,
-            "email": self.email,
-            "token": self.token,
-            "role": self.role,
-            "message": self.message,
-            "status": self.status.value,
-            "is_active": self.is_active,
-            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
-            "accepted_at": self.accepted_at.isoformat() if self.accepted_at else None,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+    @property
+    def is_expired(self):
+        """Check if invitation is expired"""
+        return self.expires_at < func.now()
+
+    @property
+    def is_pending(self):
+        """Check if invitation is pending"""
+        return self.status == "pending" and not self.is_expired
+
+    @property
+    def can_accept(self):
+        """Check if invitation can be accepted"""
+        return self.status == "pending" and not self.is_expired
+
+    @property
+    def status_display(self):
+        """Get human-readable status"""
+        status_map = {
+            "pending": "Pending Response",
+            "accepted": "Accepted",
+            "declined": "Declined",
+            "expired": "Expired",
+            "cancelled": "Cancelled"
         }
+        if self.status == "pending" and self.is_expired:
+            return "Expired"
+        return status_map.get(self.status, self.status.title())
 
-    @property
-    def is_expired(self) -> bool:
-        """Verifica se o convite está expirado"""
-        return datetime.now(timezone.utc) > self.expires_at
-
-    @property
-    def can_be_accepted(self) -> bool:
-        """Verifica se o convite pode ser aceito"""
-        return (
-            self.status == InvitationStatus.PENDING and
-            self.is_active and
-            not self.is_expired
-        )
-
-    def mark_as_expired(self):
-        """Marca o convite como expirado"""
-        self.status = InvitationStatus.EXPIRED
-        self.is_active = False
-
-    def accept(self, user_id: str = None):
-        """Aceita o convite"""
-        if not self.can_be_accepted:
-            raise ValueError("Convite não pode ser aceito")
+    def accept(self):
+        """Accept the invitation"""
+        if not self.can_accept:
+            raise ValueError("Invitation cannot be accepted")
         
-        self.status = InvitationStatus.ACCEPTED
-        self.accepted_at = datetime.now(timezone.utc)
-        if user_id:
-            self.invited_user_id = user_id
+        self.status = "accepted"
+        self.responded_at = func.current_timestamp()
+        self.updated_at = func.current_timestamp()
 
     def decline(self):
-        """Recusa o convite"""
-        if self.status != InvitationStatus.PENDING:
-            raise ValueError("Apenas convites pendentes podem ser recusados")
+        """Decline the invitation"""
+        if not self.can_accept:
+            raise ValueError("Invitation cannot be declined")
         
-        self.status = InvitationStatus.DECLINED
-        self.is_active = False
+        self.status = "declined"
+        self.responded_at = func.current_timestamp()
+        self.updated_at = func.current_timestamp()
 
     def cancel(self):
-        """Cancela o convite"""
-        if self.status not in [InvitationStatus.PENDING]:
-            raise ValueError("Apenas convites pendentes podem ser cancelados")
+        """Cancel the invitation"""
+        if self.status in ["accepted", "declined"]:
+            raise ValueError("Cannot cancel responded invitation")
         
-        self.status = InvitationStatus.CANCELLED
-        self.is_active = False
+        self.status = "cancelled"
+        self.updated_at = func.current_timestamp()
+
+    def resend(self, new_token, new_expires_at):
+        """Resend the invitation with new token"""
+        if self.status != "pending":
+            raise ValueError("Can only resend pending invitations")
+        
+        self.token = new_token
+        self.expires_at = new_expires_at
+        self.updated_at = func.current_timestamp()
 
     @classmethod
-    def create_invitation(
-        cls,
-        workspace_id: str,
-        inviter_id: str,
-        email: str,
-        role: str = "member",
-        message: str = None,
-        expires_in_days: int = 7
-    ):
-        """Cria um novo convite"""
-        token = secrets.token_urlsafe(32)
-        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
-        
-        return cls(
-            workspace_id=workspace_id,
-            inviter_id=inviter_id,
-            email=email.lower(),
-            token=token,
-            role=role,
-            message=message,
-            expires_at=expires_at
-        )
+    def get_by_token(cls, session, token):
+        """Get invitation by token"""
+        return session.query(cls).filter(cls.token == token).first()
 
     @classmethod
-    def find_by_token(cls, db_session, token: str):
-        """Encontra convite pelo token"""
-        return db_session.query(cls).filter(cls.token == token).first()
+    def get_workspace_invitations(cls, session, workspace_id, status=None):
+        """Get invitations for a workspace"""
+        query = session.query(cls).filter(cls.workspace_id == workspace_id)
+        if status:
+            query = query.filter(cls.status == status)
+        return query.order_by(cls.created_at.desc()).all()
 
     @classmethod
-    def find_pending_by_email(cls, db_session, email: str, workspace_id: str = None):
-        """Encontra convites pendentes por email"""
-        query = db_session.query(cls).filter(
-            cls.email == email.lower(),
-            cls.status == InvitationStatus.PENDING,
-            cls.is_active == True
-        )
+    def get_user_invitations(cls, session, email=None, user_id=None, status=None):
+        """Get invitations for a user"""
+        query = session.query(cls)
         
-        if workspace_id:
-            query = query.filter(cls.workspace_id == workspace_id)
+        if email:
+            query = query.filter(cls.email == email)
+        if user_id:
+            query = query.filter(cls.invited_user_id == user_id)
+        if status:
+            query = query.filter(cls.status == status)
         
-        return query.all()
+        return query.order_by(cls.created_at.desc()).all()
 
-    def generate_invitation_url(self, base_url: str) -> str:
-        """Gera URL de convite"""
-        return f"{base_url}/invite/accept?token={self.token}" 
+    @classmethod
+    def cleanup_expired(cls, session):
+        """Update expired invitations status"""
+        expired_invitations = session.query(cls).filter(
+            cls.status == "pending",
+            cls.expires_at < func.now()
+        ).all()
+        
+        for invitation in expired_invitations:
+            invitation.status = "expired"
+            invitation.updated_at = func.current_timestamp()
+        
+        return len(expired_invitations)
+
+    @classmethod
+    def get_pending_for_email(cls, session, email):
+        """Get pending invitations for an email"""
+        return session.query(cls).filter(
+            cls.email == email,
+            cls.status == "pending",
+            cls.expires_at > func.now()
+        ).all()

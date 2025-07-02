@@ -1,9 +1,0 @@
-{
-  "api_base_url": "http://localhost:8000",
-  "timeout_seconds": 30,
-  "test_user_prefix": "improved_test_",
-  "cleanup_resources": true,
-  "validate_schemas": true,
-  "performance_threshold": 10.0,
-  "success_rate_threshold": 90.0
-}

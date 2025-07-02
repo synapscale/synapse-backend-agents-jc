@@ -112,10 +112,14 @@ class ConnectionManager:
     ):
         """Envia mensagem para um WebSocket específico"""
         try:
+
             def default_encoder(obj):
                 if isinstance(obj, uuid.UUID):
                     return str(obj)
-                raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+                raise TypeError(
+                    f"Object of type {type(obj).__name__} is not JSON serializable"
+                )
+
             await websocket.send_text(json.dumps(message, default=default_encoder))
         except Exception as e:
             logger.error(f"Erro ao enviar mensagem WebSocket: {str(e)}")

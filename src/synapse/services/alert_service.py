@@ -13,17 +13,21 @@ import json
 import uuid
 from enum import Enum
 
-from synapse.models.analytics import AnalyticsAlert, AnalyticsEvent, AnalyticsMetric
+from synapse.models.analytics_alert import AnalyticsAlert
+from synapse.models.analytics_event import AnalyticsEvent  
+from synapse.models.analytics_metric import AnalyticsMetric
 from synapse.models.user import User
 from synapse.core.email.service import EmailService
 from synapse.core.websockets.manager import WebSocketManager
-from synapse.schemas.analytics import AlertCreate, AlertUpdate
+from synapse.schemas.models import AlertCreate
+from synapse.schemas.models import AlertUpdate
 
 logger = logging.getLogger(__name__)
 
 
 class AlertSeverity(Enum):
     """Alert severity levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -32,6 +36,7 @@ class AlertSeverity(Enum):
 
 class AlertStatus(Enum):
     """Alert status"""
+
     ACTIVE = "active"
     PAUSED = "paused"
     TRIGGERED = "triggered"
@@ -40,6 +45,7 @@ class AlertStatus(Enum):
 
 class NotificationChannel(Enum):
     """Notification channels"""
+
     EMAIL = "email"
     WEBSOCKET = "websocket"
     WEBHOOK = "webhook"
@@ -56,11 +62,15 @@ class AlertService:
         self._alert_states = {}  # Cache for alert state management
         self._evaluation_running = False
 
-    async def create_alert(self, alert_data: Dict[str, Any], user_id: str) -> Dict[str, Any]:
+    async def create_alert(
+        self, alert_data: Dict[str, Any], user_id: str
+    ) -> Dict[str, Any]:
         """Create a new alert with real validation and setup"""
         try:
             # Validate alert condition
-            condition_validated = self._validate_alert_condition(alert_data.get("condition", {}))
+            condition_validated = self._validate_alert_condition(
+                alert_data.get("condition", {})
+            )
             if not condition_validated:
                 raise ValueError("Invalid alert condition configuration")
 
@@ -74,7 +84,7 @@ class AlertService:
                 is_active=True,
                 owner_id=user_id,
                 created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+                updated_at=datetime.utcnow(),
             )
 
             self.db.add(alert)
@@ -87,10 +97,12 @@ class AlertService:
                 "last_triggered": None,
                 "trigger_count": 0,
                 "current_value": None,
-                "status": AlertStatus.ACTIVE.value
+                "status": AlertStatus.ACTIVE.value,
             }
 
-            logger.info(f"Alert created: {alert.name} (ID: {alert.id}) for user {user_id}")
+            logger.info(
+                f"Alert created: {alert.name} (ID: {alert.id}) for user {user_id}"
+            )
 
             return {
                 "alert_id": str(alert.id),
@@ -98,7 +110,7 @@ class AlertService:
                 "status": "active",
                 "created_at": alert.created_at.isoformat(),
                 "condition": alert.condition,
-                "notification_config": alert.notification_config
+                "notification_config": alert.notification_config,
             }
 
         except Exception as e:
@@ -106,39 +118,57 @@ class AlertService:
             self.db.rollback()
             raise
 
-    async def get_user_alerts(self, user_id: str, status: str = None, limit: int = 20, offset: int = 0) -> List[Dict[str, Any]]:
+    async def get_user_alerts(
+        self, user_id: str, status: str = None, limit: int = 20, offset: int = 0
+    ) -> List[Dict[str, Any]]:
         """Get user's alerts with real data"""
         try:
-            query = self.db.query(AnalyticsAlert).filter(AnalyticsAlert.owner_id == user_id)
-            
+            query = self.db.query(AnalyticsAlert).filter(
+                AnalyticsAlert.owner_id == user_id
+            )
+
             if status:
                 if status == "triggered":
                     # Show alerts that have been triggered recently
                     query = query.filter(
-                        AnalyticsAlert.last_triggered_at >= datetime.utcnow() - timedelta(hours=24)
+                        AnalyticsAlert.last_triggered_at
+                        >= datetime.utcnow() - timedelta(hours=24)
                     )
                 else:
-                    query = query.filter(AnalyticsAlert.is_active == (status == "active"))
+                    query = query.filter(
+                        AnalyticsAlert.is_active == (status == "active")
+                    )
 
-            alerts = query.order_by(desc(AnalyticsAlert.created_at)).offset(offset).limit(limit).all()
+            alerts = (
+                query.order_by(desc(AnalyticsAlert.created_at))
+                .offset(offset)
+                .limit(limit)
+                .all()
+            )
 
             result = []
             for alert in alerts:
                 alert_state = self._alert_states.get(str(alert.id), {})
-                result.append({
-                    "id": str(alert.id),
-                    "name": alert.name,
-                    "description": alert.description,
-                    "condition": alert.condition,
-                    "notification_config": alert.notification_config,
-                    "is_active": alert.is_active,
-                    "last_triggered_at": alert.last_triggered_at.isoformat() if alert.last_triggered_at else None,
-                    "created_at": alert.created_at.isoformat(),
-                    "updated_at": alert.updated_at.isoformat(),
-                    "current_status": alert_state.get("status", "active"),
-                    "trigger_count": alert_state.get("trigger_count", 0),
-                    "current_value": alert_state.get("current_value")
-                })
+                result.append(
+                    {
+                        "id": str(alert.id),
+                        "name": alert.name,
+                        "description": alert.description,
+                        "condition": alert.condition,
+                        "notification_config": alert.notification_config,
+                        "is_active": alert.is_active,
+                        "last_triggered_at": (
+                            alert.last_triggered_at.isoformat()
+                            if alert.last_triggered_at
+                            else None
+                        ),
+                        "created_at": alert.created_at.isoformat(),
+                        "updated_at": alert.updated_at.isoformat(),
+                        "current_status": alert_state.get("status", "active"),
+                        "trigger_count": alert_state.get("trigger_count", 0),
+                        "current_value": alert_state.get("current_value"),
+                    }
+                )
 
             return result
 
@@ -146,19 +176,30 @@ class AlertService:
             logger.error(f"Failed to get user alerts: {str(e)}")
             raise
 
-    async def update_alert(self, alert_id: str, alert_data: AlertUpdate, user_id: str) -> Dict[str, Any]:
+    async def update_alert(
+        self, alert_id: str, alert_data: AlertUpdate, user_id: str
+    ) -> Dict[str, Any]:
         """Update an existing alert"""
         try:
-            alert = self.db.query(AnalyticsAlert).filter(
-                and_(AnalyticsAlert.id == alert_id, AnalyticsAlert.owner_id == user_id)
-            ).first()
+            alert = (
+                self.db.query(AnalyticsAlert)
+                .filter(
+                    and_(
+                        AnalyticsAlert.id == alert_id,
+                        AnalyticsAlert.owner_id == user_id,
+                    )
+                )
+                .first()
+            )
 
             if not alert:
                 raise ValueError("Alert not found or access denied")
 
             # Validate new condition if provided
             if alert_data.condition:
-                condition_validated = self._validate_alert_condition(alert_data.condition)
+                condition_validated = self._validate_alert_condition(
+                    alert_data.condition
+                )
                 if not condition_validated:
                     raise ValueError("Invalid alert condition configuration")
                 alert.condition = alert_data.condition
@@ -181,7 +222,7 @@ class AlertService:
             return {
                 "alert_id": str(alert.id),
                 "name": alert.name,
-                "updated_at": alert.updated_at.isoformat()
+                "updated_at": alert.updated_at.isoformat(),
             }
 
         except Exception as e:
@@ -192,9 +233,16 @@ class AlertService:
     async def delete_alert(self, alert_id: str, user_id: str) -> bool:
         """Delete an alert"""
         try:
-            alert = self.db.query(AnalyticsAlert).filter(
-                and_(AnalyticsAlert.id == alert_id, AnalyticsAlert.owner_id == user_id)
-            ).first()
+            alert = (
+                self.db.query(AnalyticsAlert)
+                .filter(
+                    and_(
+                        AnalyticsAlert.id == alert_id,
+                        AnalyticsAlert.owner_id == user_id,
+                    )
+                )
+                .first()
+            )
 
             if not alert:
                 return False
@@ -217,9 +265,16 @@ class AlertService:
     async def pause_alert(self, alert_id: str, user_id: str) -> bool:
         """Pause an alert"""
         try:
-            alert = self.db.query(AnalyticsAlert).filter(
-                and_(AnalyticsAlert.id == alert_id, AnalyticsAlert.owner_id == user_id)
-            ).first()
+            alert = (
+                self.db.query(AnalyticsAlert)
+                .filter(
+                    and_(
+                        AnalyticsAlert.id == alert_id,
+                        AnalyticsAlert.owner_id == user_id,
+                    )
+                )
+                .first()
+            )
 
             if not alert:
                 return False
@@ -243,9 +298,16 @@ class AlertService:
     async def resume_alert(self, alert_id: str, user_id: str) -> bool:
         """Resume a paused alert"""
         try:
-            alert = self.db.query(AnalyticsAlert).filter(
-                and_(AnalyticsAlert.id == alert_id, AnalyticsAlert.owner_id == user_id)
-            ).first()
+            alert = (
+                self.db.query(AnalyticsAlert)
+                .filter(
+                    and_(
+                        AnalyticsAlert.id == alert_id,
+                        AnalyticsAlert.owner_id == user_id,
+                    )
+                )
+                .first()
+            )
 
             if not alert:
                 return False
@@ -289,15 +351,19 @@ class AlertService:
     async def _initialize_alert_states(self):
         """Initialize alert states from database"""
         try:
-            alerts = self.db.query(AnalyticsAlert).filter(AnalyticsAlert.is_active == True).all()
-            
+            alerts = (
+                self.db.query(AnalyticsAlert)
+                .filter(AnalyticsAlert.is_active == True)
+                .all()
+            )
+
             for alert in alerts:
                 self._alert_states[str(alert.id)] = {
                     "last_evaluation": None,
                     "last_triggered": alert.last_triggered_at,
                     "trigger_count": 0,
                     "current_value": None,
-                    "status": AlertStatus.ACTIVE.value
+                    "status": AlertStatus.ACTIVE.value,
                 }
 
             logger.info(f"Initialized {len(alerts)} active alerts")
@@ -320,7 +386,11 @@ class AlertService:
     async def _evaluate_all_alerts(self):
         """Evaluate all active alerts"""
         try:
-            alerts = self.db.query(AnalyticsAlert).filter(AnalyticsAlert.is_active == True).all()
+            alerts = (
+                self.db.query(AnalyticsAlert)
+                .filter(AnalyticsAlert.is_active == True)
+                .all()
+            )
 
             for alert in alerts:
                 try:
@@ -336,10 +406,10 @@ class AlertService:
         try:
             alert_id = str(alert.id)
             condition = alert.condition
-            
+
             # Get current metric value based on condition
             current_value = await self._get_metric_value(condition)
-            
+
             # Update alert state
             if alert_id not in self._alert_states:
                 self._alert_states[alert_id] = {
@@ -347,7 +417,7 @@ class AlertService:
                     "last_triggered": None,
                     "trigger_count": 0,
                     "current_value": None,
-                    "status": AlertStatus.ACTIVE.value
+                    "status": AlertStatus.ACTIVE.value,
                 }
 
             self._alert_states[alert_id]["last_evaluation"] = datetime.utcnow()
@@ -379,7 +449,7 @@ class AlertService:
                     and_(
                         AnalyticsMetric.metric_name == metric_name,
                         AnalyticsMetric.timestamp >= start_time,
-                        AnalyticsMetric.timestamp <= end_time
+                        AnalyticsMetric.timestamp <= end_time,
                     )
                 )
             elif aggregation == "avg":
@@ -387,7 +457,7 @@ class AlertService:
                     and_(
                         AnalyticsMetric.metric_name == metric_name,
                         AnalyticsMetric.timestamp >= start_time,
-                        AnalyticsMetric.timestamp <= end_time
+                        AnalyticsMetric.timestamp <= end_time,
                     )
                 )
             elif aggregation == "max":
@@ -395,7 +465,7 @@ class AlertService:
                     and_(
                         AnalyticsMetric.metric_name == metric_name,
                         AnalyticsMetric.timestamp >= start_time,
-                        AnalyticsMetric.timestamp <= end_time
+                        AnalyticsMetric.timestamp <= end_time,
                     )
                 )
             elif aggregation == "min":
@@ -403,7 +473,7 @@ class AlertService:
                     and_(
                         AnalyticsMetric.metric_name == metric_name,
                         AnalyticsMetric.timestamp >= start_time,
-                        AnalyticsMetric.timestamp <= end_time
+                        AnalyticsMetric.timestamp <= end_time,
                     )
                 )
             else:
@@ -411,7 +481,7 @@ class AlertService:
                     and_(
                         AnalyticsMetric.metric_name == metric_name,
                         AnalyticsMetric.timestamp >= start_time,
-                        AnalyticsMetric.timestamp <= end_time
+                        AnalyticsMetric.timestamp <= end_time,
                     )
                 )
 
@@ -422,7 +492,9 @@ class AlertService:
             logger.error(f"Failed to get metric value: {str(e)}")
             return 0.0
 
-    def _check_alert_condition(self, condition: Dict[str, Any], current_value: float) -> bool:
+    def _check_alert_condition(
+        self, condition: Dict[str, Any], current_value: float
+    ) -> bool:
         """Check if alert condition is met"""
         try:
             operator = condition.get("operator", "gt")
@@ -451,7 +523,7 @@ class AlertService:
         """Trigger an alert and send notifications"""
         try:
             alert_id = str(alert.id)
-            
+
             # Update alert state
             self._alert_states[alert_id]["last_triggered"] = datetime.utcnow()
             self._alert_states[alert_id]["trigger_count"] += 1
@@ -464,12 +536,16 @@ class AlertService:
             # Send notifications
             await self._send_alert_notifications(alert, current_value)
 
-            logger.warning(f"Alert triggered: {alert.name} (ID: {alert.id}) - Value: {current_value}")
+            logger.warning(
+                f"Alert triggered: {alert.name} (ID: {alert.id}) - Value: {current_value}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to trigger alert: {str(e)}")
 
-    async def _send_alert_notifications(self, alert: AnalyticsAlert, current_value: float):
+    async def _send_alert_notifications(
+        self, alert: AnalyticsAlert, current_value: float
+    ):
         """Send alert notifications through configured channels"""
         try:
             notification_config = alert.notification_config
@@ -484,7 +560,7 @@ class AlertService:
             # Prepare notification content
             severity = self._get_alert_severity(alert.condition)
             subject = f"🚨 Alert Triggered: {alert.name}"
-            
+
             notification_data = {
                 "alert_id": str(alert.id),
                 "alert_name": alert.name,
@@ -494,38 +570,43 @@ class AlertService:
                 "severity": severity.value,
                 "triggered_at": datetime.utcnow().isoformat(),
                 "owner_email": owner.email,
-                "owner_name": owner.full_name or owner.email
+                "owner_name": owner.full_name or owner.email,
             }
 
             # Send notifications through each channel
             for channel in channels:
                 try:
                     if channel["type"] == NotificationChannel.EMAIL.value:
-                        await self._send_email_notification(notification_data, channel.get("config", {}))
+                        await self._send_email_notification(
+                            notification_data, channel.get("config", {})
+                        )
                     elif channel["type"] == NotificationChannel.WEBSOCKET.value:
-                        await self._send_websocket_notification(notification_data, channel.get("config", {}))
+                        await self._send_websocket_notification(
+                            notification_data, channel.get("config", {})
+                        )
                     elif channel["type"] == NotificationChannel.WEBHOOK.value:
-                        await self._send_webhook_notification(notification_data, channel.get("config", {}))
+                        await self._send_webhook_notification(
+                            notification_data, channel.get("config", {})
+                        )
                     # Add Slack integration if needed
-                    
+
                 except Exception as e:
-                    logger.error(f"Failed to send notification via {channel['type']}: {str(e)}")
+                    logger.error(
+                        f"Failed to send notification via {channel['type']}: {str(e)}"
+                    )
 
         except Exception as e:
             logger.error(f"Failed to send alert notifications: {str(e)}")
 
-    async def _send_email_notification(self, notification_data: Dict[str, Any], channel_config: Dict[str, Any]):
+    async def _send_email_notification(
+        self, notification_data: Dict[str, Any], channel_config: Dict[str, Any]
+    ):
         """Send email notification"""
         try:
-            severity_emoji = {
-                "low": "ℹ️",
-                "medium": "⚠️", 
-                "high": "🔥",
-                "critical": "💥"
-            }
+            severity_emoji = {"low": "ℹ️", "medium": "⚠️", "high": "🔥", "critical": "💥"}
 
             emoji = severity_emoji.get(notification_data["severity"], "🚨")
-            
+
             content = f"""
             <h3>{emoji} Alert Triggered</h3>
             <p><strong>Alert:</strong> {notification_data['alert_name']}</p>
@@ -543,36 +624,41 @@ class AlertService:
                 title=f"Alert Triggered: {notification_data['alert_name']}",
                 content=content,
                 user_name=notification_data["owner_name"],
-                subject=f"🚨 Alert: {notification_data['alert_name']}"
+                subject=f"🚨 Alert: {notification_data['alert_name']}",
             )
 
-            logger.info(f"Email notification sent for alert {notification_data['alert_id']}")
+            logger.info(
+                f"Email notification sent for alert {notification_data['alert_id']}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to send email notification: {str(e)}")
 
-    async def _send_websocket_notification(self, notification_data: Dict[str, Any], channel_config: Dict[str, Any]):
+    async def _send_websocket_notification(
+        self, notification_data: Dict[str, Any], channel_config: Dict[str, Any]
+    ):
         """Send WebSocket notification"""
         try:
             # Send to alert owner via WebSocket
             await self.websocket_manager.send_user_message(
                 user_id=str(notification_data["alert_id"]),  # This should be owner_id
-                message={
-                    "type": "alert_triggered",
-                    "data": notification_data
-                }
+                message={"type": "alert_triggered", "data": notification_data},
             )
 
-            logger.info(f"WebSocket notification sent for alert {notification_data['alert_id']}")
+            logger.info(
+                f"WebSocket notification sent for alert {notification_data['alert_id']}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to send WebSocket notification: {str(e)}")
 
-    async def _send_webhook_notification(self, notification_data: Dict[str, Any], channel_config: Dict[str, Any]):
+    async def _send_webhook_notification(
+        self, notification_data: Dict[str, Any], channel_config: Dict[str, Any]
+    ):
         """Send webhook notification"""
         try:
             import aiohttp
-            
+
             webhook_url = channel_config.get("url")
             if not webhook_url:
                 logger.error("Webhook URL not configured")
@@ -588,8 +674,8 @@ class AlertService:
                     "description": notification_data["description"],
                     "severity": notification_data["severity"],
                     "current_value": notification_data["current_value"],
-                    "threshold": notification_data["threshold"]
-                }
+                    "threshold": notification_data["threshold"],
+                },
             }
 
             async with aiohttp.ClientSession() as session:
@@ -597,12 +683,16 @@ class AlertService:
                     webhook_url,
                     json=payload,
                     headers={"Content-Type": "application/json"},
-                    timeout=aiohttp.ClientTimeout(total=10)
+                    timeout=aiohttp.ClientTimeout(total=10),
                 ) as response:
                     if response.status == 200:
-                        logger.info(f"Webhook notification sent for alert {notification_data['alert_id']}")
+                        logger.info(
+                            f"Webhook notification sent for alert {notification_data['alert_id']}"
+                        )
                     else:
-                        logger.error(f"Webhook notification failed with status {response.status}")
+                        logger.error(
+                            f"Webhook notification failed with status {response.status}"
+                        )
 
         except Exception as e:
             logger.error(f"Failed to send webhook notification: {str(e)}")
@@ -633,7 +723,7 @@ class AlertService:
         """Validate alert condition structure"""
         try:
             required_fields = ["metric", "operator", "threshold"]
-            
+
             for field in required_fields:
                 if field not in condition:
                     return False
@@ -657,9 +747,16 @@ class AlertService:
     async def get_alert_metrics(self, alert_id: str, user_id: str) -> Dict[str, Any]:
         """Get metrics and history for a specific alert"""
         try:
-            alert = self.db.query(AnalyticsAlert).filter(
-                and_(AnalyticsAlert.id == alert_id, AnalyticsAlert.owner_id == user_id)
-            ).first()
+            alert = (
+                self.db.query(AnalyticsAlert)
+                .filter(
+                    and_(
+                        AnalyticsAlert.id == alert_id,
+                        AnalyticsAlert.owner_id == user_id,
+                    )
+                )
+                .first()
+            )
 
             if not alert:
                 raise ValueError("Alert not found or access denied")
@@ -670,23 +767,28 @@ class AlertService:
             # Get recent metric values for trending
             condition = alert.condition
             metric_name = condition.get("metric")
-            
+
             # Get last 24 hours of data
             end_time = datetime.utcnow()
             start_time = end_time - timedelta(hours=24)
 
-            metric_history = self.db.query(AnalyticsMetric).filter(
-                and_(
-                    AnalyticsMetric.metric_name == metric_name,
-                    AnalyticsMetric.timestamp >= start_time,
-                    AnalyticsMetric.timestamp <= end_time
+            metric_history = (
+                self.db.query(AnalyticsMetric)
+                .filter(
+                    and_(
+                        AnalyticsMetric.metric_name == metric_name,
+                        AnalyticsMetric.timestamp >= start_time,
+                        AnalyticsMetric.timestamp <= end_time,
+                    )
                 )
-            ).order_by(AnalyticsMetric.timestamp).all()
+                .order_by(AnalyticsMetric.timestamp)
+                .all()
+            )
 
             history_data = [
                 {
                     "timestamp": metric.timestamp.isoformat(),
-                    "value": float(metric.metric_value)
+                    "value": float(metric.metric_value),
                 }
                 for metric in metric_history
             ]
@@ -696,12 +798,16 @@ class AlertService:
                 "alert_name": alert.name,
                 "current_value": alert_state.get("current_value"),
                 "threshold": condition.get("threshold"),
-                "last_triggered": alert_state.get("last_triggered").isoformat() if alert_state.get("last_triggered") else None,
+                "last_triggered": (
+                    alert_state.get("last_triggered").isoformat()
+                    if alert_state.get("last_triggered")
+                    else None
+                ),
                 "trigger_count": alert_state.get("trigger_count", 0),
                 "status": alert_state.get("status", "active"),
-                "metric_history": history_data
+                "metric_history": history_data,
             }
 
         except Exception as e:
             logger.error(f"Failed to get alert metrics: {str(e)}")
-            raise 
+            raise

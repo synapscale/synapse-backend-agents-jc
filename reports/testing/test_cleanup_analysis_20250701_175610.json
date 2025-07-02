@@ -1,0 +1,796 @@
+{
+  "timestamp": "2025-07-01T17:56:10.680404",
+  "summary": {
+    "total_files_analyzed": 32,
+    "total_size_kb": 315.5,
+    "categories": {
+      "keep_current_tests": {
+        "count": 8,
+        "total_size_kb": 117.4
+      },
+      "review_consolidate": {
+        "count": 18,
+        "total_size_kb": 171.3
+      },
+      "remove_deprecated": {
+        "count": 4,
+        "total_size_kb": 10.9
+      },
+      "archive_reports": {
+        "count": 0,
+        "total_size_kb": 0
+      },
+      "database_validation": {
+        "count": 2,
+        "total_size_kb": 15.9
+      },
+      "model_validation": {
+        "count": 0,
+        "total_size_kb": 0
+      }
+    }
+  },
+  "categorized_files": {
+    "keep_current_tests": [
+      {
+        "filename": "setup_improved_testing.py",
+        "size_kb": 3.1,
+        "lines": 112,
+        "test_type": "api",
+        "description": "API endpoint test",
+        "functions_count": 4,
+        "functions": [
+          "install_dependencies",
+          "validate_environment",
+          "create_test_config",
+          "main"
+        ],
+        "key_imports": [
+          "subprocess",
+          "sys",
+          "os",
+          "jsonschema",
+          "requests",
+          "json"
+        ]
+      },
+      {
+        "filename": "verify_models_detailed.py",
+        "size_kb": 5.1,
+        "lines": 157,
+        "test_type": "llm",
+        "description": "LLM/AI model test",
+        "functions_count": 4,
+        "functions": [
+          "get_table_columns",
+          "check_model_columns",
+          "compare_table_model",
+          "main"
+        ],
+        "key_imports": [
+          "sys",
+          "os",
+          "sync_engine",
+          "DATABASE_SCHEMA",
+          "text",
+          "re",
+          "traceback"
+        ]
+      },
+      {
+        "filename": "temp_backup.py",
+        "size_kb": 65.1,
+        "lines": 1760,
+        "test_type": "api_auth",
+        "description": "API authentication test",
+        "functions_count": 0,
+        "functions": [],
+        "key_imports": [
+          "BaseModel",
+          "Field",
+          "Optional",
+          "datetime",
+          "uuid"
+        ]
+      },
+      {
+        "filename": "validate_models_comprehensive.py",
+        "size_kb": 8.3,
+        "lines": 187,
+        "test_type": "llm",
+        "description": "LLM/AI model test",
+        "functions_count": 7,
+        "functions": [
+          "__init__",
+          "_get_all_models",
+          "validate_table_names",
+          "validate_relationships",
+          "validate_foreign_keys"
+        ],
+        "key_imports": [
+          "sys",
+          "os",
+          "inspect",
+          "inspect as sqlalchemy_inspect",
+          "src.synapse.models as models_module",
+          "completeness...",
+          "src.synapse.models as models_module"
+        ]
+      },
+      {
+        "filename": "validate_no_hardcoded_final.py",
+        "size_kb": 7.9,
+        "lines": 244,
+        "test_type": "llm",
+        "description": "LLM/AI model test",
+        "functions_count": 6,
+        "functions": [
+          "scan_for_hardcoded_values",
+          "is_valid_usage",
+          "generate",
+          "create",
+          "check_env_usage"
+        ],
+        "key_imports": [
+          "os",
+          "re",
+          "glob",
+          "List",
+          "Tuple"
+        ]
+      },
+      {
+        "filename": "test_complete_llm_system.py",
+        "size_kb": 11.0,
+        "lines": 344,
+        "test_type": "llm",
+        "description": "LLM/AI model test",
+        "functions_count": 12,
+        "functions": [
+          "print_header",
+          "print_success",
+          "print_error",
+          "print_warning",
+          "print_info"
+        ],
+        "key_imports": [
+          "asyncio",
+          "sys",
+          "os",
+          "time",
+          "Path",
+          "get_llm_service",
+          "get_logger"
+        ]
+      },
+      {
+        "filename": "analyze_remaining_models.py",
+        "size_kb": 7.1,
+        "lines": 139,
+        "test_type": "llm",
+        "description": "LLM/AI model test",
+        "functions_count": 2,
+        "functions": [
+          "categorize_remaining_models",
+          "main"
+        ],
+        "key_imports": []
+      },
+      {
+        "filename": "validate_complete_structure.py",
+        "size_kb": 9.8,
+        "lines": 277,
+        "test_type": "llm",
+        "description": "LLM/AI model test",
+        "functions_count": 5,
+        "functions": [
+          "get_real_table_structure",
+          "get_model_files",
+          "find_model_for_table",
+          "validate_table_vs_model",
+          "main"
+        ],
+        "key_imports": [
+          "sys",
+          "os",
+          "sync_engine",
+          "DATABASE_SCHEMA",
+          "text",
+          "glob",
+          "importlib",
+          "traceback"
+        ]
+      }
+    ],
+    "review_consolidate": [
+      {
+        "filename": "test_models_detailed.py",
+        "size_kb": 2.5,
+        "lines": 72,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 2,
+        "functions": [
+          "test_individual_import",
+          "main"
+        ],
+        "key_imports": [
+          "os",
+          "traceback",
+          "sys",
+          "print"
+        ]
+      },
+      {
+        "filename": "final_database_alignment_test.py",
+        "size_kb": 5.6,
+        "lines": 172,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 4,
+        "functions": [
+          "test_critical_models",
+          "test_database_connection",
+          "verify_model_table_alignment",
+          "main"
+        ],
+        "key_imports": [
+          "os",
+          "sys",
+          "load_dotenv",
+          "test_database_connection",
+          "get_database_info",
+          "psycopg2",
+          "urlparse"
+        ]
+      },
+      {
+        "filename": "comprehensive_model_test.py",
+        "size_kb": 5.2,
+        "lines": 154,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 4,
+        "functions": [
+          "test_individual_model_imports",
+          "test_reserved_words_in_action",
+          "test_relationship_conflicts",
+          "main"
+        ],
+        "key_imports": [
+          "os",
+          "sys",
+          "glob",
+          "importlib",
+          "User",
+          "Workspace",
+          "Agent",
+          "Workflow",
+          "Node",
+          "traceback"
+        ]
+      },
+      {
+        "filename": "test_endpoints_comprehensive.py",
+        "size_kb": 20.5,
+        "lines": 609,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 18,
+        "functions": [
+          "__init__",
+          "log",
+          "check_server_health",
+          "discover_endpoints",
+          "_categorize"
+        ],
+        "key_imports": [
+          "argparse",
+          "asyncio",
+          "aiohttp",
+          "json",
+          "time",
+          "uuid",
+          "datetime",
+          "Dict",
+          "List",
+          "Any"
+        ]
+      },
+      {
+        "filename": "comprehensive_validation.py",
+        "size_kb": 9.4,
+        "lines": 273,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 8,
+        "functions": [
+          "get_database_url",
+          "test_model_imports",
+          "test_database_connection",
+          "test_model_metadata",
+          "verify_key_tables_exist"
+        ],
+        "key_imports": [
+          "os",
+          "sys",
+          "Path",
+          "logging",
+          "create_engine",
+          "text",
+          "inspect",
+          "sessionmaker",
+          "load_dotenv",
+          "Workspace"
+        ]
+      },
+      {
+        "filename": "test_service_architecture.py",
+        "size_kb": 4.5,
+        "lines": 145,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 2,
+        "functions": [
+          "test_service_layer_imports",
+          "main"
+        ],
+        "key_imports": [
+          "sys",
+          "Path",
+          "print",
+          "BaseService",
+          "print",
+          "print",
+          "print",
+          "configure_services",
+          "print",
+          "UserService"
+        ]
+      },
+      {
+        "filename": "test_error_handling_system.py",
+        "size_kb": 8.6,
+        "lines": 294,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 12,
+        "functions": [
+          "__init__",
+          "__init__",
+          "__init__",
+          "__str__",
+          "__init__"
+        ],
+        "key_imports": [
+          "os",
+          "sys",
+          "asyncio",
+          "logging",
+          "traceback",
+          "time",
+          "Path",
+          "get_logger",
+          "get_error_stats",
+          "create_error_response"
+        ]
+      },
+      {
+        "filename": "test_agents_system.py",
+        "size_kb": 4.4,
+        "lines": 135,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 4,
+        "functions": [
+          "test_imports",
+          "test_enums",
+          "test_schemas_validation",
+          "main"
+        ],
+        "key_imports": [
+          "os",
+          "sys",
+          "Agent",
+          "AgentTool",
+          "AgentModel",
+          "AgentConfiguration",
+          "AgentACL",
+          "AgentErrorLog",
+          "AgentHierarchy",
+          "AgentKB"
+        ]
+      },
+      {
+        "filename": "test_llm_endpoint.py",
+        "size_kb": 4.3,
+        "lines": 134,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 3,
+        "functions": [
+          "test_llm_models_endpoint",
+          "test_llm_providers_endpoint",
+          "main"
+        ],
+        "key_imports": [
+          "asyncio",
+          "aiohttp",
+          "json",
+          "Dict",
+          "Any"
+        ]
+      },
+      {
+        "filename": "test_auth_endpoints.py",
+        "size_kb": 13.7,
+        "lines": 358,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 8,
+        "functions": [
+          "__init__",
+          "setup_authentication",
+          "discover_endpoints",
+          "test_endpoint_without_auth",
+          "test_endpoint_with_auth"
+        ],
+        "key_imports": [
+          "requests",
+          "json",
+          "urljoin",
+          "Dict",
+          "List",
+          "Optional",
+          "time"
+        ]
+      },
+      {
+        "filename": "test_cleanup_analysis.py",
+        "size_kb": 11.4,
+        "lines": 316,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 8,
+        "functions": [
+          "get_file_size",
+          "get_file_info",
+          "analyze_test_file_content",
+          "test_",
+          "test_"
+        ],
+        "key_imports": [
+          "os",
+          "json",
+          "re",
+          "datetime",
+          "Dict",
+          "List",
+          "Any",
+          "Path",
+          "traceback"
+        ]
+      },
+      {
+        "filename": "test_model_validation.py",
+        "size_kb": 7.2,
+        "lines": 158,
+        "test_type": "agent",
+        "description": "Agent system test",
+        "functions_count": 2,
+        "functions": [
+          "validate_model",
+          "main"
+        ],
+        "key_imports": [
+          "sys",
+          "os",
+          "create_engine",
+          "text",
+          "declarative_base",
+          "Column",
+          "String",
+          "Boolean",
+          "DateTime",
+          "Integer"
+        ]
+      },
+      {
+        "filename": "test_registration_debug.py",
+        "size_kb": 10.0,
+        "lines": 301,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 7,
+        "functions": [
+          "test_server_status",
+          "test_database_connection",
+          "test_registration",
+          "test_login",
+          "test_user_info"
+        ],
+        "key_imports": [
+          "requests",
+          "json",
+          "os",
+          "sys",
+          "datetime"
+        ]
+      },
+      {
+        "filename": "test_service_layer_integration.py",
+        "size_kb": 10.5,
+        "lines": 281,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 2,
+        "functions": [
+          "test_service_layer_integration",
+          "main"
+        ],
+        "key_imports": [
+          "asyncio",
+          "logging",
+          "sys",
+          "os",
+          "Path",
+          "uuid4",
+          "datetime",
+          "configure_services",
+          "get_container",
+          "init_db"
+        ]
+      },
+      {
+        "filename": "test_llm_endpoints.py",
+        "size_kb": 16.3,
+        "lines": 525,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 16,
+        "functions": [
+          "print_header",
+          "print_success",
+          "print_error",
+          "print_warning",
+          "print_info"
+        ],
+        "key_imports": [
+          "asyncio",
+          "aiohttp",
+          "json",
+          "sys",
+          "os",
+          "time",
+          "Path",
+          "Dict",
+          "Any",
+          "Optional"
+        ]
+      },
+      {
+        "filename": "final_relationship_test.py",
+        "size_kb": 6.3,
+        "lines": 175,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 3,
+        "functions": [
+          "test_full_model_registry",
+          "test_database_query",
+          "main"
+        ],
+        "key_imports": [
+          "os",
+          "sys",
+          "Path",
+          "logging",
+          "create_engine",
+          "sessionmaker",
+          "load_dotenv",
+          "Workspace",
+          "WorkspaceProject",
+          "WorkspaceMember"
+        ]
+      },
+      {
+        "filename": "setup_test_user_api_keys.py",
+        "size_kb": 7.7,
+        "lines": 238,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 5,
+        "functions": [
+          "create_test_user",
+          "setup_user_api_keys",
+          "list_user_api_keys",
+          "test_user_llm_generation",
+          "main"
+        ],
+        "key_imports": [
+          "asyncio",
+          "sys",
+          "os",
+          "Path",
+          "Session",
+          "get_db_session",
+          "get_llm_service",
+          "User",
+          "UserVariable",
+          "get_logger"
+        ]
+      },
+      {
+        "filename": "test_endpoints_functional.py",
+        "size_kb": 23.2,
+        "lines": 641,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 25,
+        "functions": [
+          "__init__",
+          "log",
+          "setup_test_environment",
+          "test_authentication_flow",
+          "_test_user_registration"
+        ],
+        "key_imports": [
+          "requests",
+          "json",
+          "uuid",
+          "time",
+          "datetime",
+          "Dict",
+          "List",
+          "Any",
+          "Optional",
+          "argparse"
+        ]
+      }
+    ],
+    "remove_deprecated": [
+      {
+        "filename": "test_llm_endpoint_simple.py",
+        "size_kb": 1.8,
+        "lines": 62,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 2,
+        "functions": [
+          "test_llm_models_simple",
+          "main"
+        ],
+        "key_imports": [
+          "asyncio",
+          "aiohttp",
+          "json"
+        ]
+      },
+      {
+        "filename": "test_simple_imports.py",
+        "size_kb": 1.3,
+        "lines": 52,
+        "test_type": "pytest",
+        "description": "Standard pytest test file",
+        "functions_count": 1,
+        "functions": [
+          "test_basic_imports"
+        ],
+        "key_imports": [
+          "sys",
+          "enum",
+          "BaseModel",
+          "Field",
+          "Dict",
+          "Any",
+          "uuid4"
+        ]
+      },
+      {
+        "filename": "test_simple_models.py",
+        "size_kb": 1.0,
+        "lines": 32,
+        "test_type": "agent",
+        "description": "Agent system test",
+        "functions_count": 1,
+        "functions": [
+          "__str__"
+        ],
+        "key_imports": [
+          "os",
+          "Column",
+          "String",
+          "DateTime",
+          "BigInteger",
+          "Numeric",
+          "ForeignKey",
+          "UUID",
+          "relationship",
+          "func"
+        ]
+      },
+      {
+        "filename": "decrypt_existing_data.py",
+        "size_kb": 6.8,
+        "lines": 230,
+        "test_type": "unknown",
+        "description": "",
+        "functions_count": 5,
+        "functions": [
+          "is_base64_encoded",
+          "is_fernet_encrypted",
+          "attempt_fernet_decrypt",
+          "decrypt_all_variables",
+          "main"
+        ],
+        "key_imports": [
+          "os",
+          "sys",
+          "base64",
+          "load_dotenv",
+          "create_engine",
+          "text",
+          "sessionmaker",
+          "UserVariable",
+          "Fernet"
+        ]
+      }
+    ],
+    "archive_reports": [],
+    "database_validation": [
+      {
+        "filename": "check_database_structure.py",
+        "size_kb": 10.6,
+        "lines": 289,
+        "test_type": "database",
+        "description": "Database connection/validation test",
+        "functions_count": 4,
+        "functions": [
+          "get_database_connection",
+          "analyze_database_structure",
+          "FROM",
+          "main"
+        ],
+        "key_imports": [
+          "os",
+          "json",
+          "asyncio",
+          "asyncpg",
+          "datetime",
+          "Dict",
+          "List",
+          "Any",
+          "urlparse",
+          "sys"
+        ]
+      },
+      {
+        "filename": "check_missing_models.py",
+        "size_kb": 5.3,
+        "lines": 134,
+        "test_type": "database",
+        "description": "Database connection/validation test",
+        "functions_count": 3,
+        "functions": [
+          "table_to_model_file",
+          "check_model_files",
+          "main"
+        ],
+        "key_imports": [
+          "psycopg2",
+          "os",
+          "Path"
+        ]
+      }
+    ],
+    "model_validation": []
+  },
+  "recommendations": {
+    "keep_current_tests": "These are functional tests that should be maintained",
+    "review_consolidate": "Review these files and consider consolidating similar functionality",
+    "remove_deprecated": "These files can be safely removed",
+    "archive_reports": "Move these analysis reports to archive directory",
+    "database_validation": "Consider consolidating into single database validation suite",
+    "model_validation": "Consider consolidating into single model validation suite"
+  }
+}

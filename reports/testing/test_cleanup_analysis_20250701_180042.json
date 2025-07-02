@@ -1,0 +1,1508 @@
+{
+  "timestamp": "20250701_180042",
+  "test_files": [
+    {
+      "filename": "temp_backup.py",
+      "path": "temp_backup.py",
+      "size_bytes": 66643,
+      "size_kb": 65.1,
+      "lines": 1761,
+      "modification_time": "2025-07-01T13:56:43.618998",
+      "analysis": {
+        "imports_count": 3,
+        "functions_count": 0,
+        "classes_count": 102,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "temporary_file"
+    },
+    {
+      "filename": "test_endpoints_functional.py",
+      "path": "test_endpoints_functional.py",
+      "size_bytes": 23708,
+      "size_kb": 23.2,
+      "lines": 642,
+      "modification_time": "2025-07-01T13:56:42.476268",
+      "analysis": {
+        "imports_count": 7,
+        "functions_count": 25,
+        "classes_count": 1,
+        "docstring": null,
+        "key_imports": [
+          "import requests"
+        ],
+        "test_functions": [
+          "test_authentication_flow",
+          "test_system_endpoints",
+          "test_tenant_functionality",
+          "test_user_profile_functionality",
+          "test_workspace_enhanced_functionality"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "other"
+    },
+    {
+      "filename": "test_endpoints_comprehensive.py",
+      "path": "test_endpoints_comprehensive.py",
+      "size_bytes": 20968,
+      "size_kb": 20.5,
+      "lines": 610,
+      "modification_time": "2025-07-01T13:56:42.565735",
+      "analysis": {
+        "imports_count": 19,
+        "functions_count": 18,
+        "classes_count": 3,
+        "docstring": null,
+        "key_imports": [
+          "import asyncio",
+          "import requests",
+          "import requests",
+          "import requests",
+          "import requests",
+          "import requests"
+        ],
+        "test_functions": [
+          "test_endpoints_sync"
+        ],
+        "main_functions": [
+          "run",
+          "main"
+        ]
+      },
+      "category": "current_functional_test"
+    },
+    {
+      "filename": "test_llm_endpoints.py",
+      "path": "test_llm_endpoints.py",
+      "size_bytes": 16722,
+      "size_kb": 16.3,
+      "lines": 526,
+      "modification_time": "2025-07-01T13:56:42.487451",
+      "analysis": {
+        "imports_count": 11,
+        "functions_count": 5,
+        "classes_count": 1,
+        "docstring": null,
+        "key_imports": [
+          "import asyncio"
+        ],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "current_functional_test"
+    },
+    {
+      "filename": "test_cleanup_analysis.py",
+      "path": "test_cleanup_analysis.py",
+      "size_bytes": 14418,
+      "size_kb": 14.1,
+      "lines": 382,
+      "modification_time": "2025-07-01T18:00:35.045386",
+      "analysis": {
+        "imports_count": 6,
+        "functions_count": 8,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "other"
+    },
+    {
+      "filename": "test_auth_endpoints.py",
+      "path": "test_auth_endpoints.py",
+      "size_bytes": 14022,
+      "size_kb": 13.7,
+      "lines": 359,
+      "modification_time": "2025-07-01T13:56:42.281247",
+      "analysis": {
+        "imports_count": 5,
+        "functions_count": 8,
+        "classes_count": 1,
+        "docstring": null,
+        "key_imports": [
+          "import requests"
+        ],
+        "test_functions": [
+          "test_endpoint_without_auth",
+          "test_endpoint_with_auth"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "current_functional_test"
+    },
+    {
+      "filename": "test_complete_llm_system.py",
+      "path": "test_complete_llm_system.py",
+      "size_bytes": 11252,
+      "size_kb": 11.0,
+      "lines": 345,
+      "modification_time": "2025-07-01T13:56:41.841029",
+      "analysis": {
+        "imports_count": 7,
+        "functions_count": 7,
+        "classes_count": 1,
+        "docstring": null,
+        "key_imports": [
+          "import asyncio"
+        ],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "other"
+    },
+    {
+      "filename": "check_database_structure.py",
+      "path": "check_database_structure.py",
+      "size_bytes": 10905,
+      "size_kb": 10.6,
+      "lines": 307,
+      "modification_time": "2025-07-01T17:58:56.218089",
+      "analysis": {
+        "imports_count": 8,
+        "functions_count": 6,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "test_service_layer_integration.py",
+      "path": "test_service_layer_integration.py",
+      "size_bytes": 10737,
+      "size_kb": 10.5,
+      "lines": 282,
+      "modification_time": "2025-07-01T13:56:42.442328",
+      "analysis": {
+        "imports_count": 12,
+        "functions_count": 0,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "import asyncio"
+        ],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "architecture_test"
+    },
+    {
+      "filename": "test_registration_debug.py",
+      "path": "test_registration_debug.py",
+      "size_bytes": 10212,
+      "size_kb": 10.0,
+      "lines": 302,
+      "modification_time": "2025-07-01T13:56:42.467202",
+      "analysis": {
+        "imports_count": 5,
+        "functions_count": 7,
+        "classes_count": 0,
+        "docstring": "Debug script para identificar problemas no registro de usu\u00e1rio Foco no problema do plan_id sendo None durante cria\u00e7\u00e3o de workspace",
+        "key_imports": [
+          "import requests"
+        ],
+        "test_functions": [
+          "test_server_status",
+          "test_database_connection",
+          "test_registration",
+          "test_login",
+          "test_user_info",
+          "test_workspaces"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "debug_test"
+    },
+    {
+      "filename": "validate_complete_structure.py",
+      "path": "validate_complete_structure.py",
+      "size_bytes": 10064,
+      "size_kb": 9.8,
+      "lines": 278,
+      "modification_time": "2025-07-01T16:51:03.193858",
+      "analysis": {
+        "imports_count": 7,
+        "functions_count": 5,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "from sqlalchemy import text"
+        ],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "comprehensive_validation.py",
+      "path": "comprehensive_validation.py",
+      "size_bytes": 9676,
+      "size_kb": 9.4,
+      "lines": 273,
+      "modification_time": "2025-07-01T16:44:41.446514",
+      "analysis": {
+        "imports_count": 23,
+        "functions_count": 8,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "from sqlalchemy import create_engine, text, inspect",
+          "from sqlalchemy.orm import sessionmaker"
+        ],
+        "test_functions": [
+          "test_model_imports",
+          "test_database_connection",
+          "test_model_metadata",
+          "test_workspace_model_alignment",
+          "test_relationships"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "test_error_handling_system.py",
+      "path": "test_error_handling_system.py",
+      "size_bytes": 8827,
+      "size_kb": 8.6,
+      "lines": 295,
+      "modification_time": "2025-07-01T13:56:42.456917",
+      "analysis": {
+        "imports_count": 14,
+        "functions_count": 5,
+        "classes_count": 4,
+        "docstring": "Teste do Sistema de Error Handling e Logging do SynapScale Este teste verifica se o sistema de tratamento de erros globais, logging estruturado e exce\u00e7\u00f5es customizadas est\u00e1 funcionando corretamente.",
+        "key_imports": [
+          "import asyncio"
+        ],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "other"
+    },
+    {
+      "filename": "validate_models_comprehensive.py",
+      "path": "validate_models_comprehensive.py",
+      "size_bytes": 8467,
+      "size_kb": 8.3,
+      "lines": 187,
+      "modification_time": "2025-07-01T16:18:20.558617",
+      "analysis": {
+        "imports_count": 7,
+        "functions_count": 7,
+        "classes_count": 1,
+        "docstring": null,
+        "key_imports": [
+          "from sqlalchemy.inspection import inspect as sqlalchemy_inspect"
+        ],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "validate_no_hardcoded_final.py",
+      "path": "validate_no_hardcoded_final.py",
+      "size_bytes": 8067,
+      "size_kb": 7.9,
+      "lines": 245,
+      "modification_time": "2025-07-01T13:56:43.101014",
+      "analysis": {
+        "imports_count": 4,
+        "functions_count": 4,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "setup_test_user_api_keys.py",
+      "path": "setup_test_user_api_keys.py",
+      "size_bytes": 7896,
+      "size_kb": 7.7,
+      "lines": 239,
+      "modification_time": "2025-07-01T13:56:40.086401",
+      "analysis": {
+        "imports_count": 10,
+        "functions_count": 4,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "import asyncio",
+          "from sqlalchemy.orm import Session"
+        ],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "test_setup"
+    },
+    {
+      "filename": "test_model_validation.py",
+      "path": "test_model_validation.py",
+      "size_bytes": 7379,
+      "size_kb": 7.2,
+      "lines": 159,
+      "modification_time": "2025-07-01T16:46:20.748352",
+      "analysis": {
+        "imports_count": 8,
+        "functions_count": 2,
+        "classes_count": 3,
+        "docstring": null,
+        "key_imports": [
+          "from sqlalchemy import create_engine, text",
+          "from sqlalchemy.ext.declarative import declarative_base",
+          "from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey, ARRAY",
+          "from sqlalchemy.dialects.postgresql import UUID, JSONB",
+          "from sqlalchemy.sql import func"
+        ],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "model_validation"
+    },
+    {
+      "filename": "analyze_remaining_models.py",
+      "path": "analyze_remaining_models.py",
+      "size_bytes": 7255,
+      "size_kb": 7.1,
+      "lines": 140,
+      "modification_time": "2025-07-01T16:11:12.843788",
+      "analysis": {
+        "imports_count": 0,
+        "functions_count": 2,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "analysis_script"
+    },
+    {
+      "filename": "decrypt_existing_data.py",
+      "path": "decrypt_existing_data.py",
+      "size_bytes": 6930,
+      "size_kb": 6.8,
+      "lines": 231,
+      "modification_time": "2025-07-01T13:56:39.848926",
+      "analysis": {
+        "imports_count": 8,
+        "functions_count": 5,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "from sqlalchemy import create_engine, text",
+          "from sqlalchemy.orm import sessionmaker"
+        ],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "temporary_file"
+    },
+    {
+      "filename": "final_relationship_test.py",
+      "path": "final_relationship_test.py",
+      "size_bytes": 6486,
+      "size_kb": 6.3,
+      "lines": 175,
+      "modification_time": "2025-07-01T16:47:07.270830",
+      "analysis": {
+        "imports_count": 27,
+        "functions_count": 3,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "from sqlalchemy import create_engine",
+          "from sqlalchemy.orm import sessionmaker"
+        ],
+        "test_functions": [
+          "test_full_model_registry",
+          "test_database_query"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "final_database_alignment_test.py",
+      "path": "final_database_alignment_test.py",
+      "size_bytes": 5750,
+      "size_kb": 5.6,
+      "lines": 173,
+      "modification_time": "2025-07-01T17:23:53.243423",
+      "analysis": {
+        "imports_count": 6,
+        "functions_count": 4,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [
+          "test_critical_models",
+          "test_database_connection"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "check_missing_models.py",
+      "path": "check_missing_models.py",
+      "size_bytes": 5387,
+      "size_kb": 5.3,
+      "lines": 135,
+      "modification_time": "2025-07-01T15:53:37.332604",
+      "analysis": {
+        "imports_count": 3,
+        "functions_count": 3,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "comprehensive_model_test.py",
+      "path": "comprehensive_model_test.py",
+      "size_bytes": 5317,
+      "size_kb": 5.2,
+      "lines": 155,
+      "modification_time": "2025-07-01T17:07:02.352619",
+      "analysis": {
+        "imports_count": 10,
+        "functions_count": 4,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [
+          "test_individual_model_imports",
+          "test_reserved_words_in_action",
+          "test_relationship_conflicts"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "other"
+    },
+    {
+      "filename": "verify_models_detailed.py",
+      "path": "verify_models_detailed.py",
+      "size_bytes": 5184,
+      "size_kb": 5.1,
+      "lines": 158,
+      "modification_time": "2025-07-01T17:04:58.148333",
+      "analysis": {
+        "imports_count": 6,
+        "functions_count": 4,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "from sqlalchemy import text"
+        ],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "database_validation"
+    },
+    {
+      "filename": "test_service_architecture.py",
+      "path": "test_service_architecture.py",
+      "size_bytes": 4653,
+      "size_kb": 4.5,
+      "lines": 146,
+      "modification_time": "2025-07-01T13:56:42.395265",
+      "analysis": {
+        "imports_count": 9,
+        "functions_count": 2,
+        "classes_count": 0,
+        "docstring": "Simple Service Layer Architecture Test. This test validates that all the service layer components are properly structured and can be imported without errors.",
+        "key_imports": [],
+        "test_functions": [
+          "test_service_layer_imports"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "architecture_test"
+    },
+    {
+      "filename": "test_agents_system.py",
+      "path": "test_agents_system.py",
+      "size_bytes": 4496,
+      "size_kb": 4.4,
+      "lines": 136,
+      "modification_time": "2025-07-01T13:56:41.639035",
+      "analysis": {
+        "imports_count": 27,
+        "functions_count": 4,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [
+          "test_imports",
+          "test_enums",
+          "test_schemas_validation"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "other"
+    },
+    {
+      "filename": "test_llm_endpoint.py",
+      "path": "test_llm_endpoint.py",
+      "size_bytes": 4377,
+      "size_kb": 4.3,
+      "lines": 135,
+      "modification_time": "2025-07-01T13:56:42.268771",
+      "analysis": {
+        "imports_count": 4,
+        "functions_count": 0,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "import asyncio"
+        ],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "other"
+    },
+    {
+      "filename": "setup_improved_testing.py",
+      "path": "setup_improved_testing.py",
+      "size_bytes": 3151,
+      "size_kb": 3.1,
+      "lines": 113,
+      "modification_time": "2025-07-01T13:56:40.019057",
+      "analysis": {
+        "imports_count": 6,
+        "functions_count": 4,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "import requests"
+        ],
+        "test_functions": [],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "test_setup"
+    },
+    {
+      "filename": "test_models_detailed.py",
+      "path": "test_models_detailed.py",
+      "size_bytes": 2513,
+      "size_kb": 2.5,
+      "lines": 73,
+      "modification_time": "2025-07-01T16:09:32.618271",
+      "analysis": {
+        "imports_count": 4,
+        "functions_count": 2,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [
+          "test_individual_import"
+        ],
+        "main_functions": [
+          "main"
+        ]
+      },
+      "category": "model_validation"
+    },
+    {
+      "filename": "test_llm_endpoint_simple.py",
+      "path": "test_llm_endpoint_simple.py",
+      "size_bytes": 1819,
+      "size_kb": 1.8,
+      "lines": 63,
+      "modification_time": "2025-07-01T13:56:42.232308",
+      "analysis": {
+        "imports_count": 3,
+        "functions_count": 0,
+        "classes_count": 0,
+        "docstring": null,
+        "key_imports": [
+          "import asyncio"
+        ],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "other"
+    },
+    {
+      "filename": "test_simple_imports.py",
+      "path": "test_simple_imports.py",
+      "size_bytes": 1364,
+      "size_kb": 1.3,
+      "lines": 53,
+      "modification_time": "2025-07-01T13:56:42.306726",
+      "analysis": {
+        "imports_count": 5,
+        "functions_count": 1,
+        "classes_count": 2,
+        "docstring": null,
+        "key_imports": [],
+        "test_functions": [
+          "test_basic_imports"
+        ],
+        "main_functions": []
+      },
+      "category": "debug_test"
+    },
+    {
+      "filename": "test_simple_models.py",
+      "path": "test_simple_models.py",
+      "size_bytes": 1073,
+      "size_kb": 1.0,
+      "lines": 33,
+      "modification_time": "2025-07-01T16:05:28.807480",
+      "analysis": {
+        "imports_count": 6,
+        "functions_count": 1,
+        "classes_count": 1,
+        "docstring": null,
+        "key_imports": [
+          "from sqlalchemy import Column, String, DateTime, BigInteger, Numeric, ForeignKey",
+          "from sqlalchemy.dialects.postgresql import UUID",
+          "from sqlalchemy.orm import relationship",
+          "from sqlalchemy.sql import func"
+        ],
+        "test_functions": [],
+        "main_functions": []
+      },
+      "category": "model_validation"
+    }
+  ],
+  "recommendations": {
+    "files_to_keep": [
+      {
+        "filename": "test_endpoints_comprehensive.py",
+        "path": "test_endpoints_comprehensive.py",
+        "size_bytes": 20968,
+        "size_kb": 20.5,
+        "lines": 610,
+        "modification_time": "2025-07-01T13:56:42.565735",
+        "analysis": {
+          "imports_count": 19,
+          "functions_count": 18,
+          "classes_count": 3,
+          "docstring": null,
+          "key_imports": [
+            "import asyncio",
+            "import requests",
+            "import requests",
+            "import requests",
+            "import requests",
+            "import requests"
+          ],
+          "test_functions": [
+            "test_endpoints_sync"
+          ],
+          "main_functions": [
+            "run",
+            "main"
+          ]
+        },
+        "category": "current_functional_test"
+      },
+      {
+        "filename": "test_llm_endpoints.py",
+        "path": "test_llm_endpoints.py",
+        "size_bytes": 16722,
+        "size_kb": 16.3,
+        "lines": 526,
+        "modification_time": "2025-07-01T13:56:42.487451",
+        "analysis": {
+          "imports_count": 11,
+          "functions_count": 5,
+          "classes_count": 1,
+          "docstring": null,
+          "key_imports": [
+            "import asyncio"
+          ],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "current_functional_test"
+      },
+      {
+        "filename": "test_auth_endpoints.py",
+        "path": "test_auth_endpoints.py",
+        "size_bytes": 14022,
+        "size_kb": 13.7,
+        "lines": 359,
+        "modification_time": "2025-07-01T13:56:42.281247",
+        "analysis": {
+          "imports_count": 5,
+          "functions_count": 8,
+          "classes_count": 1,
+          "docstring": null,
+          "key_imports": [
+            "import requests"
+          ],
+          "test_functions": [
+            "test_endpoint_without_auth",
+            "test_endpoint_with_auth"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "current_functional_test"
+      }
+    ],
+    "files_to_remove": [
+      {
+        "filename": "temp_backup.py",
+        "path": "temp_backup.py",
+        "size_bytes": 66643,
+        "size_kb": 65.1,
+        "lines": 1761,
+        "modification_time": "2025-07-01T13:56:43.618998",
+        "analysis": {
+          "imports_count": 3,
+          "functions_count": 0,
+          "classes_count": 102,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "temporary_file"
+      },
+      {
+        "filename": "test_registration_debug.py",
+        "path": "test_registration_debug.py",
+        "size_bytes": 10212,
+        "size_kb": 10.0,
+        "lines": 302,
+        "modification_time": "2025-07-01T13:56:42.467202",
+        "analysis": {
+          "imports_count": 5,
+          "functions_count": 7,
+          "classes_count": 0,
+          "docstring": "Debug script para identificar problemas no registro de usu\u00e1rio Foco no problema do plan_id sendo None durante cria\u00e7\u00e3o de workspace",
+          "key_imports": [
+            "import requests"
+          ],
+          "test_functions": [
+            "test_server_status",
+            "test_database_connection",
+            "test_registration",
+            "test_login",
+            "test_user_info",
+            "test_workspaces"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "debug_test"
+      },
+      {
+        "filename": "decrypt_existing_data.py",
+        "path": "decrypt_existing_data.py",
+        "size_bytes": 6930,
+        "size_kb": 6.8,
+        "lines": 231,
+        "modification_time": "2025-07-01T13:56:39.848926",
+        "analysis": {
+          "imports_count": 8,
+          "functions_count": 5,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "from sqlalchemy import create_engine, text",
+            "from sqlalchemy.orm import sessionmaker"
+          ],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "temporary_file"
+      },
+      {
+        "filename": "test_simple_imports.py",
+        "path": "test_simple_imports.py",
+        "size_bytes": 1364,
+        "size_kb": 1.3,
+        "lines": 53,
+        "modification_time": "2025-07-01T13:56:42.306726",
+        "analysis": {
+          "imports_count": 5,
+          "functions_count": 1,
+          "classes_count": 2,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [
+            "test_basic_imports"
+          ],
+          "main_functions": []
+        },
+        "category": "debug_test"
+      }
+    ],
+    "files_to_consolidate": [
+      {
+        "filename": "check_database_structure.py",
+        "path": "check_database_structure.py",
+        "size_bytes": 10905,
+        "size_kb": 10.6,
+        "lines": 307,
+        "modification_time": "2025-07-01T17:58:56.218089",
+        "analysis": {
+          "imports_count": 8,
+          "functions_count": 6,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "validate_complete_structure.py",
+        "path": "validate_complete_structure.py",
+        "size_bytes": 10064,
+        "size_kb": 9.8,
+        "lines": 278,
+        "modification_time": "2025-07-01T16:51:03.193858",
+        "analysis": {
+          "imports_count": 7,
+          "functions_count": 5,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "from sqlalchemy import text"
+          ],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "comprehensive_validation.py",
+        "path": "comprehensive_validation.py",
+        "size_bytes": 9676,
+        "size_kb": 9.4,
+        "lines": 273,
+        "modification_time": "2025-07-01T16:44:41.446514",
+        "analysis": {
+          "imports_count": 23,
+          "functions_count": 8,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "from sqlalchemy import create_engine, text, inspect",
+            "from sqlalchemy.orm import sessionmaker"
+          ],
+          "test_functions": [
+            "test_model_imports",
+            "test_database_connection",
+            "test_model_metadata",
+            "test_workspace_model_alignment",
+            "test_relationships"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "validate_models_comprehensive.py",
+        "path": "validate_models_comprehensive.py",
+        "size_bytes": 8467,
+        "size_kb": 8.3,
+        "lines": 187,
+        "modification_time": "2025-07-01T16:18:20.558617",
+        "analysis": {
+          "imports_count": 7,
+          "functions_count": 7,
+          "classes_count": 1,
+          "docstring": null,
+          "key_imports": [
+            "from sqlalchemy.inspection import inspect as sqlalchemy_inspect"
+          ],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "validate_no_hardcoded_final.py",
+        "path": "validate_no_hardcoded_final.py",
+        "size_bytes": 8067,
+        "size_kb": 7.9,
+        "lines": 245,
+        "modification_time": "2025-07-01T13:56:43.101014",
+        "analysis": {
+          "imports_count": 4,
+          "functions_count": 4,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "test_model_validation.py",
+        "path": "test_model_validation.py",
+        "size_bytes": 7379,
+        "size_kb": 7.2,
+        "lines": 159,
+        "modification_time": "2025-07-01T16:46:20.748352",
+        "analysis": {
+          "imports_count": 8,
+          "functions_count": 2,
+          "classes_count": 3,
+          "docstring": null,
+          "key_imports": [
+            "from sqlalchemy import create_engine, text",
+            "from sqlalchemy.ext.declarative import declarative_base",
+            "from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey, ARRAY",
+            "from sqlalchemy.dialects.postgresql import UUID, JSONB",
+            "from sqlalchemy.sql import func"
+          ],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "model_validation"
+      },
+      {
+        "filename": "final_relationship_test.py",
+        "path": "final_relationship_test.py",
+        "size_bytes": 6486,
+        "size_kb": 6.3,
+        "lines": 175,
+        "modification_time": "2025-07-01T16:47:07.270830",
+        "analysis": {
+          "imports_count": 27,
+          "functions_count": 3,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "from sqlalchemy import create_engine",
+            "from sqlalchemy.orm import sessionmaker"
+          ],
+          "test_functions": [
+            "test_full_model_registry",
+            "test_database_query"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "final_database_alignment_test.py",
+        "path": "final_database_alignment_test.py",
+        "size_bytes": 5750,
+        "size_kb": 5.6,
+        "lines": 173,
+        "modification_time": "2025-07-01T17:23:53.243423",
+        "analysis": {
+          "imports_count": 6,
+          "functions_count": 4,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [
+            "test_critical_models",
+            "test_database_connection"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "check_missing_models.py",
+        "path": "check_missing_models.py",
+        "size_bytes": 5387,
+        "size_kb": 5.3,
+        "lines": 135,
+        "modification_time": "2025-07-01T15:53:37.332604",
+        "analysis": {
+          "imports_count": 3,
+          "functions_count": 3,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "verify_models_detailed.py",
+        "path": "verify_models_detailed.py",
+        "size_bytes": 5184,
+        "size_kb": 5.1,
+        "lines": 158,
+        "modification_time": "2025-07-01T17:04:58.148333",
+        "analysis": {
+          "imports_count": 6,
+          "functions_count": 4,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "from sqlalchemy import text"
+          ],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "database_validation"
+      },
+      {
+        "filename": "test_models_detailed.py",
+        "path": "test_models_detailed.py",
+        "size_bytes": 2513,
+        "size_kb": 2.5,
+        "lines": 73,
+        "modification_time": "2025-07-01T16:09:32.618271",
+        "analysis": {
+          "imports_count": 4,
+          "functions_count": 2,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [
+            "test_individual_import"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "model_validation"
+      },
+      {
+        "filename": "test_simple_models.py",
+        "path": "test_simple_models.py",
+        "size_bytes": 1073,
+        "size_kb": 1.0,
+        "lines": 33,
+        "modification_time": "2025-07-01T16:05:28.807480",
+        "analysis": {
+          "imports_count": 6,
+          "functions_count": 1,
+          "classes_count": 1,
+          "docstring": null,
+          "key_imports": [
+            "from sqlalchemy import Column, String, DateTime, BigInteger, Numeric, ForeignKey",
+            "from sqlalchemy.dialects.postgresql import UUID",
+            "from sqlalchemy.orm import relationship",
+            "from sqlalchemy.sql import func"
+          ],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "model_validation"
+      }
+    ],
+    "files_to_review": [
+      {
+        "filename": "test_endpoints_functional.py",
+        "path": "test_endpoints_functional.py",
+        "size_bytes": 23708,
+        "size_kb": 23.2,
+        "lines": 642,
+        "modification_time": "2025-07-01T13:56:42.476268",
+        "analysis": {
+          "imports_count": 7,
+          "functions_count": 25,
+          "classes_count": 1,
+          "docstring": null,
+          "key_imports": [
+            "import requests"
+          ],
+          "test_functions": [
+            "test_authentication_flow",
+            "test_system_endpoints",
+            "test_tenant_functionality",
+            "test_user_profile_functionality",
+            "test_workspace_enhanced_functionality"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "other"
+      },
+      {
+        "filename": "test_cleanup_analysis.py",
+        "path": "test_cleanup_analysis.py",
+        "size_bytes": 14418,
+        "size_kb": 14.1,
+        "lines": 382,
+        "modification_time": "2025-07-01T18:00:35.045386",
+        "analysis": {
+          "imports_count": 6,
+          "functions_count": 8,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "other"
+      },
+      {
+        "filename": "test_complete_llm_system.py",
+        "path": "test_complete_llm_system.py",
+        "size_bytes": 11252,
+        "size_kb": 11.0,
+        "lines": 345,
+        "modification_time": "2025-07-01T13:56:41.841029",
+        "analysis": {
+          "imports_count": 7,
+          "functions_count": 7,
+          "classes_count": 1,
+          "docstring": null,
+          "key_imports": [
+            "import asyncio"
+          ],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "other"
+      },
+      {
+        "filename": "test_service_layer_integration.py",
+        "path": "test_service_layer_integration.py",
+        "size_bytes": 10737,
+        "size_kb": 10.5,
+        "lines": 282,
+        "modification_time": "2025-07-01T13:56:42.442328",
+        "analysis": {
+          "imports_count": 12,
+          "functions_count": 0,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "import asyncio"
+          ],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "architecture_test"
+      },
+      {
+        "filename": "test_error_handling_system.py",
+        "path": "test_error_handling_system.py",
+        "size_bytes": 8827,
+        "size_kb": 8.6,
+        "lines": 295,
+        "modification_time": "2025-07-01T13:56:42.456917",
+        "analysis": {
+          "imports_count": 14,
+          "functions_count": 5,
+          "classes_count": 4,
+          "docstring": "Teste do Sistema de Error Handling e Logging do SynapScale Este teste verifica se o sistema de tratamento de erros globais, logging estruturado e exce\u00e7\u00f5es customizadas est\u00e1 funcionando corretamente.",
+          "key_imports": [
+            "import asyncio"
+          ],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "other"
+      },
+      {
+        "filename": "setup_test_user_api_keys.py",
+        "path": "setup_test_user_api_keys.py",
+        "size_bytes": 7896,
+        "size_kb": 7.7,
+        "lines": 239,
+        "modification_time": "2025-07-01T13:56:40.086401",
+        "analysis": {
+          "imports_count": 10,
+          "functions_count": 4,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "import asyncio",
+            "from sqlalchemy.orm import Session"
+          ],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "test_setup"
+      },
+      {
+        "filename": "comprehensive_model_test.py",
+        "path": "comprehensive_model_test.py",
+        "size_bytes": 5317,
+        "size_kb": 5.2,
+        "lines": 155,
+        "modification_time": "2025-07-01T17:07:02.352619",
+        "analysis": {
+          "imports_count": 10,
+          "functions_count": 4,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [
+            "test_individual_model_imports",
+            "test_reserved_words_in_action",
+            "test_relationship_conflicts"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "other"
+      },
+      {
+        "filename": "test_service_architecture.py",
+        "path": "test_service_architecture.py",
+        "size_bytes": 4653,
+        "size_kb": 4.5,
+        "lines": 146,
+        "modification_time": "2025-07-01T13:56:42.395265",
+        "analysis": {
+          "imports_count": 9,
+          "functions_count": 2,
+          "classes_count": 0,
+          "docstring": "Simple Service Layer Architecture Test. This test validates that all the service layer components are properly structured and can be imported without errors.",
+          "key_imports": [],
+          "test_functions": [
+            "test_service_layer_imports"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "architecture_test"
+      },
+      {
+        "filename": "test_agents_system.py",
+        "path": "test_agents_system.py",
+        "size_bytes": 4496,
+        "size_kb": 4.4,
+        "lines": 136,
+        "modification_time": "2025-07-01T13:56:41.639035",
+        "analysis": {
+          "imports_count": 27,
+          "functions_count": 4,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [
+            "test_imports",
+            "test_enums",
+            "test_schemas_validation"
+          ],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "other"
+      },
+      {
+        "filename": "test_llm_endpoint.py",
+        "path": "test_llm_endpoint.py",
+        "size_bytes": 4377,
+        "size_kb": 4.3,
+        "lines": 135,
+        "modification_time": "2025-07-01T13:56:42.268771",
+        "analysis": {
+          "imports_count": 4,
+          "functions_count": 0,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "import asyncio"
+          ],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "other"
+      },
+      {
+        "filename": "setup_improved_testing.py",
+        "path": "setup_improved_testing.py",
+        "size_bytes": 3151,
+        "size_kb": 3.1,
+        "lines": 113,
+        "modification_time": "2025-07-01T13:56:40.019057",
+        "analysis": {
+          "imports_count": 6,
+          "functions_count": 4,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "import requests"
+          ],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "test_setup"
+      },
+      {
+        "filename": "test_llm_endpoint_simple.py",
+        "path": "test_llm_endpoint_simple.py",
+        "size_bytes": 1819,
+        "size_kb": 1.8,
+        "lines": 63,
+        "modification_time": "2025-07-01T13:56:42.232308",
+        "analysis": {
+          "imports_count": 3,
+          "functions_count": 0,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [
+            "import asyncio"
+          ],
+          "test_functions": [],
+          "main_functions": []
+        },
+        "category": "other"
+      }
+    ],
+    "files_to_archive": [
+      {
+        "filename": "analyze_remaining_models.py",
+        "path": "analyze_remaining_models.py",
+        "size_bytes": 7255,
+        "size_kb": 7.1,
+        "lines": 140,
+        "modification_time": "2025-07-01T16:11:12.843788",
+        "analysis": {
+          "imports_count": 0,
+          "functions_count": 2,
+          "classes_count": 0,
+          "docstring": null,
+          "key_imports": [],
+          "test_functions": [],
+          "main_functions": [
+            "main"
+          ]
+        },
+        "category": "analysis_script"
+      }
+    ],
+    "summary": {
+      "total_files": 32,
+      "total_size_kb": 318.2000000000001,
+      "categories": {
+        "temporary_file": {
+          "count": 2,
+          "size_kb": 71.89999999999999
+        },
+        "other": {
+          "count": 8,
+          "size_kb": 72.6
+        },
+        "current_functional_test": {
+          "count": 3,
+          "size_kb": 50.5
+        },
+        "database_validation": {
+          "count": 9,
+          "size_kb": 68.29999999999998
+        },
+        "architecture_test": {
+          "count": 2,
+          "size_kb": 15.0
+        },
+        "debug_test": {
+          "count": 2,
+          "size_kb": 11.3
+        },
+        "test_setup": {
+          "count": 2,
+          "size_kb": 10.8
+        },
+        "model_validation": {
+          "count": 3,
+          "size_kb": 10.7
+        },
+        "analysis_script": {
+          "count": 1,
+          "size_kb": 7.1
+        }
+      },
+      "recommendations_count": {
+        "keep": 3,
+        "remove": 4,
+        "consolidate": 12,
+        "review": 12,
+        "archive": 1
+      }
+    }
+  }
+}

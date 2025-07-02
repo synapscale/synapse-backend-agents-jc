@@ -15,7 +15,7 @@ from sqlalchemy import (
     JSON,
     Enum as SQLEnum,
     text,
-    UUID
+    UUID,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -58,7 +58,6 @@ class WorkflowExecution(Base):
     """
 
     __tablename__ = "workflow_executions"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -67,8 +66,17 @@ class WorkflowExecution(Base):
     )
 
     # Relacionamentos
-    workflow_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflows.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False, index=True)
+    workflow_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("workflows.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+    )
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Status e controle
     status = Column(String(20), nullable=False, server_default=text("'pending'"))
@@ -87,7 +95,9 @@ class WorkflowExecution(Base):
     progress_percentage = Column(Integer, default=0)
 
     # Controle de tempo
-    started_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    started_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     completed_at = Column(DateTime(timezone=True))
     timeout_at = Column(DateTime(timezone=True), nullable=True)
     estimated_duration = Column(Integer, nullable=True)  # Em segundos
@@ -169,7 +179,6 @@ class NodeExecution(Base):
     """
 
     __tablename__ = "node_executions"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -177,9 +186,9 @@ class NodeExecution(Base):
 
     # Relacionamentos
     workflow_execution_id = Column(
-        Integer, ForeignKey("synapscale_db.workflow_executions.id"), nullable=False, index=True
+        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
     )
-    node_id = Column(Integer, ForeignKey("synapscale_db.nodes.id"), nullable=False, index=True)
+    node_id = Column(Integer, ForeignKey("nodes.id"), nullable=False, index=True)
 
     # Identificação do nó
     node_key = Column(
@@ -271,7 +280,6 @@ class ExecutionQueue(Base):
     """
 
     __tablename__ = "workflow_execution_queue"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -281,9 +289,14 @@ class ExecutionQueue(Base):
 
     # Relacionamentos
     workflow_execution_id = Column(
-        Integer, ForeignKey("synapscale_db.workflow_executions.id"), nullable=False, index=True
+        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
     )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Controle da fila
     priority = Column(Integer, default=5, index=True)  # 1-10, maior = mais prioritário
@@ -330,17 +343,16 @@ class ExecutionMetrics(Base):
     """
 
     __tablename__ = "workflow_execution_metrics"
-    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     workflow_execution_id = Column(
-        Integer, ForeignKey("synapscale_db.workflow_executions.id"), nullable=False, index=True
+        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
     )
     node_execution_id = Column(
-        Integer, ForeignKey("synapscale_db.node_executions.id"), nullable=True, index=True
+        Integer, ForeignKey("node_executions.id"), nullable=True, index=True
     )
 
     # Tipo de métrica

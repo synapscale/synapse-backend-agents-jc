@@ -7,6 +7,7 @@ Sistema completo de validação para marketplace de templates
 from pydantic import BaseModel, Field, validator, HttpUrl
 from typing import Dict, Any, Optional, List
 from datetime import datetime
+import uuid
 
 from synapse.models.template import (
     TemplateCategory,
@@ -140,8 +141,8 @@ class TemplateResponse(TemplateBase):
     """Schema de resposta para template"""
 
     id: str
-    template_id: str
-    author_id: str
+    author_id: uuid.UUID
+    tenant_id: uuid.UUID  # CRÍTICO: campo de multi-tenancy adicionado
     status: TemplateStatus
     is_public: bool
     is_featured: bool
@@ -171,12 +172,12 @@ class TemplateResponse(TemplateBase):
     published_at: datetime | None = None
     last_used_at: datetime | None = None
 
-    @validator("id", "template_id", "author_id", pre=True)
+    @validator("id", pre=True)
     def convert_uuid_to_string(cls, v):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -251,9 +252,9 @@ class ReviewUpdate(BaseModel):
 class ReviewResponse(ReviewBase):
     """Schema de resposta para review"""
 
-    id: str
-    template_id: str
-    user_id: str
+    id: uuid.UUID
+    template_id: uuid.UUID
+    user_id: uuid.UUID
     is_verified_purchase: bool
     is_helpful_count: int
     version_reviewed: str | None = None
@@ -269,7 +270,7 @@ class ReviewResponse(ReviewBase):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -288,8 +289,8 @@ class DownloadCreate(BaseModel):
 class DownloadResponse(BaseModel):
     """Schema de resposta para download"""
 
-    id: str
-    template_id: str
+    id: uuid.UUID
+    template_id: uuid.UUID
     user_id: str
     download_type: str
     template_version: str | None = None
@@ -300,7 +301,7 @@ class DownloadResponse(BaseModel):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -325,9 +326,9 @@ class FavoriteUpdate(BaseModel):
 class FavoriteResponse(BaseModel):
     """Schema de resposta para favorito"""
 
-    id: int
-    template_id: int
-    user_id: int
+    id: uuid.UUID
+    template_id: uuid.UUID
+    user_id: uuid.UUID
     notes: str | None = None
     created_at: datetime
 
@@ -354,7 +355,7 @@ class CollectionBase(BaseModel):
 class CollectionCreate(CollectionBase):
     """Schema para criação de coleção"""
 
-    template_ids: list[int] = Field(..., min_items=1, max_items=100)
+    template_ids: list[uuid.UUID] = Field(..., min_items=1, max_items=100)
 
     @validator("template_ids")
     def validate_template_ids(cls, v):
@@ -376,9 +377,9 @@ class CollectionUpdate(BaseModel):
 class CollectionResponse(CollectionBase):
     """Schema de resposta para coleção"""
 
-    id: str
-    collection_id: str
-    creator_id: str
+    id: uuid.UUID
+    collection_id: uuid.UUID
+    creator_id: uuid.UUID
     is_featured: bool
     template_ids: list[int]
     view_count: int
@@ -399,7 +400,7 @@ class CollectionResponse(CollectionBase):
         """Converte UUID para string"""
         if v is None:
             return v
-        if hasattr(v, '__str__'):
+        if hasattr(v, "__str__"):
             return str(v)
         return v
 
@@ -422,7 +423,7 @@ class TemplateFilter(BaseModel):
     complexity_max: int | None = Field(None, ge=1, le=5)
     is_featured: bool | None = None
     is_verified: bool | None = None
-    author_id: int | None = Field(None, gt=0)
+    author_id: uuid.UUID | None = Field(None, gt=0)
     created_after: datetime | None = None
     created_before: datetime | None = None
     industries: list[str] | None = None
@@ -486,7 +487,7 @@ class MarketplaceStats(BaseModel):
 class TemplateInstall(BaseModel):
     """Schema para instalação de template"""
 
-    template_id: int = Field(..., gt=0)
+    template_id: uuid.UUID = Field(..., gt=0)
     workflow_name: str | None = Field(None, min_length=1, max_length=255)
     custom_variables: dict[str, Any] | None = None
     modify_config: dict[str, Any] | None = None
@@ -509,7 +510,7 @@ class TemplateInstallResponse(BaseModel):
     """Schema de resposta para instalação"""
 
     success: bool
-    workflow_id: int | None = None
+    workflow_id: uuid.UUID | None = None
     workflow_name: str
     template_id: int
     template_name: str

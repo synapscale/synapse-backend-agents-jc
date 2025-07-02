@@ -2,7 +2,18 @@
 Modelo UsageLog para tracking detalhado de uso de LLMs
 """
 
-from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, JSON, UUID, Text, ForeignKey
+from sqlalchemy import (
+    Column,
+    String,
+    Float,
+    Integer,
+    Boolean,
+    DateTime,
+    JSON,
+    UUID,
+    Text,
+    ForeignKey,
+)
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
@@ -16,30 +27,56 @@ class UsageLog(Base):
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    message_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms_messages.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE"), nullable=False, index=True)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms_conversations.id", ondelete="CASCADE"), nullable=False, index=True)
-    llm_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms.id", ondelete="RESTRICT"), nullable=False, index=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id", ondelete="SET NULL"), nullable=True, index=True)
+    message_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.llms_messages.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.llms_conversations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    llm_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.llms.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    workspace_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.workspaces.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     # Métricas de uso
-    input_tokens = Column(Integer, nullable=False, server_default='0')
-    output_tokens = Column(Integer, nullable=False, server_default='0')
-    total_tokens = Column(Integer, nullable=False, server_default='0')
-    cost_usd = Column(Float, nullable=False, server_default='0.0')
+    input_tokens = Column(Integer, nullable=False, server_default="0")
+    output_tokens = Column(Integer, nullable=False, server_default="0")
+    total_tokens = Column(Integer, nullable=False, server_default="0")
+    cost_usd = Column(Float, nullable=False, server_default="0.0")
     latency_ms = Column(Integer, nullable=True)
 
     # Dados da API
     api_status_code = Column(Integer, nullable=True)
     api_request_payload = Column(JSON, nullable=True)
-    api_response_metadata = Column(JSON, nullable=True)
-    user_api_key_used = Column(Boolean, server_default='false')
+    api_response_metadata = Column("metadata", JSON, nullable=True)
+    user_api_key_used = Column(Boolean, server_default="false")
     model_settings = Column(JSON, nullable=True)
     error_message = Column(Text, nullable=True)
-    status = Column(String(20), server_default='success')
+    status = Column(String(20), server_default="success")
 
     # Timestamp
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
 
     # Relacionamentos
     message = relationship("Message", back_populates="usage_logs")
@@ -69,7 +106,7 @@ class UsageLog(Base):
     @property
     def was_successful(self):
         """Indica se a operação foi bem-sucedida"""
-        return self.status == 'success' and self.api_status_code in [200, 201]
+        return self.status == "success" and self.api_status_code in [200, 201]
 
     def to_dict(self):
         """Converte para dicionário"""
@@ -100,38 +137,53 @@ class UsageLog(Base):
     def get_user_usage_stats(cls, db_session, user_id, start_date=None, end_date=None):
         """Obtém estatísticas de uso de um usuário"""
         query = db_session.query(cls).filter(cls.user_id == user_id)
-        
+
         if start_date:
             query = query.filter(cls.created_at >= start_date)
         if end_date:
             query = query.filter(cls.created_at <= end_date)
-            
+
         logs = query.all()
-        
+
         return {
             "total_requests": len(logs),
             "total_tokens": sum(log.total_tokens for log in logs),
             "total_cost_usd": sum(log.cost_usd for log in logs),
-            "success_rate": len([log for log in logs if log.was_successful]) / len(logs) if logs else 0,
-            "avg_latency_ms": sum(log.latency_ms for log in logs if log.latency_ms) / len([log for log in logs if log.latency_ms]) if logs else 0,
+            "success_rate": (
+                len([log for log in logs if log.was_successful]) / len(logs)
+                if logs
+                else 0
+            ),
+            "avg_latency_ms": (
+                sum(log.latency_ms for log in logs if log.latency_ms)
+                / len([log for log in logs if log.latency_ms])
+                if logs
+                else 0
+            ),
         }
 
     @classmethod
-    def get_workspace_usage_stats(cls, db_session, workspace_id, start_date=None, end_date=None):
+    def get_workspace_usage_stats(
+        cls, db_session, workspace_id, start_date=None, end_date=None
+    ):
         """Obtém estatísticas de uso de um workspace"""
         query = db_session.query(cls).filter(cls.workspace_id == workspace_id)
-        
+
         if start_date:
             query = query.filter(cls.created_at >= start_date)
         if end_date:
             query = query.filter(cls.created_at <= end_date)
-            
+
         logs = query.all()
-        
+
         return {
             "total_requests": len(logs),
             "total_tokens": sum(log.total_tokens for log in logs),
             "total_cost_usd": sum(log.cost_usd for log in logs),
             "unique_users": len(set(log.user_id for log in logs)),
-            "success_rate": len([log for log in logs if log.was_successful]) / len(logs) if logs else 0,
-        } 
+            "success_rate": (
+                len([log for log in logs if log.was_successful]) / len(logs)
+                if logs
+                else 0
+            ),
+        }

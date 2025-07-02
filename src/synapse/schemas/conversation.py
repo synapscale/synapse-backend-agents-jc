@@ -1,99 +1,92 @@
-"""
-Schemas Pydantic para conversations e messages
-"""
+"""Conversation schemas aligned with database model"""
 
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
 from datetime import datetime
+from uuid import UUID
 
-
-# Schemas de Conversation
 class ConversationBase(BaseModel):
-    title: str | None = None
-    agent_id: str | None = None
-    workspace_id: str | None = None
-
-
+    """Base conversation schema"""
+    title: Optional[str] = Field(None, description="Título da conversa")
+    status: str = Field(default="active", description="Status da conversa")
+    
 class ConversationCreate(ConversationBase):
-    context: dict[str, Any] | None = Field(default_factory=dict)
-    settings: dict[str, Any] | None = Field(default_factory=dict)
-
+    """Schema for creating conversation"""
+    agent_id: Optional[UUID] = Field(None, description="ID do agente")
+    workspace_id: Optional[UUID] = Field(None, description="ID do workspace")
+    title: Optional[str] = Field(None, description="Título da conversa")
+    context: Optional[Dict[str, Any]] = Field(None, description="Contexto da conversa")
+    settings: Optional[Dict[str, Any]] = Field(None, description="Configurações da conversa")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Metadados adicionais")
 
 class ConversationResponse(ConversationBase):
-    id: str
-    user_id: str
-    status: str
-    message_count: int
-    total_tokens_used: int
-    context: dict[str, Any] | None = None
-    settings: dict[str, Any] | None = None
-    last_message_at: datetime | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-
-    @validator("id", "user_id", "agent_id", "workspace_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-    model_config = {"from_attributes": True}
-
+    """Response schema for conversation"""
+    id: UUID = Field(..., description="ID da conversa")
+    user_id: UUID = Field(..., description="ID do usuário")
+    agent_id: Optional[UUID] = Field(None, description="ID do agente")
+    workspace_id: Optional[UUID] = Field(None, description="ID do workspace")
+    tenant_id: UUID = Field(..., description="ID do tenant")
+    title: Optional[str] = Field(None, description="Título da conversa")
+    status: str = Field(..., description="Status da conversa")
+    message_count: int = Field(default=0, description="Número de mensagens")
+    total_tokens_used: int = Field(default=0, description="Total de tokens usados")
+    agent_name: Optional[str] = Field(None, description="Nome do agente")
+    latest_message: Optional[Dict[str, Any]] = Field(None, description="Última mensagem")
+    last_message_at: Optional[datetime] = Field(None, description="Data da última mensagem")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+    context: Optional[Dict[str, Any]] = Field(None, description="Contexto da conversa")
+    settings: Optional[Dict[str, Any]] = Field(None, description="Configurações da conversa")
+    
+    class Config:
+        from_attributes = True
 
 class ConversationListResponse(BaseModel):
-    items: list[ConversationResponse]
+    """Response schema for conversation list"""
+    conversations: List[ConversationResponse]
     total: int
     page: int
     size: int
-    pages: int
+    
+class ConversationTitleUpdate(BaseModel):
+    """Schema for updating conversation title"""
+    title: str = Field(..., min_length=1, max_length=255, description="Novo título")
 
-
-# Schemas de Message
 class MessageBase(BaseModel):
-    content: str = Field(..., min_length=1)
-    role: str = Field(..., pattern="^(user|assistant|system)$")
-
-
-class MessageCreate(BaseModel):
-    content: str = Field(..., min_length=1)
-    attachments: list[dict[str, Any]] | None = Field(default_factory=list)
-
+    """Base message schema"""
+    content: str = Field(..., description="Conteúdo da mensagem")
+    role: str = Field(..., description="Role da mensagem (user, assistant, system)")
+    
+class MessageCreate(MessageBase):
+    """Schema for creating message"""
+    agent_id: Optional[UUID] = Field(None, description="ID do agente")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Metadados da mensagem")
+    tokens_used: Optional[int] = Field(None, description="Tokens usados")
+    cost: Optional[float] = Field(None, description="Custo da mensagem")
 
 class MessageResponse(MessageBase):
-    id: str
-    conversation_id: str
-    attachments: list[dict[str, Any]]
-    model_used: str | None = None
-    model_provider: str | None = None
-    tokens_used: int
-    processing_time_ms: int
-    temperature: float | None = None
-    max_tokens: int | None = None
-    status: str
-    error_message: str | None = None
-    rating: int | None = None
-    feedback: str | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
-
-    @validator("id", "conversation_id", pre=True)
-    def convert_uuid_to_string(cls, v):
-        """Converte UUID para string"""
-        if v is None:
-            return v
-        if hasattr(v, '__str__'):
-            return str(v)
-        return v
-
-    model_config = {"from_attributes": True}
-
+    """Response schema for message"""
+    id: UUID = Field(..., description="ID da mensagem")
+    conversation_id: UUID = Field(..., description="ID da conversa")
+    agent_id: Optional[UUID] = Field(None, description="ID do agente")
+    agent_name: Optional[str] = Field(None, description="Nome do agente")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadados")
+    tokens_used: Optional[int] = Field(None, description="Tokens usados")
+    cost: Optional[float] = Field(None, description="Custo da mensagem")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+    
+    class Config:
+        from_attributes = True
 
 class MessageListResponse(BaseModel):
-    items: list[MessageResponse]
+    """Response schema for message list"""
+    messages: List[MessageResponse]
     total: int
     page: int
     size: int
-    pages: int
+
+__all__ = [
+    "ConversationCreate", "ConversationResponse", "ConversationListResponse", 
+    "ConversationTitleUpdate", "MessageCreate", "MessageResponse", "MessageListResponse"
+]

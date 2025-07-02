@@ -1,7 +1,6 @@
 """
 Modelo Component para Marketplace
-Criado por José - um desenvolvedor Full Stack
-Sistema avançado de componentes reutilizáveis
+Sistema avançado de componentes reutilizáveis - SINCRONIZADO COM BANCO REAL
 """
 
 from sqlalchemy import (
@@ -13,105 +12,87 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
-    JSON,
     DECIMAL,
     text,
-    UUID,
+    func,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from datetime import datetime
 from synapse.database import Base
 import uuid
-from sqlalchemy.dialects.postgresql import UUID
 
 
 class MarketplaceComponent(Base):
     """
     Modelo para componentes do marketplace
     Representa componentes reutilizáveis que podem ser compartilhados
+    SINCRONIZADO COM ESTRUTURA REAL DO BANCO
     """
 
     __tablename__ = "marketplace_components"
-    __table_args__ = {"schema": "synapscale_db"}
 
-    # Identificação
+    # Identificação básica - EXATA do banco
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
+    name = Column(String, nullable=False)
     description = Column(Text)
-    category = Column(String(100), nullable=False)
-    component_type = Column(String(50), nullable=False)
-    tags = Column(Text)
-    price = Column(DECIMAL(10,2), nullable=False, server_default=text("0.00"))
+    category = Column(String, nullable=False)
+    component_type = Column(String, nullable=False)
+    tags = Column(ARRAY(String))  # PostgreSQL Array - tipo correto!
+    price = Column(DECIMAL(10, 2), nullable=False, server_default=text("0.00"))
     is_free = Column(Boolean, nullable=False, server_default=text("true"))
-    author_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    version = Column(String(50), nullable=False, server_default=text("'1.0.0'"))
+    author_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    version = Column(String, nullable=False, server_default=text("'1.0.0'"))
     content = Column(Text)
-    component_metadata = Column(Text)
+    component_metadata = Column(Text)  # Campo exato do banco
     downloads_count = Column(Integer, nullable=False, server_default=text("0"))
-    rating_average = Column(DECIMAL(3,2), nullable=False, server_default=text("0.00"))
-    rating_count = Column(Integer, nullable=False, server_default=text("0"))
+    rating_average = Column(Float, nullable=False)  # Única definição!
+    rating_count = Column(Integer, nullable=False)  # Única definição!
     is_featured = Column(Boolean, nullable=False, server_default=text("false"))
     is_approved = Column(Boolean, nullable=False, server_default=text("false"))
-    status = Column(String(20), nullable=False, server_default=text("'pending'"))
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    status = Column(String, nullable=False, server_default=text("'pending'"))
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
-    # Informações básicas
-    title = Column(String(200), nullable=False)
-    short_description = Column(String(500))
-
-    # Categorização
-    subcategory = Column(String(50), index=True)
-
-    # Autor e propriedade
-    author_name = Column(String(100), nullable=False)
-    organization = Column(String(100))
-
-    # Conteúdo técnico
-    configuration_schema = Column(JSON)  # Schema de configuração
-
-    # Dependências
-    dependencies = Column(JSON, default=list)  # Lista de dependências
-    compatibility = Column(JSON, default=dict)  # Compatibilidade com versões
-
-    # Documentação
+    # Campos adicionais - EXATOS do banco
+    title = Column(String, nullable=False)
+    short_description = Column(String)
+    subcategory = Column(String)
+    organization = Column(String)
+    configuration_schema = Column(JSONB)
+    dependencies = Column(JSONB)
+    compatibility = Column(JSONB)
     documentation = Column(Text)
     readme = Column(Text)
     changelog = Column(Text)
-    examples = Column(JSON, default=list)  # Exemplos de uso
-
-    # Mídia
-    icon_url = Column(String(500))
-    screenshots = Column(JSON, default=list)  # URLs das screenshots
-    demo_url = Column(String(500))
-    video_url = Column(String(500))
-
-    # Monetização
-    currency = Column(String(3), default="USD")
-    license_type = Column(String(50), default="MIT")
-
-    # Estatísticas
-    install_count = Column(Integer, default=0, nullable=False)
-    view_count = Column(Integer, default=0, nullable=False)
-    like_count = Column(Integer, default=0, nullable=False)
-
-    # Avaliações
-    rating_average = Column(Float, default=0.0, nullable=False)
-    rating_count = Column(Integer, default=0, nullable=False)
-
-    # Status e moderação
-    is_verified = Column(Boolean, default=False, nullable=False)
+    examples = Column(JSONB)
+    icon_url = Column(String)
+    screenshots = Column(JSONB)
+    demo_url = Column(String)
+    video_url = Column(String)
+    currency = Column(String)
+    license_type = Column(String)
+    install_count = Column(Integer, nullable=False)
+    view_count = Column(Integer, nullable=False)
+    like_count = Column(Integer, nullable=False)
+    is_verified = Column(Boolean, nullable=False)
     moderation_notes = Column(Text)
-
-    # SEO e descoberta
-    keywords = Column(JSON, default=list)
-    search_vector = Column(Text)  # Para busca full-text
-    popularity_score = Column(Float, default=0.0, nullable=False)
-
-    # Timestamps
-    published_at = Column(DateTime)
-    last_download_at = Column(DateTime)
+    keywords = Column(JSONB)
+    search_vector = Column(Text)
+    popularity_score = Column(Float, nullable=False)
+    published_at = Column(DateTime(timezone=True))
+    last_download_at = Column(DateTime(timezone=True))
+    
+    # Campo OBRIGATÓRIO presente no banco!
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"))
 
     # Relacionamentos
     author = relationship("User", back_populates="marketplace_components")
@@ -123,9 +104,6 @@ class MarketplaceComponent(Base):
     )
     purchases = relationship(
         "ComponentPurchase", back_populates="component", cascade="all, delete-orphan"
-    )
-    versions = relationship(
-        "ComponentVersion", back_populates="component", cascade="all, delete-orphan"
     )
 
     def __repr__(self):
@@ -144,45 +122,32 @@ class MarketplaceComponent(Base):
     @property
     def rating_stars(self):
         """Retorna rating em formato de estrelas (0-5)"""
-        return round(self.rating_average, 1)
-
-    def update_statistics(self):
-        """Atualiza estatísticas do componente"""
-        # Atualizar contadores baseado nos relacionamentos
-        self.download_count = len(self.downloads)
-        self.rating_count = len(self.ratings)
-        if self.ratings:
-            self.rating_average = sum(r.rating for r in self.ratings) / len(
-                self.ratings
-            )
-
-        # Calcular score de popularidade
-        self.popularity_score = (
-            self.download_count * 1.0
-            + self.install_count * 1.5
-            + self.view_count * 0.1
-            + self.like_count * 2.0
-            + self.rating_average * self.rating_count * 3.0
-        )
+        return round(float(self.rating_average), 1)
 
 
 class ComponentRating(Base):
     """
     Modelo para avaliações de componentes
+    SINCRONIZADO COM ESTRUTURA REAL DO BANCO
     """
 
     __tablename__ = "component_ratings"
-    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.marketplace_components.id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.marketplace_components.id"),
+        nullable=False,
     )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+    )
 
-    # Avaliação
-    rating = Column(Integer, nullable=False)  # 1-5 estrelas
-    title = Column(String(200))
+    # Avaliação principal
+    rating = Column(Integer, nullable=False)
+    title = Column(String)
     review = Column(Text)
 
     # Aspectos específicos (1-5)
@@ -193,26 +158,25 @@ class ComponentRating(Base):
     support_quality = Column(Integer)
 
     # Contexto
-    version_used = Column(String(20))
-    use_case = Column(String(100))
-    experience_level = Column(String(20))  # beginner, intermediate, advanced
+    version_used = Column(String)
+    use_case = Column(String)
+    experience_level = Column(String)
 
     # Interação
-    helpful_count = Column(Integer, default=0, nullable=False)
-    reported_count = Column(Integer, default=0, nullable=False)
+    helpful_count = Column(Integer, nullable=False)
+    reported_count = Column(Integer, nullable=False)
 
     # Status
-    is_verified_purchase = Column(Boolean, default=False, nullable=False)
-    is_featured = Column(Boolean, default=False, nullable=False)
-    status = Column(
-        String(20), default="active", nullable=False
-    )  # active, hidden, deleted
+    is_verified_purchase = Column(Boolean, nullable=False)
+    is_featured = Column(Boolean, nullable=False)
+    status = Column(String, nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+    
+    # Campo obrigatório do banco
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"))
 
     # Relacionamentos
     component = relationship("MarketplaceComponent", back_populates="ratings")
@@ -225,138 +189,101 @@ class ComponentRating(Base):
 class ComponentDownload(Base):
     """
     Modelo para downloads de componentes
+    SINCRONIZADO COM ESTRUTURA REAL DO BANCO
     """
 
     __tablename__ = "component_downloads"
-    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.marketplace_components.id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.marketplace_components.id"),
+        nullable=False,
     )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+    )
 
     # Informações do download
-    version = Column(String(20), nullable=False)
-    download_type = Column(
-        String(20), default="manual", nullable=False
-    )  # manual, auto, cli
+    version = Column(String, nullable=False)
+    download_type = Column(String, nullable=False)
 
     # Contexto
-    ip_address = Column(String(45))
-    user_agent = Column(String(500))
-    referrer = Column(String(500))
+    ip_address = Column(String)
+    user_agent = Column(String)
+    referrer = Column(String)
 
     # Status
-    status = Column(
-        String(20), default="completed", nullable=False
-    )  # pending, completed, failed
-    file_size = Column(Integer)  # Tamanho em bytes
+    status = Column(String, nullable=False)
+    file_size = Column(Integer)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    completed_at = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True))
+    
+    # Campo obrigatório do banco
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"))
 
     # Relacionamentos
     component = relationship("MarketplaceComponent", back_populates="downloads")
     user = relationship("User")
 
     def __repr__(self):
-        return f"<ComponentDownload(id={self.id}, component_id={self.component_id}, user_id={self.user_id})>"
+        return f"<ComponentDownload(id={self.id}, component_id={self.component_id}, status='{self.status}')>"
 
 
 class ComponentPurchase(Base):
     """
     Modelo para compras de componentes premium
+    SINCRONIZADO COM ESTRUTURA REAL DO BANCO
     """
 
     __tablename__ = "component_purchases"
-    __table_args__ = {"schema": "synapscale_db"}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.marketplace_components.id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.marketplace_components.id"),
+        nullable=False,
     )
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+    )
 
-    # Informações da compra
-    amount = Column(Float, nullable=False)
-    currency = Column(String(3), nullable=False)
-    payment_method = Column(String(50))
+    # Informações da compra - EXATAS do banco
+    amount = Column(Float, nullable=False)  # double precision
+    currency = Column(String, nullable=False)
+    payment_method = Column(String)
 
     # Processamento
-    transaction_id = Column(String(100), unique=True, nullable=False)
-    payment_provider = Column(String(50))  # stripe, paypal, etc.
-    provider_transaction_id = Column(String(100))
+    transaction_id = Column(String, nullable=False)
+    payment_provider = Column(String)
+    provider_transaction_id = Column(String)
 
     # Status
-    status = Column(
-        String(20), default="pending", nullable=False
-    )  # pending, completed, failed, refunded
+    status = Column(String, nullable=False)
 
     # Licença
-    license_key = Column(String(100), unique=True)
-    license_expires_at = Column(DateTime)
+    license_key = Column(String)
+    license_expires_at = Column(DateTime(timezone=True))
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    completed_at = Column(DateTime)
-    refunded_at = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True))
+    refunded_at = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True))
+    
+    # Campo obrigatório do banco
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"))
 
     # Relacionamentos
     component = relationship("MarketplaceComponent", back_populates="purchases")
     user = relationship("User")
 
     def __repr__(self):
-        return f"<ComponentPurchase(id={self.id}, component_id={self.component_id}, amount={self.amount})>"
-
-
-class ComponentVersion(Base):
-    """
-    Modelo para versões de componentes
-    """
-
-    __tablename__ = "component_versions"
-    __table_args__ = {"schema": "synapscale_db"}
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    component_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.marketplace_components.id"), nullable=False, index=True
-    )
-
-    # Versão
-    version = Column(String(20), nullable=False)
-    is_latest = Column(Boolean, default=False, nullable=False)
-    is_stable = Column(Boolean, default=True, nullable=False)
-
-    # Mudanças
-    changelog = Column(Text)
-    breaking_changes = Column(Text)
-    migration_guide = Column(Text)
-
-    # Dados técnicos
-    component_data = Column(JSON, nullable=False)
-    file_size = Column(Integer)
-
-    # Compatibilidade
-    min_platform_version = Column(String(20))
-    max_platform_version = Column(String(20))
-    dependencies = Column(JSON, default=list)
-
-    # Estatísticas
-    download_count = Column(Integer, default=0, nullable=False)
-
-    # Status
-    status = Column(
-        String(20), default="active", nullable=False
-    )  # active, deprecated, deleted
-
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    deprecated_at = Column(DateTime)
-
-    # Relacionamentos
-    component = relationship("MarketplaceComponent", back_populates="versions")
-
-    def __repr__(self):
-        return f"<ComponentVersion(id={self.id}, component_id={self.component_id}, version='{self.version}')>"
+        return f"<ComponentPurchase(id={self.id}, component_id={self.component_id}, amount={self.amount}, status='{self.status}')>"

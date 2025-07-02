@@ -1,4 +1,1 @@
 # Pacote SynapScale Backend
-
-
-

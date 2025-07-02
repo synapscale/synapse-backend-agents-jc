@@ -5,6 +5,7 @@ Revises: add_plan_id_manual
 Create Date: 2025-06-21 12:56:28.003524
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '2cedfbb519dd'
-down_revision: Union[str, None] = 'add_plan_id_manual'
+revision: str = "2cedfbb519dd"
+down_revision: Union[str, None] = "add_plan_id_manual"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

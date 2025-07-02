@@ -41,6 +41,7 @@ DATABASE_SCHEMA = "synapscale_db"
 try:
     from synapse.database import Base  # noqa: E402
     from synapse.models import *  # noqa: F401,F403,E402
+
     target_metadata = Base.metadata
 except ImportError:
     # Fallback para quando não conseguir importar
@@ -62,6 +63,7 @@ target_metadata = Base.metadata
 # ---------------------------------------------------------------------------
 # Helpers para migração (online/offline)
 # ---------------------------------------------------------------------------
+
 
 def get_url() -> str:
     """Retorna a DATABASE_URL a partir das Settings (.env)."""
@@ -104,7 +106,7 @@ def run_migrations_online() -> None:
         schema_sql = f"CREATE SCHEMA IF NOT EXISTS {DATABASE_SCHEMA}"
         connection.execute(text(schema_sql))
         connection.commit()
-        
+
         # Garantir que só trabalhamos com o schema synapscale_db
         connection.execute(text(f"SET search_path TO {DATABASE_SCHEMA}"))
 
@@ -115,9 +117,12 @@ def run_migrations_online() -> None:
             include_schemas=False,  # CRÍTICO: Só trabalhar com o schema definido
             include_object=lambda obj, name, type_, reflected, compare_to: (
                 # Só incluir objetos do schema synapscale_db
-                getattr(obj, 'schema', None) == DATABASE_SCHEMA or 
-                (hasattr(obj, 'table') and getattr(obj.table, 'schema', None) == DATABASE_SCHEMA)
-            )
+                getattr(obj, "schema", None) == DATABASE_SCHEMA
+                or (
+                    hasattr(obj, "table")
+                    and getattr(obj.table, "schema", None) == DATABASE_SCHEMA
+                )
+            ),
         )
 
         with context.begin_transaction():

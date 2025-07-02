@@ -56,7 +56,7 @@ class ExecutionEngine:
     def __init__(self, websocket_manager: ConnectionManager | None = None):
         self.websocket_manager = websocket_manager
         self.variable_service = VariableService()
-        
+
         # Disable ThreadPoolExecutor for development to avoid multiprocessing issues
         # TODO: Re-enable with proper configuration for production
         # try:
@@ -65,7 +65,7 @@ class ExecutionEngine:
         # except RuntimeError:
         #     # Method already set, continue
         #     pass
-        #     
+        #
         # self.executor = ThreadPoolExecutor(max_workers=5)  # Reduced workers for stability
         self.executor = None  # Disabled for development
         self.running_executions: dict[str, asyncio.Task] = {}
@@ -590,7 +590,7 @@ class ExecutionEngine:
         while self.is_running:
             try:
                 from synapse.database import get_db_session
-                
+
                 execution_id = None
                 user_id = None
 
@@ -1048,7 +1048,8 @@ class ExecutionService:
         return {
             "is_running": self.engine.is_running,
             "running_executions": len(self.engine.running_executions),
-            "has_queue_processor": self.engine.queue_processor_task is not None and not self.engine.queue_processor_task.done()
+            "has_queue_processor": self.engine.queue_processor_task is not None
+            and not self.engine.queue_processor_task.done(),
         }
 
     async def create_and_start_execution(

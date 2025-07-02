@@ -1,0 +1,113 @@
+# Product Requirements Document: SynapScale Database Schema Optimization
+
+## Visão Geral
+Realizar otimização completa da estrutura de banco de dados do SynapScale, garantindo alinhamento perfeito entre modelos SQLAlchemy, esquemas Pydantic e estrutura real do banco PostgreSQL.
+
+## Objetivos
+1. Criar todos os modelos SQLAlchemy faltantes para 41 tabelas sem representação
+2. Corrigir inconsistências identificadas nos modelos existentes
+3. Implementar validação automatizada de alinhamento de esquemas
+4. Estabelecer testes abrangentes para garantir integridade
+5. Otimizar performance e relacionamentos
+
+## Escopo do Projeto
+
+### Fase 1: Análise e Correção de Modelos Críticos (ALTA PRIORIDADE)
+- Corrigir modelo `workspace_features` com problemas de importação
+- Validar e corrigir relacionamentos de chave estrangeira existentes
+- Resolver inconsistências em tipos de dados entre modelos e banco
+
+### Fase 2: Criação de Modelos RBAC (CRÍTICO)
+- Implementar modelo `RbacPermission` para tabela `rbac_permissions`
+- Implementar modelo `RbacRole` para tabela `rbac_roles`
+- Implementar modelo `RbacRolePermission` para tabela `rbac_role_permissions`
+- Implementar modelo `UserTenantRole` para tabela `user_tenant_roles`
+- Estabelecer relacionamentos corretos entre modelos RBAC
+
+### Fase 3: Sistema de Autenticação e Tokens
+- Implementar modelo `PasswordResetToken` para tabela `password_reset_tokens`
+- Implementar modelo `EmailVerificationToken` para tabela `email_verification_tokens`
+- Integrar com sistema de autenticação existente
+
+### Fase 4: Sistema de Agentes Completo
+- Implementar todos os 10 modelos faltantes do sistema de agentes:
+  * `AgentAcl` (agent_acl)
+  * `AgentConfiguration` (agent_configurations)
+  * `AgentErrorLog` (agent_error_logs)
+  * `AgentHierarchy` (agent_hierarchy)
+  * `AgentKb` (agent_kbs)
+  * `AgentModel` (agent_models)
+  * `AgentQuota` (agent_quotas)
+  * `AgentTool` (agent_tools)
+  * `AgentTrigger` (agent_triggers)
+  * `AgentUsageMetric` (agent_usage_metrics)
+
+### Fase 5: Sistema de Auditoria
+- Implementar modelo `AuditLog` para tabela `audit_log`
+- Configurar logging automático de mudanças críticas
+- Estabelecer políticas de retenção
+
+### Fase 6: Sistema de Pagamentos
+- Implementar modelos para sistema de pagamento completo:
+  * `PaymentCustomer` (payment_customers)
+  * `PaymentMethod` (payment_methods)
+  * `PaymentProvider` (payment_providers)
+  * `Invoice` (invoices)
+  * `Subscription` (subscriptions)
+  * `Coupon` (coupons)
+
+### Fase 7: CRM e Marketing
+- Implementar sistema de contatos e campanhas:
+  * `Contact` (contacts)
+  * `ContactList` (contact_lists)
+  * `Campaign` (campaigns)
+  * `ContactEvent` (contact_events)
+  * `ContactInteraction` (contact_interactions)
+
+### Fase 8: Recursos Avançados
+- Implementar `KnowledgeBase` (knowledge_bases)
+- Implementar `Tool` (tools)
+- Implementar `WebhookLog` (webhook_logs)
+
+### Fase 9: Validação e Testes
+- Criar script de validação automática de alinhamento
+- Implementar testes de integridade para todos os modelos
+- Configurar CI/CD para validação contínua
+- Documentar todos os relacionamentos
+
+### Fase 10: Performance e Otimização
+- Analisar e otimizar índices de banco de dados
+- Implementar queries otimizadas
+- Configurar monitoring de performance
+- Documentação final e guias de migração
+
+## Critérios de Aceitação
+1. Todos os 101 tabelas do banco devem ter modelos SQLAlchemy correspondentes
+2. Zero inconsistências entre modelos e estrutura de banco
+3. Todos os relacionamentos funcionando corretamente
+4. 100% de cobertura de testes para modelos críticos
+5. Performance mantida ou melhorada
+6. Documentação completa atualizada
+
+## Riscos e Mitigações
+- **Risco**: Quebra de compatibilidade com código existente
+  **Mitigação**: Implementação incremental com testes em cada etapa
+- **Risco**: Performance degradada
+  **Mitigação**: Análise de índices e otimização de queries
+- **Risco**: Conflitos de migração
+  **Mitigação**: Backup completo e estratégia de rollback
+
+## Dependências Técnicas
+- PostgreSQL 13+
+- SQLAlchemy 2.0+
+- Pydantic 2.0+
+- Alembic para migrações
+- FastAPI para endpoints
+
+## Timeline Estimado
+- Fase 1-3: 2-3 dias (crítico)
+- Fase 4-6: 3-4 dias (essencial)
+- Fase 7-8: 2-3 dias (importante)
+- Fase 9-10: 2-3 dias (finalização)
+
+Total: 9-13 dias de desenvolvimento 

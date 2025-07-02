@@ -5,6 +5,7 @@ Revises: 6f67f2913b9a
 Create Date: 2025-06-20 13:52:13.127894
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,25 +13,31 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'b780a865dc0f'
-down_revision: Union[str, None] = '6f67f2913b9a'
+revision: str = "b780a865dc0f"
+down_revision: Union[str, None] = "6f67f2913b9a"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
     """Upgrade schema."""
-    
+
     connection = op.get_bind()
-    
+
     # 1. Adicionar campo type à tabela workspaces usando SQL direto
-    connection.execute(sa.text("""
+    connection.execute(
+        sa.text(
+            """
         ALTER TABLE synapscale_db.workspaces 
         ADD COLUMN type workspacetype DEFAULT 'INDIVIDUAL' NOT NULL
-    """))
-    
+    """
+        )
+    )
+
     # 2. Criar tabela plans usando SQL direto
-    connection.execute(sa.text("""
+    connection.execute(
+        sa.text(
+            """
         CREATE TABLE synapscale_db.plans (
             id UUID PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
@@ -56,10 +63,14 @@ def upgrade() -> None:
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
-    """))
-    
+    """
+        )
+    )
+
     # 3. Criar tabela user_subscriptions usando SQL direto
-    connection.execute(sa.text("""
+    connection.execute(
+        sa.text(
+            """
         CREATE TABLE synapscale_db.user_subscriptions (
             id UUID PRIMARY KEY,
             user_id UUID NOT NULL REFERENCES synapscale_db.users(id) ON DELETE CASCADE,
@@ -81,42 +92,66 @@ def upgrade() -> None:
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
-    """))
-    
+    """
+        )
+    )
+
     # 4. Criar índices
-    connection.execute(sa.text("CREATE INDEX idx_workspaces_type ON synapscale_db.workspaces(type)"))
-    connection.execute(sa.text("CREATE INDEX idx_plans_type ON synapscale_db.plans(type)"))
-    connection.execute(sa.text("CREATE INDEX idx_plans_is_active ON synapscale_db.plans(is_active)"))
-    connection.execute(sa.text("CREATE INDEX idx_user_subscriptions_user_id ON synapscale_db.user_subscriptions(user_id)"))
-    connection.execute(sa.text("CREATE INDEX idx_user_subscriptions_status ON synapscale_db.user_subscriptions(status)"))
-    
+    connection.execute(
+        sa.text("CREATE INDEX idx_workspaces_type ON synapscale_db.workspaces(type)")
+    )
+    connection.execute(
+        sa.text("CREATE INDEX idx_plans_type ON synapscale_db.plans(type)")
+    )
+    connection.execute(
+        sa.text("CREATE INDEX idx_plans_is_active ON synapscale_db.plans(is_active)")
+    )
+    connection.execute(
+        sa.text(
+            "CREATE INDEX idx_user_subscriptions_user_id ON synapscale_db.user_subscriptions(user_id)"
+        )
+    )
+    connection.execute(
+        sa.text(
+            "CREATE INDEX idx_user_subscriptions_status ON synapscale_db.user_subscriptions(status)"
+        )
+    )
+
     # 5. Inserir plano FREE padrão
     import uuid
+
     free_plan_id = str(uuid.uuid4())
-    connection.execute(sa.text("""
+    connection.execute(
+        sa.text(
+            """
         INSERT INTO synapscale_db.plans 
         (id, name, slug, type, description, price_monthly, price_yearly, max_workspaces, max_members_per_workspace, max_projects_per_workspace, max_storage_mb, max_executions_per_month, allow_collaborative_workspaces, is_active, is_public, created_at, updated_at)
         VALUES (:id, :name, :slug, :type, :description, :price_monthly, :price_yearly, :max_workspaces, :max_members_per_workspace, :max_projects_per_workspace, :max_storage_mb, :max_executions_per_month, :allow_collaborative_workspaces, :is_active, :is_public, now(), now())
-    """), {
-        "id": free_plan_id,
-        "name": "Plano FREE",
-        "slug": "free",
-        "type": "free",
-        "description": "Plano gratuito com recursos básicos",
-        "price_monthly": 0.0,
-        "price_yearly": 0.0,
-        "max_workspaces": 1,
-        "max_members_per_workspace": 1,
-        "max_projects_per_workspace": 5,
-        "max_storage_mb": 100,
-        "max_executions_per_month": 50,
-        "allow_collaborative_workspaces": False,
-        "is_active": True,
-        "is_public": True
-    })
-    
+    """
+        ),
+        {
+            "id": free_plan_id,
+            "name": "Plano FREE",
+            "slug": "free",
+            "type": "free",
+            "description": "Plano gratuito com recursos básicos",
+            "price_monthly": 0.0,
+            "price_yearly": 0.0,
+            "max_workspaces": 1,
+            "max_members_per_workspace": 1,
+            "max_projects_per_workspace": 5,
+            "max_storage_mb": 100,
+            "max_executions_per_month": 50,
+            "allow_collaborative_workspaces": False,
+            "is_active": True,
+            "is_public": True,
+        },
+    )
+
     # 6. Criar assinaturas FREE para todos os usuários existentes
-    connection.execute(sa.text(f"""
+    connection.execute(
+        sa.text(
+            f"""
         INSERT INTO synapscale_db.user_subscriptions 
         (id, user_id, plan_id, status, started_at, current_workspaces, created_at, updated_at)
         SELECT 
@@ -132,23 +167,35 @@ def upgrade() -> None:
         WHERE NOT EXISTS (
             SELECT 1 FROM synapscale_db.user_subscriptions s WHERE s.user_id = u.id
         )
-    """))
+    """
+        )
+    )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     connection = op.get_bind()
-    
+
     # Remover índices
-    connection.execute(sa.text("DROP INDEX IF EXISTS synapscale_db.idx_user_subscriptions_status"))
-    connection.execute(sa.text("DROP INDEX IF EXISTS synapscale_db.idx_user_subscriptions_user_id"))
-    connection.execute(sa.text("DROP INDEX IF EXISTS synapscale_db.idx_plans_is_active"))
+    connection.execute(
+        sa.text("DROP INDEX IF EXISTS synapscale_db.idx_user_subscriptions_status")
+    )
+    connection.execute(
+        sa.text("DROP INDEX IF EXISTS synapscale_db.idx_user_subscriptions_user_id")
+    )
+    connection.execute(
+        sa.text("DROP INDEX IF EXISTS synapscale_db.idx_plans_is_active")
+    )
     connection.execute(sa.text("DROP INDEX IF EXISTS synapscale_db.idx_plans_type"))
-    connection.execute(sa.text("DROP INDEX IF EXISTS synapscale_db.idx_workspaces_type"))
-    
+    connection.execute(
+        sa.text("DROP INDEX IF EXISTS synapscale_db.idx_workspaces_type")
+    )
+
     # Remover tabelas
     connection.execute(sa.text("DROP TABLE IF EXISTS synapscale_db.user_subscriptions"))
     connection.execute(sa.text("DROP TABLE IF EXISTS synapscale_db.plans"))
-    
+
     # Remover coluna type de workspaces
-    connection.execute(sa.text("ALTER TABLE synapscale_db.workspaces DROP COLUMN IF EXISTS type"))
+    connection.execute(
+        sa.text("ALTER TABLE synapscale_db.workspaces DROP COLUMN IF EXISTS type")
+    )

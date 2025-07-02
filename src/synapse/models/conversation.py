@@ -17,9 +17,26 @@ class Conversation(Base):
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    agent_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.agents.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id", ondelete="SET NULL"), nullable=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+    )
+    agent_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.agents.id", ondelete="SET NULL", onupdate="CASCADE"),
+        nullable=True,
+    )
+    workspace_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.workspaces.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=False,
+    )
 
     # Informações básicas
     title = Column(String(255))
@@ -35,8 +52,15 @@ class Conversation(Base):
 
     # Timestamps
     last_message_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
 
     # Relacionamentos existentes
     user = relationship("User", back_populates="conversations")
@@ -45,10 +69,14 @@ class Conversation(Base):
     messages = relationship(
         "Message", back_populates="conversation", cascade="all, delete-orphan"
     )
-    
+
     # Novos relacionamentos LLM
-    llms_conversations_turns = relationship("ConversationLLM", back_populates="conversation", cascade="all, delete-orphan")
-    usage_logs = relationship("UsageLog", back_populates="conversation", cascade="all, delete-orphan")
+    llms_conversations_turns = relationship(
+        "ConversationLLM", back_populates="conversation", cascade="all, delete-orphan"
+    )
+    usage_logs = relationship(
+        "UsageLog", back_populates="conversation", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return (

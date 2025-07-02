@@ -42,50 +42,41 @@ class Agent(Base):
     __tablename__ = "agents"
     __table_args__ = {"schema": "synapscale_db"}
 
+    # Campos que existem na estrutura real do banco
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    provider = Column(String(100), nullable=False)
-    model = Column(String(100), nullable=False)
-    system_prompt = Column(Text)
-    temperature = Column(DECIMAL(3,2), server_default=text("0.7"))
-    max_tokens = Column(Integer, server_default=text("1000"))
-    is_active = Column(Boolean, nullable=False, server_default=text("true"))
-    user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+    )
+    created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=func.now(), onupdate=func.now())
+    workspace_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.workspaces.id"),
+        nullable=True,
+    )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=False,
+    )
+    status = Column(String, nullable=True, default='active')
+    priority = Column(Integer, nullable=True, default=1)
+    version = Column(String, nullable=True, default='1.0.0')
+    environment = Column(String, nullable=True, default='development')
+    current_config = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.agent_configurations.config_id"),
+        nullable=True,
+    )
 
-    # Configuração de personalidade
-    personality = Column(Text)
-    instructions = Column(Text)
-    agent_type = Column(Enum(AgentType), default=AgentType.GENERAL)
 
-    # Configuração do modelo LLM
-    model_provider = Column(String(50), default="openai")
-    top_p = Column(Float, default=1.0)
-    frequency_penalty = Column(Float, default=0.0)
-    presence_penalty = Column(Float, default=0.0)
 
-    # Ferramentas e capacidades
-    tools = Column(JSON, default=list)  # Lista de ferramentas disponíveis
-    knowledge_base = Column(JSON, default=dict)  # Base de conhecimento específica
-    capabilities = Column(JSON, default=list)  # Capacidades específicas
 
-    # Estado e configuração
-    status = Column(Enum(AgentStatus), default=AgentStatus.ACTIVE)
-    avatar_url = Column(String(500))
-    configuration = Column(JSON, default=dict)
-
-    # Estatísticas
-    conversation_count = Column(Integer, default=0)
-    message_count = Column(Integer, default=0)
-    total_tokens_used = Column(Integer, default=0)
-    average_response_time = Column(Float, default=0.0)
-    rating_average = Column(Float, default=0.0)
-    rating_count = Column(Integer, default=0)
-
-    # Timestamps
-    last_active_at = Column(DateTime(timezone=True))
 
     # Relacionamentos
     user = relationship("User", back_populates="agents")
@@ -93,8 +84,21 @@ class Agent(Base):
     conversations = relationship(
         "Conversation", back_populates="agent", cascade="all, delete-orphan"
     )
-
-    workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=True, index=True)
+    
+    # Novos relacionamentos para as tabelas de agentes
+    agent_acl = relationship("AgentACL", back_populates="agent", cascade="all, delete-orphan")
+    agent_configurations = relationship("AgentConfiguration", foreign_keys="[AgentConfiguration.agent_id]", back_populates="agent", cascade="all, delete-orphan")
+    agent_error_logs = relationship("AgentErrorLog", back_populates="agent", cascade="all, delete-orphan")
+    agent_knowledge_bases = relationship("AgentKnowledgeBase", back_populates="agent", cascade="all, delete-orphan")
+    agent_models = relationship("AgentModel", back_populates="agent", cascade="all, delete-orphan")
+    agent_quotas = relationship("AgentQuota", back_populates="agent", cascade="all, delete-orphan")
+    agent_tools = relationship("AgentTool", back_populates="agent", cascade="all, delete-orphan")
+    agent_triggers = relationship("AgentTrigger", back_populates="agent", cascade="all, delete-orphan")
+    agent_usage_metrics = relationship("AgentUsageMetric", back_populates="agent", cascade="all, delete-orphan")
+    
+    # Relacionamentos de hierarquia
+    descendants = relationship("AgentHierarchy", foreign_keys="AgentHierarchy.ancestor", back_populates="ancestor_agent", cascade="all, delete-orphan")
+    ancestors = relationship("AgentHierarchy", foreign_keys="AgentHierarchy.descendant", back_populates="descendant_agent", cascade="all, delete-orphan")
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Converte agente para dicionário"""
