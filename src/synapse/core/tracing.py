@@ -116,6 +116,9 @@ class TracingState:
         self.propagator = None
         self.initialized = False
         self.enabled = False
+        # Resetar flag de instrumentação de bibliotecas
+        if hasattr(self, '_libraries_instrumented'):
+            delattr(self, '_libraries_instrumented')
 
 # Instância global do estado
 _tracing_state = TracingState()
@@ -155,6 +158,25 @@ def setup_tracing() -> bool:
     if not OPENTELEMETRY_AVAILABLE:
         logger.info("OpenTelemetry não está disponível - tracing desabilitado")
         return False
+
+    # Verificar se já foi configurado para evitar reconfiguração
+    if _tracing_state.initialized and _tracing_state.enabled:
+        logger.debug("Tracing já configurado - reutilizando configuração existente")
+        return True
+    
+    # Verificar se o TracerProvider já está configurado (proteção adicional)
+    try:
+        existing_provider = trace.get_tracer_provider()
+        if existing_provider and hasattr(existing_provider, '_resource') and existing_provider._resource:
+            logger.debug("TracerProvider do OpenTelemetry já configurado - reutilizando")
+            _tracing_state.initialized = True
+            _tracing_state.enabled = True
+            _tracing_state.tracer = trace.get_tracer(__name__)
+            _tracing_state.propagator = TraceContextTextMapPropagator()
+            return True
+    except Exception:
+        # Se falhar a verificação, continuar com a configuração normal
+        pass
 
     config = TracingConfig()
 
@@ -280,10 +302,17 @@ def instrument_fastapi(app) -> bool:
         return False
 
     try:
+        # Verificar se já foi instrumentado
+        if hasattr(app, '_is_instrumented_by_opentelemetry'):
+            logger.debug("FastAPI já instrumentado - ignorando nova instrumentação")
+            return True
+            
         FastAPIInstrumentor.instrument_app(
             app,
             excluded_urls="health,metrics,docs,redoc,openapi.json",
         )
+        # Marcar como instrumentado
+        app._is_instrumented_by_opentelemetry = True
         logger.info("FastAPI instrumentado com OpenTelemetry")
         return True
     except Exception as e:
@@ -301,25 +330,38 @@ def instrument_libraries() -> bool:
         logger.debug("Tracing não disponível - instrumentação de bibliotecas ignorada")
         return False
 
+    # Verificar se já foram instrumentadas
+    if hasattr(_tracing_state, '_libraries_instrumented') and _tracing_state._libraries_instrumented:
+        logger.debug("Bibliotecas já instrumentadas - ignorando nova instrumentação")
+        return True
+
     instrumented = []
 
     try:
         # Instrumentar HTTPX
         if HTTPX_INSTRUMENTATION_AVAILABLE:
-            HTTPXClientInstrumentor().instrument()
-            instrumented.append("HTTPX")
+            httpx_instrumentor = HTTPXClientInstrumentor()
+            if not httpx_instrumentor.is_instrumented_by_opentelemetry:
+                httpx_instrumentor.instrument()
+                instrumented.append("HTTPX")
 
         # Instrumentar Redis
         if REDIS_INSTRUMENTATION_AVAILABLE:
-            RedisInstrumentor().instrument()
-            instrumented.append("Redis")
+            redis_instrumentor = RedisInstrumentor()
+            if not redis_instrumentor.is_instrumented_by_opentelemetry:
+                redis_instrumentor.instrument()
+                instrumented.append("Redis")
 
         # Instrumentar SQLAlchemy
         if SQLALCHEMY_INSTRUMENTATION_AVAILABLE:
-            SQLAlchemyInstrumentor().instrument()
-            instrumented.append("SQLAlchemy")
+            sqlalchemy_instrumentor = SQLAlchemyInstrumentor()
+            if not sqlalchemy_instrumentor.is_instrumented_by_opentelemetry:
+                sqlalchemy_instrumentor.instrument()
+                instrumented.append("SQLAlchemy")
 
         if instrumented:
+            # Marcar como instrumentadas
+            _tracing_state._libraries_instrumented = True
             logger.info(f"Bibliotecas instrumentadas: {', '.join(instrumented)}")
             return True
         else:
