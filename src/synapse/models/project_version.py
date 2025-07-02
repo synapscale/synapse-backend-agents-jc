@@ -12,7 +12,7 @@ class ProjectVersion(Base):
     """Version control for workspace projects"""
     
     __tablename__ = "project_versions"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     project_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspace_projects.id"), nullable=False)

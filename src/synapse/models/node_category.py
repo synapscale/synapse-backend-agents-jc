@@ -12,7 +12,7 @@ class NodeCategory(Base):
     """Categories for organizing workflow nodes"""
     
     __tablename__ = "node_categories"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(100), nullable=False)

@@ -16,7 +16,7 @@ class UserTenantRole(Base):
     """Model para roles de usuários por tenant - ALINHADO COM user_tenant_roles TABLE"""
 
     __tablename__ = "user_tenant_roles"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     id = Column(

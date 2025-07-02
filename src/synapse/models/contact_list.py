@@ -15,7 +15,7 @@ class ContactList(Base):
     """Model para listas de contatos do CRM - ALINHADO COM contact_lists TABLE"""
     
     __tablename__ = "contact_lists"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())

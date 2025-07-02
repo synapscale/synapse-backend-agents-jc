@@ -4,6 +4,7 @@ from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from datetime import datetime, timezone
 
 from synapse.database import Base
 
@@ -12,7 +13,7 @@ class RefreshToken(Base):
     """Refresh tokens for JWT authentication"""
     
     __tablename__ = "refresh_tokens"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     token = Column(String(500), nullable=False, unique=True)
@@ -29,12 +30,12 @@ class RefreshToken(Base):
         return f"RefreshToken(user_id={self.user_id}, expires_at={self.expires_at})"
 
     @property
-    def is_expired(self):
+    def is_expired(self) -> bool:
         """Check if token is expired"""
-        return self.expires_at < func.now()
+        return self.expires_at < datetime.now(timezone.utc)
 
     @property
-    def is_valid(self):
+    def is_valid(self) -> bool:
         """Check if token is valid (not revoked and not expired)"""
         return not self.is_revoked and not self.is_expired
 

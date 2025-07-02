@@ -25,11 +25,12 @@ except ImportError:
     from datetime import datetime
     import uuid
 
-    from synapse.models.base import Base
+    from synapse.database import Base
 
     class Invoice(Base):
         """Modelo básico de Invoice para compatibilidade"""
         __tablename__ = "invoices"
+        __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
         
         id = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
         tenant_id = Column(PostgresUUID(as_uuid=True), nullable=False)

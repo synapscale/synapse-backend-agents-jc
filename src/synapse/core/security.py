@@ -1,101 +1,45 @@
 """
-Configuração de segurança do backend
-Criado por José - um desenvolvedor Full Stack
-Implementa todas as melhores práticas de segurança
+API Key Security Functions
+
+This module provides API key generation, hashing, and verification functions.
+All password verification and JWT functions have been moved to their dedicated modules:
+- Password verification: User.verify_password() method
+- JWT operations: synapse.core.auth.jwt.JWTManager
 """
 
-import jwt
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+import secrets
+import hashlib
 from passlib.context import CryptContext
-from synapse.core.config import settings
 
-# Password hashing context
+# Password context for API key hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# JWT token functions
-def create_access_token(
-    data: dict[str, Any], expires_delta: timedelta | None = None
-) -> str:
-    """Create JWT access token"""
-    to_encode = data.copy()
-
-    # Set expiration time
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(
-            minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
-        )
-
-    to_encode.update({"exp": expire})
-
-    # Create token
-    encoded_jwt = jwt.encode(
-        to_encode,
-        settings.SECRET_KEY,
-        algorithm=settings.JWT_ALGORITHM,
-    )
-
-    return encoded_jwt
-
-
-def create_refresh_token(data: dict[str, Any]) -> str:
-    """Create JWT refresh token"""
-    to_encode = data.copy()
-
-    # Set expiration time (longer than access token)
-    expire = datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire})
-
-    # Create token
-    encoded_jwt = jwt.encode(
-        to_encode,
-        settings.SECRET_KEY,
-        algorithm=settings.JWT_ALGORITHM,
-    )
-
-    return encoded_jwt
-
-
-def verify_token(token: str) -> dict[str, Any]:
-    """Verify JWT token"""
-    try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
-        )
-        return payload
-    except jwt.PyJWTError:
-        return None
-
-
-# Password functions
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against hash"""
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    """Hash password"""
-    return pwd_context.hash(password)
-
-
-# API key functions
 def generate_api_key() -> str:
-    """Generate secure API key"""
-    import secrets
-
-    return f"sk-{secrets.token_urlsafe(32)}"
+    """Generate a secure API key"""
+    return secrets.token_urlsafe(32)
 
 
 def hash_api_key(api_key: str) -> str:
-    """Hash API key for storage"""
+    """Hash an API key using bcrypt"""
     return pwd_context.hash(api_key)
 
 
-def verify_api_key(plain_api_key: str, hashed_api_key: str) -> bool:
-    """Verify API key against hash"""
-    return pwd_context.verify(plain_api_key, hashed_api_key)
+def verify_api_key(plain_key: str, hashed_key: str) -> bool:
+    """Verify an API key against its hash"""
+    return pwd_context.verify(plain_key, hashed_key)
+
+
+def generate_secure_token(length: int = 32) -> str:
+    """Generate a secure random token"""
+    return secrets.token_urlsafe(length)
+
+
+def hash_token(token: str) -> str:
+    """Hash a token using SHA-256"""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def verify_token_hash(token: str, token_hash: str) -> bool:
+    """Verify a token against its SHA-256 hash"""
+    return hash_token(token) == token_hash

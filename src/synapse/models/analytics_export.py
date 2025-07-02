@@ -12,7 +12,7 @@ class AnalyticsExport(Base):
     """Analytics data export management"""
     
     __tablename__ = "analytics_exports"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)

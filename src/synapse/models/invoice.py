@@ -16,7 +16,7 @@ class Invoice(Base):
     """Model para faturas - ALINHADO COM invoices TABLE"""
     
     __tablename__ = "invoices"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())

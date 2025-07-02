@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 from fastapi import UploadFile, HTTPException, status
-from synapse.core.security.file_validation import (
+from synapse.core.file_validation import (
     SecurityValidator,
     sanitize_filename,
 )

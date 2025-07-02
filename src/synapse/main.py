@@ -1273,7 +1273,7 @@ if __name__ == "__main__":
     logger.info(f"📍 Host: {settings.SERVER_HOST}:{settings.SERVER_PORT}")
     logger.info(f"🌍 Ambiente: {settings.ENVIRONMENT}")
     logger.info(f"🔍 Debug: {settings.DEBUG}")
-    logger.info(f"📚 Docs: http://{settings.SERVER_HOST}:{settings.SERVER_PORT}{None}")
+    logger.info(f"📚 Docs: http://{settings.SERVER_HOST}:{settings.SERVER_PORT}/docs")
 
     uvicorn.run(
         "synapse.main:app",

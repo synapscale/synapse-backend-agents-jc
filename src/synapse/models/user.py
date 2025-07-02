@@ -24,7 +24,7 @@ class UserStatus(PyEnum):
 
 class User(Base):
     __tablename__ = "users"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -50,31 +50,17 @@ class User(Base):
         UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True
     )
 
-    workflows = relationship(
-        "Workflow", back_populates="user", cascade="all, delete-orphan"
-    )
+    workflows = relationship("Workflow", back_populates="user", cascade="all, delete-orphan")
     nodes = relationship("Node", back_populates="user", cascade="all, delete-orphan")
     agents = relationship("Agent", back_populates="user", cascade="all, delete-orphan")
-    conversations = relationship(
-        "Conversation", back_populates="user", cascade="all, delete-orphan"
-    )
-    workflow_executions = relationship(
-        "WorkflowExecution", back_populates="user", cascade="all, delete-orphan"
-    )
-    refresh_tokens = relationship(
-        "RefreshToken", back_populates="user", cascade="all, delete-orphan"
-    )
-    variables = relationship(
-        "UserVariable", back_populates="user", cascade="all, delete-orphan"
-    )
+    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
+    workflow_executions = relationship("WorkflowExecution", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    variables = relationship("UserVariable", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamentos de autenticação - NOVOS MODELS
-    password_reset_tokens = relationship(
-        "PasswordResetToken", back_populates="user", cascade="all, delete-orphan"
-    )
-    email_verification_tokens = relationship(
-        "EmailVerificationToken", back_populates="user", cascade="all, delete-orphan"
-    )
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
+    email_verification_tokens = relationship("EmailVerificationToken", back_populates="user", cascade="all, delete-orphan")
     tenant_roles = relationship(
         "UserTenantRole",
         foreign_keys="UserTenantRole.user_id",
@@ -83,57 +69,27 @@ class User(Base):
     )
 
     # Relacionamentos de auditoria e analytics - NOVOS MODELS
-    audit_logs = relationship(
-        "AuditLog", back_populates="user", cascade="all, delete-orphan"
-    )
-    insights = relationship(
-        "UserInsight", back_populates="user", cascade="all, delete-orphan"
-    )
-    subscriptions = relationship(
-        "UserSubscription", back_populates="user", cascade="all, delete-orphan", overlaps="subscription"
-    )
+    audit_logs = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
+    insights = relationship("UserInsight", back_populates="user", cascade="all, delete-orphan")
+    subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamentos de templates
-    created_templates = relationship(
-        "WorkflowTemplate", back_populates="author", cascade="all, delete-orphan"
-    )
-    template_reviews = relationship(
-        "TemplateReview", back_populates="user", cascade="all, delete-orphan"
-    )
-    template_downloads = relationship(
-        "TemplateDownload", back_populates="user", cascade="all, delete-orphan"
-    )
-    favorite_templates = relationship(
-        "TemplateFavorite", back_populates="user", cascade="all, delete-orphan"
-    )
-    template_collections = relationship(
-        "TemplateCollection", back_populates="creator", cascade="all, delete-orphan"
-    )
-    template_usage = relationship(
-        "TemplateUsage", back_populates="user", cascade="all, delete-orphan"
-    )
+    created_templates = relationship("WorkflowTemplate", back_populates="author", cascade="all, delete-orphan")
+    template_reviews = relationship("TemplateReview", back_populates="user", cascade="all, delete-orphan")
+    template_downloads = relationship("TemplateDownload", back_populates="user", cascade="all, delete-orphan")
+    favorite_templates = relationship("TemplateFavorite", back_populates="user", cascade="all, delete-orphan")
+    template_collections = relationship("TemplateCollection", back_populates="creator", cascade="all, delete-orphan")
+    template_usage = relationship("TemplateUsage", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamentos de marketplace
-    marketplace_components = relationship(
-        "MarketplaceComponent", back_populates="author", cascade="all, delete-orphan"
-    )
-    component_ratings = relationship(
-        "ComponentRating", back_populates="user", cascade="all, delete-orphan"
-    )
-    component_downloads = relationship(
-        "ComponentDownload", back_populates="user", cascade="all, delete-orphan"
-    )
-    component_purchases = relationship(
-        "ComponentPurchase", back_populates="user", cascade="all, delete-orphan"
-    )
+    marketplace_components = relationship("MarketplaceComponent", back_populates="author", cascade="all, delete-orphan")
+    component_ratings = relationship("ComponentRating", back_populates="user", cascade="all, delete-orphan")
+    component_downloads = relationship("ComponentDownload", back_populates="user", cascade="all, delete-orphan")
+    component_purchases = relationship("ComponentPurchase", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamentos de workspaces
-    owned_workspaces = relationship(
-        "Workspace", back_populates="owner", cascade="all, delete-orphan"
-    )
-    workspace_memberships = relationship(
-        "WorkspaceMember", back_populates="user", cascade="all, delete-orphan"
-    )
+    owned_workspaces = relationship("Workspace", back_populates="owner", cascade="all, delete-orphan")
+    workspace_memberships = relationship("WorkspaceMember", back_populates="user", cascade="all, delete-orphan")
     workspace_invitations_sent = relationship(
         "WorkspaceInvitation",
         foreign_keys="WorkspaceInvitation.inviter_id",
@@ -144,26 +100,29 @@ class User(Base):
         foreign_keys="WorkspaceInvitation.invited_user_id",
         back_populates="invited_user",
     )
-    workspace_activities = relationship(
-        "WorkspaceActivity", back_populates="user", cascade="all, delete-orphan"
-    )
+    workspace_activities = relationship("WorkspaceActivity", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamentos de analytics
-    analytics_events = relationship(
-        "AnalyticsEvent", back_populates="user", cascade="all, delete-orphan"
-    )
-    behavior_metrics = relationship(
-        "UserBehaviorMetric", back_populates="user", cascade="all, delete-orphan"
-    )
-    custom_reports = relationship(
-        "CustomReport", back_populates="user", cascade="all, delete-orphan"
-    )
+    analytics_events = relationship("AnalyticsEvent", back_populates="user", cascade="all, delete-orphan")
+    behavior_metrics = relationship("UserBehaviorMetric", back_populates="user", cascade="all, delete-orphan")
     analytics_dashboards = relationship(
         "AnalyticsDashboard",
         back_populates="user",
         cascade="all, delete-orphan",
         foreign_keys="AnalyticsDashboard.user_id",
     )
+    
+    # Relacionamento para alertas de analytics
+    analytics_alerts = relationship("AnalyticsAlert", back_populates="owner", cascade="all, delete-orphan")
+    
+    # Relacionamento para exports de analytics
+    analytics_exports = relationship("AnalyticsExport", back_populates="owner", cascade="all, delete-orphan")
+    
+    # Relacionamento para reports de analytics
+    analytics_reports = relationship("AnalyticsReport", back_populates="owner", cascade="all, delete-orphan")
+    
+    # Relacionamento para execuções de reports
+    report_executions = relationship("ReportExecution", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamento de assinatura (uma para um)
     subscription = relationship(
@@ -174,38 +133,35 @@ class User(Base):
     )
 
     # Project relationships
-    project_versions = relationship(
-        "ProjectVersion", back_populates="user", cascade="all, delete-orphan"
-    )
+    project_versions = relationship("ProjectVersion", back_populates="user", cascade="all, delete-orphan")
 
     # Novos relacionamentos LLM
-    usage_logs = relationship(
-        "UsageLog", back_populates="user", cascade="all, delete-orphan"
-    )
-    billing_events = relationship(
-        "BillingEvent", back_populates="user", cascade="all, delete-orphan"
-    )
-    message_feedbacks = relationship(
-        "MessageFeedback", back_populates="user", cascade="all, delete-orphan"
-    )
-    created_tags = relationship(
-        "Tag", back_populates="created_by_user", cascade="all, delete-orphan"
-    )
+    usage_logs = relationship("UsageLog", back_populates="user", cascade="all, delete-orphan")
+    billing_events = relationship("BillingEvent", back_populates="user", cascade="all, delete-orphan")
+    message_feedbacks = relationship("MessageFeedback", back_populates="user", cascade="all, delete-orphan")
+    created_tags = relationship("Tag", back_populates="created_by_user", cascade="all, delete-orphan")
 
     # Relacionamentos de Pagamento - NOVOS MODELS
-    payment_customers = relationship(
-        "PaymentCustomer", back_populates="user", cascade="all, delete-orphan"
-    )
+    payment_customers = relationship("PaymentCustomer", back_populates="user", cascade="all, delete-orphan")
     created_coupons = relationship(
         "Coupon", 
         foreign_keys="Coupon.created_by",
-        back_populates="creator", 
+        back_populates="creator",
         cascade="all, delete-orphan"
     )
 
     # Relacionamentos
     tenant = relationship("Tenant", back_populates="users")
     files = relationship("File", back_populates="user")
+
+    # Relacionamento para ratings de nodes
+    node_ratings = relationship("NodeRating", back_populates="user", cascade="all, delete-orphan")
+    
+    # Relacionamento para fila de execução de workflows
+    workflow_queue_entries = relationship("WorkflowExecutionQueue", back_populates="user", cascade="all, delete-orphan")
+
+    # Relacionamento para campanhas criadas
+    created_campaigns = relationship("Campaign", back_populates="creator", cascade="all, delete-orphan")
 
     def verify_password(self, password: str) -> bool:
         """Verifica se a senha fornecida está correta"""

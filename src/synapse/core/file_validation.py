@@ -176,4 +176,4 @@ def sanitize_filename(filename: str) -> str:
     if not filename or filename.startswith("."):
         filename = f"file_{filename}" if filename else "unnamed_file"
 
-    return filename
+    return filename 

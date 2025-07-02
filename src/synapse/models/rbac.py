@@ -38,7 +38,7 @@ except ImportError:
     class UserTenantRole(Base):
         """Modelo de role de usuário por tenant"""
         __tablename__ = "user_tenant_roles"
-        __table_args__ = {"schema": "synapscale_db"}
+        __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
         
         id = Column(PostgresUUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
         user_id = Column(PostgresUUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False)

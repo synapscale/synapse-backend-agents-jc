@@ -30,8 +30,8 @@ from synapse.models import (
     Workspace,
     User,
     WorkspaceMember,
-    WorkspaceActivity,
-    WorkspaceInvitation,
+    # WorkspaceActivity,  # TODO: Add when model is available
+    # WorkspaceInvitation,  # TODO: Add when model is available
     Tenant,
 )
 

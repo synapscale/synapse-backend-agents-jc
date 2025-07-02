@@ -14,7 +14,7 @@ class AgentACL(Base):
     """Model para controle de acesso de agentes - ALINHADO COM agent_acl TABLE"""
     
     __tablename__ = "agent_acl"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela (chave composta)
     agent_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.agents.id"), primary_key=True)

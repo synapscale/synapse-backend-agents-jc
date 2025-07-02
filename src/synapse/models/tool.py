@@ -15,7 +15,7 @@ class Tool(Base):
     """Model para Tools - ALINHADO COM tools TABLE"""
 
     __tablename__ = "tools"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     tool_id = Column(

@@ -8,7 +8,7 @@ import uuid
 
 class PlanFeature(Base):
     __tablename__ = "plan_features"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Estrutura EXATA do banco de dados
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

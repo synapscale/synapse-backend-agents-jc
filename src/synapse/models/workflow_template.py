@@ -12,7 +12,7 @@ class WorkflowTemplate(Base):
     """Templates for creating workflows"""
     
     __tablename__ = "workflow_templates"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
@@ -68,9 +68,14 @@ class WorkflowTemplate(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True)
 
     # Relationships
-    author = relationship("User", back_populates="workflow_templates")
+    author = relationship("User", back_populates="created_templates")
     original_workflow = relationship("Workflow", back_populates="templates")
     tenant = relationship("Tenant", back_populates="workflow_templates")
+    
+    # Relacionamentos com as classes de template do arquivo template.py
+    reviews = relationship("TemplateReview", back_populates="template", cascade="all, delete-orphan")
+    downloads = relationship("TemplateDownload", back_populates="template", cascade="all, delete-orphan")
+    favorites = relationship("TemplateFavorite", back_populates="template", cascade="all, delete-orphan")
 
     def __str__(self):
         return f"WorkflowTemplate(name={self.name}, version={self.version})"

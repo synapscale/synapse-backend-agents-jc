@@ -12,7 +12,7 @@ class NodeRating(Base):
     """User ratings for workflow nodes"""
     
     __tablename__ = "node_ratings"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     node_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.nodes.id"), nullable=False)

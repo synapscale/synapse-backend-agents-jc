@@ -15,7 +15,6 @@ from synapse.core.config import settings
 from synapse.database import get_db
 from synapse.models.user import User
 from synapse.core.auth.jwt import verify_token
-from synapse.core.auth.password import verify_password
 
 # Esquema de autenticação OAuth2 (Bearer Token)
 # Removido auto_error=False para evitar conflitos na documentação
@@ -62,7 +61,7 @@ async def get_current_user_basic(
         raise credentials_exception
 
     # Verificar senha
-    if not verify_password(credentials.password, user.hashed_password):
+    if not user.verify_password(credentials.password):
         raise credentials_exception
 
     # Verificar se usuário está ativo

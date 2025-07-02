@@ -62,6 +62,7 @@ class AnalyticsUserBehaviorMetric(Base):
     """
 
     __tablename__ = "user_behavior_metrics"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(
@@ -122,6 +123,7 @@ class SystemPerformanceMetric(Base):
     """
 
     __tablename__ = "system_performance_metrics"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
 
@@ -149,13 +151,14 @@ class SystemPerformanceMetric(Base):
         return f"<SystemPerformanceMetric(metric_name='{self.metric_name}', value={self.value}, service='{self.service}')>"
 
 
-class BusinessMetric(Base):
+class AnalyticsBusinessMetric(Base):
     """
     Modelo para métricas de negócio
     KPIs e métricas importantes para o negócio
     """
 
-    __tablename__ = "business_metrics"
+    __tablename__ = "analytics_business_metrics"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
 
@@ -207,7 +210,7 @@ class BusinessMetric(Base):
     )
 
     def __repr__(self):
-        return f"<BusinessMetric(date={self.date}, period='{self.period_type}', total_users={self.total_users})>"
+        return f"<AnalyticsBusinessMetric(date={self.date}, period='{self.period_type}', total_users={self.total_users})>"
 
 
 
@@ -221,6 +224,7 @@ class AnalyticsUserInsight(Base):
     """
 
     __tablename__ = "user_insights"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(
@@ -282,23 +286,7 @@ class AnalyticsUserInsight(Base):
 # AnalyticsAlert is now defined in analytics_alert.py to avoid duplication
 
 
-class AnalyticsExport(Base):
-    __tablename__ = "analytics_exports"
-    id = Column(UUID(as_uuid=True), primary_key=True)
-    name = Column(String(255), nullable=False)
-    export_type = Column(String(50), nullable=False)
-    export_query = Column("query", JSONB, nullable=False)
-    file_path = Column(String(500))
-    status = Column(String(20), nullable=False, server_default=text("'pending'"))
-    owner_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-    )
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    completed_at = Column(DateTime(timezone=True))
+# AnalyticsExport is now defined in analytics_export.py to avoid duplication
 
 
 # Note: AnalyticsMetric model is defined in analytics_metric.py

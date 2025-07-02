@@ -15,7 +15,7 @@ class PaymentProvider(Base):
     """Model para provedores de pagamento - ALINHADO COM payment_providers TABLE"""
     
     __tablename__ = "payment_providers"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
@@ -32,7 +32,7 @@ class PaymentProvider(Base):
     # Relacionamentos
     tenant = relationship("Tenant", back_populates="payment_providers")
     customers = relationship("PaymentCustomer", back_populates="provider", cascade="all, delete-orphan")
-    plan_mappings = relationship("PlanProviderMapping", back_populates="provider", cascade="all, delete-orphan")
+    plan_mappings = relationship("synapse.models.plan_provider_mapping.PlanProviderMapping", back_populates="provider", cascade="all, delete-orphan")
     subscriptions = relationship("Subscription", back_populates="provider", cascade="all, delete-orphan")
 
     def __repr__(self):

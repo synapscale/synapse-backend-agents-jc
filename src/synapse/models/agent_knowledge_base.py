@@ -15,7 +15,7 @@ class AgentKnowledgeBase(Base):
     """Model para relacionamento Agent-KnowledgeBase - ALINHADO COM agent_kbs TABLE"""
 
     __tablename__ = "agent_kbs"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela (chave composta)
     agent_id = Column(

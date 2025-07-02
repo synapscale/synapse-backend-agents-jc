@@ -15,7 +15,7 @@ class AuditLog(Base):
     """Model para log de auditoria - ALINHADO COM audit_log TABLE"""
 
     __tablename__ = "audit_log"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     audit_id = Column(

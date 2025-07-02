@@ -15,7 +15,7 @@ class AgentQuota(Base):
     """Model para quotas de agentes - ALINHADO COM agent_quotas TABLE"""
     
     __tablename__ = "agent_quotas"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     quota_id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())

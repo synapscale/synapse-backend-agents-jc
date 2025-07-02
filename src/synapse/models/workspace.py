@@ -53,7 +53,7 @@ class Workspace(Base):
     """
 
     __tablename__ = "workspaces"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -142,47 +142,24 @@ class Workspace(Base):
     # Relacionamentos
     owner = relationship("User", back_populates="owned_workspaces")
     tenant = relationship("Tenant", back_populates="workspaces")
-    members = relationship(
-        "WorkspaceMember", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    activities = relationship(
-        "WorkspaceActivity", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    invitations = relationship(
-        "WorkspaceInvitation", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    projects = relationship(
-        "WorkspaceProject", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    workflows = relationship(
-        "Workflow", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    nodes = relationship(
-        "Node", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    agents = relationship(
-        "Agent", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    conversations = relationship(
-        "Conversation", back_populates="workspace", cascade="all, delete-orphan"
-    )
+    members = relationship("WorkspaceMember", back_populates="workspace", cascade="all, delete-orphan")
+    activities = relationship("WorkspaceActivity", back_populates="workspace", cascade="all, delete-orphan")
+    invitations = relationship("WorkspaceInvitation", back_populates="workspace", cascade="all, delete-orphan")
+    projects = relationship("WorkspaceProject", back_populates="workspace", cascade="all, delete-orphan")
+    workflows = relationship("Workflow", back_populates="workspace", cascade="all, delete-orphan")
+    nodes = relationship("Node", back_populates="workspace", cascade="all, delete-orphan")
+    agents = relationship("Agent", back_populates="workspace", cascade="all, delete-orphan")
+    conversations = relationship("Conversation", back_populates="workspace", cascade="all, delete-orphan")
 
     # Novos relacionamentos LLM
-    usage_logs = relationship(
-        "UsageLog", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    billing_events = relationship(
-        "BillingEvent", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    workspace_features = relationship(
-        "WorkspaceFeature", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    analytics_events = relationship(
-        "AnalyticsEvent", back_populates="workspace", cascade="all, delete-orphan"
-    )
-    custom_reports = relationship(
-        "CustomReport", back_populates="workspace", cascade="all, delete-orphan"
-    )
+    usage_logs = relationship("UsageLog", back_populates="workspace", cascade="all, delete-orphan")
+    billing_events = relationship("BillingEvent", back_populates="workspace", cascade="all, delete-orphan")
+    workspace_features = relationship("WorkspaceFeature", back_populates="workspace", cascade="all, delete-orphan")
+    analytics_events = relationship("AnalyticsEvent", back_populates="workspace", cascade="all, delete-orphan")
+    custom_reports = relationship("CustomReport", back_populates="workspace", cascade="all, delete-orphan")
+    
+    # Relacionamento para dashboards de analytics
+    analytics_dashboards = relationship("AnalyticsDashboard", back_populates="workspace", cascade="all, delete-orphan")
 
     def __repr__(self):
         return (
@@ -266,7 +243,6 @@ class Workspace(Base):
             "enable_comments": self.enable_comments,
             "enable_chat": self.enable_chat,
             "enable_video_calls": self.enable_video_calls,
-            "notification_settings": self.notification_settings,
             "member_count": self.member_count,
             "project_count": self.project_count,
             "activity_count": self.activity_count,

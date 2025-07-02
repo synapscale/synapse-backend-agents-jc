@@ -16,7 +16,7 @@ from synapse.models.analytics_event import AnalyticsEvent
 from synapse.models.analytics import EventType, MetricType
 from synapse.models.analytics_alert import AnalyticsAlert
 from synapse.models.user_behavior_metric import UserBehaviorMetric
-from synapse.models.analytics import SystemPerformanceMetric, BusinessMetric
+from synapse.models.analytics import SystemPerformanceMetric, AnalyticsBusinessMetric
 from synapse.models.custom_report import CustomReport
 from synapse.models.report_execution import ReportExecution
 from synapse.models.user_insight import UserInsight
@@ -143,7 +143,7 @@ class AnalyticsService:
 
     def create_metric(
         self, metric_data: MetricCreate, user_id: Optional[int] = None
-    ) -> Union[UserBehaviorMetric, SystemPerformanceMetric, BusinessMetric]:
+    ) -> Union[UserBehaviorMetric, SystemPerformanceMetric, AnalyticsBusinessMetric]:
         """Cria uma métrica"""
 
         if metric_data.metric_type == MetricType.USER_BEHAVIOR:
@@ -173,7 +173,7 @@ class AnalyticsService:
                 dimensions=metric_data.dimensions or {},
             )
         else:  # BUSINESS
-            metric = BusinessMetric(
+            metric = AnalyticsBusinessMetric(
                 metric_name=metric_data.metric_name,
                 metric_value=metric_data.metric_value,
                 metric_unit=metric_data.metric_unit,
@@ -206,7 +206,7 @@ class AnalyticsService:
         elif metric_type == MetricType.SYSTEM_PERFORMANCE:
             model = SystemPerformanceMetric
         else:
-            model = BusinessMetric
+            model = AnalyticsBusinessMetric
 
         # Métricas no período
         metrics = (
@@ -545,7 +545,7 @@ class AnalyticsService:
         elif metric_type == "system_performance":
             model = SystemPerformanceMetric
         else:
-            model = BusinessMetric
+            model = AnalyticsBusinessMetric
 
         # Calcular período
         end_date = datetime.utcnow()

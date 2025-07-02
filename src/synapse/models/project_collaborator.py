@@ -15,7 +15,7 @@ class ProjectCollaborator(Base):
     """Model para colaboradores de projeto - ALINHADO COM project_collaborators TABLE"""
     
     __tablename__ = "project_collaborators"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

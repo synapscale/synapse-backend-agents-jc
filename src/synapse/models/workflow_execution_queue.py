@@ -12,7 +12,7 @@ class WorkflowExecutionQueue(Base):
     """Queue management for workflow executions"""
     
     __tablename__ = "workflow_execution_queue"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     queue_id = Column(String(36), nullable=True)

@@ -13,7 +13,7 @@ import openai
 from openai import AsyncOpenAI
 
 from synapse.core.executors.base import BaseExecutor, ExecutorType, ExecutionContext
-from synapse.models.workflow_execution import NodeExecution
+from synapse.models.node_execution import NodeExecution
 from synapse.models.node import Node
 
 

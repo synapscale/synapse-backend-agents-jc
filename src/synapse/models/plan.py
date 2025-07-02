@@ -8,7 +8,7 @@ import uuid
 
 class Plan(Base):
     __tablename__ = "plans"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Estrutura EXATA do banco de dados
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -48,6 +48,7 @@ class Plan(Base):
     subscriptions = relationship("Subscription", back_populates="plan", cascade="all, delete-orphan")
     plan_features = relationship("PlanFeature", back_populates="plan", cascade="all, delete-orphan")
     plan_entitlements = relationship("PlanEntitlement", back_populates="plan", cascade="all, delete-orphan")
+    provider_mappings = relationship("synapse.models.plan_provider_mapping.PlanProviderMapping", back_populates="plan", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Plan(id={self.id}, name='{self.name}', slug='{self.slug}')>"

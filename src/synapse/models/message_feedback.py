@@ -12,7 +12,7 @@ class MessageFeedback(Base):
     """User feedback on LLM messages"""
     
     __tablename__ = "message_feedbacks"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     message_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.llms_messages.id"), nullable=False)

@@ -31,8 +31,8 @@ REAL_DB_STRUCTURES = {
 }
 
 # Criar modelos de teste baseados na estrutura real
-class User(Base):
-    __tablename__ = "users"
+class UserValidationModel(Base):
+    __tablename__ = "users_validation_test"
     __table_args__ = {"schema": "synapscale_db"}
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -131,7 +131,7 @@ def main():
     print("=" * 70)
     
     models_to_test = [
-        (User, 'users'),
+        (UserValidationModel, 'users'),
         (Tenant, 'tenants'),
         (Agent, 'agents'),
     ]

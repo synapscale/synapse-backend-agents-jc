@@ -18,7 +18,7 @@ class EmailVerificationToken(Base):
     """Model para tokens de verificação de email - ALINHADO COM email_verification_tokens TABLE"""
 
     __tablename__ = "email_verification_tokens"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

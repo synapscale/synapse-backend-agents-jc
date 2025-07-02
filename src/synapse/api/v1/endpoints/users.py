@@ -18,7 +18,7 @@ from synapse.schemas.user import (
     UserRole,
 )
 from synapse.models import User
-from synapse.core.auth.password import get_password_hash, verify_password
+from synapse.core.auth.password import get_password_hash
 
 
 router = APIRouter()

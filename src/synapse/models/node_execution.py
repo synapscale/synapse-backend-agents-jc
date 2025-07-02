@@ -12,7 +12,7 @@ class NodeExecution(Base):
     """Individual node execution tracking within workflows"""
     
     __tablename__ = "node_executions"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     execution_id = Column(String(36), nullable=True)

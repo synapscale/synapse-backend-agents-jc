@@ -14,7 +14,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class UserDigitalOcean(Base):
     """Modelo User adaptado para a estrutura existente no DigitalOcean"""
 
-    __tablename__ = "users"
+    __tablename__ = "users_digitalocean"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(String(255), primary_key=True)
     email = Column(String(255), unique=True, nullable=False, index=True)

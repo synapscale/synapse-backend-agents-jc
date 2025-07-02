@@ -25,7 +25,6 @@ from synapse.database import Base
 
 class NodeType(enum.Enum):
     """Tipos de nodes disponíveis no sistema."""
-
     LLM = "llm"
     TRANSFORM = "transform"
     API = "api"
@@ -40,7 +39,6 @@ class NodeType(enum.Enum):
 
 class NodeStatus(enum.Enum):
     """Status possíveis para um node."""
-
     DRAFT = "draft"
     PUBLISHED = "published"
     DEPRECATED = "deprecated"
@@ -51,6 +49,7 @@ class Node(Base):
     """Modelo principal para nodes do sistema."""
 
     __tablename__ = "nodes"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
@@ -117,6 +116,12 @@ class Node(Base):
     # Relacionamento com Workspace
     workspace = relationship("Workspace", back_populates="nodes")
 
+    # Relacionamento com NodeRating
+    ratings = relationship("NodeRating", back_populates="node")
+
+    # Relacionamento com NodeExecution
+    executions = relationship("NodeExecution", back_populates="node", cascade="all, delete-orphan")
+
     def to_dict(self, include_code: bool | None = False) -> dict:
         """Converte node para dicionário"""
         data = {
@@ -156,34 +161,33 @@ class Node(Base):
             my_output = self.output_schema.get("properties", {})
             other_input = other_node.input_schema.get("properties", {})
 
-            for output_key, output_config in my_output.items():
-                if output_key in other_input:
-                    output_type = output_config.get("type")
-                    input_type = other_input[output_key].get("type")
-                    if output_type != input_type:
-                        return False
+            # Lista de chaves obrigatórias que devem estar presentes
+            required_inputs = other_node.input_schema.get("required", [])
+
+            for required_field in required_inputs:
+                if required_field not in my_output:
+                    return False
 
             return True
-        except KeyError:
+        except Exception:
             return False
 
     def update_rating(self, new_rating: int) -> None:
-        """Atualiza rating médio com nova avaliação"""
+        """Atualiza a avaliação média do node"""
         if not 1 <= new_rating <= 5:
             raise ValueError("Rating deve estar entre 1 e 5")
 
-        # Não é possível atualizar colunas diretamente
-        # isso deve ser feito na camada de serviço
-        # total_points = self.rating_average * self.rating_count
-        # total_points += new_rating
-        # self.rating_count += 1
-        # self.rating_average = total_points / self.rating_count
+        current_total = self.rating_average * self.rating_count
+        new_total = current_total + new_rating
+        self.rating_count += 1
+        self.rating_average = new_total / self.rating_count
 
 
 class NodeTemplate(Base):
     """Template para criação de nodes baseados em padrões predefinidos."""
 
     __tablename__ = "node_templates"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(200), nullable=False)
@@ -232,6 +236,8 @@ class NodeTemplate(Base):
             "examples": self.examples,
             "is_system": self.is_system,
             "is_active": self.is_active,
+            "rating_count": self.rating_count,
+            "rating_average": self.rating_average,
             "created_at": (
                 self.created_at.isoformat() if self.created_at is not None else None
             ),
@@ -244,7 +250,6 @@ class NodeTemplate(Base):
             "description": self.description,
             "type": self.type,
             "category": self.category,
-            "user_id": user_id,
             "code_template": self.code_template,
             "input_schema": self.input_schema,
             "output_schema": self.output_schema,
@@ -253,30 +258,5 @@ class NodeTemplate(Base):
             "color": self.color,
             "documentation": self.documentation,
             "examples": self.examples,
+            "user_id": user_id,
         }
-
-
-class NodeRating(Base):
-    __tablename__ = "node_ratings"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    node_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("nodes.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    rating = Column(Integer, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
-    updated_at = Column(
-        DateTime(timezone=True), server_default=text("NOW()"), onupdate=text("NOW()")
-    )
-
-    node = relationship("Node", backref="ratings")
-    user = relationship("User")

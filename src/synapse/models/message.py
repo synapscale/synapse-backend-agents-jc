@@ -23,7 +23,7 @@ from synapse.database import Base
 
 class Message(Base):
     __tablename__ = "llms_messages"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

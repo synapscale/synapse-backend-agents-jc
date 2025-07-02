@@ -12,7 +12,7 @@ class RBACPermission(Base):
     """Role-Based Access Control permissions"""
     
     __tablename__ = "rbac_permissions"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     key = Column(String(100), nullable=False, unique=True)

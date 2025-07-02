@@ -8,7 +8,7 @@ import uuid
 
 class Feature(Base):
     __tablename__ = "features"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Estrutura EXATA do banco de dados
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -52,7 +52,7 @@ class WorkspaceFeature(Base):
     """Features customizadas por workspace"""
 
     __tablename__ = "workspace_features"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos EXATOS da estrutura do banco de dados
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

@@ -15,7 +15,7 @@ class AgentModel(Base):
     """Model para relacionamento Agent-LLM - ALINHADO COM agent_models TABLE"""
     
     __tablename__ = "agent_models"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela (chave composta)
     agent_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.agents.id"), primary_key=True)

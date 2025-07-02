@@ -28,7 +28,6 @@ from synapse.database import Base
 
 class TemplateCategory(str, Enum):
     """Categorias de templates"""
-
     AUTOMATION = "automation"
     DATA_PROCESSING = "data_processing"
     AI_WORKFLOWS = "ai_workflows"
@@ -46,7 +45,6 @@ class TemplateCategory(str, Enum):
 
 class TemplateStatus(str, Enum):
     """Status do template"""
-
     DRAFT = "draft"
     PUBLISHED = "published"
     FEATURED = "featured"
@@ -56,146 +54,10 @@ class TemplateStatus(str, Enum):
 
 class TemplateLicense(str, Enum):
     """Licenças de templates"""
-
     FREE = "free"
     PREMIUM = "premium"
     ENTERPRISE = "enterprise"
     CUSTOM = "custom"
-
-
-class WorkflowTemplate(Base):
-    """
-    Modelo para templates de workflows
-    Permite compartilhamento e reutilização de workflows
-    """
-
-    __tablename__ = "workflow_templates"
-
-    # Campos principais
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    category = Column(String(100), nullable=False)
-    tags = Column(JSONB, nullable=True)
-    workflow_definition = Column(JSONB, nullable=False)
-    preview_image = Column(String(500))
-    author_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-    )
-    version = Column(String(50), nullable=False, server_default=text("'1.0.0'"))
-    is_public = Column(Boolean, nullable=False, server_default=text("false"))
-    is_featured = Column(Boolean, nullable=False, server_default=text("false"))
-    downloads_count = Column(Integer, nullable=False, server_default=text("0"))
-    rating_average = Column(DECIMAL(3, 2), nullable=False, server_default=text("0.00"))
-    rating_count = Column(Integer, nullable=False, server_default=text("0"))
-    price = Column(DECIMAL(10, 2), nullable=False, server_default=text("0.00"))
-    is_free = Column(Boolean, nullable=False, server_default=text("true"))
-    license = Column(String(50), nullable=False, server_default=text("'MIT'"))
-    created_at = Column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
-    )
-
-    # Informações básicas
-    title = Column(String(255), nullable=False)  # Título público
-    short_description = Column(String(500), nullable=True)
-
-    # Relacionamentos
-    original_workflow_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflows.id"), nullable=True, index=True
-    )
-
-    # Status e visibilidade (campos adicionais - mantendo apenas o que não existe no banco principal)
-    status = Column(String(20), default=TemplateStatus.DRAFT.value, index=True)
-    is_verified = Column(Boolean, default=False, index=True)
-
-    # Licenciamento (campo adicional)
-    license_type = Column(String(20), default=TemplateLicense.FREE.value, index=True)
-
-    # Conteúdo do template (campos adicionais para compatibilidade)
-    workflow_data = Column(JSONB, nullable=False)  # Estrutura completa do workflow
-    nodes_data = Column(JSONB, nullable=False)  # Dados dos nós
-    connections_data = Column(JSONB, nullable=True)  # Conexões entre nós
-
-    # Configurações
-    required_variables = Column(JSONB, nullable=True)  # Variáveis obrigatórias
-    optional_variables = Column(JSONB, nullable=True)  # Variáveis opcionais
-    default_config = Column(JSONB, nullable=True)  # Configuração padrão
-
-    # Metadados
-    compatibility_version = Column(
-        String(20), default="1.0.0"
-    )  # Versão mínima do sistema
-    estimated_duration = Column(Integer, nullable=True)  # Duração estimada em segundos
-    complexity_level = Column(Integer, default=1)  # 1-5 (básico a avançado)
-
-    # Estatísticas (campos adicionais - download_count é para compatibilidade)
-    download_count = Column(Integer, default=0, index=True)
-    usage_count = Column(Integer, default=0)
-    view_count = Column(Integer, default=0)
-
-    # SEO e descoberta
-    keywords = Column(JSONB, nullable=True)  # Palavras-chave para busca
-    use_cases = Column(JSONB, nullable=True)  # Casos de uso
-    industries = Column(JSONB, nullable=True)  # Indústrias aplicáveis
-
-    # Recursos visuais
-    thumbnail_url = Column(String(500), nullable=True)
-    preview_images = Column(JSONB, nullable=True)  # URLs de imagens de preview
-    demo_video_url = Column(String(500), nullable=True)
-
-    # Documentação
-    documentation = Column(Text, nullable=True)  # Documentação em Markdown
-    setup_instructions = Column(Text, nullable=True)  # Instruções de configuração
-    changelog = Column(JSONB, nullable=True)  # Histórico de mudanças
-
-    # Suporte e manutenção
-    support_email = Column(String(255), nullable=True)
-    repository_url = Column(String(500), nullable=True)
-    documentation_url = Column(String(500), nullable=True)
-
-    # Timestamps adicionais
-    published_at = Column(DateTime(timezone=True), nullable=True, index=True)
-    last_used_at = Column(DateTime(timezone=True), nullable=True)
-
-    # Tenant ID para multi-tenancy
-    tenant_id = Column(UUID(as_uuid=True), nullable=True)
-
-    # Relacionamentos
-    author = relationship("User", back_populates="created_templates")
-    original_workflow = relationship("Workflow")
-    reviews = relationship(
-        "TemplateReview", back_populates="template", cascade="all, delete-orphan"
-    )
-    downloads = relationship(
-        "TemplateDownload", back_populates="template", cascade="all, delete-orphan"
-    )
-    favorites = relationship(
-        "TemplateFavorite", back_populates="template", cascade="all, delete-orphan"
-    )
-
-    def __repr__(self):
-        return f"<WorkflowTemplate(id={self.id}, name='{self.name}', status='{self.status}')>"
-
-    @property
-    def is_premium(self) -> bool:
-        """Verifica se é um template premium"""
-        return self.license_type in [
-            TemplateLicense.PREMIUM.value,
-            TemplateLicense.ENTERPRISE.value,
-        ]
-
-    @property
-    def rating_stars(self) -> float:
-        """Retorna a avaliação em estrelas (0-5)"""
-        return round(self.rating_average, 1)
 
 
 class TemplateReview(Base):
@@ -204,13 +66,14 @@ class TemplateReview(Base):
     """
 
     __tablename__ = "template_reviews"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
     )
     user_id = Column(
         UUID(as_uuid=True),
@@ -258,13 +121,14 @@ class TemplateDownload(Base):
     """
 
     __tablename__ = "template_downloads"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
     )
     user_id = Column(
         UUID(as_uuid=True),
@@ -300,13 +164,14 @@ class TemplateFavorite(Base):
     """
 
     __tablename__ = "template_favorites"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
     )
     user_id = Column(
         UUID(as_uuid=True),
@@ -325,9 +190,6 @@ class TemplateFavorite(Base):
     template = relationship("WorkflowTemplate", back_populates="favorites")
     user = relationship("User", back_populates="favorite_templates")
 
-    # Constraint para evitar duplicatas
-    __table_args__ = ({"sqlite_autoincrement": True},)
-
     def __repr__(self):
         return f"<TemplateFavorite(id={self.id}, template_id={self.template_id}, user_id={self.user_id})>"
 
@@ -339,6 +201,7 @@ class TemplateCollection(Base):
     """
 
     __tablename__ = "template_collections"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -391,13 +254,14 @@ class TemplateUsage(Base):
     """
 
     __tablename__ = "template_usage"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
 
     # Relacionamentos
     template_id = Column(
-        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
+        UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_templates.id"), nullable=False, index=True
     )
     user_id = Column(
         UUID(as_uuid=True),
@@ -405,7 +269,7 @@ class TemplateUsage(Base):
         nullable=False,
         index=True,
     )
-    workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable=True, index=True)
+    workflow_id = Column(Integer, ForeignKey("synapscale_db.workflows.id"), nullable=True, index=True)
 
     # Informações de uso
     usage_type = Column(String(20), nullable=False)  # create, clone, execute, modify

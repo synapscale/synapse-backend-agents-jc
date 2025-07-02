@@ -12,7 +12,7 @@ class BusinessMetric(Base):
     """Business metrics and KPIs tracking"""
     
     __tablename__ = "business_metrics"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     date = Column(DateTime(timezone=True), nullable=False)

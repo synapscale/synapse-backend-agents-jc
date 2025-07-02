@@ -12,7 +12,7 @@ class AnalyticsDashboard(Base):
     """Analytics dashboards and visualizations"""
     
     __tablename__ = "analytics_dashboards"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
@@ -36,9 +36,9 @@ class AnalyticsDashboard(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True)
 
     # Relationships
-    user = relationship("User", back_populates="analytics_dashboards")
-    workspace = relationship("Workspace", back_populates="analytics_dashboards")
-    tenant = relationship("Tenant", back_populates="analytics_dashboards")
+    user = relationship("synapse.models.user.User", back_populates="analytics_dashboards")
+    workspace = relationship("synapse.models.workspace.Workspace", back_populates="analytics_dashboards")
+    tenant = relationship("synapse.models.tenant.Tenant", back_populates="analytics_dashboards")
 
     def __str__(self):
         return f"AnalyticsDashboard(name={self.name}, status={self.status})"

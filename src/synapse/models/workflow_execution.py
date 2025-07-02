@@ -30,7 +30,6 @@ from synapse.database import Base
 
 class ExecutionStatus(str, Enum):
     """Status de execução do workflow"""
-
     PENDING = "pending"
     RUNNING = "running"
     PAUSED = "paused"
@@ -42,7 +41,6 @@ class ExecutionStatus(str, Enum):
 
 class NodeExecutionStatus(str, Enum):
     """Status de execução de um nó específico"""
-
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -58,6 +56,7 @@ class WorkflowExecution(Base):
     """
 
     __tablename__ = "workflow_executions"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos principais
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -68,7 +67,7 @@ class WorkflowExecution(Base):
     # Relacionamentos
     workflow_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("workflows.id", ondelete="CASCADE", onupdate="CASCADE"),
+        ForeignKey("synapscale_db.workflows.id", ondelete="CASCADE", onupdate="CASCADE"),
         nullable=False,
     )
     user_id = Column(
@@ -134,6 +133,16 @@ class WorkflowExecution(Base):
         back_populates="workflow_execution",
         cascade="all, delete-orphan",
     )
+    metrics = relationship(
+        "WorkflowExecutionMetric",
+        back_populates="workflow_execution",
+        cascade="all, delete-orphan",
+    )
+    queue_entries = relationship(
+        "WorkflowExecutionQueue",
+        back_populates="workflow_execution",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<WorkflowExecution(id={self.id}, execution_id='{self.execution_id}', status='{self.status}')>"
@@ -172,212 +181,17 @@ class WorkflowExecution(Base):
             self.progress_percentage = 0
 
 
-class NodeExecution(Base):
-    """
-    Modelo para execução de nós individuais
-    Rastreia o estado de cada nó durante a execução
-    """
-
-    __tablename__ = "node_executions"
-
-    # Campos principais
-    id = Column(Integer, primary_key=True, index=True)
-    execution_id = Column(String(36), index=True, default=lambda: str(uuid.uuid4()))
-
-    # Relacionamentos
-    workflow_execution_id = Column(
-        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
-    )
-    node_id = Column(Integer, ForeignKey("nodes.id"), nullable=False, index=True)
-
-    # Identificação do nó
-    node_key = Column(
-        String(255), nullable=False, index=True
-    )  # Chave única do nó no workflow
-    node_type = Column(String(100), nullable=False, index=True)
-    node_name = Column(String(255), nullable=True)
-
-    # Status e controle
-    status = Column(
-        SQLEnum(NodeExecutionStatus), default=NodeExecutionStatus.PENDING, index=True
-    )
-    execution_order = Column(Integer, nullable=False, index=True)
-
-    # Dados de execução
-    input_data = Column(JSON, nullable=True)
-    output_data = Column(JSON, nullable=True)
-    config_data = Column(JSON, nullable=True)
-
-    # Controle de tempo
-    started_at = Column(DateTime(timezone=True), nullable=True)
-    completed_at = Column(DateTime(timezone=True), nullable=True)
-    timeout_at = Column(DateTime(timezone=True), nullable=True)
-    duration_ms = Column(Integer, nullable=True)  # Duração em milissegundos
-
-    # Logs e debugging
-    execution_log = Column(Text, nullable=True)
-    error_message = Column(Text, nullable=True)
-    error_details = Column(JSON, nullable=True)
-    debug_info = Column(JSON, nullable=True)
-
-    # Retry e recovery
-    retry_count = Column(Integer, default=0)
-    max_retries = Column(Integer, default=3)
-    retry_delay = Column(Integer, default=1000)  # Em milissegundos
-
-    # Dependências
-    dependencies = Column(
-        JSON, nullable=True
-    )  # IDs dos nós que devem ser executados antes
-    dependents = Column(JSON, nullable=True)  # IDs dos nós que dependem deste
-
-    # Metadados
-    meta_data = Column(JSON, nullable=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    # Relacionamentos
-    workflow_execution = relationship(
-        "WorkflowExecution", back_populates="node_executions"
-    )
-    node = relationship("Node")
-
-    def __repr__(self):
-        return f"<NodeExecution(id={self.id}, node_key='{self.node_key}', status='{self.status}')>"
-
-    @property
-    def is_ready_to_execute(self) -> bool:
-        """Verifica se o nó está pronto para execução"""
-        return self.status == NodeExecutionStatus.PENDING
-
-    @property
-    def is_completed(self) -> bool:
-        """Verifica se a execução do nó foi concluída"""
-        return self.status in [
-            NodeExecutionStatus.COMPLETED,
-            NodeExecutionStatus.FAILED,
-            NodeExecutionStatus.SKIPPED,
-        ]
-
-    @property
-    def duration_seconds(self) -> float | None:
-        """Calcula a duração da execução em segundos"""
-        if self.duration_ms:
-            return self.duration_ms / 1000.0
-        elif self.started_at and self.completed_at:
-            return (self.completed_at - self.started_at).total_seconds()
-        return None
-
-
-class ExecutionQueue(Base):
-    """
-    Modelo para fila de execução de workflows
-    Gerencia a ordem e prioridade de execução
-    """
-
-    __tablename__ = "workflow_execution_queue"
-
-    # Campos principais
-    id = Column(Integer, primary_key=True, index=True)
-    queue_id = Column(
-        String(36), unique=True, index=True, default=lambda: str(uuid.uuid4())
-    )
-
-    # Relacionamentos
-    workflow_execution_id = Column(
-        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
-    )
-    user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.users.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-
-    # Controle da fila
-    priority = Column(Integer, default=5, index=True)  # 1-10, maior = mais prioritário
-    scheduled_at = Column(
-        DateTime(timezone=True), nullable=True, index=True
-    )  # Agendamento
-    started_at = Column(DateTime(timezone=True), nullable=True)
-    completed_at = Column(DateTime(timezone=True), nullable=True)
-
-    # Status
-    status = Column(
-        String(50), default="queued", index=True
-    )  # queued, processing, completed, failed
-    worker_id = Column(
-        String(100), nullable=True, index=True
-    )  # ID do worker processando
-
-    # Configurações
-    max_execution_time = Column(Integer, default=3600)  # Timeout em segundos
-    retry_count = Column(Integer, default=0)
-    max_retries = Column(Integer, default=3)
-
-    # Metadados
-    meta_data = Column(JSON, nullable=True)
-
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    # Relacionamentos
-    workflow_execution = relationship("WorkflowExecution")
-    user = relationship("User")
-
-    def __repr__(self):
-        return f"<ExecutionQueue(id={self.id}, status='{self.status}', priority={self.priority})>"
-
-
-class ExecutionMetrics(Base):
-    """
-    Modelo para métricas de execução
-    Armazena estatísticas e métricas de performance
-    """
-
-    __tablename__ = "workflow_execution_metrics"
-
-    # Campos principais
-    id = Column(Integer, primary_key=True, index=True)
-
-    # Relacionamentos
-    workflow_execution_id = Column(
-        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
-    )
-    node_execution_id = Column(
-        Integer, ForeignKey("node_executions.id"), nullable=True, index=True
-    )
-
-    # Tipo de métrica
-    metric_type = Column(
-        String(100), nullable=False, index=True
-    )  # execution_time, memory_usage, api_calls, etc.
-    metric_name = Column(String(255), nullable=False, index=True)
-
-    # Valores
-    value_numeric = Column(Integer, nullable=True)
-    value_float = Column(String(50), nullable=True)  # Para valores decimais
-    value_text = Column(Text, nullable=True)
-    value_json = Column(JSON, nullable=True)
-
-    # Contexto
-    context = Column(String(255), nullable=True, index=True)  # node, workflow, system
-    tags = Column(JSON, nullable=True)
-
-    # Timestamps
-    measured_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    # Relacionamentos
-    workflow_execution = relationship("WorkflowExecution")
-    node_execution = relationship("NodeExecution")
-
-    def __repr__(self):
-        return f"<ExecutionMetrics(id={self.id}, metric_type='{self.metric_type}', metric_name='{self.metric_name}')>"
+# COMENTADO: Esta classe duplica a tabela com NodeExecution em node_execution.py
+# Use NodeExecution de node_execution.py ao invés desta classe
+#
+# class NodeExecution(Base):
+#     """
+#     Modelo para execução de nós individuais
+#     Rastreia o estado de cada nó durante a execução
+#     """
+#
+#     __tablename__ = "node_executions"
+#     __table_args__ = {"schema": "synapscale_db"}
+#
+#     # Campos principais
+#     id = Column(Integer, primary_key=True, index=True)

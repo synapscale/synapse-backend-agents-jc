@@ -13,7 +13,7 @@ from synapse.database import Base
 
 class Conversation(Base):
     __tablename__ = "llms_conversations"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -66,6 +66,7 @@ class Conversation(Base):
     user = relationship("User", back_populates="conversations")
     agent = relationship("Agent", back_populates="conversations")
     workspace = relationship("Workspace", back_populates="conversations")
+    tenant = relationship("Tenant", back_populates="conversations")
     messages = relationship(
         "Message", back_populates="conversation", cascade="all, delete-orphan"
     )

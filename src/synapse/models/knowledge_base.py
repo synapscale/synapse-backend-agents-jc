@@ -12,7 +12,7 @@ class KnowledgeBase(Base):
     """Knowledge base for storing structured information"""
     
     __tablename__ = "knowledge_bases"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     kb_id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     title = Column(Text, nullable=False)

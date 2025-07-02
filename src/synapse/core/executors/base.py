@@ -13,7 +13,7 @@ import json
 import traceback
 from enum import Enum
 
-from synapse.models.workflow_execution import NodeExecution
+from synapse.models.node_execution import NodeExecution
 from synapse.models.node import Node
 
 

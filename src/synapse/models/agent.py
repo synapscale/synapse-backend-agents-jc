@@ -40,7 +40,7 @@ class AgentType(enum.Enum):
 
 class Agent(Base):
     __tablename__ = "agents"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos que existem na estrutura real do banco
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -81,14 +81,28 @@ class Agent(Base):
     # Relacionamentos
     user = relationship("User", back_populates="agents")
     workspace = relationship("Workspace", back_populates="agents")
+    tenant = relationship("Tenant", back_populates="agents")
     conversations = relationship(
         "Conversation", back_populates="agent", cascade="all, delete-orphan"
     )
     
     # Novos relacionamentos para as tabelas de agentes
     agent_acl = relationship("AgentACL", back_populates="agent", cascade="all, delete-orphan")
-    agent_configurations = relationship("AgentConfiguration", foreign_keys="[AgentConfiguration.agent_id]", back_populates="agent", cascade="all, delete-orphan")
-    agent_error_logs = relationship("AgentErrorLog", back_populates="agent", cascade="all, delete-orphan")
+    agent_configurations = relationship(
+        "AgentConfiguration", 
+        foreign_keys="[AgentConfiguration.agent_id]",
+        back_populates="agent", 
+        cascade="all, delete-orphan"
+    )
+    
+    # Relacionamento para a configuração atual
+    current_configuration = relationship(
+        "AgentConfiguration",
+        foreign_keys="[Agent.current_config]",
+        post_update=True,  # Evita referência circular
+        uselist=False
+    )
+    error_logs = relationship("AgentErrorLog", back_populates="agent", cascade="all, delete-orphan")
     agent_knowledge_bases = relationship("AgentKnowledgeBase", back_populates="agent", cascade="all, delete-orphan")
     agent_models = relationship("AgentModel", back_populates="agent", cascade="all, delete-orphan")
     agent_quotas = relationship("AgentQuota", back_populates="agent", cascade="all, delete-orphan")
@@ -96,9 +110,9 @@ class Agent(Base):
     agent_triggers = relationship("AgentTrigger", back_populates="agent", cascade="all, delete-orphan")
     agent_usage_metrics = relationship("AgentUsageMetric", back_populates="agent", cascade="all, delete-orphan")
     
-    # Relacionamentos de hierarquia
-    descendants = relationship("AgentHierarchy", foreign_keys="AgentHierarchy.ancestor", back_populates="ancestor_agent", cascade="all, delete-orphan")
-    ancestors = relationship("AgentHierarchy", foreign_keys="AgentHierarchy.descendant", back_populates="descendant_agent", cascade="all, delete-orphan")
+    # Relacionamentos de hierarquia (removendo foreign_keys problemáticos)
+    descendants = relationship("AgentHierarchy", back_populates="ancestor_agent", cascade="all, delete-orphan")
+    ancestors = relationship("AgentHierarchy", back_populates="descendant_agent", cascade="all, delete-orphan")
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Converte agente para dicionário"""

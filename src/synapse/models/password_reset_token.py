@@ -12,7 +12,7 @@ class PasswordResetToken(Base):
     """Password reset tokens for user authentication"""
     
     __tablename__ = "password_reset_tokens"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     token = Column(String(500), nullable=False, unique=True)

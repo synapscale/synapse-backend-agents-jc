@@ -16,7 +16,7 @@ class RBACRole(Base):
     """Model para roles RBAC - ALINHADO COM rbac_roles TABLE"""
 
     __tablename__ = "rbac_roles"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     id = Column(

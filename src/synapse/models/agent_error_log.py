@@ -17,7 +17,7 @@ class AgentErrorLog(Base):
     """Model para logs de erro de agentes - ALINHADO COM agent_error_logs TABLE"""
     
     __tablename__ = "agent_error_logs"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     error_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

@@ -12,7 +12,7 @@ class AnalyticsMetric(Base):
     """Analytics metrics storage and tracking"""
     
     __tablename__ = "analytics_metrics"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     metric_name = Column(String(100), nullable=False)

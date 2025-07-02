@@ -12,7 +12,7 @@ class CustomReport(Base):
     """User-created custom reports"""
     
     __tablename__ = "custom_reports"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=False)
@@ -40,7 +40,8 @@ class CustomReport(Base):
     user = relationship("User", back_populates="custom_reports")
     workspace = relationship("Workspace", back_populates="custom_reports")
     tenant = relationship("Tenant", back_populates="custom_reports")
-    executions = relationship("ReportExecution", back_populates="report")
+    # NOTE: Temporarily commented to resolve conflict with AnalyticsReport.executions
+    # executions = relationship("ReportExecution", back_populates="report")
 
     def __str__(self):
         return f"CustomReport(name={self.name}, status={self.status})"

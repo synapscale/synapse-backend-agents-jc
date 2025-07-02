@@ -13,7 +13,7 @@ from synapse.database import Base
 
 class ConversationLLM(Base):
     __tablename__ = "llms_conversations_turns"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Identificação
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

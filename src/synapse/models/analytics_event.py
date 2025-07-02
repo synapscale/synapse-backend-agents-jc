@@ -12,7 +12,7 @@ class AnalyticsEvent(Base):
     """Analytics event tracking and data collection"""
     
     __tablename__ = "analytics_events"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     event_id = Column(String(36), nullable=False)  # External event ID

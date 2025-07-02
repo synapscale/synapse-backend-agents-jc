@@ -12,7 +12,7 @@ class AnalyticsAlert(Base):
     """Analytics alerts and notifications"""
     
     __tablename__ = "analytics_alerts"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     name = Column(String(255), nullable=False)
@@ -27,8 +27,8 @@ class AnalyticsAlert(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True)
 
     # Relationships
-    owner = relationship("User", back_populates="analytics_alerts")
-    tenant = relationship("Tenant", back_populates="analytics_alerts")
+    owner = relationship("synapse.models.user.User", back_populates="analytics_alerts")
+    tenant = relationship("synapse.models.tenant.Tenant", back_populates="analytics_alerts")
 
     def __str__(self):
         return f"AnalyticsAlert(name={self.name}, active={self.is_active})"

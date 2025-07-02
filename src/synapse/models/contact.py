@@ -15,7 +15,7 @@ class Contact(Base):
     """Model para contatos do CRM - ALINHADO COM contacts TABLE"""
     
     __tablename__ = "contacts"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos exatos da tabela
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
@@ -36,19 +36,20 @@ class Contact(Base):
 
     # Relacionamentos
     tenant = relationship("Tenant", back_populates="contacts")
+    # lists = relationship("ContactList", secondary="synapscale_db.contact_list_memberships", back_populates="contacts")  # Tabela não existe
+    interactions = relationship("ContactInteraction", back_populates="contact", cascade="all, delete-orphan")
+    contact_events = relationship(
+        "ContactEvent",
+        back_populates="contact",
+        cascade="all, delete-orphan"
+    )
     
-    # Relacionamentos CRM
+    # Relacionamento para jornadas de conversão
+    conversion_journeys = relationship(
+        "ConversionJourney", back_populates="contact", cascade="all, delete-orphan"
+    )
     campaign_contacts = relationship(
         "CampaignContact", back_populates="contact", cascade="all, delete-orphan"
-    )
-    contact_events = relationship(
-        "ContactEvent", back_populates="contact", cascade="all, delete-orphan"
-    )
-    contact_interactions = relationship(
-        "ContactInteraction", back_populates="contact", cascade="all, delete-orphan"
-    )
-    conversion_journey = relationship(
-        "ConversionJourney", back_populates="contact", uselist=False, cascade="all, delete-orphan"
     )
 
     def __repr__(self):
@@ -168,15 +169,15 @@ class Contact(Base):
         from datetime import datetime, timedelta
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         
-        for interaction in self.contact_interactions:
+        for interaction in self.interactions:
             if interaction.created_at and interaction.created_at >= cutoff_date:
                 return True
         return False
 
     def get_interaction_count(self) -> int:
         """Retorna o número total de interações"""
-        return len(self.contact_interactions)
+        return len(self.interactions)
 
     def get_campaign_count(self) -> int:
         """Retorna o número de campanhas que o contato participou"""
-        return len(self.campaign_contacts) 
+        return len(self.contact_events) 

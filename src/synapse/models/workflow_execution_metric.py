@@ -12,7 +12,7 @@ class WorkflowExecutionMetric(Base):
     """Metrics collected during workflow execution"""
     
     __tablename__ = "workflow_execution_metrics"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     workflow_execution_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workflow_executions.id"), nullable=False)

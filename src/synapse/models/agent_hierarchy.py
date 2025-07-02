@@ -15,7 +15,7 @@ class AgentHierarchy(Base):
     __tablename__ = "agent_hierarchy"
     __table_args__ = (
         PrimaryKeyConstraint("ancestor", "descendant"),
-        {"schema": "synapscale_db"}
+        {"schema": "synapscale_db", "extend_existing": True}
     )
 
     # Campos exatos da tabela (closure table design)
@@ -24,8 +24,8 @@ class AgentHierarchy(Base):
     depth = Column(Integer, nullable=False)
 
     # Relacionamentos
-    ancestor_agent = relationship("Agent", foreign_keys=[ancestor], back_populates="descendant_relationships")
-    descendant_agent = relationship("Agent", foreign_keys=[descendant], back_populates="ancestor_relationships")
+    ancestor_agent = relationship("Agent", foreign_keys=[ancestor], back_populates="descendants")
+    descendant_agent = relationship("Agent", foreign_keys=[descendant], back_populates="ancestors")
 
     def __repr__(self):
         return f"<AgentHierarchy(ancestor={self.ancestor}, descendant={self.descendant}, depth={self.depth})>"

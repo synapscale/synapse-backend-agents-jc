@@ -31,6 +31,7 @@ class MarketplaceComponent(Base):
     """
 
     __tablename__ = "marketplace_components"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Identificação básica - EXATA do banco
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -95,6 +96,7 @@ class MarketplaceComponent(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"))
 
     # Relacionamentos
+    tenant = relationship("Tenant", back_populates="marketplace_components")
     author = relationship("User", back_populates="marketplace_components")
     ratings = relationship(
         "ComponentRating", back_populates="component", cascade="all, delete-orphan"
@@ -132,6 +134,7 @@ class ComponentRating(Base):
     """
 
     __tablename__ = "component_ratings"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
@@ -179,6 +182,7 @@ class ComponentRating(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"))
 
     # Relacionamentos
+    tenant = relationship("Tenant", back_populates="component_ratings")
     component = relationship("MarketplaceComponent", back_populates="ratings")
     user = relationship("User")
 
@@ -193,6 +197,7 @@ class ComponentDownload(Base):
     """
 
     __tablename__ = "component_downloads"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
@@ -228,6 +233,7 @@ class ComponentDownload(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"))
 
     # Relacionamentos
+    tenant = relationship("Tenant", back_populates="component_downloads")
     component = relationship("MarketplaceComponent", back_populates="downloads")
     user = relationship("User")
 
@@ -242,6 +248,7 @@ class ComponentPurchase(Base):
     """
 
     __tablename__ = "component_purchases"
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     component_id = Column(
@@ -282,6 +289,7 @@ class ComponentPurchase(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"))
 
     # Relacionamentos
+    tenant = relationship("Tenant", back_populates="component_purchases")
     component = relationship("MarketplaceComponent", back_populates="purchases")
     user = relationship("User")
 

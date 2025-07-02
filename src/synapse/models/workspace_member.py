@@ -22,7 +22,7 @@ class WorkspaceMember(Base):
     """Workspace membership and permissions"""
     
     __tablename__ = "workspace_members"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=False)

@@ -5,7 +5,7 @@ Endpoints completos de autenticação e autorização
 import logging
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Request
@@ -27,6 +27,7 @@ from synapse.models.email_verification_token import EmailVerificationToken
 from synapse.schemas.auth import (
     UserCreate,
     UserResponse,
+    UserLogin,
     Token,
     RefreshTokenRequest,
     PasswordResetRequest,
@@ -38,6 +39,30 @@ from synapse.services.user_defaults import create_user_defaults
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+# ==================== HELPER FUNCTIONS ====================
+
+
+def wrap_data_response(data: Any, message: str = "Success", request: Request = None) -> Dict[str, Any]:
+    """Wrap data in standardized response format."""
+    return {
+        "status": "success",
+        "message": message,
+        "data": data,
+        "request_id": getattr(request.state, "request_id", None) if request else None,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def wrap_empty_response(message: str = "Operation completed successfully", request: Request = None) -> Dict[str, Any]:
+    """Wrap empty responses in standardized format."""
+    return {
+        "status": "success", 
+        "message": message,
+        "request_id": getattr(request.state, "request_id", None) if request else None,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @router.post(
@@ -254,56 +279,232 @@ async def register_user(
 @router.post(
     "/login",
     response_model=Dict[str, Any],
-    summary="Login do usuário",
-    response_description="Tokens de acesso e refresh gerados"
+    summary="Login flexível do usuário",
+    response_description="Tokens de acesso e refresh gerados",
+    description="""
+    **Endpoint de login flexível que aceita múltiplos formatos de entrada:**
+    
+    ## 🔄 Formatos Aceitos:
+    
+    ### 1. JSON (application/json):
+    ```json
+    {
+        "username": "user@example.com",
+        "password": "password123"
+    }
+    ```
+    
+    ### 2. Form Data (application/x-www-form-urlencoded):
+    ```
+    username=user@example.com&password=password123
+    ```
+    
+    ### 3. Via cURL (qualquer formato):
+    ```bash
+    # JSON
+    curl -X POST "http://localhost:8000/api/v1/auth/login" \
+         -H "Content-Type: application/json" \
+         -d '{"username":"user@example.com","password":"password123"}'
+    
+    # Form data
+    curl -X POST "http://localhost:8000/api/v1/auth/login" \
+         -H "Content-Type: application/x-www-form-urlencoded" \
+         -d "username=user@example.com&password=password123"
+    ```
+    
+    ## 🔑 Campos de Login:
+    - **username**: Aceita tanto **email** quanto **username**
+    - **password**: Senha do usuário
+    
+    O sistema automaticamente busca por email OU username na base de dados.
+    """
 )
 async def login(
     request: Request,
-    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
     """
-    Autentica o usuário e retorna tokens de acesso e refresh.
-
-    - **username**: Email do usuário
-    - **password**: Senha do usuário
-
-    Exemplo de corpo (x-www-form-urlencoded):
-    ```
-    username=usuario@exemplo.com&password=SenhaForte123!
-    ```
+    Autentica o usuário com flexibilidade total de formato de entrada.
+    
+    Aceita automaticamente:
+    - JSON com Content-Type: application/json
+    - Form-data com Content-Type: application/x-www-form-urlencoded
+    - Parâmetros diretos via form
+    
+    Busca o usuário por email OU username automaticamente.
+    ROBUSTO: Funciona mesmo com problemas de relacionamento SQLAlchemy.
     """
-    # Buscar usuário por email
-    user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not user.verify_password(form_data.password):
-        logger.info(f"Tentativa de login inválida para email: {form_data.username}")
+    user_identifier = None
+    user_password = None
+    
+    # Tentar extrair credenciais do corpo da requisição
+    try:
+        # Ler corpo da requisição
+        body = await request.body()
+        content_type = request.headers.get("content-type", "").lower()
+        
+        if "application/json" in content_type:
+            # Parse JSON
+            import json
+            data = json.loads(body.decode())
+            user_identifier = data.get("username") or data.get("email")
+            user_password = data.get("password")
+            
+        elif "application/x-www-form-urlencoded" in content_type:
+            # Parse form data
+            from urllib.parse import parse_qs
+            data = parse_qs(body.decode())
+            user_identifier = data.get("username", [None])[0]
+            user_password = data.get("password", [None])[0]
+            
+        else:
+            # Tentar como form data padrão (para compatibilidade)
+            try:
+                from urllib.parse import parse_qs
+                data = parse_qs(body.decode())
+                user_identifier = data.get("username", [None])[0]
+                user_password = data.get("password", [None])[0]
+            except:
+                pass
+                
+    except Exception as e:
+        logger.warning(f"Erro ao extrair credenciais: {e}")
+    
+    # Validar se conseguimos extrair as credenciais
+    if not user_identifier or not user_password:
+        logger.warning("Tentativa de login sem credenciais completas")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email ou senha incorretos",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username/email e senha são obrigatórios. Envie no formato JSON ou form-data.",
         )
-    if not user.is_active:
-        logger.info(f"Tentativa de login em conta desativada: {form_data.username}")
+    
+    # ===== BUSCA ROBUSTA DE USUÁRIO (sem relacionamentos problemáticos) =====
+    try:
+        # Query simples e direta sem relacionamentos
+        from sqlalchemy import text
+        
+        # Buscar usuário usando SQL direto para evitar problemas de relacionamento
+        result = db.execute(
+            text("""
+                SELECT id, email, username, hashed_password, is_active, is_verified, tenant_id
+                FROM synapscale_db.users 
+                WHERE email = :identifier OR username = :identifier
+                LIMIT 1
+            """),
+            {"identifier": user_identifier}
+        ).fetchone()
+        
+        if not result:
+            logger.info(f"Usuário não encontrado: {user_identifier}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email/username ou senha incorretos",
+            )
+        
+        # Verificar senha usando método direto
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        
+        if not pwd_context.verify(user_password, result.hashed_password):
+            logger.info(f"Senha incorreta para: {user_identifier}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email/username ou senha incorretos",
+            )
+        
+        # Verificar se conta está ativa
+        if not result.is_active:
+            logger.info(f"Conta desativada: {user_identifier}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Conta desativada",
+            )
+        
+        # Criar dados do usuário para resposta
+        user_data = {
+            "id": str(result.id),
+            "email": result.email,
+            "username": result.username,
+            "is_active": result.is_active,
+            "is_verified": result.is_verified,
+            "tenant_id": str(result.tenant_id) if result.tenant_id else None
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Erro na busca de usuário: {e}")
+        # Fallback para query ORM simples
+        try:
+            user = db.query(User).filter(
+                (User.email == user_identifier) | (User.username == user_identifier)
+            ).first()
+            
+            if not user or not user.verify_password(user_password):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Email/username ou senha incorretos",
+                )
+            
+            if not user.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Conta desativada",
+                )
+            
+            user_data = {
+                "id": str(user.id),
+                "email": user.email,
+                "username": user.username,
+                "is_active": user.is_active,
+                "is_verified": user.is_verified,
+                "tenant_id": str(user.tenant_id) if user.tenant_id else None
+            }
+            
+        except Exception as fallback_error:
+            logger.error(f"Erro crítico no login: {fallback_error}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Erro interno do servidor. Tente novamente.",
+            )
+
+    # ===== CRIAÇÃO DE TOKENS (método robusto) =====
+    try:
+        # Criar tokens
+        access_token = jwt_manager.create_access_token(
+            data={"sub": user_data["email"], "user_id": user_data["id"]},
+        )
+        
+        # Tentar criar refresh token
+        try:
+            user_refresh_token = jwt_manager.create_refresh_token(user_data["id"], db)
+        except Exception as refresh_error:
+            logger.warning(f"Erro ao criar refresh token: {refresh_error}")
+            # Continuar sem refresh token se houver problema
+            user_refresh_token = None
+        
+        # Montar resposta
+        response_data = {
+            "access_token": access_token,
+            "refresh_token": user_refresh_token,
+            "token_type": "bearer",
+            "user": user_data
+        }
+
+        logger.info(f"Login realizado com sucesso para: {user_data['email']} (identificado como: {user_identifier})")
+        return wrap_data_response(
+            data=response_data, 
+            message="Login realizado com sucesso", 
+            request=request
+        )
+        
+    except Exception as token_error:
+        logger.error(f"Erro na criação de tokens: {token_error}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Conta desativada",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao gerar tokens de acesso.",
         )
-
-    # Criar tokens
-    access_token = jwt_manager.create_access_token(
-        data={"sub": user.email, "user_id": str(user.id)},
-    )
-    user_refresh_token = jwt_manager.create_refresh_token(str(user.id), db)
-
-    token_data = Token(
-        access_token=access_token,
-        refresh_token=user_refresh_token,
-        token_type="bearer",
-        user=UserResponse.from_orm(user),
-    )
-
-    return wrap_data_response(
-        data=token_data.dict(), message="Login realizado com sucesso", request=request
-    )
 
 
 @router.post(

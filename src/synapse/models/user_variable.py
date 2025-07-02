@@ -12,7 +12,7 @@ class UserVariable(Base):
     """User-defined variables for workflows and automation"""
     
     __tablename__ = "user_variables"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     key = Column(String(255), nullable=False)

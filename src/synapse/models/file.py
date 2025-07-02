@@ -26,7 +26,7 @@ class File(Base):
     """Modelo de dados para arquivos armazenados no sistema."""
 
     __tablename__ = "files"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Campos EXATOS da estrutura do banco de dados
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

@@ -18,11 +18,20 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import uuid
 from synapse.database import Base
+from enum import Enum as PyEnum
+
+
+class WorkflowStatus(PyEnum):
+    """Status do workflow"""
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+    DEPRECATED = "deprecated"
 
 
 class Workflow(Base):
     __tablename__ = "workflows"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     # Colunas exatamente como no banco de dados
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

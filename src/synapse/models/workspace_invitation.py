@@ -12,7 +12,7 @@ class WorkspaceInvitation(Base):
     """Workspace invitation management"""
     
     __tablename__ = "workspace_invitations"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     workspace_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.workspaces.id"), nullable=False)

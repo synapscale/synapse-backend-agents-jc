@@ -12,10 +12,10 @@ class ReportExecution(Base):
     """Report execution tracking and results"""
     
     __tablename__ = "report_executions"
-    __table_args__ = {"schema": "synapscale_db"}
+    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(UUID(as_uuid=True), primary_key=True)
-    report_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.custom_reports.id"), nullable=False)
+    report_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.analytics_reports.id"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.users.id"), nullable=True)
     execution_type = Column(String(20), nullable=False)  # manual, scheduled, api
     parameters = Column(JSON, nullable=True)
@@ -32,7 +32,7 @@ class ReportExecution(Base):
     updated_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
 
     # Relationships
-    report = relationship("CustomReport", back_populates="executions")
+    report = relationship("AnalyticsReport", back_populates="executions")
     user = relationship("User", back_populates="report_executions")
     tenant = relationship("Tenant", back_populates="report_executions")
 

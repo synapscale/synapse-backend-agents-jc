@@ -14,7 +14,7 @@ from fastapi import UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from synapse.core.security.file_validation import SecurityValidator, sanitize_filename
+from synapse.core.file_validation import SecurityValidator, sanitize_filename
 from synapse.core.storage.storage_manager import StorageManager
 from synapse.exceptions import NotFoundError, StorageError, not_found_exception
 from synapse.models.file import File
