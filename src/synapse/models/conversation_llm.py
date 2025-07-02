@@ -29,6 +29,12 @@ class ConversationLLM(Base):
         nullable=False,
         index=True,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
 
     # Timestamps de uso
     first_used_at = Column(
@@ -49,6 +55,7 @@ class ConversationLLM(Base):
         "Conversation", back_populates="llms_conversations_turns"
     )
     llm = relationship("LLM", back_populates="llms_conversations_turns")
+    tenant = relationship("Tenant", back_populates="conversation_llms")
 
     def __repr__(self):
         return f"<ConversationLLM(conversation_id={self.conversation_id}, llm_id={self.llm_id})>"

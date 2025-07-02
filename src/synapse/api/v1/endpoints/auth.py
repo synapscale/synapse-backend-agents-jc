@@ -406,7 +406,12 @@ async def login(
         pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         
         if not pwd_context.verify(user_password, result.hashed_password):
-            logger.info(f"Senha incorreta para: {user_identifier}")
+            logger.warning(
+                f"🔐 ❌ LOGIN FAILED | "
+                f"Input: {user_identifier} | "
+                f"Reason: WRONG_PASSWORD | "
+                f"IP: {request.client.host if request.client else 'unknown'}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email/username ou senha incorretos",
@@ -414,7 +419,12 @@ async def login(
         
         # Verificar se conta está ativa
         if not result.is_active:
-            logger.info(f"Conta desativada: {user_identifier}")
+            logger.warning(
+                f"🔐 ❌ LOGIN FAILED | "
+                f"Input: {user_identifier} | "
+                f"Reason: ACCOUNT_DISABLED | "
+                f"IP: {request.client.host if request.client else 'unknown'}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Conta desativada",
@@ -492,7 +502,14 @@ async def login(
             "user": user_data
         }
 
-        logger.info(f"Login realizado com sucesso para: {user_data['email']} (identificado como: {user_identifier})")
+        # 🎉 LOG DE SUCESSO DESTACADO
+        logger.info(
+            f"🔐 ✅ LOGIN SUCCESS | "
+            f"User: {user_data['email']} | "
+            f"Input: {user_identifier} | "
+            f"Method: {'EMAIL' if '@' in user_identifier else 'USERNAME'} | "
+            f"IP: {request.client.host if request.client else 'unknown'}"
+        )
         return wrap_data_response(
             data=response_data, 
             message="Login realizado com sucesso", 

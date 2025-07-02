@@ -493,11 +493,33 @@ async def log_requests(request: Request, call_next):
     # Calcular tempo de processamento
     process_time = time.time() - start_time
 
-    # Log da requisição
-    logger.info(
-        f"{method} {url} - {response.status_code} - "
-        f"{process_time:.3f}s - {client_ip} - {user_agent[:50]}"
-    )
+    # 🎯 FILTRAR ENDPOINTS QUE GERAM LOGS DESNECESSÁRIOS
+    # Não logar endpoints de sistema que são chamados frequentemente
+    excluded_paths = {
+        "/current-url",
+        "/.identity", 
+        "/health",
+        "/metrics",
+        "/favicon.ico"
+    }
+    
+    path = request.url.path
+    
+    # Apenas logar se não estiver na lista de exclusão
+    if path not in excluded_paths:
+        # 🔐 DESTACAR LOGS DE AUTENTICAÇÃO
+        if "/auth/" in path:
+            # Log especial para endpoints de autenticação
+            logger.info(
+                f"🔐 AUTH | {method} {path} - {response.status_code} - "
+                f"{process_time:.3f}s - {client_ip}"
+            )
+        else:
+            # Log normal para outros endpoints
+            logger.info(
+                f"{method} {url} - {response.status_code} - "
+                f"{process_time:.3f}s - {client_ip}"
+            )
 
     return response
 
