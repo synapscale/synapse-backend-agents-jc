@@ -21,17 +21,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Add tenant_id column to billing_events table
-    op.add_column(
-        'billing_events',
-        sa.Column(
-            'tenant_id', 
-            UUID(as_uuid=True), 
-            nullable=True
-        ),
-        schema='synapscale_db'
-    )
-    
     # Create foreign key constraint
     op.create_foreign_key(
         'fk_billing_events_tenant_id',
@@ -45,34 +34,28 @@ def upgrade() -> None:
     )
     
     # Create index for better performance
-    op.create_index(
-        'idx_billing_events_tenant_id',
-        'billing_events',
-        ['tenant_id'],
-        schema='synapscale_db'
-    )
+    # op.create_index(
+    #     "idx_billing_events_tenant_id",
+    #     "billing_events",
+    #     ["tenant_id"],
+    #     unique=False,
+    #     schema="synapscale_db"
+    # )
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # Drop index
-    op.drop_index(
-        'idx_billing_events_tenant_id',
-        'billing_events',
-        schema='synapscale_db'
-    )
+    # op.drop_index(
+    #     'idx_billing_events_tenant_id',
+    #     'billing_events',
+    #     schema='synapscale_db'
+    # )
     
     # Drop foreign key constraint
     op.drop_constraint(
         'fk_billing_events_tenant_id',
         'billing_events',
         type_='foreignkey',
-        schema='synapscale_db'
-    )
-    
-    # Drop column
-    op.drop_column(
-        'billing_events',
-        'tenant_id',
         schema='synapscale_db'
     )
