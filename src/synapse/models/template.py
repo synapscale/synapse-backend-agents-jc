@@ -110,6 +110,16 @@ class TemplateReview(Base):
     # Relacionamentos
     template = relationship("WorkflowTemplate", back_populates="reviews")
     user = relationship("User", back_populates="template_reviews")
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=False,
+        index=True,
+    )
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        back_populates="template_reviews"
+    )
 
     def __repr__(self):
         return f"<TemplateReview(id={self.id}, rating={self.rating}, template_id={self.template_id})>"
@@ -136,6 +146,12 @@ class TemplateDownload(Base):
         nullable=False,
         index=True,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Informações do download
     download_type = Column(String(20), default="full")  # full, preview, demo
@@ -153,6 +169,10 @@ class TemplateDownload(Base):
     # Relacionamentos
     template = relationship("WorkflowTemplate", back_populates="downloads")
     user = relationship("User", back_populates="template_downloads")
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        back_populates="template_downloads"
+    )
 
     def __repr__(self):
         return f"<TemplateDownload(id={self.id}, template_id={self.template_id}, user_id={self.user_id})>"
@@ -179,6 +199,12 @@ class TemplateFavorite(Base):
         nullable=False,
         index=True,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Metadados
     notes = Column(Text, nullable=True)  # Notas pessoais do usuário
@@ -189,6 +215,10 @@ class TemplateFavorite(Base):
     # Relacionamentos
     template = relationship("WorkflowTemplate", back_populates="favorites")
     user = relationship("User", back_populates="favorite_templates")
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        back_populates="template_favorites"
+    )
 
     def __repr__(self):
         return f"<TemplateFavorite(id={self.id}, template_id={self.template_id}, user_id={self.user_id})>"
@@ -218,6 +248,12 @@ class TemplateCollection(Base):
         nullable=False,
         index=True,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Configurações
     is_public = Column(Boolean, default=True)
@@ -242,6 +278,7 @@ class TemplateCollection(Base):
 
     # Relacionamentos
     creator = relationship("User", back_populates="template_collections")
+    tenant = relationship("synapse.models.tenant.Tenant", back_populates="template_collections")
 
     def __repr__(self):
         return f"<TemplateCollection(id={self.id}, name='{self.name}', creator_id={self.creator_id})>"
@@ -290,6 +327,16 @@ class TemplateUsage(Base):
     # Relacionamentos
     template = relationship("WorkflowTemplate")
     user = relationship("User", back_populates="template_usage")
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=False,
+        index=True
+    )
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        back_populates="template_usage"
+    )
     workflow = relationship("Workflow")
 
     def __repr__(self):

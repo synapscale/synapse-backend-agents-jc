@@ -87,10 +87,15 @@ _imports.update(safe_import("business_metric", ["BusinessMetric"]))
 _imports.update(safe_import("agent_usage_metric", ["AgentUsageMetric"]))
 _imports.update(safe_import("user_behavior_metric", ["UserBehaviorMetric"]))
 _imports.update(safe_import("workflow_execution_metric", ["WorkflowExecutionMetric"]))
+_imports.update(safe_import("analytics", ["SystemPerformanceMetric"]))
 
 # ==================== CONTATOS & CAMPANHAS ====================
 _imports.update(safe_import("contact", ["Contact"]))
+_imports.update(safe_import("contact_source", ["ContactSource"]))
 _imports.update(safe_import("contact_list", ["ContactList"]))
+_imports.update(safe_import("contact_list_membership", ["ContactListMembership"]))
+_imports.update(safe_import("contact_note", ["ContactNote"]))
+_imports.update(safe_import("contact_tag", ["ContactTag"]))
 _imports.update(safe_import("contact_event", ["ContactEvent"]))
 _imports.update(safe_import("contact_interaction", ["ContactInteraction"]))
 _imports.update(safe_import("campaign", ["Campaign"]))
@@ -135,10 +140,11 @@ _imports.update(safe_import("refresh_token", ["RefreshToken"]))
 _imports.update(safe_import("password_reset_token", ["PasswordResetToken"]))
 _imports.update(safe_import("email_verification_token", ["EmailVerificationToken"]))
 
-# ==================== MARKETPLACE ====================
+# ==================== MARKPLACE ====================
 _imports.update(safe_import("marketplace", [
     "MarketplaceComponent", "ComponentRating", "ComponentDownload", "ComponentPurchase"
 ]))
+_imports.update(safe_import("component_version", ["ComponentVersion"]))
 
 # ==================== OUTROS ====================
 _imports.update(safe_import("file", ["File"]))

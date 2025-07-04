@@ -71,7 +71,7 @@ class User(Base):
     # Relacionamentos de auditoria e analytics - NOVOS MODELS
     audit_logs = relationship("AuditLog", back_populates="user", cascade="all, delete-orphan")
     insights = relationship("UserInsight", back_populates="user", cascade="all, delete-orphan")
-    subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
+    subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan", overlaps="subscription")
 
     # Relacionamentos de templates
     created_templates = relationship("WorkflowTemplate", back_populates="author", cascade="all, delete-orphan")
@@ -82,10 +82,10 @@ class User(Base):
     template_usage = relationship("TemplateUsage", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamentos de marketplace
-    marketplace_components = relationship("MarketplaceComponent", back_populates="author", cascade="all, delete-orphan")
-    component_ratings = relationship("ComponentRating", back_populates="user", cascade="all, delete-orphan")
-    component_downloads = relationship("ComponentDownload", back_populates="user", cascade="all, delete-orphan")
-    component_purchases = relationship("ComponentPurchase", back_populates="user", cascade="all, delete-orphan")
+    marketplace_components = relationship("synapse.models.marketplace.MarketplaceComponent", back_populates="author", cascade="all, delete-orphan")
+    component_ratings = relationship("synapse.models.marketplace.ComponentRating", back_populates="user", cascade="all, delete-orphan")
+    component_downloads = relationship("synapse.models.marketplace.ComponentDownload", back_populates="user", cascade="all, delete-orphan")
+    component_purchases = relationship("synapse.models.marketplace.ComponentPurchase", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamentos de workspaces
     owned_workspaces = relationship("Workspace", back_populates="owner", cascade="all, delete-orphan")
@@ -130,6 +130,7 @@ class User(Base):
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
+        overlaps="subscriptions"
     )
 
     # Project relationships
@@ -162,6 +163,15 @@ class User(Base):
 
     # Relacionamento para campanhas criadas
     created_campaigns = relationship("Campaign", back_populates="creator", cascade="all, delete-orphan")
+    
+    # Relacionamento para notas de contatos
+    contact_notes = relationship("ContactNote", back_populates="user", cascade="all, delete-orphan")
+    
+    # Relacionamento para memberships de listas de contatos adicionadas
+    added_contact_memberships = relationship("ContactListMembership", back_populates="added_by_user", cascade="all, delete-orphan")
+    
+    # Relacionamento para relatórios customizados
+    custom_reports = relationship("CustomReport", back_populates="user", cascade="all, delete-orphan")
 
     def verify_password(self, password: str) -> bool:
         """Verifica se a senha fornecida está correta"""

@@ -71,6 +71,13 @@ class Node(Base):
         index=True,
     )
 
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=True,
+        index=True,
+    )
+
     downloads_count = Column(Integer, default=0)
     usage_count = Column(Integer, default=0)
     rating_count = Column(Integer, default=0)
@@ -121,6 +128,9 @@ class Node(Base):
 
     # Relacionamento com NodeExecution
     executions = relationship("NodeExecution", back_populates="node", cascade="all, delete-orphan")
+
+    # Relacionamento com Tenant
+    tenant = relationship("synapse.models.tenant.Tenant", back_populates="nodes")
 
     def to_dict(self, include_code: bool | None = False) -> dict:
         """Converte node para dicionário"""

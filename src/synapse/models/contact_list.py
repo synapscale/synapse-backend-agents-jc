@@ -29,6 +29,7 @@ class ContactList(Base):
 
     # Relacionamentos
     tenant = relationship("Tenant", back_populates="contact_lists")
+    memberships = relationship("ContactListMembership", back_populates="contact_list", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<ContactList(id={self.id}, name='{self.name}', type='{self.type}')>"

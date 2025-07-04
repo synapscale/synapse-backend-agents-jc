@@ -83,6 +83,10 @@ class Workflow(Base):
     # Relacionamentos
     user = relationship("User", back_populates="workflows")
     workspace = relationship("Workspace", back_populates="workflows")
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        back_populates="workflows"
+    )
     workflow_nodes = relationship(
         "WorkflowNode", back_populates="workflow", cascade="all, delete-orphan"
     )

@@ -111,7 +111,7 @@ class AnalyticsUserBehaviorMetric(Base):
     )
 
     # Relacionamentos
-    user = relationship("User")
+    user = relationship("User", overlaps="behavior_metrics,user")
 
     def __repr__(self):
         return f"<UserBehaviorMetric(user_id={self.user_id}, date={self.date}, period='{self.period_type}')>"
@@ -126,6 +126,8 @@ class SystemPerformanceMetric(Base):
     __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=False, index=True)
+    tenant = relationship("synapse.models.tenant.Tenant", back_populates="system_performance_metrics")
 
     # Identificação da métrica
     metric_name = Column(String(100), nullable=False, index=True)
@@ -275,7 +277,7 @@ class AnalyticsUserInsight(Base):
     acted_at = Column(DateTime)
 
     # Relacionamentos
-    user = relationship("User")
+    user = relationship("User", overlaps="insights")
 
     def __repr__(self):
         return f"<UserInsight(id={self.id}, user_id={self.user_id}, type='{self.insight_type}')>"

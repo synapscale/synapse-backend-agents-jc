@@ -143,6 +143,17 @@ class WorkflowExecution(Base):
         back_populates="workflow_execution",
         cascade="all, delete-orphan",
     )
+    # Multi-tenancy
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=True,
+        index=True
+    )
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        back_populates="workflow_executions"
+    )
 
     def __repr__(self):
         return f"<WorkflowExecution(id={self.id}, execution_id='{self.execution_id}', status='{self.status}')>"

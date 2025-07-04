@@ -107,6 +107,7 @@ class MarketplaceComponent(Base):
     purchases = relationship(
         "ComponentPurchase", back_populates="component", cascade="all, delete-orphan"
     )
+    versions = relationship("ComponentVersion", back_populates="component", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<MarketplaceComponent(id={self.id}, name='{self.name}', version='{self.version}')>"

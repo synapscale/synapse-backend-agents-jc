@@ -30,7 +30,7 @@ class NodeCategory(Base):
     parent = relationship("NodeCategory", remote_side=[id], back_populates="children")
     children = relationship("NodeCategory", back_populates="parent")
     tenant = relationship("Tenant", back_populates="node_categories")
-    nodes = relationship("Node", back_populates="category")
+    nodes = relationship("Node", primaryjoin="NodeCategory.name == foreign(Node.category)", viewonly=True)
 
     def __str__(self):
         return f"NodeCategory(name={self.name}, parent={self.parent.name if self.parent else 'None'})"

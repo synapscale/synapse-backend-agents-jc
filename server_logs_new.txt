@@ -1,0 +1,1535 @@
+✅ Models importados: 109 classes
+2025-07-04 14:25:52,571 - INFO - synapse.middlewares.metrics - Middleware de métricas configurado com sucesso
+INFO:synapse.middlewares.metrics:Middleware de métricas configurado com sucesso
+2025-07-04 14:25:52,571 - INFO - synapse.middlewares.error_middleware - Error middleware configurado com sucesso
+INFO:synapse.middlewares.error_middleware:Error middleware configurado com sucesso
+2025-07-04 14:25:52,572 - INFO - synapse.error_handlers - Global error handlers configured successfully
+INFO:synapse.error_handlers:Global error handlers configured successfully
+INFO:     Started server process [75630]
+INFO:     Waiting for application startup.
+2025-07-04 14:25:52,674 - INFO - synapse.main - 🚀 Iniciando SynapScale Backend API com configuração centralizada...
+INFO:synapse.main:🚀 Iniciando SynapScale Backend API com configuração centralizada...
+2025-07-04 14:25:52,675 - INFO - synapse.main - 🔍 Verificando configurações com sistema centralizado...
+INFO:synapse.main:🔍 Verificando configurações com sistema centralizado...
+2025-07-04 14:25:52,675 - INFO - synapse.main - ✅ Todas as configurações validadas com sucesso
+INFO:synapse.main:✅ Todas as configurações validadas com sucesso
+2025-07-04 14:25:52,675 - INFO - synapse.main - 📁 Diretório de uploads criado: ./uploads
+INFO:synapse.main:📁 Diretório de uploads criado: ./uploads
+2025-07-04 14:25:55,910 - INFO - synapse.database - ✅ Database connection successful to: synapscale_db
+INFO:synapse.database:✅ Database connection successful to: synapscale_db
+2025-07-04 14:25:56,164 - INFO - synapse.database - ✅ Schema 'synapscale_db' ensured
+INFO:synapse.database:✅ Schema 'synapscale_db' ensured
+2025-07-04 14:25:56,291 - INFO - synapse.main - ✅ Banco de dados inicializado via SQLAlchemy
+INFO:synapse.main:✅ Banco de dados inicializado via SQLAlchemy
+2025-07-04 14:25:56,291 - INFO - synapse.core.services.service_configuration - 🔧 Configuring application services...
+INFO:synapse.core.services.service_configuration:🔧 Configuring application services...
+2025-07-04 14:25:56,304 - INFO - synapse.core.services.service_configuration - ✅ Configured 14 services
+INFO:synapse.core.services.service_configuration:✅ Configured 14 services
+2025-07-04 14:25:56,304 - INFO - synapse.main - ✅ Sistema de serviços configurado
+INFO:synapse.main:✅ Sistema de serviços configurado
+2025-07-04 14:25:57,193 - INFO - synapse.main - ✅ Conectividade com banco de dados verificada
+INFO:synapse.main:✅ Conectividade com banco de dados verificada
+2025-07-04 14:25:57,193 - INFO - synapse.main - ✅ WebSocket Manager inicializado
+INFO:synapse.main:✅ WebSocket Manager inicializado
+2025-07-04 14:25:57,193 - INFO - synapse.main - ✅ Engine de Execução de Workflows inicializada
+INFO:synapse.main:✅ Engine de Execução de Workflows inicializada
+2025-07-04 14:25:57,194 - INFO - synapse.core.alerts.background_tasks - Starting background tasks
+INFO:synapse.core.alerts.background_tasks:Starting background tasks
+2025-07-04 14:25:57,194 - INFO - synapse.core.alerts.background_tasks - Started 3 background tasks
+INFO:synapse.core.alerts.background_tasks:Started 3 background tasks
+2025-07-04 14:25:57,194 - INFO - synapse.main - ✅ Sistema de Alertas e Tarefas em Background inicializado
+INFO:synapse.main:✅ Sistema de Alertas e Tarefas em Background inicializado
+2025-07-04 14:25:57,194 - INFO - synapse.main - 🎉 SynapScale Backend iniciado com sucesso!
+INFO:synapse.main:🎉 SynapScale Backend iniciado com sucesso!
+2025-07-04 14:25:57,194 - INFO - synapse.core.alerts.background_tasks - Starting alert evaluation engine
+INFO:synapse.core.alerts.background_tasks:Starting alert evaluation engine
+2025-07-04 14:25:57,194 - INFO - synapse.core.alerts.alert_engine - Alert evaluation engine started
+INFO:synapse.core.alerts.alert_engine:Alert evaluation engine started
+/Users/joaovictormiranda/backend/synapse-backend-agents-jc/src/synapse/core/alerts/alert_engine.py:111: SAWarning: relationship 'User.subscription' will copy column users.id to column user_subscriptions.user_id, which conflicts with relationship(s): 'User.subscriptions' (copies users.id to user_subscriptions.user_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="subscriptions"' to the 'User.subscription' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+  db.query(AnalyticsAlert)
+2025-07-04 14:25:57,303 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:25:57,304 - INFO - synapse.core.alerts.background_tasks - Starting metric aggregation task
+INFO:synapse.core.alerts.background_tasks:Starting metric aggregation task
+2025-07-04 14:25:57,304 - ERROR - synapse.core.alerts.background_tasks - Error aggregating metrics: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.background_tasks:Error aggregating metrics: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:25:57,304 - INFO - synapse.core.alerts.background_tasks - Starting cleanup task
+INFO:synapse.core.alerts.background_tasks:Starting cleanup task
+2025-07-04 14:25:57,304 - ERROR - synapse.core.alerts.background_tasks - Error cleaning up old data: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.background_tasks:Error cleaning up old data: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-07-04 14:25:58,570 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:25:58,570 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52421 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52422 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:04,232 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:04,232 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52422 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52421 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:04,357 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52424 - "GET /health HTTP/1.1" 200 OK
+2025-07-04 14:26:10,272 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:10,272 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52432 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52433 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:15,366 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:15,366 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52449 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52450 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:19,114 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:19,114 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52450 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52449 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:20,429 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:20,429 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52449 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52450 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:25,686 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:25,686 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52459 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52460 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:30,783 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:30,783 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52463 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52464 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:33,232 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:33,232 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52464 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52463 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:35,783 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:35,783 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52463 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52464 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:41,035 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:41,035 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52471 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52472 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:45,817 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:45,817 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52472 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52471 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:46,100 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:46,101 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52471 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52472 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:51,380 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:51,382 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52484 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52485 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:53,941 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:53,942 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52485 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52484 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:56,081 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:26:56,081 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52484 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52485 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:26:57,305 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:27:01,380 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:01,380 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52490 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52491 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:05,047 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:05,048 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52491 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52490 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:06,090 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:06,090 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52490 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52491 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:11,322 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:11,322 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52500 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52501 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:16,549 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:16,549 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52509 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52510 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:21,625 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:21,626 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52516 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52517 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:26,890 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:26,890 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52522 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52523 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:31,572 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:31,573 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52523 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52522 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:32,873 - INFO - synapse.main - GET http://localhost:8000/api/health - 404 - 0.001s - 127.0.0.1
+INFO:synapse.main:GET http://localhost:8000/api/health - 404 - 0.001s - 127.0.0.1
+2025-07-04 14:27:32,874 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52525 - "GET /api/health HTTP/1.1" 404 Not Found
+2025-07-04 14:27:36,681 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:36,681 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52529 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52530 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:41,743 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:41,743 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52534 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52535 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:41,965 - INFO - synapse.main - GET http://localhost:8000/ - 200 - 0.001s - 127.0.0.1
+INFO:synapse.main:GET http://localhost:8000/ - 200 - 0.001s - 127.0.0.1
+2025-07-04 14:27:41,966 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52537 - "GET / HTTP/1.1" 200 OK
+2025-07-04 14:27:47,233 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:47,233 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52540 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52541 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:48,311 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52543 - "GET /health HTTP/1.1" 200 OK
+2025-07-04 14:27:52,020 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:52,020 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52541 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52540 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:27:57,307 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:27:57,906 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:27:57,906 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52551 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52552 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:02,961 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:02,961 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52555 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52556 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:09,423 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:09,423 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52565 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52566 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:14,267 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:14,267 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52566 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52565 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:21,796 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:21,796 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52600 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52601 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:26,846 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:26,847 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52615 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52616 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:32,650 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:32,650 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52626 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52627 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:37,983 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:37,983 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52637 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52638 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:46,842 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:46,843 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52656 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52657 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:51,826 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:51,827 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52657 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52656 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:28:57,309 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:28:57,445 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:28:57,446 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52680 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52681 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:02,406 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:02,406 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52681 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52680 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:12,045 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:12,045 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52704 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52705 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:17,007 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:17,007 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52705 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52704 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:23,055 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:23,055 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52723 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52724 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:28,273 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:28,273 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52742 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52743 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:35,816 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:35,816 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52770 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52771 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:40,747 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:40,747 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52771 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52770 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:51,564 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:51,564 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52826 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52827 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:56,289 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:29:56,289 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52827 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52826 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:29:57,310 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:30:02,683 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:02,684 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52845 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52846 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:07,792 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:07,793 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52851 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52852 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:12,771 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:12,772 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52852 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52851 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:17,839 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:17,839 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52871 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52872 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:23,108 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:23,108 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52878 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52879 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:28,393 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:28,393 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52888 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52889 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:33,510 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:33,510 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52895 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52896 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:38,688 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:38,689 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52903 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52904 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:43,829 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:43,830 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52910 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52911 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:49,010 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:49,010 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52919 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52920 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:54,201 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:54,202 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52931 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52932 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:30:57,309 - ERROR - synapse.core.alerts.background_tasks - Error aggregating metrics: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.background_tasks:Error aggregating metrics: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:30:57,311 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:30:59,114 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:30:59,114 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52932 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52931 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:04,937 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:31:04,938 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52947 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52948 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:09,891 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:31:09,891 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52948 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52947 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:15,313 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52967 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:31:15,314 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52969 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:20,450 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:31:20,450 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52978 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52979 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:25,939 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:31:25,940 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52985 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52986 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:30,897 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:31:30,898 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52986 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52985 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:32,796 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52985 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:31:36,871 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52985 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:31:36,871 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52993 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:41,767 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:31:41,768 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:52993 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52985 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:47,027 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:31:47,027 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53000 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53001 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:47,283 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53001 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:31:49,298 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53001 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:31:51,470 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53001 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:31:52,036 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53001 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:31:52,036 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53006 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:57,239 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:31:57,239 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53010 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53011 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:31:57,313 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:32:03,636 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:03,637 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53020 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53021 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:07,746 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:07,746 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53021 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53020 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:12,671 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:12,672 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53037 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53039 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:15,984 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53039 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:32:15,985 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53037 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:32:15,986 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53042 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:17,832 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53042 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:32:17,833 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53037 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:18,724 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53037 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:32:18,726 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:18,726 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53042 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53039 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:23,018 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:23,018 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53039 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53042 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:23,089 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53042 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:32:24,538 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:24,538 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53042 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53039 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:25,052 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:25,052 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53039 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53042 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:29,850 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:29,850 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53042 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53039 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:33,181 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:33,181 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53039 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53042 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:39,520 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53077 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:32:39,521 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53079 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:39,985 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53079 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:32:40,368 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:40,368 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53079 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53077 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:41,596 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:41,596 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53077 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53079 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:44,422 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:44,422 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53079 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53077 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:44,504 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:44,504 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53077 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53079 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:50,112 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:50,113 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53089 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53090 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:55,049 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:32:55,050 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53090 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53089 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:32:57,316 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:32:59,984 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53089 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:32:59,987 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53090 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:05,097 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:05,097 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53100 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53101 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:10,960 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:10,961 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53109 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53110 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:15,904 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:15,905 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53110 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53109 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:22,080 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:22,080 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53136 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53137 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:27,022 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:27,023 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53137 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53136 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:28,205 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:28,206 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53136 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53137 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:29,339 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:29,339 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53137 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53136 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:32,070 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:32,070 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53136 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53137 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:37,026 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:37,027 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53137 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53136 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:39,083 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53136 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:40,358 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53136 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:41,746 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53136 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:42,527 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53136 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:42,527 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53173 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:42,637 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53173 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:43,486 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53173 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:44,603 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53173 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:47,731 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53173 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:47,731 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53186 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:52,408 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:33:52,409 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53186 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53173 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:33:53,093 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53173 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:33:57,318 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:34:09,066 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:09,066 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53213 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53214 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:13,467 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:13,467 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53214 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53213 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:16,971 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:16,971 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53213 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53214 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:18,524 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53214 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:34:18,524 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53213 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:23,843 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:23,843 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53254 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53255 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:29,541 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:29,541 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53276 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53277 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:34,709 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:34,709 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53294 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53295 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:41,196 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53319 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:34:41,197 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53321 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:46,408 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:46,408 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53333 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53334 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:51,368 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:51,368 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53334 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53333 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:56,341 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:34:56,341 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53333 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53334 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:34:57,319 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:35:01,950 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:01,951 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53392 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53393 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:06,937 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:06,938 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53393 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53392 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:13,682 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:13,682 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53409 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53410 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:17,868 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:17,869 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53410 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53409 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:24,191 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53417 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:35:24,191 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53419 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:29,559 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:29,559 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53424 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53425 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:34,269 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:34,269 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53425 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53424 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:39,590 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:39,590 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53433 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53434 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:44,733 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:44,733 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53437 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53438 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:49,512 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:35:49,512 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53438 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53437 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:55,083 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53445 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:35:55,084 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53447 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:35:57,313 - ERROR - synapse.core.alerts.background_tasks - Error aggregating metrics: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.background_tasks:Error aggregating metrics: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:35:57,321 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:36:00,256 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:00,256 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53451 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53452 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:05,761 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:05,761 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53455 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53456 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:10,604 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:10,604 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53456 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53455 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:16,154 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:16,154 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53465 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53466 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:21,341 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:21,342 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53469 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53470 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:26,432 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:26,432 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53473 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53474 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:31,344 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53474 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:36:31,344 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53473 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:36,668 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:36,669 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53477 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53478 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:41,753 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:41,754 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53488 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53489 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:46,942 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:46,943 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53499 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53500 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:51,855 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:51,855 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53500 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53499 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:57,303 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:36:57,304 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53513 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53514 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:36:57,322 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:37:02,301 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:02,301 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53514 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53513 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:07,689 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:07,689 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53518 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53519 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:12,677 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:12,677 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53519 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53518 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:18,213 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:18,213 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53530 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53531 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:23,117 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:23,117 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53531 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53530 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:28,572 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53533 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:37:28,573 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53535 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:33,806 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:33,806 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53539 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53541 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:38,710 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:38,710 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53541 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53539 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:43,604 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:43,605 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53539 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53541 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:49,324 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53544 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:37:49,325 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53546 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:54,082 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:54,082 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53546 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53544 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:37:57,326 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:37:59,790 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:37:59,791 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53554 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53555 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:04,382 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:04,382 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53555 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53554 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:04,696 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:04,696 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53554 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53555 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:09,875 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:09,878 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53564 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53565 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:14,909 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:14,909 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53583 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53584 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:17,596 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:17,596 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53584 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53583 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:20,377 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53583 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:38:20,377 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53584 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:25,367 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:25,367 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53584 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53583 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:30,777 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:30,777 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53615 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53616 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:35,898 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:35,899 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53649 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53650 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:41,190 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:41,190 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53663 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53664 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:46,554 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:46,554 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53675 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53676 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:52,222 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:52,222 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53692 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53693 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:54,289 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:54,289 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53693 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53692 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:56,638 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:56,638 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53692 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53693 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:56,917 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:38:56,917 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53693 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53692 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:38:57,328 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:39:02,136 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:02,136 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53703 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53704 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:07,072 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:07,073 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53704 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53703 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:07,583 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53703 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:39:07,584 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53704 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:12,556 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:12,556 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53704 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53703 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:18,350 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:18,351 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53739 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53740 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:22,878 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:22,878 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53740 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53739 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:29,362 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:29,362 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53781 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53782 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:33,234 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:33,234 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53782 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53781 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:41,002 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:41,002 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53825 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53826 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:44,601 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:44,601 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53826 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53825 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:50,773 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53865 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:39:50,775 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53867 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:54,342 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:54,343 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53867 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53865 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:55,596 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:39:55,596 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53865 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53867 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:39:57,329 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:40:00,654 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:00,654 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53891 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53892 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:06,030 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:06,030 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53896 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53897 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:12,113 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:12,113 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53905 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53906 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:17,072 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:17,072 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53906 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53905 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:26,732 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:26,732 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53918 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53919 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:31,692 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:31,692 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53919 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53918 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:36,799 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:36,799 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53929 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53930 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:41,913 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:41,913 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53933 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53934 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:50,915 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:50,915 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53947 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53948 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:56,100 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:40:56,100 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53952 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53954 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:40:57,315 - ERROR - synapse.core.alerts.background_tasks - Error aggregating metrics: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.background_tasks:Error aggregating metrics: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:40:57,331 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:41:01,053 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:01,053 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53954 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53952 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:06,016 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:06,016 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53952 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53954 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:12,040 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:12,040 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53963 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53964 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:16,966 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:16,966 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53964 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53963 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:22,818 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:22,818 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53970 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53971 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:27,926 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:27,927 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53975 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53976 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:32,945 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:32,945 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53980 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53981 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:37,801 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:37,801 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53981 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53980 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:43,418 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:43,418 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53992 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53993 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:48,441 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:48,441 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:53999 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54000 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:53,836 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:53,836 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54008 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54009 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:41:57,332 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:41:58,879 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:41:58,880 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54013 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54014 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:04,315 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:04,315 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54018 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54019 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:09,242 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:09,243 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54019 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54018 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:14,663 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:14,663 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54029 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54030 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:20,007 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:20,010 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54035 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54036 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:25,056 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:25,056 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54039 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54040 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:30,406 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:30,407 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54044 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54045 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:35,653 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54048 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:42:35,654 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54050 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:40,612 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54050 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:42:40,613 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54048 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:45,993 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:45,993 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54056 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54057 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:51,018 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:51,019 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54066 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54067 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:56,487 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:42:56,487 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54073 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54074 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:42:57,334 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:43:01,405 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:01,406 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54074 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54073 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:06,677 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:06,677 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54080 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54081 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:11,849 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:11,849 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54092 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54093 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:17,062 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:17,062 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54103 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54104 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:22,071 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:22,071 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54111 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54112 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:27,548 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:27,548 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54124 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54125 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:31,324 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54125 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:43:34,535 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54125 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:43:34,536 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54141 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:37,897 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54141 - "POST /current-url HTTP/1.1" 200 OK
+2025-07-04 14:43:37,898 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54125 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:42,833 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:42,833 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54125 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54141 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:48,297 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:48,297 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54160 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54161 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:52,137 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:52,138 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54161 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54160 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:53,531 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:53,531 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54160 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54161 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:43:57,336 - ERROR - synapse.core.alerts.alert_engine - Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+ERROR:synapse.core.alerts.alert_engine:Error getting active alerts: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Tenant(tenants)]'. Original exception was: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.contact_tag.ContactTag' failed to locate a name ("Module 'models' has no mapped classes registered under the name 'contact_tag'"). If this is a class name, consider adding this relationship() to the <class 'synapse.models.tenant.Tenant'> class after both dependent classes have been defined.
+2025-07-04 14:43:58,868 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:43:58,868 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54186 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54187 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:44:03,673 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:44:03,673 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54187 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54186 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:44:09,534 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:44:09,534 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54193 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54194 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:44:14,230 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:44:14,230 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54194 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54193 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:44:20,419 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:44:20,420 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54216 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54217 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:44:25,521 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:44:25,521 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54232 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54233 - "GET /.identity HTTP/1.1" 200 OK
+2025-07-04 14:44:30,793 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+2025-07-04 14:44:30,793 - INFO - synapse.middlewares.error_middleware - Request completed successfully
+INFO:synapse.middlewares.error_middleware:Request completed successfully
+INFO:     127.0.0.1:54253 - "POST /current-url HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54254 - "GET /.identity HTTP/1.1" 200 OK

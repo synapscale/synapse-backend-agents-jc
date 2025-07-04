@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
-from sqlalchemy import Column, String, Text, DateTime, Boolean, Integer, func
+from sqlalchemy import Column, String, Text, DateTime, Boolean, Integer, func, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
@@ -47,7 +47,16 @@ class WebhookLog(Base):
     updated_at = Column(DateTime(timezone=True), nullable=True, default=func.now(), onupdate=func.now())
     
     # Multi-tenancy
-    tenant_id = Column(UUID(as_uuid=True), nullable=True, index=True)
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
+        nullable=True,
+        index=True
+    )
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        back_populates="webhook_logs"
+    )
     
     def __init__(self, **kwargs):
         """Initialize WebhookLog with defaults"""

@@ -78,7 +78,10 @@ class WorkspaceFeature(Base):
     # Relacionamentos
     workspace = relationship("Workspace", back_populates="workspace_features")
     feature = relationship("Feature")
-    tenant = relationship("Tenant")
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        back_populates="workspace_features"
+    )
 
     def __repr__(self):
         return f"<WorkspaceFeature(workspace_id={self.workspace_id}, feature_id={self.feature_id})>"

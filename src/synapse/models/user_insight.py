@@ -40,7 +40,7 @@ class UserInsight(Base):
     updated_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
 
     # Relationships
-    user = relationship("User", back_populates="insights")
+    user = relationship("User", back_populates="insights", overlaps="user")
     tenant = relationship("Tenant", back_populates="user_insights")
 
     def __str__(self):

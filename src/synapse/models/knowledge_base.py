@@ -22,7 +22,7 @@ class KnowledgeBase(Base):
 
     # Relationships
     tenant = relationship("Tenant", back_populates="knowledge_bases")
-    agent_knowledge_bases = relationship("AgentKnowledgeBase", back_populates="knowledge_base")
+    agent_kbs = relationship("AgentKnowledgeBase", back_populates="knowledge_base")
 
     def __str__(self):
         return f"KnowledgeBase(id={self.kb_id}, title={self.title[:50]}...)"

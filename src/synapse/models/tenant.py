@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, DateTime, Boolean, Integer, ForeignKey, ARRAY
+from sqlalchemy import Column, String, DateTime, Boolean, Integer, ForeignKey, ARRAY, and_
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, foreign
 from sqlalchemy.sql import func
 from synapse.database import Base
 import uuid
@@ -123,9 +123,9 @@ class Tenant(Base):
     billing_events = relationship("synapse.models.billing_event.BillingEvent", back_populates="tenant", cascade="all, delete-orphan")
 
     # Component and Marketplace Relationships  
-    component_downloads = relationship("synapse.models.component_download.ComponentDownload", back_populates="tenant", cascade="all, delete-orphan")
-    component_purchases = relationship("synapse.models.component_purchase.ComponentPurchase", back_populates="tenant", cascade="all, delete-orphan")
-    component_ratings = relationship("synapse.models.component_rating.ComponentRating", back_populates="tenant", cascade="all, delete-orphan")
+    component_downloads = relationship("synapse.models.marketplace.ComponentDownload", back_populates="tenant", cascade="all, delete-orphan")
+    component_purchases = relationship("synapse.models.marketplace.ComponentPurchase", back_populates="tenant", cascade="all, delete-orphan")
+    component_ratings = relationship("synapse.models.marketplace.ComponentRating", back_populates="tenant", cascade="all, delete-orphan")
     component_versions = relationship("synapse.models.component_version.ComponentVersion", back_populates="tenant", cascade="all, delete-orphan")
     marketplace_components = relationship("synapse.models.marketplace.MarketplaceComponent", back_populates="tenant", cascade="all, delete-orphan")
 
@@ -150,17 +150,22 @@ class Tenant(Base):
     project_comments = relationship("synapse.models.project_comment.ProjectComment", back_populates="tenant", cascade="all, delete-orphan")
 
     # System Performance Relationships
-    system_performance_metrics = relationship("synapse.models.system_performance_metric.SystemPerformanceMetric", back_populates="tenant", cascade="all, delete-orphan")
+    system_performance_metrics = relationship("synapse.models.analytics.SystemPerformanceMetric", back_populates="tenant", cascade="all, delete-orphan")
 
     # Tags Relationships
-    tags = relationship("synapse.models.tag.Tag", back_populates="tenant", cascade="all, delete-orphan")
+    tags = relationship(
+        "synapse.models.tag.Tag",
+        primaryjoin="and_(foreign(synapse.models.tag.Tag.target_id) == synapse.models.tenant.Tenant.id, synapse.models.tag.Tag.target_type == 'tenant')",
+        back_populates="tenant",
+        cascade="all, delete-orphan",
+    )
 
     # Template Relationships
-    template_collections = relationship("synapse.models.template_collection.TemplateCollection", back_populates="tenant", cascade="all, delete-orphan")
-    template_downloads = relationship("synapse.models.template_download.TemplateDownload", back_populates="tenant", cascade="all, delete-orphan")
-    template_favorites = relationship("synapse.models.template_favorite.TemplateFavorite", back_populates="tenant", cascade="all, delete-orphan")
-    template_reviews = relationship("synapse.models.template_review.TemplateReview", back_populates="tenant", cascade="all, delete-orphan")
-    template_usage = relationship("synapse.models.template_usage.TemplateUsage", back_populates="tenant", cascade="all, delete-orphan")
+    template_collections = relationship("synapse.models.template.TemplateCollection", back_populates="tenant", cascade="all, delete-orphan")
+    template_downloads = relationship("synapse.models.template.TemplateDownload", back_populates="tenant", cascade="all, delete-orphan")
+    template_favorites = relationship("synapse.models.template.TemplateFavorite", back_populates="tenant", cascade="all, delete-orphan")
+    template_reviews = relationship("synapse.models.template.TemplateReview", back_populates="tenant", cascade="all, delete-orphan")
+    template_usage = relationship("synapse.models.template.TemplateUsage", back_populates="tenant", cascade="all, delete-orphan")
 
     # Webhook Relationships
     webhook_logs = relationship("synapse.models.webhook_log.WebhookLog", back_populates="tenant", cascade="all, delete-orphan")
@@ -170,7 +175,7 @@ class Tenant(Base):
     workflows = relationship("synapse.models.workflow.Workflow", back_populates="tenant", cascade="all, delete-orphan")
 
     # Workspace Feature Relationships
-    workspace_features = relationship("synapse.models.workspace_feature.WorkspaceFeature", back_populates="tenant", cascade="all, delete-orphan")
+    workspace_features = relationship("synapse.models.feature.WorkspaceFeature", back_populates="tenant", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Tenant(id={self.id}, name='{self.name}', status={self.status})>"

@@ -28,7 +28,7 @@ class Contact(Base):
     job_title = Column(String, nullable=True)
     status = Column(String, nullable=True)
     lead_score = Column(Integer, nullable=True)
-    source_id = Column(UUID(as_uuid=True), nullable=True)  # Source de onde veio o contato
+    source_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.contact_sources.id"), nullable=True)  # Source de onde veio o contato
     custom_fields = Column(JSONB, nullable=True, server_default=func.text("'{}'::jsonb"))
     tags = Column(String, nullable=True)  # Tags separadas por vírgula
     created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
@@ -36,13 +36,15 @@ class Contact(Base):
 
     # Relacionamentos
     tenant = relationship("Tenant", back_populates="contacts")
-    # lists = relationship("ContactList", secondary="synapscale_db.contact_list_memberships", back_populates="contacts")  # Tabela não existe
-    interactions = relationship("ContactInteraction", back_populates="contact", cascade="all, delete-orphan")
+    source = relationship("ContactSource", back_populates="contacts")
+    list_memberships = relationship("ContactListMembership", back_populates="contact", cascade="all, delete-orphan")
+    contact_interactions = relationship("ContactInteraction", back_populates="contact", cascade="all, delete-orphan")
     contact_events = relationship(
         "ContactEvent",
         back_populates="contact",
         cascade="all, delete-orphan"
     )
+    contact_notes = relationship("ContactNote", back_populates="contact", cascade="all, delete-orphan")
     
     # Relacionamento para jornadas de conversão
     conversion_journeys = relationship(

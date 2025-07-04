@@ -12,9 +12,10 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     text,
+    and_,
 )
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, foreign
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -60,6 +61,13 @@ class Tag(Base):
 
     # Relacionamentos
     created_by_user = relationship("User", back_populates="created_tags")
+    # Polymorphic relationship to Tenant
+    tenant = relationship(
+        "synapse.models.tenant.Tenant",
+        primaryjoin="and_(foreign(synapse.models.tag.Tag.target_id) == synapse.models.tenant.Tenant.id, synapse.models.tag.Tag.target_type == 'tenant')",
+        back_populates="tags",
+        viewonly=True,
+    )
 
     def __repr__(self):
         return f"<Tag(target_type={self.target_type}, target_id={self.target_id}, tag_name={self.tag_name})>"

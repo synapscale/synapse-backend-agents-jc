@@ -110,9 +110,9 @@ class Agent(Base):
     agent_triggers = relationship("AgentTrigger", back_populates="agent", cascade="all, delete-orphan")
     agent_usage_metrics = relationship("AgentUsageMetric", back_populates="agent", cascade="all, delete-orphan")
     
-    # Relacionamentos de hierarquia (removendo foreign_keys problemáticos)
-    descendants = relationship("AgentHierarchy", back_populates="ancestor_agent", cascade="all, delete-orphan")
-    ancestors = relationship("AgentHierarchy", back_populates="descendant_agent", cascade="all, delete-orphan")
+    # Relacionamentos de hierarquia
+    descendants = relationship("AgentHierarchy", foreign_keys="[AgentHierarchy.ancestor]", back_populates="ancestor_agent", cascade="all, delete-orphan")
+    ancestors = relationship("AgentHierarchy", foreign_keys="[AgentHierarchy.descendant]", back_populates="descendant_agent", cascade="all, delete-orphan")
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Converte agente para dicionário"""

@@ -26,7 +26,7 @@ class AgentConfiguration(Base):
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     # Relacionamentos
-    agent = relationship("Agent", back_populates="agent_configurations")
+    agent = relationship("Agent", foreign_keys="[AgentConfiguration.agent_id]", back_populates="agent_configurations")
     creator = relationship("User")
 
     def __repr__(self):

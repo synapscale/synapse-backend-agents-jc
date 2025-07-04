@@ -23,6 +23,12 @@ class BillingEvent(Base):
         nullable=False,
         index=True,
     )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     workspace_id = Column(
         UUID(as_uuid=True),
         ForeignKey("synapscale_db.workspaces.id", ondelete="SET NULL"),
@@ -69,13 +75,14 @@ class BillingEvent(Base):
     )
 
     # Relacionamentos
-    user = relationship("User", back_populates="billing_events")
-    workspace = relationship("Workspace", back_populates="billing_events")
-    related_usage_log = relationship("UsageLog", back_populates="billing_events")
-    message = relationship("Message", back_populates="billing_events")
+    tenant = relationship("synapse.models.tenant.Tenant", back_populates="billing_events")
+    user = relationship("synapse.models.user.User", back_populates="billing_events")
+    workspace = relationship("synapse.models.workspace.Workspace", back_populates="billing_events")
+    related_usage_log = relationship("synapse.models.usage_log.UsageLog", back_populates="billing_events")
+    message = relationship("synapse.models.message.Message", back_populates="billing_events")
 
     def __repr__(self):
-        return f"<BillingEvent(user_id={self.user_id}, event_type={self.event_type}, amount={self.amount_usd})>"
+        return f"<BillingEvent(tenant_id={self.tenant_id}, user_id={self.user_id}, event_type={self.event_type}, amount={self.amount_usd})>"
 
     @property
     def is_completed(self):
@@ -96,6 +103,7 @@ class BillingEvent(Base):
         """Converte para dicionário"""
         return {
             "id": str(self.id),
+            "tenant_id": str(self.tenant_id),
             "user_id": str(self.user_id),
             "workspace_id": str(self.workspace_id) if self.workspace_id else None,
             "event_type": self.event_type,
