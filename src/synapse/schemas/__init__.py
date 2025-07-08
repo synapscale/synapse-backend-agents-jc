@@ -164,7 +164,7 @@ from .subscription import (
     SubscriptionCreate,
     SubscriptionResponse,
     SubscriptionUpdate,
-    SubscriptionList,
+    SubscriptionListResponse,
     SubscriptionSummary,
     SubscriptionWithPlan,
 )
@@ -995,6 +995,78 @@ from .models import (
     ModelsStats,
 )
 
+# Agent Usage Metric (from task)
+from .agent_usage_metric import (
+    AgentUsageMetricBase,
+    AgentUsageMetricUpdate,
+    AgentUsageMetricListResponse,
+)
+
+# Agent Quota (from task)
+from .agent_quota import (
+    AgentQuotaBase,
+    AgentQuotaUpdate,
+    AgentQuotaUsageCheck,
+    AgentQuotaListResponse,
+    AgentQuotaCreateDaily,
+    AgentQuotaCreateHourly,
+    AgentQuotaCreateMonthly,
+)
+
+# Payment Customer (from task)
+from .payment_customer import (
+    PaymentCustomerBase,
+    PaymentCustomerUpdate,
+    PaymentCustomerListResponse,
+    PaymentCustomerCreateSimple,
+    PaymentCustomerSearch,
+    PaymentCustomerSummary,
+    PaymentCustomerActivateDeactivate,
+    PaymentCustomerUpdateData,
+)
+
+# Node Execution Status (from task)
+from .node_execution_status import (
+    NodeExecutionStatusBase,
+    NodeExecutionStatusUpdate,
+    NodeExecutionStatusList,
+    NodeExecutionStatusFilter,
+    NodeExecutionStatusStatistics,
+    NodeExecutionStatusValidation,
+    NodeExecutionStatusValidationResult,
+    NodeExecutionStatusFlow,
+    NodeExecutionStatusTransition,
+    NodeExecutionStatusHealth,
+)
+
+# Node Type
+from .node_type import (
+    NodeTypeCreate,
+    NodeTypeRead,
+    NodeTypeUpdate,
+    NodeTypeList,
+    NodeTypeStats,
+    NodeTypeValidation,
+)
+
+# User Tenant Role (from task)
+from .user_tenant_role import (
+    UserTenantRoleBase,
+    UserTenantRoleUpdate,
+    UserTenantRoleList,
+    UserTenantRoleFilter,
+    UserTenantRoleAssign,
+    UserTenantRoleRevoke,
+    UserTenantRoleExtend,
+    UserTenantRolePermissionCheck,
+    UserTenantRolePermissionResult,
+    UserTenantRoleStatistics,
+    UserTenantRoleCleanup,
+    UserTenantRoleCleanupResult,
+    UserTenantRoleAudit,
+    UserTenantRoleExpirationAlert,
+)
+
 # It's recommended to eventually refactor the code to import directly
 # from the specific files (e.g., from synapse.schemas.user import UserCreate)
 # instead of relying on this central __init__.py.
@@ -1134,7 +1206,7 @@ __all__ = [
     "SubscriptionCreate",
     "SubscriptionResponse",
     "SubscriptionUpdate",
-    "SubscriptionList",
+    "SubscriptionListResponse",
     "SubscriptionSummary",
     "SubscriptionWithPlan",
     # Message
@@ -1763,4 +1835,58 @@ __all__ = [
     "ModelsRead",
     "ModelsUpdate",
     "ModelsStats",
+    # Agent Usage Metric (from task)
+    "AgentUsageMetricBase",
+    "AgentUsageMetricUpdate",
+    "AgentUsageMetricListResponse",
+    # Agent Quota (from task)
+    "AgentQuotaBase",
+    "AgentQuotaUpdate",
+    "AgentQuotaUsageCheck",
+    "AgentQuotaListResponse",
+    "AgentQuotaCreateDaily",
+    "AgentQuotaCreateHourly",
+    "AgentQuotaCreateMonthly",
+    # Payment Customer (from task)
+    "PaymentCustomerBase",
+    "PaymentCustomerUpdate",
+    "PaymentCustomerListResponse",
+    "PaymentCustomerCreateSimple",
+    "PaymentCustomerSearch",
+    "PaymentCustomerSummary",
+    "PaymentCustomerActivateDeactivate",
+    "PaymentCustomerUpdateData",
+    # Node Execution Status (from task)
+    "NodeExecutionStatusBase",
+    "NodeExecutionStatusUpdate",
+    "NodeExecutionStatusList",
+    "NodeExecutionStatusFilter",
+    "NodeExecutionStatusStatistics",
+    "NodeExecutionStatusValidation",
+    "NodeExecutionStatusValidationResult",
+    "NodeExecutionStatusFlow",
+    "NodeExecutionStatusTransition",
+    "NodeExecutionStatusHealth",
+    # Node Type
+    "NodeTypeCreate",
+    "NodeTypeRead",
+    "NodeTypeUpdate",
+    "NodeTypeList",
+    "NodeTypeStats",
+    "NodeTypeValidation",
+    # User Tenant Role (from task)
+    "UserTenantRoleBase",
+    "UserTenantRoleUpdate",
+    "UserTenantRoleList",
+    "UserTenantRoleFilter",
+    "UserTenantRoleAssign",
+    "UserTenantRoleRevoke",
+    "UserTenantRoleExtend",
+    "UserTenantRolePermissionCheck",
+    "UserTenantRolePermissionResult",
+    "UserTenantRoleStatistics",
+    "UserTenantRoleCleanup",
+    "UserTenantRoleCleanupResult",
+    "UserTenantRoleAudit",
+    "UserTenantRoleExpirationAlert",
 ]

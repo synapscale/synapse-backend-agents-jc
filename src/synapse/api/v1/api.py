@@ -22,6 +22,10 @@ from synapse.api.v1.endpoints import (
     node_categories, # Workflows
     node_execution_statuses, # Workflows
     node_ratings, # Workflows
+    node_executions, # Workflows
+    node_statuses, # Workflows
+    node_templates, # Workflows
+    node_types, # Workflows
     llms,  # 🆕 Adicionado - novos endpoints completos de LLM
     llm_catalog,  # ✅ Adicionado - rotas /llms/*
     analytics,
@@ -82,6 +86,10 @@ api_router.include_router(nodes.router, prefix="/nodes", tags=["workflows"])
 api_router.include_router(node_categories.router, prefix="/workflows/node-categories", tags=["workflows"]) # Workflows
 api_router.include_router(node_execution_statuses.router, prefix="/workflows/node-execution-statuses", tags=["workflows"]) # Workflows
 api_router.include_router(node_ratings.router, prefix="/workflows/node-ratings", tags=["workflows"]) # Workflows
+api_router.include_router(node_executions.router, prefix="/workflows/node-executions", tags=["workflows"]) # Workflows
+api_router.include_router(node_statuses.router, prefix="/workflows/node-statuses", tags=["workflows"]) # Workflows
+api_router.include_router(node_templates.router, prefix="/workflows/node-templates", tags=["workflows"]) # Workflows
+api_router.include_router(node_types.router, prefix="/workflows/node-types", tags=["workflows"]) # Workflows
 
 # 📊 ANALYTICS (CONSOLIDADO)
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
@@ -106,9 +114,9 @@ api_router.include_router(contact_sources.router, prefix="/crm/contact-sources",
 api_router.include_router(contact_notes.router, prefix="/crm/contact-notes", tags=["crm"]) 
 
 # 🏢 ENTERPRISE (CONSOLIDADO) - Todas as funcionalidades empresariais
-api_router.include_router(rbac.router, prefix="/enterprise/rbac", tags=["enterprise"])  # Mudança: /enterprise/rbac
-api_router.include_router(features.router, prefix="/enterprise/features", tags=["enterprise"])  # Mudança: /enterprise/features
-api_router.include_router(payments.router, prefix="/enterprise/payments", tags=["enterprise"])  # Mudança: /enterprise/payments
+api_router.include_router(rbac.router, prefix="/enterprise/rbac", tags=["enterprise"])
+api_router.include_router(features.router, prefix="/enterprise/features", tags=["enterprise"])
+api_router.include_router(payments.router, prefix="/enterprise/payments", tags=["enterprise"])
 api_router.include_router(billing_events.router, prefix="/enterprise/billing-events", tags=["enterprise"]) # Enterprise
 api_router.include_router(invoices.router, prefix="/enterprise/invoices", tags=["enterprise"]) # Enterprise
 api_router.include_router(plans.router, prefix="/enterprise/plans", tags=["enterprise"]) # Enterprise

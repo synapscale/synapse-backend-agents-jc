@@ -1,146 +1,65 @@
 """
-Schemas para NodeTemplate
+Schemas for NodeTemplate - a model for defining reusable workflow node templates.
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field, UUID4, validator
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, ConfigDict
+from uuid import UUID
+
 
 class NodeTemplateBase(BaseModel):
-    """Base schema for NodeTemplate"""
-    name: str = Field(..., max_length=255, description="Template name")
-    description: Optional[str] = None
-    category: Optional[str] = Field(None, max_length=100, description="Template category")
-    code_template: str = Field(..., description="Code template content")
-    input_schema: Dict[str, Any] = Field(..., description="Input schema definition")
-    output_schema: Dict[str, Any] = Field(..., description="Output schema definition")
-    parameters_schema: Optional[Dict[str, Any]] = Field(None, description="Parameters schema definition")
-    icon: Optional[str] = Field(None, max_length=255, description="Template icon")
-    color: Optional[str] = Field(None, max_length=255, description="Template color")
-    documentation: Optional[str] = Field(None, description="Template documentation")
-    examples: Optional[Dict[str, Any]] = Field(None, description="Usage examples")
-    is_system: bool = Field(default=False, description="Whether this is a system template")
-    is_active: bool = Field(default=True, description="Whether the template is active")
-    tenant_id: Optional[UUID4] = None
-    
-    @validator('name')
-    def validate_name(cls, v):
-        if not v.strip():
-            raise ValueError("Name cannot be empty")
-        return v.strip()
-    
-    @validator('code_template')
-    def validate_code_template(cls, v):
-        if not v.strip():
-            raise ValueError("Code template cannot be empty")
-        return v.strip()
-    
-    @validator('input_schema', 'output_schema')
-    def validate_schemas(cls, v):
-        if not isinstance(v, dict):
-            raise ValueError("Schema must be a dictionary")
-        return v
-    
-    @validator('parameters_schema')
-    def validate_parameters_schema(cls, v):
-        if v is not None and not isinstance(v, dict):
-            raise ValueError("Parameters schema must be a dictionary")
-        return v
-    
-    class Config:
-        from_attributes = True
+    """Base schema for NodeTemplate attributes."""
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str = Field(..., max_length=255, description="The name of the node template.")
+    description: Optional[str] = Field(None, description="A detailed description of the node template.")
+    category: Optional[str] = Field(None, max_length=100, description="The category of the node template (e.g., 'data_processing', 'integrations').")
+    code_template: str = Field(..., description="The code template for the node.")
+    input_schema: Dict[str, Any] = Field(..., description="JSON schema defining the expected input for the node.")
+    output_schema: Dict[str, Any] = Field(..., description="JSON schema defining the expected output from the node.")
+    parameters_schema: Optional[Dict[str, Any]] = Field(None, description="JSON schema defining configurable parameters for the node.")
+    icon: Optional[str] = Field(None, max_length=255, description="An icon for UI representation.")
+    color: Optional[str] = Field(None, max_length=255, description="A color for UI representation.")
+    documentation: Optional[str] = Field(None, description="Documentation for the node template.")
+    examples: Optional[Dict[str, Any]] = Field(None, description="Examples of how to use the node template.")
+    is_system: Optional[bool] = Field(None, description="Indicates if this is a system-defined template.")
+    is_active: Optional[bool] = Field(None, description="Whether this template is active and can be used.")
+    tenant_id: Optional[UUID] = Field(None, description="The tenant to which this template belongs.")
+
 
 class NodeTemplateCreate(NodeTemplateBase):
-    """Schema for creating NodeTemplate"""
+    """Schema for creating a new NodeTemplate."""
     pass
 
-class NodeTemplateRead(NodeTemplateBase):
-    """Schema for reading NodeTemplate"""
-    id: UUID4
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
 
 class NodeTemplateUpdate(BaseModel):
-    """Schema for updating NodeTemplate"""
-    name: Optional[str] = Field(None, max_length=255)
-    description: Optional[str] = None
-    category: Optional[str] = Field(None, max_length=100)
-    code_template: Optional[str] = None
-    input_schema: Optional[Dict[str, Any]] = None
-    output_schema: Optional[Dict[str, Any]] = None
-    parameters_schema: Optional[Dict[str, Any]] = None
-    icon: Optional[str] = Field(None, max_length=255)
-    color: Optional[str] = Field(None, max_length=255)
-    documentation: Optional[str] = None
-    examples: Optional[Dict[str, Any]] = None
-    is_system: Optional[bool] = None
-    is_active: Optional[bool] = None
-    
-    @validator('name')
-    def validate_name(cls, v):
-        if v is not None and not v.strip():
-            raise ValueError("Name cannot be empty")
-        return v.strip() if v else v
-    
-    @validator('code_template')
-    def validate_code_template(cls, v):
-        if v is not None and not v.strip():
-            raise ValueError("Code template cannot be empty")
-        return v.strip() if v else v
-    
-    @validator('input_schema', 'output_schema')
-    def validate_schemas(cls, v):
-        if v is not None and not isinstance(v, dict):
-            raise ValueError("Schema must be a dictionary")
-        return v
-    
-    @validator('parameters_schema')
-    def validate_parameters_schema(cls, v):
-        if v is not None and not isinstance(v, dict):
-            raise ValueError("Parameters schema must be a dictionary")
-        return v
-    
-    class Config:
-        from_attributes = True
+    """Schema for updating an existing NodeTemplate. All fields are optional."""
+    name: Optional[str] = Field(None, max_length=255, description="New name for the template.")
+    description: Optional[str] = Field(None, description="New description.")
+    category: Optional[str] = Field(None, max_length=100, description="New category.")
+    code_template: Optional[str] = Field(None, description="New code template.")
+    input_schema: Optional[Dict[str, Any]] = Field(None, description="New input schema.")
+    output_schema: Optional[Dict[str, Any]] = Field(None, description="New output schema.")
+    parameters_schema: Optional[Dict[str, Any]] = Field(None, description="New parameters schema.")
+    icon: Optional[str] = Field(None, max_length=255, description="New icon.")
+    color: Optional[str] = Field(None, max_length=255, description="New color.")
+    documentation: Optional[str] = Field(None, description="New documentation.")
+    examples: Optional[Dict[str, Any]] = Field(None, description="New examples.")
+    is_system: Optional[bool] = Field(None, description="New system status.")
+    is_active: Optional[bool] = Field(None, description="New active status.")
 
-class NodeTemplateList(BaseModel):
-    """Schema for template list with pagination"""
-    templates: List[NodeTemplateRead]
-    total: int
-    page: int
-    page_size: int
-    
-    class Config:
-        from_attributes = True
 
-class NodeTemplateStats(BaseModel):
-    """Schema for template statistics"""
-    total_templates: int
-    active_templates: int
-    system_templates: int
-    by_category: Dict[str, int]
-    
-    class Config:
-        from_attributes = True
+class NodeTemplateResponse(NodeTemplateBase):
+    """Response schema for a NodeTemplate, including database-generated fields."""
+    id: UUID = Field(..., description="Unique identifier for the node template.")
+    created_at: datetime = Field(..., description="Timestamp of when the template was created.")
+    updated_at: datetime = Field(..., description="Timestamp of the last update.")
 
-class NodeTemplateSearch(BaseModel):
-    """Schema for template search"""
-    query: str = Field(..., description="Search query")
-    category: Optional[str] = Field(None, description="Filter by category")
-    is_system: Optional[bool] = Field(None, description="Filter by system templates")
-    is_active: Optional[bool] = Field(default=True, description="Filter by active templates")
-    
-    class Config:
-        from_attributes = True
 
-class NodeTemplateValidation(BaseModel):
-    """Schema for template validation result"""
-    is_valid: bool
-    errors: List[str] = []
-    warnings: List[str] = []
-    
-    class Config:
-        from_attributes = True
+class NodeTemplateListResponse(BaseModel):
+    """Paginated list of NodeTemplates."""
+    items: List[NodeTemplateResponse] = Field(..., description="List of node templates for the current page.")
+    total: int = Field(..., description="Total number of node templates.")
+    page: int = Field(..., description="Current page number.")
+    size: int = Field(..., description="Number of items per page.")
