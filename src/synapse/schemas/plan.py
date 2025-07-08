@@ -48,7 +48,7 @@ class PlanBase(BaseModel):
     storage_limit_gb: Optional[int] = Field(None, ge=0, description="The maximum storage allowed in GB.")
     features_config: Dict[str, Any] = Field(default_factory=dict, description="A dictionary defining the features included in this plan.")
     trial_days: Optional[int] = Field(None, ge=0, description="The number of trial days offered with this plan.")
-    tenant_id: Optional[UUID] = Field(None, description="The tenant to which this plan belongs (null for global plans).")
+    # Plans are global system configuration, no tenant_id needed
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata for the plan.")
     color: Optional[str] = Field(None, description="A hex color code for UI representation.")
     icon: Optional[str] = Field(None, description="An icon for UI representation.")

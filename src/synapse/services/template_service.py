@@ -14,19 +14,19 @@ from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import and_, or_, desc, asc, func, text, select
 from sqlalchemy.exc import IntegrityError
 
-from synapse.models.workflow_template import WorkflowTemplate
-from synapse.models.template import (
+from synapse.models import (
+    WorkflowTemplate,
     TemplateReview,
     TemplateDownload,
     TemplateFavorite,
     TemplateCollection,
     TemplateUsage,
+)
+from synapse.models.template import (
     TemplateStatus,
     TemplateLicense,
 )
-from synapse.models.workflow import Workflow
-from synapse.models.node import Node
-from synapse.models.user import User
+from synapse.models import Workflow, Node, User
 from synapse.schemas.template import (
     TemplateCreate,
     TemplateUpdate,

@@ -9,6 +9,7 @@ from typing import List, Optional
 import uuid
 
 from synapse.api.deps import get_current_active_user, get_async_db
+from synapse.models.user import User
 from synapse.schemas.subscription import (
     SubscriptionResponse,
     SubscriptionCreate,

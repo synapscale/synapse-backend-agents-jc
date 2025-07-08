@@ -4,7 +4,7 @@ Schemas for PaymentCustomer - managing payment customers.
 
 from datetime import datetime
 from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field, ConfigDict, validator
+from pydantic import BaseModel, Field, ConfigDict, validator, computed_field
 from uuid import UUID
 
 
@@ -58,11 +58,7 @@ class PaymentCustomerRead(PaymentCustomerBase):
     updated_at: datetime = Field(..., description="Timestamp when the customer was last updated")
     
     # Computed fields
-    customer_email: Optional[str] = Field(None, description="Customer email from customer data")
-    customer_name: Optional[str] = Field(None, description="Customer name from customer data")
-    customer_phone: Optional[str] = Field(None, description="Customer phone from customer data")
-    has_valid_payment_method: Optional[bool] = Field(None, description="Whether customer has a valid payment method")
-    
+    @computed_field
     @property
     def customer_email(self) -> Optional[str]:
         """Get customer email from customer data."""
@@ -70,6 +66,7 @@ class PaymentCustomerRead(PaymentCustomerBase):
             return self.customer_data.get("email")
         return None
     
+    @computed_field
     @property
     def customer_name(self) -> Optional[str]:
         """Get customer name from customer data."""
@@ -77,6 +74,7 @@ class PaymentCustomerRead(PaymentCustomerBase):
             return self.customer_data.get("name") or self.customer_data.get("full_name")
         return None
     
+    @computed_field
     @property
     def customer_phone(self) -> Optional[str]:
         """Get customer phone from customer data."""

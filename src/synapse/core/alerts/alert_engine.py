@@ -15,10 +15,7 @@ from enum import Enum
 
 from synapse.core.email.service import EmailService
 from synapse.core.websockets.manager import ConnectionManager
-from synapse.models.analytics_alert import AnalyticsAlert
-from synapse.models.analytics_event import AnalyticsEvent
-from synapse.models.analytics_metric import AnalyticsMetric
-from synapse.models.user import User
+from synapse.models import AnalyticsAlert, AnalyticsEvent, AnalyticsMetric, User
 
 
 logger = logging.getLogger(__name__)

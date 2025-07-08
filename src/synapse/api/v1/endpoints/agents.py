@@ -10,6 +10,7 @@ from typing import List, Optional
 import uuid
 
 from synapse.api.deps import get_current_active_user
+from synapse.models.user import User
 from synapse.schemas.agent import (
     AgentResponse,
     AgentCreate,
@@ -17,7 +18,6 @@ from synapse.schemas.agent import (
     AgentListResponse,
     AgentStatus,
     AgentEnvironment,
-    AgentScope,
 )
 from synapse.models import Agent, User, Workspace, Tenant
 from synapse.database import get_async_db
@@ -40,7 +40,7 @@ async def list_agents(
     environment: Optional[AgentEnvironment] = Query(
         None, description="Filtrar por ambiente"
     ),
-    scope: Optional[AgentScope] = Query(None, description="Filtrar por escopo"),
+    scope: Optional[str] = Query(None, description="Filtrar por escopo"),
     is_active: Optional[bool] = Query(None, description="Filtrar agentes ativos"),
 ):
     """Listar agentes do usuário"""
@@ -91,9 +91,6 @@ async def list_agents(
     if environment:
         conditions.append(Agent.environment == environment.value)
 
-    if scope:
-        conditions.append(Agent.status == scope.value)
-
     if is_active is not None:
         conditions.append(Agent.is_active == is_active)
 
@@ -127,23 +124,21 @@ async def list_agents(
                 version=agent.version,
                 environment=agent.environment,
                 status=agent.status,
-                scope=agent.status,
-                configuration=agent.configuration or {},
-                metadata=agent.metadata or {},
+                priority=agent.priority,
                 is_active=agent.is_active,
                 user_id=agent.user_id,
                 workspace_id=agent.workspace_id,
                 tenant_id=agent.tenant_id,
+                current_config=agent.current_config,
                 created_at=agent.created_at,
                 updated_at=agent.updated_at,
                 # Dados relacionados
                 user_name=agent.user.full_name if agent.user else None,
-                workspace_name=agent.workspace.name if agent.workspace else None,
             )
         )
 
     return AgentListResponse(
-        items=agent_responses, total=total, page=page, pages=pages, size=size
+        items=agent_responses, total=total
     )
 
 
@@ -162,7 +157,7 @@ async def create_agent(
                 and_(
                     Workspace.id == agent_data.workspace_id,
                     or_(
-                        Workspace.tenant_id == current_user.id,
+                        Workspace.owner_id == current_user.id,
                         # TODO: Verificar se é membro do workspace
                     ),
                 )
@@ -178,10 +173,8 @@ async def create_agent(
     # Verificar se nome é único no escopo (workspace ou tenant)
     name_conditions = [Agent.name == agent_data.name, Agent.user_id == current_user.id]
 
-    if agent_data.scope == AgentScope.WORKSPACE and agent_data.workspace_id:
+    if agent_data.workspace_id:
         name_conditions.append(Agent.workspace_id == agent_data.workspace_id)
-    elif agent_data.scope == AgentScope.PRIVATE:
-        name_conditions.append(Agent.status == AgentScope.PRIVATE.value)
 
     existing_agent = await db.execute(select(Agent).where(and_(*name_conditions)))
     if existing_agent.scalar_one_or_none():
@@ -196,14 +189,13 @@ async def create_agent(
         description=agent_data.description,
         version=agent_data.version,
         environment=agent_data.environment,
-        status=AgentStatus.DRAFT.value,  # Sempre criar como draft
-        scope=agent_data.scope,
-        configuration=agent_data.configuration,
-        metadata=agent_data.metadata,
+        status="draft",  # Sempre criar como draft
+        priority=agent_data.priority,
         is_active=False,  # Sempre criar como inativo
         user_id=current_user.id,
         workspace_id=agent_data.workspace_id,
         tenant_id=current_user.tenant_id,
+        current_config=agent_data.current_config,
     )
 
     db.add(agent)
@@ -217,13 +209,12 @@ async def create_agent(
         version=agent.version,
         environment=agent.environment,
         status=agent.status,
-        scope=agent.status,
-        configuration=agent.configuration or {},
-        metadata=agent.metadata or {},
+        priority=agent.priority,
         is_active=agent.is_active,
         user_id=agent.user_id,
         workspace_id=agent.workspace_id,
         tenant_id=agent.tenant_id,
+        current_config=agent.current_config,
         created_at=agent.created_at,
         updated_at=agent.updated_at,
         user_name=current_user.full_name,
@@ -256,11 +247,8 @@ async def get_agent(
     # Owner sempre tem acesso
     if agent.user_id == current_user.id:
         has_access = True
-    # Agentes globais são acessíveis por todos
-    elif agent.status == AgentScope.GLOBAL.value:
-        has_access = True
     # Agentes de workspace são acessíveis por membros
-    elif agent.status == AgentScope.WORKSPACE.value and agent.workspace:
+    elif agent.workspace:
         if agent.workspace.owner_id == current_user.id or agent.workspace.is_public:
             has_access = True
         # TODO: Verificar se é membro do workspace
@@ -278,17 +266,15 @@ async def get_agent(
         version=agent.version,
         environment=agent.environment,
         status=agent.status,
-        scope=agent.status,
-        configuration=agent.configuration or {},
-        metadata=agent.metadata or {},
+        priority=agent.priority,
         is_active=agent.is_active,
         user_id=agent.user_id,
         workspace_id=agent.workspace_id,
         tenant_id=agent.tenant_id,
+        current_config=agent.current_config,
         created_at=agent.created_at,
         updated_at=agent.updated_at,
         user_name=agent.user.full_name if agent.user else None,
-        workspace_name=agent.workspace.name if agent.workspace else None,
     )
 
 
@@ -324,10 +310,8 @@ async def update_agent(
             Agent.id != agent_id,
         ]
 
-        if agent.status == AgentScope.WORKSPACE.value and agent.workspace_id:
+        if agent.workspace_id:
             name_conditions.append(Agent.workspace_id == agent.workspace_id)
-        elif agent.status == AgentScope.PRIVATE.value:
-            name_conditions.append(Agent.status == AgentScope.PRIVATE.value)
 
         existing = await db.execute(select(Agent).where(and_(*name_conditions)))
         if existing.scalar_one_or_none():
@@ -351,13 +335,12 @@ async def update_agent(
         version=agent.version,
         environment=agent.environment,
         status=agent.status,
-        scope=agent.status,
-        configuration=agent.configuration or {},
-        metadata=agent.metadata or {},
+        priority=agent.priority,
         is_active=agent.is_active,
         user_id=agent.user_id,
         workspace_id=agent.workspace_id,
         tenant_id=agent.tenant_id,
+        current_config=agent.current_config,
         created_at=agent.created_at,
         updated_at=agent.updated_at,
     )
@@ -387,7 +370,7 @@ async def delete_agent(
         )
 
     # Soft delete
-    agent.status = AgentStatus.ARCHIVED.value
+    agent.status = "archived"
     agent.is_active = False
 
     await db.commit()
@@ -418,15 +401,8 @@ async def activate_agent(
             detail="Apenas o proprietário pode ativar o agente",
         )
 
-    # Verificar se configuração está válida
-    if not agent.configuration or not agent.configuration.get("model_id"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Agente precisa ter configuração válida para ser ativado",
-        )
-
     agent.is_active = True
-    agent.status = AgentStatus.ACTIVE.value
+    agent.status = "active"
 
     await db.commit()
 
@@ -457,7 +433,7 @@ async def deactivate_agent(
         )
 
     agent.is_active = False
-    agent.status = AgentStatus.INACTIVE.value
+    agent.status = "inactive"
 
     await db.commit()
 
@@ -485,9 +461,7 @@ async def clone_agent(
     has_access = False
     if agent.user_id == current_user.id:
         has_access = True
-    elif agent.status == AgentScope.GLOBAL.value:
-        has_access = True
-    elif agent.status == AgentScope.WORKSPACE.value and agent.workspace:
+    elif agent.workspace:
         if agent.workspace.owner_id == current_user.id or agent.workspace.is_public:
             has_access = True
 
@@ -506,7 +480,6 @@ async def clone_agent(
                 and_(
                     Agent.name == clone_name,
                     Agent.user_id == current_user.id,
-                    Agent.status == AgentScope.PRIVATE.value,
                 )
             )
         )
@@ -521,14 +494,13 @@ async def clone_agent(
         description=f"Clone de {agent.name}",
         version="1.0.0",
         environment=agent.environment,
-        status=AgentStatus.DRAFT.value,
-        scope=AgentScope.PRIVATE.value,  # Clones são sempre privados
-        configuration=agent.configuration.copy() if agent.configuration else {},
-        metadata=agent.metadata.copy() if agent.metadata else {},
+        status="draft",
+        priority=agent.priority,
         is_active=False,
         user_id=current_user.id,
         workspace_id=None,  # Clones não herdam workspace
         tenant_id=current_user.tenant_id,
+        current_config=None,
     )
 
     db.add(clone)
@@ -542,13 +514,12 @@ async def clone_agent(
         version=clone.version,
         environment=clone.environment,
         status=clone.status,
-        scope=clone.scope,
-        configuration=clone.configuration or {},
-        metadata=clone.metadata or {},
+        priority=clone.priority,
         is_active=clone.is_active,
         user_id=clone.user_id,
         workspace_id=clone.workspace_id,
         tenant_id=clone.tenant_id,
+        current_config=clone.current_config,
         created_at=clone.created_at,
         updated_at=clone.updated_at,
         user_name=current_user.full_name,

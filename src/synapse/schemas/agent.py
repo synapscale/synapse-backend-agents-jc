@@ -53,12 +53,10 @@ class AgentBase(BaseModel):
     name: str = Field(..., max_length=255, description="Agent name")
     description: Optional[str] = Field(None, description="Description")
     is_active: bool = Field(True, description="Active agent")
-    status: AgentStatus = Field(AgentStatus.ACTIVE, description="Status")
-    priority: int = Field(1, ge=1, le=10, description="Priority (1-10)")
-    version: str = Field("1.0.0", max_length=20, description="Version")
-    environment: AgentEnvironment = Field(
-        AgentEnvironment.DEVELOPMENT, description="Environment"
-    )
+    status: Optional[str] = Field("active", description="Status")
+    priority: Optional[int] = Field(1, ge=1, le=10, description="Priority (1-10)")
+    version: Optional[str] = Field("1.0.0", max_length=20, description="Version")
+    environment: Optional[str] = Field("development", description="Environment")
     workspace_id: Optional[uuid.UUID] = Field(None, description="Workspace ID")
     current_config: Optional[uuid.UUID] = Field(
         None, description="Active configuration ID"
@@ -77,10 +75,10 @@ class AgentUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=255, description="Agent name")
     description: Optional[str] = Field(None, description="Description")
     is_active: Optional[bool] = Field(None, description="Active agent")
-    status: Optional[AgentStatus] = Field(None, description="Status")
+    status: Optional[str] = Field(None, description="Status")
     priority: Optional[int] = Field(None, ge=1, le=10, description="Priority")
     version: Optional[str] = Field(None, max_length=20, description="Version")
-    environment: Optional[AgentEnvironment] = Field(None, description="Environment")
+    environment: Optional[str] = Field(None, description="Environment")
     current_config: Optional[uuid.UUID] = Field(
         None, description="Active configuration ID"
     )
@@ -92,6 +90,7 @@ class AgentResponse(AgentBase):
     id: uuid.UUID = Field(..., description="Agent ID")
     user_id: uuid.UUID = Field(..., description="User ID")
     tenant_id: uuid.UUID = Field(..., description="Tenant ID")
+    user_name: Optional[str] = Field(None, description="User name")
     created_at: datetime.datetime = Field(..., description="Creation timestamp")
     updated_at: datetime.datetime = Field(..., description="Last update timestamp")
 

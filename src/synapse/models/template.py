@@ -66,7 +66,7 @@ class TemplateReview(Base):
     """
 
     __tablename__ = "template_reviews"
-    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -78,6 +78,12 @@ class TemplateReview(Base):
     user_id = Column(
         UUID(as_uuid=True),
         ForeignKey("synapscale_db.users.id"),
+        nullable=False,
+        index=True,
+    )
+    tenant_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("synapscale_db.tenants.id"),
         nullable=False,
         index=True,
     )
@@ -108,14 +114,8 @@ class TemplateReview(Base):
     )
 
     # Relacionamentos
-    template = relationship("WorkflowTemplate", back_populates="reviews")
-    user = relationship("User", back_populates="template_reviews")
-    tenant_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.tenants.id"),
-        nullable=False,
-        index=True,
-    )
+    template = relationship("synapse.models.workflow_template.WorkflowTemplate", back_populates="reviews")
+    user = relationship("synapse.models.user.User", back_populates="template_reviews")
     tenant = relationship(
         "synapse.models.tenant.Tenant",
         back_populates="template_reviews"
@@ -131,7 +131,7 @@ class TemplateDownload(Base):
     """
 
     __tablename__ = "template_downloads"
-    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -167,8 +167,8 @@ class TemplateDownload(Base):
     )
 
     # Relacionamentos
-    template = relationship("WorkflowTemplate", back_populates="downloads")
-    user = relationship("User", back_populates="template_downloads")
+    template = relationship("synapse.models.workflow_template.WorkflowTemplate", back_populates="downloads")
+    user = relationship("synapse.models.user.User", back_populates="template_downloads")
     tenant = relationship(
         "synapse.models.tenant.Tenant",
         back_populates="template_downloads"
@@ -184,7 +184,7 @@ class TemplateFavorite(Base):
     """
 
     __tablename__ = "template_favorites"
-    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -213,8 +213,8 @@ class TemplateFavorite(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relacionamentos
-    template = relationship("WorkflowTemplate", back_populates="favorites")
-    user = relationship("User", back_populates="favorite_templates")
+    template = relationship("synapse.models.workflow_template.WorkflowTemplate", back_populates="favorites")
+    user = relationship("synapse.models.user.User", back_populates="favorite_templates")
     tenant = relationship(
         "synapse.models.tenant.Tenant",
         back_populates="template_favorites"
@@ -231,7 +231,7 @@ class TemplateCollection(Base):
     """
 
     __tablename__ = "template_collections"
-    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -277,7 +277,7 @@ class TemplateCollection(Base):
     )
 
     # Relacionamentos
-    creator = relationship("User", back_populates="template_collections")
+    creator = relationship("synapse.models.user.User", back_populates="template_collections")
     tenant = relationship("synapse.models.tenant.Tenant", back_populates="template_collections")
 
     def __repr__(self):
@@ -291,7 +291,7 @@ class TemplateUsage(Base):
     """
 
     __tablename__ = "template_usage"
-    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(Integer, primary_key=True, index=True)
@@ -325,8 +325,8 @@ class TemplateUsage(Base):
     used_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     # Relacionamentos
-    template = relationship("WorkflowTemplate")
-    user = relationship("User", back_populates="template_usage")
+    template = relationship("synapse.models.workflow_template.WorkflowTemplate")
+    user = relationship("synapse.models.user.User", back_populates="template_usage")
     tenant_id = Column(
         UUID(as_uuid=True),
         ForeignKey("synapscale_db.tenants.id"),
@@ -337,7 +337,7 @@ class TemplateUsage(Base):
         "synapse.models.tenant.Tenant",
         back_populates="template_usage"
     )
-    workflow = relationship("Workflow")
+    workflow = relationship("synapse.models.workflow.Workflow")
 
     def __repr__(self):
         return f"<TemplateUsage(id={self.id}, template_id={self.template_id}, usage_type='{self.usage_type}')>"

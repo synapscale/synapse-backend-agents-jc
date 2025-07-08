@@ -9,6 +9,7 @@ from typing import List, Optional
 import uuid
 
 from synapse.api.deps import get_current_active_user, get_async_db
+from synapse.models.user import User
 from synapse.schemas.plan import (
     PlanResponse,
     PlanCreate,
@@ -26,12 +27,7 @@ async def create_plan(
     current_user: User = Depends(get_current_active_user),
 ):
     """Create a new plan."""
-    # For global plans, tenant_id should be None
-    if plan_in.tenant_id and plan_in.tenant_id != current_user.tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Cannot create plan for another tenant.",
-        )
+    # Plans are global system configuration, no tenant restriction needed
 
     db_plan = Plan(**plan_in.model_dump())
     db.add(db_plan)
@@ -47,7 +43,7 @@ async def get_plan(
 ):
     """Get a specific plan by its ID."""
     result = await db.execute(
-        select(Plan).where(Plan.id == plan_id, or_(Plan.tenant_id == current_user.tenant_id, Plan.tenant_id == None))
+        select(Plan).where(Plan.id == plan_id)
     )
     plan = result.scalar_one_or_none()
 
@@ -65,8 +61,8 @@ async def list_plans(
     size: int = Query(20, ge=1, le=100, description="Page size"),
     search: Optional[str] = Query(None, description="Search term for name or description"),
 ):
-    """List all plans for the current tenant (including global plans)."""
-    query = select(Plan).where(or_(Plan.tenant_id == current_user.tenant_id, Plan.tenant_id == None))
+    """List all plans (global system configuration)."""
+    query = select(Plan)
     
     if search:
         search_term = f"%{search}%"
@@ -103,7 +99,7 @@ async def update_plan(
 ):
     """Update an existing plan."""
     result = await db.execute(
-        select(Plan).where(Plan.id == plan_id, or_(Plan.tenant_id == current_user.tenant_id, Plan.tenant_id == None))
+        select(Plan).where(Plan.id == plan_id)
     )
     db_plan = result.scalar_one_or_none()
 
@@ -128,7 +124,7 @@ async def delete_plan(
 ):
     """Delete a plan."""
     result = await db.execute(
-        select(Plan).where(Plan.id == plan_id, or_(Plan.tenant_id == current_user.tenant_id, Plan.tenant_id == None))
+        select(Plan).where(Plan.id == plan_id)
     )
     db_plan = result.scalar_one_or_none()
 

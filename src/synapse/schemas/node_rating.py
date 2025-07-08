@@ -4,7 +4,7 @@ Schemas for NodeRating - a model for user ratings of workflow nodes.
 
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, computed_field
 from uuid import UUID
 from enum import Enum
 
@@ -44,11 +44,31 @@ class NodeRatingResponse(NodeRatingBase):
     created_at: datetime = Field(..., description="Timestamp of when the rating was created.")
     updated_at: datetime = Field(..., description="Timestamp of the last update.")
     
-    # Computed fields
-    rating_display: Optional[str] = Field(None, description="Visual representation of the rating (e.g., '⭐⭐⭐⭐⭐').")
-    is_positive: Optional[bool] = Field(None, description="Indicates if the rating is considered positive (4-5 stars).")
-    is_negative: Optional[bool] = Field(None, description="Indicates if the rating is considered negative (1-2 stars).")
-    is_neutral: Optional[bool] = Field(None, description="Indicates if the rating is considered neutral (3 stars).")
+    # Computed fields (calculated, not stored in DB)
+    @computed_field
+    def rating_display(self) -> str:
+        """Visual representation of the rating."""
+        # Handle both enum value and int value
+        rating_val = self.rating if isinstance(self.rating, int) else self.rating.value
+        return "⭐" * rating_val
+    
+    @computed_field
+    def is_positive(self) -> bool:
+        """Indicates if the rating is considered positive (4-5 stars)."""
+        rating_val = self.rating if isinstance(self.rating, int) else self.rating.value
+        return rating_val >= 4
+    
+    @computed_field
+    def is_negative(self) -> bool:
+        """Indicates if the rating is considered negative (1-2 stars)."""
+        rating_val = self.rating if isinstance(self.rating, int) else self.rating.value
+        return rating_val <= 2
+    
+    @computed_field
+    def is_neutral(self) -> bool:
+        """Indicates if the rating is considered neutral (3 stars)."""
+        rating_val = self.rating if isinstance(self.rating, int) else self.rating.value
+        return rating_val == 3
 
 
 class NodeRatingListResponse(BaseModel):

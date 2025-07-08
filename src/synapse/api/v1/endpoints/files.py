@@ -12,9 +12,13 @@ import uuid
 import os
 import aiofiles
 import mimetypes
+import logging
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 from synapse.api.deps import get_current_active_user
+from synapse.models.user import User
 from synapse.schemas.file import (
     FileResponse,
     FileCreate,
@@ -23,7 +27,7 @@ from synapse.schemas.file import (
     FileStatus,
     ScanStatus,
 )
-from synapse.models import File as FileModel, User, Workspace
+from synapse.models import File as FileModel, User
 from synapse.database import get_async_db
 from synapse.core.config import settings
 
@@ -95,7 +99,6 @@ def validate_file(file: UploadFile) -> None:
 @router.post("/upload", response_model=FileResponse)
 async def upload_file(
     file: UploadFile = File(...),
-    workspace_id: Optional[uuid.UUID] = Query(None, description="ID do workspace"),
     description: Optional[str] = Query(None, description="Descrição do arquivo"),
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
@@ -104,27 +107,6 @@ async def upload_file(
 
     # Validar arquivo
     validate_file(file)
-
-    # Verificar workspace se especificado
-    if workspace_id:
-        workspace_result = await db.execute(
-            select(Workspace).where(
-                and_(
-                    Workspace.id == workspace_id,
-                    or_(
-                        Workspace.tenant_id == current_user.id,
-                        Workspace.is_public == True,
-                        # TODO: Verificar se é membro
-                    ),
-                )
-            )
-        )
-        workspace = workspace_result.scalar_one_or_none()
-        if not workspace:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Workspace não encontrado ou sem acesso",
-            )
 
     # Gerar nome único para o arquivo
     file_id = uuid.uuid4()
@@ -147,17 +129,17 @@ async def upload_file(
         # Criar registro no banco
         file_record = FileModel(
             id=file_id,
-            filename=file.filename or unique_filename,
-            original_filename=file.filename,
+            filename=unique_filename,
+            original_name=file.filename or unique_filename,
             file_path=str(file_path),
             file_size=file_size,
-            content_type=content_type,
+            mime_type=content_type,
+            category="document",  # Categoria padrão
             description=description,
             user_id=current_user.id,
-            workspace_id=workspace_id,
             tenant_id=current_user.tenant_id,
-            status=FileStatus.ACTIVE.value,
-            scan_status=ScanStatus.PENDING.value,
+            status="active",
+            scan_status="pending",
         )
 
         db.add(file_record)
@@ -167,22 +149,20 @@ async def upload_file(
         return FileResponse(
             id=file_record.id,
             filename=file_record.filename,
-            original_filename=file_record.original_filename,
+            original_name=file_record.original_name,
             file_size=file_record.file_size,
-            content_type=file_record.content_type,
+            mime_type=file_record.mime_type,
+            category=file_record.category,
             description=file_record.description,
             user_id=file_record.user_id,
-            workspace_id=file_record.workspace_id,
             tenant_id=file_record.tenant_id,
             status=file_record.status,
             scan_status=file_record.scan_status,
-            download_count=file_record.download_count,
+            access_count=file_record.access_count,
             is_public=file_record.is_public,
-            metadata=file_record.metadata or {},
+            tags=file_record.tags or [],
             created_at=file_record.created_at,
             updated_at=file_record.updated_at,
-            # URL de download
-            download_url=f"/api/v1/files/{file_record.id}/download",
         )
 
     except HTTPException:
@@ -201,9 +181,6 @@ async def list_files(
     current_user: User = Depends(get_current_active_user),
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
-    workspace_id: Optional[uuid.UUID] = Query(
-        None, description="Filtrar por workspace"
-    ),
     search: Optional[str] = Query(None, description="Buscar por nome ou descrição"),
     content_type: Optional[str] = Query(
         None, description="Filtrar por tipo de conteúdo"
@@ -214,7 +191,7 @@ async def list_files(
 
     # Query base
     query = select(FileModel).options(
-        selectinload(FileModel.user), selectinload(FileModel.workspace)
+        selectinload(FileModel.user)
     )
 
     conditions = []
@@ -224,9 +201,7 @@ async def list_files(
         or_(FileModel.user_id == current_user.id, FileModel.is_public == True)
     )
 
-    # Filtrar por workspace se especificado
-    if workspace_id:
-        conditions.append(FileModel.workspace_id == workspace_id)
+    # Files não estão associados a workspaces no modelo atual
 
     # Aplicar filtros adicionais
     if search:
@@ -234,19 +209,19 @@ async def list_files(
         conditions.append(
             or_(
                 FileModel.filename.ilike(search_term),
-                FileModel.original_filename.ilike(search_term),
+                FileModel.original_name.ilike(search_term),
                 FileModel.description.ilike(search_term),
             )
         )
 
     if content_type:
-        conditions.append(FileModel.content_type.ilike(f"%{content_type}%"))
+        conditions.append(FileModel.mime_type.ilike(f"%{content_type}%"))
 
     if status:
         conditions.append(FileModel.status == status.value)
     else:
         # Por padrão, só mostrar arquivos ativos
-        conditions.append(FileModel.status == FileStatus.ACTIVE.value)
+        conditions.append(FileModel.status == "active")
 
     if conditions:
         query = query.where(and_(*conditions))
@@ -272,30 +247,27 @@ async def list_files(
         FileResponse(
             id=file.id,
             filename=file.filename,
-            original_filename=file.original_filename,
+            original_name=file.original_name,
             file_size=file.file_size,
-            content_type=file.content_type,
+            mime_type=file.mime_type,
+            category=file.category,
             description=file.description,
             user_id=file.user_id,
-            workspace_id=file.workspace_id,
             tenant_id=file.tenant_id,
             status=file.status,
             scan_status=file.scan_status,
-            download_count=file.download_count,
+            access_count=file.access_count,
             is_public=file.is_public,
-            metadata=file.metadata or {},
+            tags=file.tags or {},
+            last_accessed_at=file.last_accessed_at,
             created_at=file.created_at,
             updated_at=file.updated_at,
-            download_url=f"/api/v1/files/{file.id}/download",
-            # Dados relacionados
-            user_name=file.user.full_name if file.user else None,
-            workspace_name=file.workspace.name if file.workspace else None,
         )
         for file in files
     ]
 
     return FileListResponse(
-        items=file_responses, total=total, page=page, pages=pages, size=size
+        items=file_responses, total=total
     )
 
 
@@ -309,7 +281,7 @@ async def get_file(
 
     result = await db.execute(
         select(FileModel)
-        .options(selectinload(FileModel.user), selectinload(FileModel.workspace))
+        .options(selectinload(FileModel.user))
         .where(FileModel.id == file_id)
     )
     file = result.scalar_one_or_none()

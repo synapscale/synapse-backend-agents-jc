@@ -9,11 +9,12 @@ from typing import List, Optional
 import uuid
 
 from synapse.api.deps import get_current_active_user, get_async_db
+from synapse.models.user import User
 from synapse.schemas.node_execution import (
     NodeExecutionResponse,
     NodeExecutionCreate,
     NodeExecutionUpdate,
-    NodeExecutionListResponse
+    NodeExecutionList
 )
 from synapse.models import NodeExecution
 
@@ -55,7 +56,7 @@ async def get_node_execution(
         )
     return execution
 
-@router.get("/", response_model=NodeExecutionListResponse)
+@router.get("/", response_model=NodeExecutionList)
 async def list_node_executions(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),

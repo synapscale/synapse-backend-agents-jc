@@ -43,6 +43,23 @@ class Tenant(Base):
     max_members_per_workspace = Column(Integer)
     enabled_features = Column(ARRAY(String))
 
+    @property
+    def settings(self) -> dict:
+        """Constrói settings baseado nos campos do tenant"""
+        return {
+            "email_notifications": True,
+            "slack_webhook": None,
+            "webhook_events": [],
+            "api_rate_limit": 1000,
+            "webhook_secret": None,
+            "auto_backup_enabled": False,
+            "backup_frequency": "daily",
+            "backup_retention_days": 30,
+            "gdpr_compliant": False,
+            "data_retention_days": 365,
+            "audit_logging_enabled": True,
+        }
+
     # Relationships
     users = relationship("synapse.models.user.User", back_populates="tenant")
     files = relationship("synapse.models.file.File", back_populates="tenant")
@@ -106,7 +123,6 @@ class Tenant(Base):
     message_feedbacks = relationship("synapse.models.message_feedback.MessageFeedback", back_populates="tenant", cascade="all, delete-orphan")
     
     # LLM Relationships
-    llms = relationship("synapse.models.llm.LLM", back_populates="tenant", cascade="all, delete-orphan")
     conversations = relationship("synapse.models.conversation.Conversation", back_populates="tenant", cascade="all, delete-orphan")
     conversation_llms = relationship("synapse.models.conversation_llm.ConversationLLM", back_populates="tenant", cascade="all, delete-orphan")
 

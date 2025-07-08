@@ -11,6 +11,7 @@ import uuid
 import secrets
 
 from synapse.api.deps import get_current_active_user, get_db, get_current_superuser
+from synapse.models.user import User
 from synapse.schemas.tenant import (
     TenantCreate,
     TenantUpdate,
@@ -57,19 +58,19 @@ async def get_my_tenant(
         domain=tenant.domain,
         status=tenant.status,
         plan_id=tenant.plan_id,
-        settings=tenant.settings or {},
         theme=tenant.theme,
         default_language=tenant.default_language,
         timezone=tenant.timezone,
-        logo_url=tenant.logo_url,
-        favicon_url=tenant.favicon_url,
-        custom_css=tenant.custom_css,
-        metadata=tenant.metadata or {},
+        mfa_required=tenant.mfa_required,
+        session_timeout=tenant.session_timeout,
+        ip_whitelist=tenant.ip_whitelist or [],
+        max_storage_mb=tenant.max_storage_mb,
+        max_workspaces=tenant.max_workspaces,
+        max_api_calls_per_day=tenant.max_api_calls_per_day,
+        max_members_per_workspace=tenant.max_members_per_workspace,
+        enabled_features=tenant.enabled_features or [],
         created_at=tenant.created_at,
         updated_at=tenant.updated_at,
-        # Dados do plano
-        plan_name=tenant.plan.name if tenant.plan else None,
-        plan_type=tenant.plan.type if tenant.plan else None,
     )
 
 
@@ -135,24 +136,25 @@ async def list_tenants(
             domain=tenant.domain,
             status=tenant.status,
             plan_id=tenant.plan_id,
-            settings=tenant.settings or {},
             theme=tenant.theme,
             default_language=tenant.default_language,
             timezone=tenant.timezone,
-            logo_url=tenant.logo_url,
-            favicon_url=tenant.favicon_url,
-            custom_css=tenant.custom_css,
-            metadata=tenant.metadata or {},
+            mfa_required=tenant.mfa_required,
+            session_timeout=tenant.session_timeout,
+            ip_whitelist=tenant.ip_whitelist or [],
+            max_storage_mb=tenant.max_storage_mb,
+            max_workspaces=tenant.max_workspaces,
+            max_api_calls_per_day=tenant.max_api_calls_per_day,
+            max_members_per_workspace=tenant.max_members_per_workspace,
+            enabled_features=tenant.enabled_features or [],
             created_at=tenant.created_at,
             updated_at=tenant.updated_at,
-            plan_name=tenant.plan.name if tenant.plan else None,
-            plan_type=tenant.plan.type if tenant.plan else None,
         )
         for tenant in tenants
     ]
 
     return TenantListResponse(
-        items=tenant_responses, total=total, page=page, pages=pages, size=size
+        tenants=tenant_responses, total=total, page=page, pages=pages, size=size
     )
 
 
@@ -213,10 +215,8 @@ async def create_tenant(
         theme=tenant_data.theme,
         default_language=tenant_data.default_language,
         timezone=tenant_data.timezone,
-        logo_url=tenant_data.logo_url,
-        favicon_url=tenant_data.favicon_url,
-        custom_css=tenant_data.custom_css,
-        metadata=tenant_data.metadata,
+
+
         status=TenantStatus.ACTIVE.value,
     )
 
@@ -231,14 +231,17 @@ async def create_tenant(
         domain=tenant.domain,
         status=tenant.status,
         plan_id=tenant.plan_id,
-        settings=tenant.settings or {},
         theme=tenant.theme,
         default_language=tenant.default_language,
         timezone=tenant.timezone,
-        logo_url=tenant.logo_url,
-        favicon_url=tenant.favicon_url,
-        custom_css=tenant.custom_css,
-        metadata=tenant.metadata or {},
+        mfa_required=tenant.mfa_required,
+        session_timeout=tenant.session_timeout,
+        ip_whitelist=tenant.ip_whitelist or [],
+        max_storage_mb=tenant.max_storage_mb,
+        max_workspaces=tenant.max_workspaces,
+        max_api_calls_per_day=tenant.max_api_calls_per_day,
+        max_members_per_workspace=tenant.max_members_per_workspace,
+        enabled_features=tenant.enabled_features or [],
         created_at=tenant.created_at,
         updated_at=tenant.updated_at,
     )
@@ -269,18 +272,20 @@ async def get_tenant(
         domain=tenant.domain,
         status=tenant.status,
         plan_id=tenant.plan_id,
-        settings=tenant.settings or {},
+
         theme=tenant.theme,
         default_language=tenant.default_language,
         timezone=tenant.timezone,
-        logo_url=tenant.logo_url,
-        favicon_url=tenant.favicon_url,
-        custom_css=tenant.custom_css,
-        metadata=tenant.metadata or {},
+        mfa_required=tenant.mfa_required,
+        session_timeout=tenant.session_timeout,
+        ip_whitelist=tenant.ip_whitelist or [],
+        max_storage_mb=tenant.max_storage_mb,
+        max_workspaces=tenant.max_workspaces,
+        max_api_calls_per_day=tenant.max_api_calls_per_day,
+        max_members_per_workspace=tenant.max_members_per_workspace,
+        enabled_features=tenant.enabled_features or [],
         created_at=tenant.created_at,
         updated_at=tenant.updated_at,
-        plan_name=tenant.plan.name if tenant.plan else None,
-        plan_type=tenant.plan.type if tenant.plan else None,
     )
 
 
@@ -350,14 +355,17 @@ async def update_tenant(
         domain=tenant.domain,
         status=tenant.status,
         plan_id=tenant.plan_id,
-        settings=tenant.settings or {},
         theme=tenant.theme,
         default_language=tenant.default_language,
         timezone=tenant.timezone,
-        logo_url=tenant.logo_url,
-        favicon_url=tenant.favicon_url,
-        custom_css=tenant.custom_css,
-        metadata=tenant.metadata or {},
+        mfa_required=tenant.mfa_required,
+        session_timeout=tenant.session_timeout,
+        ip_whitelist=tenant.ip_whitelist or [],
+        max_storage_mb=tenant.max_storage_mb,
+        max_workspaces=tenant.max_workspaces,
+        max_api_calls_per_day=tenant.max_api_calls_per_day,
+        max_members_per_workspace=tenant.max_members_per_workspace,
+        enabled_features=tenant.enabled_features or [],
         created_at=tenant.created_at,
         updated_at=tenant.updated_at,
     )

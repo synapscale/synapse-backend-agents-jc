@@ -10,6 +10,7 @@ from typing import List, Optional
 import uuid
 
 from synapse.api.deps import get_current_active_user, get_db, get_current_superuser
+from synapse.models.user import User
 from synapse.schemas.llm import (
     LLMResponse,
     LLMCreate,
@@ -46,8 +47,8 @@ async def list_llms(
     query = select(LLM)
     conditions = []
 
-    # Filtrar apenas modelos acessíveis ao usuário
-    conditions.append(LLM.tenant_id == current_user.tenant_id)
+    # Apenas mostrar LLMs ativos
+    conditions.append(LLM.is_active == True)
 
     # Aplicar filtros
     if search:
@@ -56,7 +57,7 @@ async def list_llms(
             or_(
                 LLM.name.ilike(search_term),
                 LLM.provider.ilike(search_term),
-                LLM.model_version.ilike(search_term),
+                LLM.model_version.ilike(search_term) if LLM.model_version.is_not(None) else False,
             )
         )
 
@@ -66,8 +67,7 @@ async def list_llms(
     if is_active is not None:
         conditions.append(LLM.is_active == is_active)
 
-    if is_public is not None:
-        conditions.append(LLM.is_active == is_public)
+    # is_public parameter ignored - LLMs are always global
 
     if conditions:
         query = query.where(and_(*conditions))
@@ -94,17 +94,20 @@ async def list_llms(
             id=llm.id,
             name=llm.name,
             provider=llm.provider,
-            model_id=llm.model_id,
-            description=llm.description,
-            max_tokens=llm.max_tokens,
-            temperature=llm.temperature,
-            top_p=llm.top_p,
-            frequency_penalty=llm.frequency_penalty,
-            presence_penalty=llm.presence_penalty,
-            cost_per_1k_input_tokens=llm.cost_per_1k_input_tokens,
-            cost_per_1k_output_tokens=llm.cost_per_1k_output_tokens,
+            model_version=llm.model_version,
+            cost_per_token_input=llm.cost_per_token_input,
+            cost_per_token_output=llm.cost_per_token_output,
+            max_tokens_supported=llm.max_tokens_supported,
+            supports_function_calling=llm.supports_function_calling,
+            supports_vision=llm.supports_vision,
+            supports_streaming=llm.supports_streaming,
+            context_window=llm.context_window,
             is_active=llm.is_active,
-            is_public=llm.is_active,
+            llm_metadata=llm.llm_metadata,
+            status=llm.status,
+            health_status=llm.health_status,
+            response_time_avg_ms=llm.response_time_avg_ms,
+            availability_percentage=llm.availability_percentage,
             created_at=llm.created_at,
             updated_at=llm.updated_at,
         )
@@ -112,7 +115,12 @@ async def list_llms(
     ]
 
     return LLMListResponse(
-        items=llm_responses, total=total, page=page, pages=pages, size=size
+        items=llm_responses, 
+        total=total, 
+        page=page, 
+        per_page=size,
+        has_next=page < pages,
+        has_prev=page > 1
     )
 
 
@@ -134,34 +142,37 @@ async def create_llm(
             detail="Já existe um LLM com este nome",
         )
 
-    # Verificar se model_id é único para o provedor
-    existing_model = await db.execute(
-        select(LLM).where(
-            and_(LLM.provider == llm_data.provider, LLM.id == llm_data.model_id)
+    # Verificar se model_version é único para o provedor
+    if llm_data.model_version:
+        existing_model = await db.execute(
+            select(LLM).where(
+                and_(LLM.provider == llm_data.provider, LLM.model_version == llm_data.model_version)
+            )
         )
-    )
-    if existing_model.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Já existe um LLM com este model_id para este provedor",
-        )
+        if existing_model.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Já existe um LLM com esta model_version para este provedor",
+            )
 
     # Criar LLM
     llm = LLM(
         name=llm_data.name,
         provider=llm_data.provider,
-        model_id=llm_data.model_id,
-        description=llm_data.description,
-        max_tokens=llm_data.max_tokens,
-        temperature=llm_data.temperature,
-        top_p=llm_data.top_p,
-        frequency_penalty=llm_data.frequency_penalty,
-        presence_penalty=llm_data.presence_penalty,
-        cost_per_1k_input_tokens=llm_data.cost_per_1k_input_tokens,
-        cost_per_1k_output_tokens=llm_data.cost_per_1k_output_tokens,
+        model_version=llm_data.model_version,
+        cost_per_token_input=llm_data.cost_per_token_input,
+        cost_per_token_output=llm_data.cost_per_token_output,
+        max_tokens_supported=llm_data.max_tokens_supported,
+        supports_function_calling=llm_data.supports_function_calling,
+        supports_vision=llm_data.supports_vision,
+        supports_streaming=llm_data.supports_streaming,
+        context_window=llm_data.context_window,
         is_active=llm_data.is_active,
-        is_public=llm_data.is_public,
-        user_id=current_user.id,
+        llm_metadata=llm_data.llm_metadata,
+        status=llm_data.status,
+        health_status=llm_data.health_status,
+        response_time_avg_ms=llm_data.response_time_avg_ms,
+        availability_percentage=llm_data.availability_percentage,
     )
 
     db.add(llm)
@@ -172,17 +183,20 @@ async def create_llm(
         id=llm.id,
         name=llm.name,
         provider=llm.provider,
-        model_id=llm.model_id,
-        description=llm.description,
-        max_tokens=llm.max_tokens,
-        temperature=llm.temperature,
-        top_p=llm.top_p,
-        frequency_penalty=llm.frequency_penalty,
-        presence_penalty=llm.presence_penalty,
-        cost_per_1k_input_tokens=llm.cost_per_1k_input_tokens,
-        cost_per_1k_output_tokens=llm.cost_per_1k_output_tokens,
+        model_version=llm.model_version,
+        cost_per_token_input=llm.cost_per_token_input,
+        cost_per_token_output=llm.cost_per_token_output,
+        max_tokens_supported=llm.max_tokens_supported,
+        supports_function_calling=llm.supports_function_calling,
+        supports_vision=llm.supports_vision,
+        supports_streaming=llm.supports_streaming,
+        context_window=llm.context_window,
         is_active=llm.is_active,
-        is_public=llm.is_active,
+        llm_metadata=llm.llm_metadata,
+        status=llm.status,
+        health_status=llm.health_status,
+        response_time_avg_ms=llm.response_time_avg_ms,
+        availability_percentage=llm.availability_percentage,
         created_at=llm.created_at,
         updated_at=llm.updated_at,
     )
@@ -204,32 +218,31 @@ async def get_llm(
             status_code=status.HTTP_404_NOT_FOUND, detail="LLM não encontrado"
         )
 
-    # Verificar acesso
-    if (
-        not llm.is_active
-        and llm.user_id != current_user.id
-        and not current_user.is_superuser
-    ):
+    # Verificar se LLM está ativo
+    if not llm.is_active and not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Não autorizado a acessar este LLM",
+            detail="LLM não está ativo",
         )
 
     return LLMResponse(
         id=llm.id,
         name=llm.name,
         provider=llm.provider,
-        model_id=llm.model_id,
-        description=llm.description,
-        max_tokens=llm.max_tokens,
-        temperature=llm.temperature,
-        top_p=llm.top_p,
-        frequency_penalty=llm.frequency_penalty,
-        presence_penalty=llm.presence_penalty,
-        cost_per_1k_input_tokens=llm.cost_per_1k_input_tokens,
-        cost_per_1k_output_tokens=llm.cost_per_1k_output_tokens,
+        model_version=llm.model_version,
+        cost_per_token_input=llm.cost_per_token_input,
+        cost_per_token_output=llm.cost_per_token_output,
+        max_tokens_supported=llm.max_tokens_supported,
+        supports_function_calling=llm.supports_function_calling,
+        supports_vision=llm.supports_vision,
+        supports_streaming=llm.supports_streaming,
+        context_window=llm.context_window,
         is_active=llm.is_active,
-        is_public=llm.is_active,
+        llm_metadata=llm.llm_metadata,
+        status=llm.status,
+        health_status=llm.health_status,
+        response_time_avg_ms=llm.response_time_avg_ms,
+        availability_percentage=llm.availability_percentage,
         created_at=llm.created_at,
         updated_at=llm.updated_at,
     )
@@ -275,17 +288,20 @@ async def update_llm(
         id=llm.id,
         name=llm.name,
         provider=llm.provider,
-        model_id=llm.model_id,
-        description=llm.description,
-        max_tokens=llm.max_tokens,
-        temperature=llm.temperature,
-        top_p=llm.top_p,
-        frequency_penalty=llm.frequency_penalty,
-        presence_penalty=llm.presence_penalty,
-        cost_per_1k_input_tokens=llm.cost_per_1k_input_tokens,
-        cost_per_1k_output_tokens=llm.cost_per_1k_output_tokens,
+        model_version=llm.model_version,
+        cost_per_token_input=llm.cost_per_token_input,
+        cost_per_token_output=llm.cost_per_token_output,
+        max_tokens_supported=llm.max_tokens_supported,
+        supports_function_calling=llm.supports_function_calling,
+        supports_vision=llm.supports_vision,
+        supports_streaming=llm.supports_streaming,
+        context_window=llm.context_window,
         is_active=llm.is_active,
-        is_public=llm.is_active,
+        llm_metadata=llm.llm_metadata,
+        status=llm.status,
+        health_status=llm.health_status,
+        response_time_avg_ms=llm.response_time_avg_ms,
+        availability_percentage=llm.availability_percentage,
         created_at=llm.created_at,
         updated_at=llm.updated_at,
     )
@@ -343,20 +359,17 @@ async def list_llm_conversations(
 ):
     """Listar conversas do LLM"""
 
-    # Verificar se LLM existe e é acessível
+    # Verificar se LLM existe
     llm_result = await db.execute(
         select(LLM).where(
-            and_(
-                LLM.id == llm_id,
-                LLM.tenant_id == current_user.tenant_id,
-            )
+            LLM.id == llm_id
         )
     )
     llm = llm_result.scalar_one_or_none()
     if not llm:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="LLM não encontrado ou sem acesso",
+            detail="LLM não encontrado",
         )
 
     # Query conversas
@@ -421,7 +434,12 @@ async def list_llm_conversations(
     ]
 
     return LLMConversationListResponse(
-        items=conversation_responses, total=total, page=page, pages=pages, size=size
+        items=conversation_responses, 
+        total=total, 
+        page=page, 
+        per_page=size,
+        has_next=page < pages,
+        has_prev=page > 1
     )
 
 
@@ -434,20 +452,17 @@ async def create_llm_conversation(
 ):
     """Criar nova conversa com LLM"""
 
-    # Verificar se LLM existe e é acessível
+    # Verificar se LLM existe
     llm_result = await db.execute(
         select(LLM).where(
-            and_(
-                LLM.id == llm_id,
-                LLM.tenant_id == current_user.tenant_id,
-            )
+            LLM.id == llm_id
         )
     )
     llm = llm_result.scalar_one_or_none()
     if not llm:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="LLM não encontrado ou sem acesso",
+            detail="LLM não encontrado",
         )
 
     # Verificar se workspace existe se especificado
@@ -457,7 +472,7 @@ async def create_llm_conversation(
                 and_(
                     Workspace.id == conversation_data.workspace_id,
                     or_(
-                        Workspace.tenant_id == current_user.id,
+                        Workspace.tenant_id == current_user.tenant_id,
                         Workspace.is_public == True,
                         # TODO: Verificar se é membro
                     ),
@@ -577,7 +592,12 @@ async def list_conversation_messages(
     ]
 
     return LLMMessageListResponse(
-        items=message_responses, total=total, page=page, pages=pages, size=size
+        items=message_responses, 
+        total=total, 
+        page=page, 
+        per_page=size,
+        has_next=page < pages,
+        has_prev=page > 1
     )
 
 

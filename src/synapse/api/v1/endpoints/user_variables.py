@@ -1,381 +1,293 @@
 """
-User Variables endpoints - Simplified Implementation
-
-This module handles basic CRUD operations for user variables.
+Endpoints for managing User Variables.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, func
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-from uuid import UUID
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_, or_
+from typing import List, Optional
+import uuid
 
-from synapse.api.deps import get_current_active_user, get_db
-from synapse.models.user_variable import UserVariable
+from synapse.api.deps import get_current_active_user, get_async_db
 from synapse.models.user import User
-from synapse.schemas.user_features import (
+from synapse.models import UserVariable, User
+from synapse.schemas.user_variable import (
     UserVariableCreate,
     UserVariableUpdate,
-    UserVariableResponse
+    UserVariableResponse,
+    UserVariableListResponse
 )
-from synapse.database import get_async_db
-# HTTPException already imported from fastapi
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-# Temporary encryption functions until proper service is implemented
+# Temporary encryption functions (as per existing code comment)
+# These should ideally be moved to a dedicated service layer.
 def encrypt_value(value: str) -> str:
     """Temporary encryption - implement proper encryption later"""
-    # For now, just return the value as is
-    # TODO: Implement proper encryption
     return value
 
 def decrypt_value(value: str) -> str:
     """Temporary decryption - implement proper decryption later"""
-    # For now, just return the value as is
-    # TODO: Implement proper decryption
     return value
 
-@router.get("/", response_model=List[UserVariableResponse])
+
+@router.post("/", response_model=UserVariableResponse, status_code=status.HTTP_201_CREATED)
+async def create_user_variable(
+    variable_in: UserVariableCreate,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Create a new user variable."""
+    # Ensure the variable belongs to the current user's tenant
+    if variable_in.tenant_id and variable_in.tenant_id != current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot create variable for another tenant.",
+        )
+    if not variable_in.tenant_id:
+        variable_in.tenant_id = current_user.tenant_id
+    
+    # Ensure the variable belongs to the current user
+    if variable_in.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot create variable for another user.",
+        )
+
+    # Check if key already exists for this user
+    existing_variable = await db.execute(
+        select(UserVariable).where(
+            UserVariable.user_id == current_user.id,
+            UserVariable.key == variable_in.key,
+            UserVariable.is_active == True
+        )
+    )
+    if existing_variable.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Variable with key '{variable_in.key}' already exists for this user."
+        )
+    
+    # Handle encryption if needed
+    stored_value = variable_in.value
+    if variable_in.is_encrypted:
+        stored_value = encrypt_value(variable_in.value)
+
+    db_variable = UserVariable(
+        user_id=current_user.id,
+        tenant_id=variable_in.tenant_id,
+        key=variable_in.key,
+        value=stored_value,
+        description=variable_in.description,
+        category=variable_in.category or "general",
+        is_secret=variable_in.is_secret,
+        is_encrypted=variable_in.is_encrypted,
+        is_active=variable_in.is_active,
+    )
+    
+    db.add(db_variable)
+    await db.commit()
+    await db.refresh(db_variable)
+    
+    # Return response with decrypted value for display if not secret
+    if db_variable.is_secret:
+        db_variable.value = "***HIDDEN***"
+    elif db_variable.is_encrypted:
+        db_variable.value = decrypt_value(db_variable.value)
+
+    return db_variable
+
+
+@router.get("/{variable_id}", response_model=UserVariableResponse)
+async def get_user_variable(
+    variable_id: uuid.UUID,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Get a specific user variable by its ID."""
+    result = await db.execute(
+        select(UserVariable).where(
+            UserVariable.id == variable_id,
+            UserVariable.user_id == current_user.id,
+            UserVariable.tenant_id == current_user.tenant_id
+        )
+    )
+    variable = result.scalar_one_or_none()
+
+    if not variable:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User variable not found"
+        )
+    
+    # Return with decrypted value for display if not secret
+    if variable.is_secret:
+        variable.value = "***HIDDEN***"
+    elif variable.is_encrypted:
+        variable.value = decrypt_value(variable.value)
+
+    return variable
+
+
+@router.get("/", response_model=UserVariableListResponse)
 async def list_user_variables(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_active_user),
     category: Optional[str] = Query(None, description="Filter by category"),
     search: Optional[str] = Query(None, description="Search in key or description"),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     page: int = Query(1, ge=1, description="Page number"),
-    size: int = Query(50, ge=1, le=100, description="Page size"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_async_db)
+    size: int = Query(20, ge=1, le=100, description="Page size"),
 ):
-    """Listar variáveis do usuário com filtros e paginação"""
-    try:
-        # Build query
-        query = db.query(UserVariable).filter(
-            UserVariable.user_id == current_user.id,
-            UserVariable.is_active == True
-        )
-        
-        # Apply filters
-        if category:
-            query = query.filter(UserVariable.category == category)
-        
-        if search:
-            search_term = f"%{search}%"
-            query = query.filter(
-                or_(
-                    UserVariable.key.ilike(search_term),
-                    UserVariable.description.ilike(search_term)
-                )
-            )
-        
-        if is_active is not None:
-            query = query.filter(UserVariable.is_active == is_active)
-        
-        # Pagination
-        total = query.count()
-        offset = (page - 1) * size
-        variables = query.offset(offset).limit(size).all()
-        
-        # Convert to response model
-        response_variables = []
-        for var in variables:
-            var_dict = {
-                "id": var.id,
-                "key": var.key,
-                "value": decrypt_value(var.value) if var.is_encrypted else var.value,
-                "user_id": var.user_id,
-                "description": var.description,
-                "category": var.category,
-                "is_secret": var.is_secret,
-                "is_encrypted": var.is_encrypted,
-                "is_active": var.is_active,
-                "tenant_id": var.tenant_id,
-                "created_at": var.created_at,
-                "updated_at": var.updated_at
-            }
-            response_variables.append(UserVariableResponse(**var_dict))
-        
-        return response_variables
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao listar variáveis do usuário: {str(e)}", extra={"error_type": type(e).__name__})
-        raise
+    """List all user variables for the current user and tenant."""
+    query = select(UserVariable).where(
+        UserVariable.user_id == current_user.id,
+        UserVariable.tenant_id == current_user.tenant_id
+    )
 
-@router.post("/", response_model=UserVariableResponse)
-async def create_user_variable(
-    variable_data: UserVariableCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_async_db)
-):
-    """Criar nova variável do usuário"""
-    try:
-        # Check if key already exists for this user
-        existing = db.query(UserVariable).filter(
-            and_(
-                UserVariable.user_id == current_user.id,
-                UserVariable.key == variable_data.key,
-                UserVariable.is_active == True
+    if category:
+        query = query.where(UserVariable.category == category)
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.where(
+            or_(
+                UserVariable.key.ilike(search_term),
+                UserVariable.description.ilike(search_term)
             )
-        ).first()
-        
-        if existing:
-            raise HTTPException(
-                status_code=409,
-                message="Chave já existe",
-                details=f"A chave '{variable_data.key}' já existe para este usuário"
-            )
-        
-        # Encrypt value if needed
-        stored_value = variable_data.value
-        if variable_data.is_encrypted:
-            stored_value = encrypt_value(variable_data.value)
-        
-        # Create variable
-        new_variable = UserVariable(
-            user_id=current_user.id,
-            key=variable_data.key,
-            value=stored_value,
-            description=variable_data.description,
-            category=variable_data.category or "general",
-            is_secret=variable_data.is_secret or False,
-            is_encrypted=variable_data.is_encrypted or False,
-            is_active=True,
-            tenant_id=variable_data.tenant_id or current_user.tenant_id
         )
-        
-        db.add(new_variable)
-        db.commit()
-        db.refresh(new_variable)
-        
-        # Return response with decrypted value for display
-        response_dict = {
-            "id": new_variable.id,
-            "key": new_variable.key,
-            "value": variable_data.value,  # Return original unencrypted value
-            "user_id": new_variable.user_id,
-            "description": new_variable.description,
-            "category": new_variable.category,
-            "is_secret": new_variable.is_secret,
-            "is_encrypted": new_variable.is_encrypted,
-            "is_active": new_variable.is_active,
-            "tenant_id": new_variable.tenant_id,
-            "created_at": new_variable.created_at,
-            "updated_at": new_variable.updated_at
-        }
-        
-        return UserVariableResponse(**response_dict)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao criar variável: {str(e)}", extra={"error_type": type(e).__name__})
-        db.rollback()
-        raise
+    
+    if is_active is not None:
+        query = query.where(UserVariable.is_active == is_active)
 
-@router.get("/{variable_id}", response_model=UserVariableResponse)
-async def get_user_variable(
-    variable_id: UUID,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_async_db)
-):
-    """Obter variável específica do usuário"""
-    try:
-        variable = db.query(UserVariable).filter(
-            and_(
-                UserVariable.id == variable_id,
-                UserVariable.user_id == current_user.id,
-                UserVariable.is_active == True
-            )
-        ).first()
-        
-        if not variable:
-            raise HTTPException(
-                status_code=404,
-                message="Variável não encontrada"
-            )
-        
-        # Return with decrypted value
-        response_dict = {
-            "id": variable.id,
-            "key": variable.key,
-            "value": decrypt_value(variable.value) if variable.is_encrypted else variable.value,
-            "user_id": variable.user_id,
-            "description": variable.description,
-            "category": variable.category,
-            "is_secret": variable.is_secret,
-            "is_encrypted": variable.is_encrypted,
-            "is_active": variable.is_active,
-            "tenant_id": variable.tenant_id,
-            "created_at": variable.created_at,
-            "updated_at": variable.updated_at
-        }
-        
-        return UserVariableResponse(**response_dict)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao buscar variável: {str(e)}", extra={"error_type": type(e).__name__})
-        raise
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar()
+
+    offset = (page - 1) * size
+    query = query.offset(offset).limit(size).order_by(UserVariable.created_at.desc())
+    result = await db.execute(query)
+    variables = result.scalars().all()
+
+    # Apply decryption/masking for response
+    for var in variables:
+        if var.is_secret:
+            var.value = "***HIDDEN***"
+        elif var.is_encrypted:
+            var.value = decrypt_value(var.value)
+
+    return {
+        "items": variables,
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": (total + size - 1) // size
+    }
+
 
 @router.put("/{variable_id}", response_model=UserVariableResponse)
 async def update_user_variable(
-    variable_id: UUID,
-    variable_data: UserVariableUpdate,
+    variable_id: uuid.UUID,
+    variable_in: UserVariableUpdate,
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_async_db)
 ):
-    """Atualizar variável do usuário"""
-    try:
-        variable = db.query(UserVariable).filter(
-            and_(
-                UserVariable.id == variable_id,
-                UserVariable.user_id == current_user.id,
-                UserVariable.is_active == True
-            )
-        ).first()
-        
-        if not variable:
-            raise HTTPException(
-                status_code=404,
-                message="Variável não encontrada"
-            )
-        
-        # Update fields
-        if variable_data.value is not None:
-            if variable_data.is_encrypted or variable.is_encrypted:
-                variable.value = encrypt_value(variable_data.value)
-                variable.is_encrypted = True
-            else:
-                variable.value = variable_data.value
-                variable.is_encrypted = False
-        
-        if variable_data.description is not None:
-            variable.description = variable_data.description
-            
-        if variable_data.category is not None:
-            variable.category = variable_data.category
-            
-        if variable_data.is_secret is not None:
-            variable.is_secret = variable_data.is_secret
-            
-        if variable_data.is_encrypted is not None:
-            variable.is_encrypted = variable_data.is_encrypted
-            if variable_data.is_encrypted and variable_data.value:
-                variable.value = encrypt_value(variable_data.value)
-        
-        variable.updated_at = datetime.utcnow()
-        
-        db.commit()
-        db.refresh(variable)
-        
-        # Return response with decrypted value
-        response_dict = {
-            "id": variable.id,
-            "key": variable.key,
-            "value": decrypt_value(variable.value) if variable.is_encrypted else variable.value,
-            "user_id": variable.user_id,
-            "description": variable.description,
-            "category": variable.category,
-            "is_secret": variable.is_secret,
-            "is_encrypted": variable.is_encrypted,
-            "is_active": variable.is_active,
-            "tenant_id": variable.tenant_id,
-            "created_at": variable.created_at,
-            "updated_at": variable.updated_at
-        }
-        
-        return UserVariableResponse(**response_dict)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao atualizar variável: {str(e)}", extra={"error_type": type(e).__name__})
-        db.rollback()
-        raise
+    """Update an existing user variable."""
+    result = await db.execute(
+        select(UserVariable).where(
+            UserVariable.id == variable_id,
+            UserVariable.user_id == current_user.id,
+            UserVariable.tenant_id == current_user.tenant_id
+        )
+    )
+    db_variable = result.scalar_one_or_none()
 
-@router.delete("/{variable_id}")
+    if not db_variable:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User variable not found"
+        )
+
+    update_data = variable_in.model_dump(exclude_unset=True)
+    
+    # Handle value and encryption separately
+    if "value" in update_data:
+        new_value = update_data.pop("value")
+        if db_variable.is_encrypted or variable_in.is_encrypted:
+            db_variable.value = encrypt_value(new_value)
+            db_variable.is_encrypted = True
+        else:
+            db_variable.value = new_value
+            db_variable.is_encrypted = False
+    
+    # Update other fields
+    for field, value in update_data.items():
+        setattr(db_variable, field, value)
+
+    await db.commit()
+    await db.refresh(db_variable)
+    
+    # Return response with decrypted value for display if not secret
+    if db_variable.is_secret:
+        db_variable.value = "***HIDDEN***"
+    elif db_variable.is_encrypted:
+        db_variable.value = decrypt_value(db_variable.value)
+
+    return db_variable
+
+
+@router.delete("/{variable_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user_variable(
-    variable_id: UUID,
+    variable_id: uuid.UUID,
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_async_db)
 ):
-    """Remover variável do usuário (soft delete)"""
-    try:
-        variable = db.query(UserVariable).filter(
-            and_(
-                UserVariable.id == variable_id,
-                UserVariable.user_id == current_user.id,
-                UserVariable.is_active == True
-            )
-        ).first()
-        
-        if not variable:
-            raise HTTPException(
-                status_code=404,
-                message="Variável não encontrada"
-            )
-        
-        # Soft delete
-        variable.is_active = False
-        variable.updated_at = datetime.utcnow()
-        
-        db.commit()
-        
-        return {"message": "Variável removida com sucesso"}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao remover variável: {str(e)}", extra={"error_type": type(e).__name__})
-        db.rollback()
-        raise
+    """Delete a user variable (soft delete)."""
+    result = await db.execute(
+        select(UserVariable).where(
+            UserVariable.id == variable_id,
+            UserVariable.user_id == current_user.id,
+            UserVariable.tenant_id == current_user.tenant_id
+        )
+    )
+    db_variable = result.scalar_one_or_none()
+
+    if not db_variable:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User variable not found"
+        )
+
+    # Soft delete
+    db_variable.is_active = False
+    await db.commit()
+    return
+
 
 @router.get("/key/{key}", response_model=UserVariableResponse)
 async def get_user_variable_by_key(
     key: str,
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_async_db)
 ):
-    """Obter variável do usuário por chave"""
-    try:
-        variable = db.query(UserVariable).filter(
-            and_(
-                UserVariable.key == key,
-                UserVariable.user_id == current_user.id,
-                UserVariable.is_active == True
-            )
-        ).first()
-        
-        if not variable:
-            raise HTTPException(
-                status_code=404,
-                message="Variável não encontrada"
-            )
-        
-        # Return with decrypted value
-        response_dict = {
-            "id": variable.id,
-            "key": variable.key,
-            "value": decrypt_value(variable.value) if variable.is_encrypted else variable.value,
-            "user_id": variable.user_id,
-            "description": variable.description,
-            "category": variable.category,
-            "is_secret": variable.is_secret,
-            "is_encrypted": variable.is_encrypted,
-            "is_active": variable.is_active,
-            "tenant_id": variable.tenant_id,
-            "created_at": variable.created_at,
-            "updated_at": variable.updated_at
-        }
-        
-        return UserVariableResponse(**response_dict)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao buscar variável: {str(e)}", extra={"error_type": type(e).__name__})
-        raise
+    """Get a specific user variable by its key."""
+    result = await db.execute(
+        select(UserVariable).where(
+            UserVariable.key == key,
+            UserVariable.user_id == current_user.id,
+            UserVariable.tenant_id == current_user.tenant_id
+        )
+    )
+    variable = result.scalar_one_or_none()
+
+    if not variable:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User variable not found"
+        )
+    
+    # Return with decrypted value for display if not secret
+    if variable.is_secret:
+        variable.value = "***HIDDEN***"
+    elif variable.is_encrypted:
+        variable.value = decrypt_value(variable.value)
+
+    return variable

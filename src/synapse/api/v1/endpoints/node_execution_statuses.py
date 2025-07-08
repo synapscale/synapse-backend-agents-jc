@@ -9,11 +9,12 @@ from typing import List, Optional
 import uuid
 
 from synapse.api.deps import get_current_active_user, get_async_db
+from synapse.models.user import User
 from synapse.schemas.node_execution_status import (
     NodeExecutionStatusResponse,
     NodeExecutionStatusCreate,
     NodeExecutionStatusUpdate,
-    NodeExecutionStatusListResponse
+    NodeExecutionStatusList
 )
 from synapse.models import NodeExecutionStatus
 
@@ -51,7 +52,7 @@ async def get_node_execution_status(
         )
     return status_obj
 
-@router.get("/", response_model=NodeExecutionStatusListResponse)
+@router.get("/", response_model=NodeExecutionStatusList)
 async def list_node_execution_statuses(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
@@ -81,13 +82,12 @@ async def list_node_execution_statuses(
     result = await db.execute(query)
     statuses = result.scalars().all()
 
-    return {
-        "items": statuses,
-        "total": total,
-        "page": page,
-        "size": size,
-        "pages": (total + size - 1) // size
-    }
+    return NodeExecutionStatusList(
+        items=statuses,
+        total=total,
+        page=page,
+        size=size
+    )
 
 @router.put("/{status_id}", response_model=NodeExecutionStatusResponse)
 async def update_node_execution_status(

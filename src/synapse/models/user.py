@@ -75,11 +75,11 @@ class User(Base):
 
     # Relacionamentos de templates
     created_templates = relationship("WorkflowTemplate", back_populates="author", cascade="all, delete-orphan")
-    template_reviews = relationship("TemplateReview", back_populates="user", cascade="all, delete-orphan")
-    template_downloads = relationship("TemplateDownload", back_populates="user", cascade="all, delete-orphan")
-    favorite_templates = relationship("TemplateFavorite", back_populates="user", cascade="all, delete-orphan")
-    template_collections = relationship("TemplateCollection", back_populates="creator", cascade="all, delete-orphan")
-    template_usage = relationship("TemplateUsage", back_populates="user", cascade="all, delete-orphan")
+    template_reviews = relationship("synapse.models.template.TemplateReview", back_populates="user", cascade="all, delete-orphan")
+    template_downloads = relationship("synapse.models.template.TemplateDownload", back_populates="user", cascade="all, delete-orphan")
+    favorite_templates = relationship("synapse.models.template.TemplateFavorite", back_populates="user", cascade="all, delete-orphan")
+    template_collections = relationship("synapse.models.template.TemplateCollection", back_populates="creator", cascade="all, delete-orphan")
+    template_usage = relationship("synapse.models.template.TemplateUsage", back_populates="user", cascade="all, delete-orphan")
 
     # Relacionamentos de marketplace
     marketplace_components = relationship("synapse.models.marketplace.MarketplaceComponent", back_populates="author", cascade="all, delete-orphan")

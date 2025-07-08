@@ -73,9 +73,9 @@ class WorkflowTemplate(Base):
     tenant = relationship("Tenant", back_populates="workflow_templates")
     
     # Relacionamentos com as classes de template do arquivo template.py
-    reviews = relationship("TemplateReview", back_populates="template", cascade="all, delete-orphan")
-    downloads = relationship("TemplateDownload", back_populates="template", cascade="all, delete-orphan")
-    favorites = relationship("TemplateFavorite", back_populates="template", cascade="all, delete-orphan")
+    reviews = relationship("synapse.models.template.TemplateReview", back_populates="template", cascade="all, delete-orphan")
+    downloads = relationship("synapse.models.template.TemplateDownload", back_populates="template", cascade="all, delete-orphan")
+    favorites = relationship("synapse.models.template.TemplateFavorite", back_populates="template", cascade="all, delete-orphan")
 
     def __str__(self):
         return f"WorkflowTemplate(name={self.name}, version={self.version})"

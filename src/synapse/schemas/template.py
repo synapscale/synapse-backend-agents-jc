@@ -9,11 +9,31 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime
 import uuid
 
-from synapse.models.template import (
-    TemplateCategory,
-    TemplateStatus,
-    TemplateLicense,
-)
+# Enums definidos diretamente no schema para evitar importação circular
+from enum import Enum
+
+class TemplateStatus(str, Enum):
+    """Status do template"""
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+    UNDER_REVIEW = "under_review"
+
+class TemplateCategory(str, Enum):
+    """Categoria do template"""
+    AUTOMATION = "automation"
+    DATA_PROCESSING = "data_processing"
+    INTEGRATION = "integration"
+    ANALYTICS = "analytics"
+    CUSTOM = "custom"
+
+class TemplateLicense(str, Enum):
+    """Licença do template"""
+    MIT = "mit"
+    APACHE = "apache"
+    GPL = "gpl"
+    PROPRIETARY = "proprietary"
+    CUSTOM = "custom"
 
 
 # Schemas base para templates
@@ -26,7 +46,7 @@ class TemplateBase(BaseModel):
     short_description: str | None = Field(None, max_length=500)
     category: TemplateCategory
     tags: list[str] | None = Field(None, max_items=20)
-    license_type: TemplateLicense = TemplateLicense.FREE
+    license_type: TemplateLicense = TemplateLicense.MIT
     price: float = Field(default=0.0, ge=0.0, le=9999.99)
 
     @validator("tags")

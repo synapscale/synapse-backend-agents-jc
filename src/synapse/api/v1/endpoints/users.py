@@ -9,6 +9,7 @@ from typing import List, Optional
 import uuid
 
 from synapse.api.deps import get_current_active_user, get_db, get_current_superuser
+from synapse.models.user import User
 from synapse.schemas.user import (
     UserResponse,
     UserCreate,
@@ -39,7 +40,7 @@ async def get_user_profile(current_user: User = Depends(get_current_active_user)
         profile_image_url=current_user.profile_image_url,
         bio=current_user.bio,
         status=current_user.status,
-        metadata=current_user.metadata or {},
+        metadata=current_user.user_metadata or {},
         last_login_at=current_user.last_login_at,
         login_count=current_user.login_count,
         failed_login_attempts=current_user.failed_login_attempts,
@@ -110,7 +111,7 @@ async def update_user_profile(
         profile_image_url=current_user.profile_image_url,
         bio=current_user.bio,
         status=current_user.status,
-        metadata=current_user.metadata or {},
+        metadata=current_user.user_metadata or {},
         last_login_at=current_user.last_login_at,
         login_count=current_user.login_count,
         failed_login_attempts=current_user.failed_login_attempts,
@@ -195,7 +196,7 @@ async def list_users(
             profile_image_url=user.profile_image_url,
             bio=user.bio,
             status=user.status,
-            metadata=user.metadata or {},
+            metadata=user.user_metadata or {},
             last_login_at=user.last_login_at,
             login_count=user.login_count,
             failed_login_attempts=user.failed_login_attempts,
@@ -246,7 +247,7 @@ async def get_user(
         profile_image_url=user.profile_image_url,
         bio=user.bio,
         status=user.status,
-        metadata=user.metadata or {},
+        metadata=user.user_metadata or {},
         last_login_at=user.last_login_at,
         login_count=user.login_count,
         failed_login_attempts=user.failed_login_attempts,
@@ -324,7 +325,7 @@ async def update_user(
         profile_image_url=user.profile_image_url,
         bio=user.bio,
         status=user.status,
-        metadata=user.metadata or {},
+        metadata=user.user_metadata or {},
         last_login_at=user.last_login_at,
         login_count=user.login_count,
         failed_login_attempts=user.failed_login_attempts,

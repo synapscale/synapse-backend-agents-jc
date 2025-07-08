@@ -3,13 +3,15 @@ Nodes endpoints with comprehensive CRUD operations and database integration
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import joinedload
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, or_, func, desc, asc
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime
 
-from synapse.api.deps import get_current_active_user, get_db
+from synapse.api.deps import get_current_active_user
+from synapse.database import get_async_db
 from synapse.schemas.node import (
     NodeCreate,
     NodeUpdate,
@@ -42,7 +44,7 @@ async def list_nodes(
     sort_by: Optional[str] = Query("created_at", description="Sort field"),
     sort_order: Optional[str] = Query("desc", regex="^(asc|desc)$", description="Sort order"),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     List nodes with comprehensive filtering, search, and pagination
@@ -139,7 +141,7 @@ async def list_nodes(
 async def create_node(
     node_data: NodeCreate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Create a new node
@@ -204,7 +206,7 @@ async def create_node(
 async def get_node(
     node_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Get a specific node by ID
@@ -262,7 +264,7 @@ async def update_node(
     node_id: str,
     node_update: NodeUpdate,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Update a specific node
@@ -316,7 +318,7 @@ async def update_node(
 async def delete_node(
     node_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Delete a specific node
@@ -366,7 +368,7 @@ async def get_node_executions(
     limit: int = Query(50, ge=1, le=1000),
     status: Optional[str] = Query(None, description="Filter by execution status"),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Get execution history for a specific node
@@ -462,7 +464,7 @@ async def get_node_executions(
 async def get_node_stats(
     node_id: str,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Get execution statistics for a specific node
@@ -558,7 +560,7 @@ async def rate_node(
     node_id: str,
     rating: float = Query(..., ge=1.0, le=5.0, description="Rating from 1 to 5"),
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
 ):
     """
     Rate a node (1-5 stars)

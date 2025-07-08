@@ -1,103 +1,55 @@
 """
-Schemas para UserVariable
+Schemas for UserVariable - a model for user-defined variables.
 """
 
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field, UUID4, validator
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, ConfigDict
+from uuid import UUID
+
 
 class UserVariableBase(BaseModel):
-    """Base schema for UserVariable"""
-    key: str = Field(..., max_length=255, description="Variable key/name")
-    value: str = Field(..., description="Variable value")
-    is_secret: bool = Field(default=False, description="Whether this is a secret variable")
-    category: Optional[str] = Field(None, max_length=100, description="Variable category")
-    description: Optional[str] = Field(None, description="Variable description")
-    is_encrypted: bool = Field(default=False, description="Whether the value is encrypted")
-    is_active: bool = Field(default=True, description="Whether the variable is active")
-    tenant_id: Optional[UUID4] = None
-    
-    @validator('key')
-    def validate_key(cls, v):
-        if not v.strip():
-            raise ValueError("Key cannot be empty")
-        # Remove any potentially dangerous characters
-        if any(char in v for char in ['$', '`', ';', '|', '&']):
-            raise ValueError("Key contains invalid characters")
-        return v.strip()
-    
-    @validator('value')
-    def validate_value(cls, v):
-        if not v.strip():
-            raise ValueError("Value cannot be empty")
-        return v.strip()
-    
-    class Config:
-        from_attributes = True
+    """Base schema for UserVariable attributes."""
+    model_config = ConfigDict(from_attributes=True)
+
+    key: str = Field(..., max_length=255, description="The unique key of the user variable.")
+    value: str = Field(..., description="The value of the user variable.")
+    is_secret: bool = Field(False, description="Indicates if the variable contains sensitive information.")
+    category: Optional[str] = Field(None, max_length=100, description="A category for organizing the variable.")
+    description: Optional[str] = Field(None, description="A detailed description of the variable.")
+    is_encrypted: bool = Field(False, description="Indicates if the variable's value is encrypted.")
+    is_active: bool = Field(True, description="Whether the variable is active and can be used.")
+
 
 class UserVariableCreate(UserVariableBase):
-    """Schema for creating UserVariable"""
-    user_id: UUID4
+    """Schema for creating a new UserVariable."""
+    user_id: UUID = Field(..., description="The ID of the user who owns this variable.")
+    tenant_id: Optional[UUID] = Field(None, description="The tenant to which this variable belongs.")
 
-class UserVariableRead(UserVariableBase):
-    """Schema for reading UserVariable"""
-    id: UUID4
-    user_id: UUID4
-    created_at: datetime
-    updated_at: datetime
-    
-    # Computed fields
-    display_value: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
 
 class UserVariableUpdate(BaseModel):
-    """Schema for updating UserVariable"""
-    value: Optional[str] = None
-    is_secret: Optional[bool] = None
-    category: Optional[str] = Field(None, max_length=100)
-    description: Optional[str] = None
-    is_encrypted: Optional[bool] = None
-    is_active: Optional[bool] = None
-    
-    @validator('value')
-    def validate_value(cls, v):
-        if v is not None and not v.strip():
-            raise ValueError("Value cannot be empty")
-        return v.strip() if v else v
-    
-    class Config:
-        from_attributes = True
+    """Schema for updating an existing UserVariable. All fields are optional."""
+    value: Optional[str] = Field(None, description="New value for the variable.")
+    is_secret: Optional[bool] = Field(None, description="New secret status.")
+    category: Optional[str] = Field(None, max_length=100, description="New category.")
+    description: Optional[str] = Field(None, description="New description.")
+    is_encrypted: Optional[bool] = Field(None, description="New encryption status.")
+    is_active: Optional[bool] = Field(None, description="New active status.")
 
-class UserVariableSecure(BaseModel):
-    """Schema for secure variable operations"""
-    key: str = Field(..., max_length=255)
-    value: str = Field(..., description="Encrypted or masked value")
-    is_secret: bool = True
-    category: Optional[str] = Field(None, max_length=100)
-    description: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
 
-class UserVariableList(BaseModel):
-    """Schema for variable list with pagination"""
-    variables: list[UserVariableRead]
-    total: int
-    page: int
-    page_size: int
-    
-    class Config:
-        from_attributes = True
+class UserVariableResponse(UserVariableBase):
+    """Response schema for a UserVariable, including database-generated fields."""
+    id: UUID = Field(..., description="Unique identifier for the user variable.")
+    user_id: UUID = Field(..., description="The ID of the user who owns this variable.")
+    tenant_id: Optional[UUID] = Field(None, description="The tenant to which this variable belongs.")
+    created_at: datetime = Field(..., description="Timestamp of when the variable was created.")
+    updated_at: datetime = Field(..., description="Timestamp of the last update.")
+    display_value: Optional[str] = Field(None, description="Masked value for secrets.")
 
-class UserVariableStats(BaseModel):
-    """Schema for user variable statistics"""
-    total_variables: int
-    secret_variables: int
-    encrypted_variables: int
-    active_variables: int
-    by_category: dict[str, int]
-    
-    class Config:
-        from_attributes = True
+
+class UserVariableListResponse(BaseModel):
+    """Paginated list of UserVariables."""
+    items: List[UserVariableResponse] = Field(..., description="List of user variables for the current page.")
+    total: int = Field(..., description="Total number of user variables.")
+    page: int = Field(..., description="Current page number.")
+    size: int = Field(..., description="Number of items per page.")

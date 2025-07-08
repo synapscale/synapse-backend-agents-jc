@@ -4,7 +4,7 @@ Schemas for AgentQuota - managing agent quotas and limits.
 
 from datetime import datetime, timedelta
 from typing import Optional
-from pydantic import BaseModel, Field, ConfigDict, validator
+from pydantic import BaseModel, Field, ConfigDict, validator, computed_field
 from uuid import UUID
 
 
@@ -53,31 +53,25 @@ class AgentQuotaRead(AgentQuotaBase):
     created_at: datetime = Field(..., description="Timestamp when the quota was created")
     
     # Computed fields
-    period_in_seconds: Optional[float] = Field(None, description="Period duration in seconds")
-    period_in_hours: Optional[float] = Field(None, description="Period duration in hours")
-    period_in_days: Optional[float] = Field(None, description="Period duration in days")
-    period_description: Optional[str] = Field(None, description="Human-readable period description")
-    calls_per_second_limit: Optional[float] = Field(None, description="Calls per second limit")
-    tokens_per_second_limit: Optional[float] = Field(None, description="Tokens per second limit")
-    is_daily_quota: Optional[bool] = Field(None, description="Whether this is a daily quota")
-    is_hourly_quota: Optional[bool] = Field(None, description="Whether this is an hourly quota")
-    is_monthly_quota: Optional[bool] = Field(None, description="Whether this is a monthly quota")
-    
+    @computed_field
     @property
     def period_in_seconds(self) -> float:
         """Get period duration in seconds."""
         return self.period.total_seconds()
     
+    @computed_field
     @property
     def period_in_hours(self) -> float:
         """Get period duration in hours."""
         return self.period_in_seconds / 3600
     
+    @computed_field
     @property
     def period_in_days(self) -> float:
         """Get period duration in days."""
         return self.period_in_hours / 24
     
+    @computed_field
     @property
     def period_description(self) -> str:
         """Get human-readable period description."""
@@ -90,26 +84,31 @@ class AgentQuotaRead(AgentQuotaBase):
         else:
             return f"por {self.period_in_hours:.1f} horas"
     
+    @computed_field
     @property
     def calls_per_second_limit(self) -> float:
         """Get calls per second limit."""
         return self.max_calls / self.period_in_seconds
     
+    @computed_field
     @property
     def tokens_per_second_limit(self) -> float:
         """Get tokens per second limit."""
         return self.max_tokens / self.period_in_seconds
     
+    @computed_field
     @property
     def is_daily_quota(self) -> bool:
         """Check if this is a daily quota."""
         return self.period_in_days == 1.0
     
+    @computed_field
     @property
     def is_hourly_quota(self) -> bool:
         """Check if this is an hourly quota."""
         return self.period_in_hours == 1.0
     
+    @computed_field
     @property
     def is_monthly_quota(self) -> bool:
         """Check if this is a monthly quota (approximately 30 days)."""

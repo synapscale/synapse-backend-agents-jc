@@ -1,120 +1,50 @@
 """
-Schemas para RBACRolePermission
+Schemas for RBACRolePermission - a model for managing role-permission assignments with conditions.
 """
 
 from datetime import datetime
-from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field, UUID4, validator
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, ConfigDict
+from uuid import UUID
+
 
 class RBACRolePermissionBase(BaseModel):
-    """Base schema for RBACRolePermission"""
-    role_id: UUID4
-    permission_id: UUID4
-    granted: bool = Field(default=True, description="Whether the permission is granted")
-    conditions: Optional[Dict[str, Any]] = Field(default={}, description="Conditions for the permission")
-    tenant_id: Optional[UUID4] = None
-    
-    @validator('conditions')
-    def validate_conditions(cls, v):
-        if v is not None and not isinstance(v, dict):
-            raise ValueError("Conditions must be a dictionary")
-        return v
-    
-    class Config:
-        from_attributes = True
+    """Base schema for RBACRolePermission attributes."""
+    model_config = ConfigDict(from_attributes=True)
+
+    role_id: UUID = Field(..., description="The ID of the RBAC role.")
+    permission_id: UUID = Field(..., description="The ID of the RBAC permission.")
+    granted: bool = Field(True, description="Indicates if the permission is granted or denied for this role.")
+    conditions: Dict[str, Any] = Field(default_factory=dict, description="Additional conditions under which the permission is granted.")
+
 
 class RBACRolePermissionCreate(RBACRolePermissionBase):
-    """Schema for creating RBACRolePermission"""
-    pass
+    """Schema for creating a new RBACRolePermission assignment."""
+    tenant_id: Optional[UUID] = Field(None, description="The tenant to which this assignment belongs.")
 
-class RBACRolePermissionRead(RBACRolePermissionBase):
-    """Schema for reading RBACRolePermission"""
-    id: UUID4
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
 
 class RBACRolePermissionUpdate(BaseModel):
-    """Schema for updating RBACRolePermission"""
-    granted: Optional[bool] = None
-    conditions: Optional[Dict[str, Any]] = None
-    
-    @validator('conditions')
-    def validate_conditions(cls, v):
-        if v is not None and not isinstance(v, dict):
-            raise ValueError("Conditions must be a dictionary")
-        return v
-    
-    class Config:
-        from_attributes = True
+    """Schema for updating an existing RBACRolePermission assignment. All fields are optional."""
+    granted: Optional[bool] = Field(None, description="New granted status.")
+    conditions: Optional[Dict[str, Any]] = Field(None, description="New conditions.")
 
-class RBACRolePermissionWithDetails(RBACRolePermissionRead):
-    """Schema for reading RBACRolePermission with role and permission details"""
-    role_name: Optional[str] = None
-    role_key: Optional[str] = None
-    permission_key: Optional[str] = None
-    permission_resource: Optional[str] = None
-    permission_action: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
 
-class RBACRolePermissionCheck(BaseModel):
-    """Schema for permission check request"""
-    role_id: UUID4
-    permission_key: str
-    context: Optional[Dict[str, Any]] = Field(default={}, description="Context for condition evaluation")
-    tenant_id: Optional[UUID4] = None
+class RBACRolePermissionResponse(RBACRolePermissionBase):
+    """Response schema for an RBACRolePermission assignment, including database-generated fields and related data."""
+    id: UUID = Field(..., description="Unique identifier for the role-permission assignment.")
+    created_at: datetime = Field(..., description="Timestamp of when the assignment was created.")
+    updated_at: datetime = Field(..., description="Timestamp of the last update.")
+    tenant_id: Optional[UUID] = Field(None, description="The tenant to which this assignment belongs.")
     
-    class Config:
-        from_attributes = True
+    # Enriched data
+    role_name: Optional[str] = Field(None, description="The name of the associated role.")
+    permission_key: Optional[str] = Field(None, description="The key of the associated permission.")
+    permission_description: Optional[str] = Field(None, description="The description of the associated permission.")
 
-class RBACRolePermissionCheckResult(BaseModel):
-    """Schema for permission check result"""
-    has_permission: bool
-    role_id: UUID4
-    permission_key: str
-    conditions_met: bool
-    details: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
 
-class RBACRolePermissionBulkCreate(BaseModel):
-    """Schema for bulk creating role permissions"""
-    role_id: UUID4
-    permissions: list[Dict[str, Any]] = Field(..., description="List of permission assignments")
-    tenant_id: Optional[UUID4] = None
-    
-    class Config:
-        from_attributes = True
-
-class RBACRolePermissionBulkUpdate(BaseModel):
-    """Schema for bulk updating role permissions"""
-    role_id: UUID4
-    permissions: list[Dict[str, Any]] = Field(..., description="List of permission updates")
-    
-    class Config:
-        from_attributes = True
-
-class RBACRolePermissionList(BaseModel):
-    """Schema for role permission list with pagination"""
-    permissions: list[RBACRolePermissionWithDetails]
-    total: int
-    page: int
-    page_size: int
-    
-    class Config:
-        from_attributes = True
-
-class RBACRolePermissionSummary(BaseModel):
-    """Schema for role permission summary"""
-    total_permissions: int
-    granted_permissions: int
-    denied_permissions: int
-    conditional_permissions: int
-    
-    class Config:
-        from_attributes = True
+class RBACRolePermissionListResponse(BaseModel):
+    """Paginated list of RBACRolePermission assignments."""
+    items: List[RBACRolePermissionResponse] = Field(..., description="List of role-permission assignments for the current page.")
+    total: int = Field(..., description="Total number of assignments.")
+    page: int = Field(..., description="Current page number.")
+    size: int = Field(..., description="Number of items per page.")

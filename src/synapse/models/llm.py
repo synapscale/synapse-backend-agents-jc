@@ -13,6 +13,7 @@ from sqlalchemy import (
     UUID,
     text,
     ForeignKey,
+    Numeric,
 )
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -44,18 +45,12 @@ class LLM(Base):
 
     # Status e metadata
     is_active = Column(Boolean, server_default=text("true"), index=True)
-    llm_metadata = Column("metadata", JSON, nullable=True)
+    llm_metadata = Column(JSON, nullable=True)
     
-    # Campos adicionais da estrutura real do banco
-    tenant_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("synapscale_db.tenants.id"),
-        nullable=False,
-    )
     status = Column(String(20), default="active")
     health_status = Column(String(20), default="healthy")
     response_time_avg_ms = Column(Integer, default=0)
-    availability_percentage = Column(Integer, default=100)
+    availability_percentage = Column(Numeric(5,2), default=99.9)
 
     # Timestamps
     created_at = Column(
@@ -72,9 +67,6 @@ class LLM(Base):
     llms_conversations_turns = relationship("ConversationLLM", back_populates="llm")
     usage_logs = relationship("UsageLog", back_populates="llm")
     agent_models = relationship("AgentModel", back_populates="llm", cascade="all, delete-orphan")
-
-    # Relacionamento com Tenant (faltava e causava erro de mapeamento)
-    tenant = relationship("Tenant", back_populates="llms")
 
     def __repr__(self):
         return f"<LLM(name={self.name}, provider={self.provider})>"

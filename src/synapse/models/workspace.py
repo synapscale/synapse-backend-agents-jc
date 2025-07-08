@@ -14,7 +14,6 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     JSON,
-    Enum,
     text,
 )
 from sqlalchemy.orm import relationship
@@ -23,7 +22,7 @@ from enum import Enum as PyEnum
 from synapse.database import Base
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ENUM
 import uuid
 
 # Import WorkspaceRole and WorkspaceActivity from dedicated modules to avoid conflicts
@@ -61,7 +60,7 @@ class Workspace(Base):
     slug = Column(String(120), unique=True, nullable=False, index=True)
 
     # Tipo do workspace (NOVO CAMPO)
-    type = Column(Enum(WorkspaceType), nullable=False, default=WorkspaceType.INDIVIDUAL)
+    type = Column(ENUM("collaborative", "individual", name="workspacetype", schema="synapscale_db"), nullable=False, default="individual")
 
     # Informações básicas
     description = Column(Text)

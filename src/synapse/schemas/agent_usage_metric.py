@@ -4,7 +4,7 @@ Schemas for AgentUsageMetric - tracking agent usage metrics.
 
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, ConfigDict, validator
+from pydantic import BaseModel, Field, ConfigDict, validator, computed_field
 from uuid import UUID
 from decimal import Decimal
 
@@ -50,17 +50,13 @@ class AgentUsageMetricRead(AgentUsageMetricBase):
     created_at: datetime = Field(..., description="Timestamp when the metric was created")
     
     # Computed fields
-    period_duration_minutes: Optional[int] = Field(None, description="Duration of the period in minutes")
-    cost_per_call: Optional[Decimal] = Field(None, description="Cost per API call")
-    cost_per_token: Optional[Decimal] = Field(None, description="Cost per token")
-    calls_per_minute: Optional[float] = Field(None, description="Average calls per minute")
-    tokens_per_minute: Optional[float] = Field(None, description="Average tokens per minute")
-    
+    @computed_field
     @property
     def period_duration_minutes(self) -> int:
         """Calculate period duration in minutes."""
         return int((self.period_end - self.period_start).total_seconds() / 60)
     
+    @computed_field
     @property
     def cost_per_call(self) -> Optional[Decimal]:
         """Calculate cost per call."""
@@ -68,6 +64,7 @@ class AgentUsageMetricRead(AgentUsageMetricBase):
             return self.cost_est / self.calls_count
         return None
     
+    @computed_field
     @property
     def cost_per_token(self) -> Optional[Decimal]:
         """Calculate cost per token."""
@@ -75,6 +72,7 @@ class AgentUsageMetricRead(AgentUsageMetricBase):
             return self.cost_est / self.tokens_used
         return None
     
+    @computed_field
     @property
     def calls_per_minute(self) -> Optional[float]:
         """Calculate calls per minute."""
@@ -83,6 +81,7 @@ class AgentUsageMetricRead(AgentUsageMetricBase):
             return self.calls_count / duration
         return None
     
+    @computed_field
     @property
     def tokens_per_minute(self) -> Optional[float]:
         """Calculate tokens per minute."""

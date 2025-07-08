@@ -15,7 +15,7 @@ from synapse.schemas.contact_list import (
     ContactListResponse,
     ContactListCreate,
     ContactListUpdate,
-    ContactListListResponse
+    ContactListResponse
 )
 from synapse.models import ContactList
 
@@ -58,7 +58,7 @@ async def get_contact_list(
         )
     return contact_list
 
-@router.get("/", response_model=ContactListListResponse)
+@router.get("/", response_model=ContactListResponse)
 async def list_contact_lists(
     db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),

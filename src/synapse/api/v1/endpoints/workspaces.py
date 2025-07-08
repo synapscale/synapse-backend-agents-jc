@@ -11,6 +11,7 @@ import uuid
 import secrets
 
 from synapse.api.deps import get_current_active_user
+from synapse.models.user import User
 from synapse.schemas.workspace import (
     WorkspaceCreate,
     WorkspaceResponse,
@@ -61,7 +62,7 @@ async def list_workspaces(
 
     # Filtrar por workspaces do usuário
     if is_owner:
-        conditions.append(Workspace.tenant_id == current_user.id)
+        conditions.append(Workspace.owner_id == current_user.id)
     else:
         # Workspaces onde é owner OU membro
         member_subquery = select(WorkspaceMember.workspace_id).where(
@@ -69,7 +70,7 @@ async def list_workspaces(
         )
         conditions.append(
             or_(
-                Workspace.tenant_id == current_user.id, Workspace.id.in_(member_subquery)
+                Workspace.owner_id == current_user.id, Workspace.id.in_(member_subquery)
             )
         )
 
@@ -173,7 +174,7 @@ async def create_workspace(
         user_workspaces_count = await db.execute(
             select(func.count(Workspace.id)).where(
                 and_(
-                    Workspace.tenant_id == current_user.id,
+                    Workspace.owner_id == current_user.id,
                     Workspace.status == WorkspaceStatus.ACTIVE.value,
                 )
             )
@@ -234,16 +235,6 @@ async def create_workspace(
     db.add(workspace)
     await db.commit()
     await db.refresh(workspace)
-
-    # Criar atividade
-    activity = WorkspaceActivity(
-        workspace_id=workspace.id,
-        user_id=current_user.id,
-        action="workspace_created",
-        metadata={"workspace_name": workspace.name},
-    )
-    db.add(activity)
-    await db.commit()
 
     return WorkspaceResponse(
         id=workspace.id,

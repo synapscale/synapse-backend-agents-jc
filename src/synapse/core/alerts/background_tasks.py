@@ -168,8 +168,7 @@ class BackgroundTaskManager:
     async def _aggregate_metrics(self):
         """Aggregate metrics for better performance"""
         try:
-            from synapse.models.analytics_event import AnalyticsEvent
-            from synapse.models.analytics_metric import AnalyticsMetric
+            from synapse.models import AnalyticsEvent, AnalyticsMetric
             from synapse.database import get_db_session
             from sqlalchemy import func, text
 
@@ -263,8 +262,7 @@ class BackgroundTaskManager:
     async def _cleanup_old_data(self):
         """Clean up old analytics data"""
         try:
-            from synapse.models.analytics_event import AnalyticsEvent
-            from synapse.models.analytics_metric import AnalyticsMetric
+            from synapse.models import AnalyticsEvent, AnalyticsMetric
             from synapse.database import get_db_session
 
             with get_db_session() as db:

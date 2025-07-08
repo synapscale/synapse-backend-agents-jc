@@ -108,7 +108,7 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(UserBase):
-    """Response schema for a user - PERFECTLY ALIGNED WITH DATABASE"""
+    """Response schema for a user - PERFECTLY ALIGNED WITH DATABASE (excluding sensitive fields)"""
 
     id: uuid.UUID = Field(..., description="User ID")
     last_login_at: Optional[datetime.datetime] = Field(
@@ -127,6 +127,13 @@ class UserResponse(UserBase):
     )
     updated_at: Optional[datetime.datetime] = Field(
         None, description="Last update timestamp"
+    )
+    
+    model_config = ConfigDict(
+        from_attributes=True,
+        use_enum_values=True,
+        # Exclude sensitive fields from serialization
+        exclude={"hashed_password"}
     )
 
 
