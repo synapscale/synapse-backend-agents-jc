@@ -1,5 +1,5 @@
 """
-Schemas para Plan - planos de assinatura
+Schemas for Plan - a model for managing subscription plans.
 """
 
 from datetime import datetime
@@ -7,232 +7,177 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
 from decimal import Decimal
+from enum import Enum
+
+
+class PlanStatus(str, Enum):
+    """Enum for the status of a plan."""
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    ARCHIVED = "archived"
+    DEPRECATED = "deprecated"
+
+
+class PlanPeriod(str, Enum):
+    """Enum for the billing period of a plan."""
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
+
+
+class PlanMigrationType(str, Enum):
+    """Enum for the type of plan migration."""
+    IMMEDIATE = "immediate"
+    SCHEDULED = "scheduled"
 
 
 class PlanBase(BaseModel):
-    """Schema base para Plan"""
-    
-    # Identificação
-    name: str = Field(..., description="Nome do plano")
-    description: Optional[str] = Field(None, description="Descrição do plano")
-    
-    # Código único
-    plan_code: str = Field(..., description="Código único do plano")
-    
-    # Preços
-    monthly_price: Decimal = Field(..., description="Preço mensal")
-    yearly_price: Optional[Decimal] = Field(None, description="Preço anual")
-    
-    # Configurações
-    is_active: bool = Field(True, description="Plano ativo")
-    is_public: bool = Field(True, description="Plano público")
-    is_featured: bool = Field(False, description="Plano em destaque")
-    
-    # Limites
-    user_limit: Optional[int] = Field(None, description="Limite de usuários")
-    workspace_limit: Optional[int] = Field(None, description="Limite de workspaces")
-    agent_limit: Optional[int] = Field(None, description="Limite de agentes")
-    storage_limit_gb: Optional[int] = Field(None, description="Limite de armazenamento em GB")
-    
-    # Configuração de features
-    features_config: Optional[Dict[str, Any]] = Field(None, description="Configuração de features")
-    
-    # Trial
-    trial_days: Optional[int] = Field(None, description="Dias de trial")
-    
-    # Contexto
-    tenant_id: Optional[UUID] = Field(None, description="ID do tenant (null para planos globais)")
-    
-    # Metadata
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Dados adicionais")
-    
-    # Visual
-    color: Optional[str] = Field(None, description="Cor do plano")
-    icon: Optional[str] = Field(None, description="Ícone do plano")
+    """Base schema for Plan attributes."""
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    name: str = Field(..., description="The name of the plan.")
+    description: Optional[str] = Field(None, description="A detailed description of the plan.")
+    plan_code: str = Field(..., description="A unique code for the plan.")
+    monthly_price: Decimal = Field(..., ge=0, description="The monthly price of the plan.")
+    yearly_price: Optional[Decimal] = Field(None, ge=0, description="The yearly price of the plan.")
+    is_active: bool = Field(True, description="Indicates if the plan is currently active.")
+    is_public: bool = Field(True, description="Indicates if the plan is visible to the public.")
+    is_featured: bool = Field(False, description="Indicates if the plan is featured on the pricing page.")
+    user_limit: Optional[int] = Field(None, ge=0, description="The maximum number of users allowed on this plan.")
+    workspace_limit: Optional[int] = Field(None, ge=0, description="The maximum number of workspaces allowed on this plan.")
+    agent_limit: Optional[int] = Field(None, ge=0, description="The maximum number of agents allowed on this plan.")
+    storage_limit_gb: Optional[int] = Field(None, ge=0, description="The maximum storage allowed in GB.")
+    features_config: Dict[str, Any] = Field(default_factory=dict, description="A dictionary defining the features included in this plan.")
+    trial_days: Optional[int] = Field(None, ge=0, description="The number of trial days offered with this plan.")
+    tenant_id: Optional[UUID] = Field(None, description="The tenant to which this plan belongs (null for global plans).")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata for the plan.")
+    color: Optional[str] = Field(None, description="A hex color code for UI representation.")
+    icon: Optional[str] = Field(None, description="An icon for UI representation.")
 
 
 class PlanCreate(PlanBase):
-    """Schema para criação de Plan"""
+    """Schema for creating a new Plan."""
     pass
 
 
 class PlanUpdate(BaseModel):
-    """Schema para atualização de Plan"""
-    
-    name: Optional[str] = Field(None, description="Nome do plano")
-    description: Optional[str] = Field(None, description="Descrição do plano")
-    
-    monthly_price: Optional[Decimal] = Field(None, description="Preço mensal")
-    yearly_price: Optional[Decimal] = Field(None, description="Preço anual")
-    
-    is_active: Optional[bool] = Field(None, description="Plano ativo")
-    is_public: Optional[bool] = Field(None, description="Plano público")
-    is_featured: Optional[bool] = Field(None, description="Plano em destaque")
-    
-    user_limit: Optional[int] = Field(None, description="Limite de usuários")
-    workspace_limit: Optional[int] = Field(None, description="Limite de workspaces")
-    agent_limit: Optional[int] = Field(None, description="Limite de agentes")
-    storage_limit_gb: Optional[int] = Field(None, description="Limite de armazenamento")
-    
-    features_config: Optional[Dict[str, Any]] = Field(None, description="Configuração de features")
-    trial_days: Optional[int] = Field(None, description="Dias de trial")
-    
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Dados adicionais")
-    color: Optional[str] = Field(None, description="Cor do plano")
-    icon: Optional[str] = Field(None, description="Ícone do plano")
+    """Schema for updating an existing Plan. All fields are optional."""
+    name: Optional[str] = Field(None, description="New name for the plan.")
+    description: Optional[str] = Field(None, description="New description.")
+    monthly_price: Optional[Decimal] = Field(None, ge=0, description="New monthly price.")
+    yearly_price: Optional[Decimal] = Field(None, ge=0, description="New yearly price.")
+    is_active: Optional[bool] = Field(None, description="New active status.")
+    is_public: Optional[bool] = Field(None, description="New public status.")
+    is_featured: Optional[bool] = Field(None, description="New featured status.")
+    user_limit: Optional[int] = Field(None, ge=0, description="New user limit.")
+    workspace_limit: Optional[int] = Field(None, ge=0, description="New workspace limit.")
+    agent_limit: Optional[int] = Field(None, ge=0, description="New agent limit.")
+    storage_limit_gb: Optional[int] = Field(None, ge=0, description="New storage limit.")
+    features_config: Optional[Dict[str, Any]] = Field(None, description="New features configuration.")
+    trial_days: Optional[int] = Field(None, ge=0, description="New trial days.")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="New metadata.")
+    color: Optional[str] = Field(None, description="New color.")
+    icon: Optional[str] = Field(None, description="New icon.")
 
 
 class PlanResponse(PlanBase):
-    """Schema para resposta de Plan"""
-    
-    id: UUID = Field(..., description="ID único do plano")
-    created_at: datetime = Field(..., description="Data de criação")
-    updated_at: datetime = Field(..., description="Data de atualização")
-    
-    # Estatísticas
-    subscribers_count: Optional[int] = Field(None, description="Número de assinantes")
-    revenue_monthly: Optional[Decimal] = Field(None, description="Receita mensal")
-    revenue_yearly: Optional[Decimal] = Field(None, description="Receita anual")
-    
-    # Features incluídas
-    features: Optional[List[Dict[str, Any]]] = Field(None, description="Features incluídas")
-    
-    model_config = ConfigDict(from_attributes=True)
+    """Response schema for a Plan, including database-generated fields and related data."""
+    id: UUID = Field(..., description="Unique identifier for the plan.")
+    created_at: datetime = Field(..., description="Timestamp of when the plan was created.")
+    updated_at: datetime = Field(..., description="Timestamp of the last update.")
+    subscribers_count: Optional[int] = Field(None, description="The number of active subscribers to this plan.")
+    revenue_monthly: Optional[Decimal] = Field(None, description="Estimated monthly revenue from this plan.")
+    revenue_yearly: Optional[Decimal] = Field(None, description="Estimated yearly revenue from this plan.")
+    features: Optional[List[Dict[str, Any]]] = Field(None, description="A list of detailed features included in this plan.")
 
 
-class PlanList(BaseModel):
-    """Schema para lista de Plan"""
-    
-    items: List[PlanResponse] = Field(..., description="Lista de planos")
-    total: int = Field(..., description="Total de planos")
-    page: int = Field(1, description="Página atual")
-    size: int = Field(10, description="Tamanho da página")
-    
-    model_config = ConfigDict(from_attributes=True)
+class PlanListResponse(BaseModel):
+    """Paginated list of Plans."""
+    items: List[PlanResponse] = Field(..., description="List of plans for the current page.")
+    total: int = Field(..., description="Total number of plans.")
+    page: int = Field(..., description="Current page number.")
+    size: int = Field(..., description="Number of items per page.")
 
 
 class PlanComparison(BaseModel):
-    """Schema para comparação de planos"""
-    
-    plans: List[PlanResponse] = Field(..., description="Planos a comparar")
-    
-    # Comparação de features
-    feature_comparison: Dict[str, Dict[str, Any]] = Field(..., description="Comparação de features")
-    
-    # Comparação de limites
-    limits_comparison: Dict[str, Dict[str, Any]] = Field(..., description="Comparação de limites")
-    
+    """Schema for comparing multiple plans."""
     model_config = ConfigDict(from_attributes=True)
+
+    plans: List[PlanResponse] = Field(..., description="The list of plans being compared.")
+    feature_comparison: Dict[str, Dict[str, Any]] = Field(..., description="A detailed comparison of features across plans.")
+    limits_comparison: Dict[str, Dict[str, Any]] = Field(..., description="A detailed comparison of limits across plans.")
 
 
 class PlanUsage(BaseModel):
-    """Schema para uso do plano"""
-    
-    plan_id: UUID = Field(..., description="ID do plano")
-    subscription_id: UUID = Field(..., description="ID da assinatura")
-    
-    # Uso atual
-    users_used: int = Field(..., description="Usuários utilizados")
-    workspaces_used: int = Field(..., description="Workspaces utilizados")
-    agents_used: int = Field(..., description="Agentes utilizados")
-    storage_used_gb: float = Field(..., description="Armazenamento utilizado em GB")
-    
-    # Limites do plano
-    user_limit: Optional[int] = Field(None, description="Limite de usuários")
-    workspace_limit: Optional[int] = Field(None, description="Limite de workspaces")
-    agent_limit: Optional[int] = Field(None, description="Limite de agentes")
-    storage_limit_gb: Optional[int] = Field(None, description="Limite de armazenamento")
-    
-    # Porcentagens de uso
-    users_usage_percentage: Optional[float] = Field(None, description="Porcentagem de uso de usuários")
-    workspaces_usage_percentage: Optional[float] = Field(None, description="Porcentagem de uso de workspaces")
-    agents_usage_percentage: Optional[float] = Field(None, description="Porcentagem de uso de agentes")
-    storage_usage_percentage: Optional[float] = Field(None, description="Porcentagem de uso de armazenamento")
-    
+    """Schema for tracking usage against a plan's limits."""
     model_config = ConfigDict(from_attributes=True)
+
+    plan_id: UUID = Field(..., description="The ID of the plan.")
+    subscription_id: UUID = Field(..., description="The ID of the subscription.")
+    users_used: int = Field(..., ge=0, description="Number of users currently utilizing the plan.")
+    workspaces_used: int = Field(..., ge=0, description="Number of workspaces currently utilizing the plan.")
+    agents_used: int = Field(..., ge=0, description="Number of agents currently utilizing the plan.")
+    storage_used_gb: float = Field(..., ge=0, description="Storage utilized in GB.")
+    user_limit: Optional[int] = Field(None, ge=0, description="The user limit defined by the plan.")
+    workspace_limit: Optional[int] = Field(None, ge=0, description="The workspace limit defined by the plan.")
+    agent_limit: Optional[int] = Field(None, ge=0, description="The agent limit defined by the plan.")
+    storage_limit_gb: Optional[int] = Field(None, ge=0, description="The storage limit defined by the plan.")
+    users_usage_percentage: Optional[float] = Field(None, ge=0, le=100, description="Percentage of user limit used.")
+    workspaces_usage_percentage: Optional[float] = Field(None, ge=0, le=100, description="Percentage of workspace limit used.")
+    agents_usage_percentage: Optional[float] = Field(None, ge=0, le=100, description="Percentage of agent limit used.")
+    storage_usage_percentage: Optional[float] = Field(None, ge=0, le=100, description="Percentage of storage limit used.")
 
 
 class PlanRecommendation(BaseModel):
-    """Schema para recomendação de plano"""
-    
-    user_id: UUID = Field(..., description="ID do usuário")
-    
-    # Plano recomendado
-    recommended_plan_id: UUID = Field(..., description="ID do plano recomendado")
-    recommended_plan_name: str = Field(..., description="Nome do plano recomendado")
-    
-    # Motivo da recomendação
-    reason: str = Field(..., description="Motivo da recomendação")
-    confidence_score: float = Field(..., description="Score de confiança")
-    
-    # Análise de uso
-    usage_analysis: Dict[str, Any] = Field(..., description="Análise de uso")
-    
-    # Benefícios da mudança
-    benefits: List[str] = Field(..., description="Benefícios da mudança")
-    
+    """Schema for recommending a plan to a user."""
     model_config = ConfigDict(from_attributes=True)
+
+    user_id: UUID = Field(..., description="The ID of the user for whom the recommendation is made.")
+    recommended_plan_id: UUID = Field(..., description="The ID of the recommended plan.")
+    recommended_plan_name: str = Field(..., description="The name of the recommended plan.")
+    reason: str = Field(..., description="The reason for the recommendation.")
+    confidence_score: float = Field(..., ge=0, le=1, description="The confidence score of the recommendation (0-1).")
+    usage_analysis: Dict[str, Any] = Field(..., description="An analysis of the user's current usage patterns.")
+    benefits: List[str] = Field(..., description="A list of benefits the user will gain by migrating to the recommended plan.")
 
 
 class PlanMigration(BaseModel):
-    """Schema para migração de plano"""
-    
-    from_plan_id: UUID = Field(..., description="ID do plano atual")
-    to_plan_id: UUID = Field(..., description="ID do plano de destino")
-    subscription_id: UUID = Field(..., description="ID da assinatura")
-    
-    # Configurações da migração
-    migration_type: str = Field(..., description="Tipo de migração (immediate, scheduled)")
-    scheduled_date: Optional[datetime] = Field(None, description="Data agendada")
-    
-    # Cálculos de preço
-    prorated_amount: Optional[Decimal] = Field(None, description="Valor proporcional")
-    new_monthly_amount: Decimal = Field(..., description="Novo valor mensal")
-    
-    model_config = ConfigDict(from_attributes=True)
+    """Schema for initiating a plan migration for a subscription."""
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    from_plan_id: UUID = Field(..., description="The ID of the current plan.")
+    to_plan_id: UUID = Field(..., description="The ID of the target plan.")
+    subscription_id: UUID = Field(..., description="The ID of the subscription to migrate.")
+    migration_type: PlanMigrationType = Field(..., description="The type of migration (immediate or scheduled).")
+    scheduled_date: Optional[datetime] = Field(None, description="The date for a scheduled migration.")
+    prorated_amount: Optional[Decimal] = Field(None, description="The prorated amount for the migration.")
+    new_monthly_amount: Decimal = Field(..., ge=0, description="The new monthly amount after migration.")
 
 
 class PlanStatistics(BaseModel):
-    """Schema para estatísticas de Plan"""
-    
-    total_plans: int = Field(..., description="Total de planos")
-    active_plans: int = Field(..., description="Planos ativos")
-    public_plans: int = Field(..., description="Planos públicos")
-    
-    # Assinantes
-    total_subscribers: int = Field(..., description="Total de assinantes")
-    subscribers_by_plan: Dict[str, int] = Field(..., description="Assinantes por plano")
-    
-    # Receita
-    total_monthly_revenue: Decimal = Field(..., description="Receita mensal total")
-    total_yearly_revenue: Decimal = Field(..., description="Receita anual total")
-    revenue_by_plan: Dict[str, Decimal] = Field(..., description="Receita por plano")
-    
-    # Crescimento
-    monthly_growth_rate: float = Field(..., description="Taxa de crescimento mensal")
-    churn_rate: float = Field(..., description="Taxa de cancelamento")
-    
+    """Schema for aggregated plan statistics."""
     model_config = ConfigDict(from_attributes=True)
+
+    total_plans: int = Field(..., description="Total number of plans.")
+    active_plans: int = Field(..., description="Number of active plans.")
+    public_plans: int = Field(..., description="Number of public plans.")
+    total_subscribers: int = Field(..., description="Total number of subscribers across all plans.")
+    subscribers_by_plan: Dict[str, int] = Field(..., description="Count of subscribers per plan.")
+    total_monthly_revenue: Decimal = Field(..., description="Total estimated monthly revenue from all plans.")
+    total_yearly_revenue: Decimal = Field(..., description="Total estimated yearly revenue from all plans.")
+    revenue_by_plan: Dict[str, Decimal] = Field(..., description="Revenue breakdown per plan.")
+    monthly_growth_rate: float = Field(..., description="Monthly growth rate of subscribers.")
+    churn_rate: float = Field(..., description="Overall churn rate across all plans.")
 
 
 class PlanPricing(BaseModel):
-    """Schema para precificação de plano"""
-    
-    plan_id: UUID = Field(..., description="ID do plano")
-    
-    # Preços base
-    base_monthly_price: Decimal = Field(..., description="Preço base mensal")
-    base_yearly_price: Optional[Decimal] = Field(None, description="Preço base anual")
-    
-    # Descontos
-    monthly_discount_percentage: Optional[float] = Field(None, description="Desconto mensal")
-    yearly_discount_percentage: Optional[float] = Field(None, description="Desconto anual")
-    
-    # Preços finais
-    final_monthly_price: Decimal = Field(..., description="Preço final mensal")
-    final_yearly_price: Optional[Decimal] = Field(None, description="Preço final anual")
-    
-    # Válido até
-    valid_until: Optional[datetime] = Field(None, description="Válido até")
-    
+    """Schema for detailed plan pricing information."""
     model_config = ConfigDict(from_attributes=True)
+
+    plan_id: UUID = Field(..., description="The ID of the plan.")
+    base_monthly_price: Decimal = Field(..., ge=0, description="The base monthly price.")
+    base_yearly_price: Optional[Decimal] = Field(None, ge=0, description="The base yearly price.")
+    monthly_discount_percentage: Optional[float] = Field(None, ge=0, le=100, description="Discount percentage for monthly billing.")
+    yearly_discount_percentage: Optional[float] = Field(None, ge=0, le=100, description="Discount percentage for yearly billing.")
+    final_monthly_price: Decimal = Field(..., ge=0, description="The final monthly price after discounts.")
+    final_yearly_price: Optional[Decimal] = Field(None, ge=0, description="The final yearly price after discounts.")
+    valid_until: Optional[datetime] = Field(None, description="The date until which this pricing is valid.")

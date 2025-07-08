@@ -1,136 +1,79 @@
 """
-Schemas para NodeRating
+Schemas for NodeRating - a model for user ratings of workflow nodes.
 """
 
-from datetime import datetime, date
-from typing import Optional, Dict, List
-from pydantic import BaseModel, Field, UUID4, validator
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field, ConfigDict
+from uuid import UUID
+from enum import Enum
+
+
+class RatingValue(int, Enum):
+    """Enum for possible rating values (1-5 stars)."""
+    ONE = 1
+    TWO = 2
+    THREE = 3
+    FOUR = 4
+    FIVE = 5
+
 
 class NodeRatingBase(BaseModel):
-    """Base schema for NodeRating"""
-    node_id: UUID4
-    user_id: UUID4
-    rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5 stars")
-    tenant_id: Optional[UUID4] = None
-    
-    @validator('rating')
-    def validate_rating(cls, v):
-        if not 1 <= v <= 5:
-            raise ValueError("Rating must be between 1 and 5")
-        return v
-    
-    class Config:
-        from_attributes = True
+    """Base schema for NodeRating attributes."""
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+
+    node_id: UUID = Field(..., description="The ID of the node being rated.")
+    user_id: UUID = Field(..., description="The ID of the user who provided the rating.")
+    rating: RatingValue = Field(..., description="The rating value (1-5 stars).")
+    tenant_id: Optional[UUID] = Field(None, description="The tenant to which this rating belongs.")
+
 
 class NodeRatingCreate(NodeRatingBase):
-    """Schema for creating NodeRating"""
+    """Schema for creating a new NodeRating."""
     pass
 
-class NodeRatingRead(NodeRatingBase):
-    """Schema for reading NodeRating"""
-    id: UUID4
-    created_at: datetime
-    updated_at: datetime
-    
-    # Computed fields
-    rating_display: Optional[str] = None
-    is_positive: Optional[bool] = None
-    is_negative: Optional[bool] = None
-    is_neutral: Optional[bool] = None
-    
-    class Config:
-        from_attributes = True
 
 class NodeRatingUpdate(BaseModel):
-    """Schema for updating NodeRating"""
-    rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5 stars")
+    """Schema for updating an existing NodeRating. All fields are optional."""
+    rating: Optional[RatingValue] = Field(None, description="New rating value (1-5 stars).")
+
+
+class NodeRatingResponse(NodeRatingBase):
+    """Response schema for a NodeRating, including database-generated fields and computed properties."""
+    id: UUID = Field(..., description="Unique identifier for the rating.")
+    created_at: datetime = Field(..., description="Timestamp of when the rating was created.")
+    updated_at: datetime = Field(..., description="Timestamp of the last update.")
     
-    @validator('rating')
-    def validate_rating(cls, v):
-        if not 1 <= v <= 5:
-            raise ValueError("Rating must be between 1 and 5")
-        return v
-    
-    class Config:
-        from_attributes = True
+    # Computed fields
+    rating_display: Optional[str] = Field(None, description="Visual representation of the rating (e.g., '⭐⭐⭐⭐⭐').")
+    is_positive: Optional[bool] = Field(None, description="Indicates if the rating is considered positive (4-5 stars).")
+    is_negative: Optional[bool] = Field(None, description="Indicates if the rating is considered negative (1-2 stars).")
+    is_neutral: Optional[bool] = Field(None, description="Indicates if the rating is considered neutral (3 stars).")
+
+
+class NodeRatingListResponse(BaseModel):
+    """Paginated list of NodeRatings."""
+    items: List[NodeRatingResponse] = Field(..., description="List of node ratings for the current page.")
+    total: int = Field(..., description="Total number of node ratings.")
+    page: int = Field(..., description="Current page number.")
+    size: int = Field(..., description="Number of items per page.")
+
 
 class NodeRatingSummary(BaseModel):
-    """Schema for node rating summary"""
-    total_ratings: int
-    average_rating: float
-    rating_distribution: Dict[int, int]
-    positive_percentage: float
-    negative_percentage: float
-    
-    class Config:
-        from_attributes = True
+    """Schema for aggregated rating summary for a node."""
+    total_ratings: int = Field(..., description="Total number of ratings received.")
+    average_rating: float = Field(..., description="Average rating value.")
+    rating_distribution: Dict[RatingValue, int] = Field(..., description="Count of ratings for each star value.")
+    positive_percentage: float = Field(..., description="Percentage of positive ratings.")
+    negative_percentage: float = Field(..., description="Percentage of negative ratings.")
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class NodeRatingTrend(BaseModel):
-    """Schema for rating trends"""
-    date: date
-    average_rating: float
-    rating_count: int
-    
-    class Config:
-        from_attributes = True
+    """Schema for daily rating trends."""
+    date: str = Field(..., description="Date of the trend (YYYY-MM-DD).")
+    average_rating: float = Field(..., description="Average rating for the day.")
+    rating_count: int = Field(..., description="Number of ratings for the day.")
 
-class NodeRatingStats(BaseModel):
-    """Schema for overall rating statistics"""
-    total_ratings: int
-    average_rating: float
-    unique_nodes_rated: int
-    unique_users_rating: int
-    rating_distribution: Dict[int, Dict[str, float]]
-    
-    class Config:
-        from_attributes = True
-
-class TopRatedNode(BaseModel):
-    """Schema for top rated nodes"""
-    node_id: UUID4
-    avg_rating: float
-    rating_count: int
-    
-    class Config:
-        from_attributes = True
-
-class ActiveRater(BaseModel):
-    """Schema for most active raters"""
-    user_id: UUID4
-    rating_count: int
-    avg_rating_given: float
-    
-    class Config:
-        from_attributes = True
-
-class NodeRatingRequest(BaseModel):
-    """Schema for rating request"""
-    rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5 stars")
-    
-    @validator('rating')
-    def validate_rating(cls, v):
-        if not 1 <= v <= 5:
-            raise ValueError("Rating must be between 1 and 5")
-        return v
-    
-    class Config:
-        from_attributes = True
-
-class NodeRatingResponse(BaseModel):
-    """Schema for rating response"""
-    success: bool
-    message: str
-    rating: Optional[NodeRatingRead] = None
-    
-    class Config:
-        from_attributes = True
-
-class NodeRatingList(BaseModel):
-    """Schema for paginated rating list"""
-    ratings: List[NodeRatingRead]
-    total: int
-    page: int
-    page_size: int
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

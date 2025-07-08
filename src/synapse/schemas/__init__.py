@@ -925,6 +925,76 @@ from .rbac_role_permission import (
     RBACRolePermissionSummary,
 )
 
+# Additional Models Schemas
+from .agent_trigger import (
+    AgentTriggerCreate,
+    AgentTriggerRead,
+    AgentTriggerUpdate,
+    AgentTriggerExecute,
+    AgentTriggerExecution,
+    AgentTriggerStats,
+    AgentTriggerSchedule,
+    AgentTriggerList,
+    AgentTriggerBulkOperation,
+)
+
+from .tenant_feature import (
+    TenantFeatureCreate,
+    TenantFeatureRead,
+    TenantFeatureUpdate,
+    TenantFeatureWithDetails,
+    TenantFeatureUsage,
+    TenantFeatureList,
+    TenantFeatureStats,
+    TenantFeatureBulkUpdate,
+)
+
+from .workflow_execution_metric import (
+    WorkflowExecutionMetricCreate,
+    WorkflowExecutionMetricRead,
+    WorkflowExecutionMetricUpdate,
+    WorkflowExecutionMetricValue,
+    WorkflowExecutionMetricSummary,
+    WorkflowExecutionMetricTrend,
+    WorkflowExecutionMetricList,
+    WorkflowExecutionMetricStats,
+)
+
+from .user_digitalocean import (
+    UserDigitalOceanCreate,
+    UserDigitalOceanRead,
+    UserDigitalOceanUpdate,
+    UserDigitalOceanPasswordUpdate,
+    UserDigitalOceanAuth,
+    UserDigitalOceanList,
+    UserDigitalOceanStats,
+)
+
+from .conversion_journey import (
+    ConversionJourneyCreate,
+    ConversionJourneyRead,
+    ConversionJourneyUpdate,
+)
+
+from .node_status import (
+    NodeStatusCreate,
+    NodeStatusRead,
+    NodeStatusUpdate,
+)
+
+from .plan_provider_mapping import (
+    PlanProviderMappingCreate,
+    PlanProviderMappingRead,
+    PlanProviderMappingUpdate,
+)
+
+from .models import (
+    ModelsCreate,
+    ModelsRead,
+    ModelsUpdate,
+    ModelsStats,
+)
+
 # It's recommended to eventually refactor the code to import directly
 # from the specific files (e.g., from synapse.schemas.user import UserCreate)
 # instead of relying on this central __init__.py.
@@ -1647,4 +1717,50 @@ __all__ = [
     "RBACRolePermissionBulkUpdate",
     "RBACRolePermissionList",
     "RBACRolePermissionSummary",
+    # Additional Models
+    "AgentTriggerCreate",
+    "AgentTriggerRead",
+    "AgentTriggerUpdate",
+    "AgentTriggerExecute",
+    "AgentTriggerExecution",
+    "AgentTriggerStats",
+    "AgentTriggerSchedule",
+    "AgentTriggerList",
+    "AgentTriggerBulkOperation",
+    "TenantFeatureCreate",
+    "TenantFeatureRead",
+    "TenantFeatureUpdate",
+    "TenantFeatureWithDetails",
+    "TenantFeatureUsage",
+    "TenantFeatureList",
+    "TenantFeatureStats",
+    "TenantFeatureBulkUpdate",
+    "WorkflowExecutionMetricCreate",
+    "WorkflowExecutionMetricRead",
+    "WorkflowExecutionMetricUpdate",
+    "WorkflowExecutionMetricValue",
+    "WorkflowExecutionMetricSummary",
+    "WorkflowExecutionMetricTrend",
+    "WorkflowExecutionMetricList",
+    "WorkflowExecutionMetricStats",
+    "UserDigitalOceanCreate",
+    "UserDigitalOceanRead",
+    "UserDigitalOceanUpdate",
+    "UserDigitalOceanPasswordUpdate",
+    "UserDigitalOceanAuth",
+    "UserDigitalOceanList",
+    "UserDigitalOceanStats",
+    "ConversionJourneyCreate",
+    "ConversionJourneyRead",
+    "ConversionJourneyUpdate",
+    "NodeStatusCreate",
+    "NodeStatusRead",
+    "NodeStatusUpdate",
+    "PlanProviderMappingCreate",
+    "PlanProviderMappingRead",
+    "PlanProviderMappingUpdate",
+    "ModelsCreate",
+    "ModelsRead",
+    "ModelsUpdate",
+    "ModelsStats",
 ]
