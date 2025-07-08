@@ -176,7 +176,8 @@ def _register_infrastructure_services() -> None:
 
         def create_storage_manager() -> StorageManager:
             """Factory function for StorageManager."""
-            return StorageManager(base_storage_path="storage")
+            from synapse.core.config import settings
+            return StorageManager(base_storage_path=settings.STORAGE_BASE_PATH)
 
         register_singleton(StorageManager, factory=create_storage_manager)
 

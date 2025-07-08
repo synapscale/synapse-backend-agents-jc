@@ -18,7 +18,7 @@ from synapse.core.file_validation import SecurityValidator, sanitize_filename
 from synapse.core.storage.storage_manager import StorageManager
 from synapse.exceptions import NotFoundError, StorageError, not_found_exception
 from synapse.models.file import File
-from synapse.schemas.models import FileCreate, FileUpdate
+from synapse.schemas.file import FileCreate, FileUpdate
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -29,7 +29,8 @@ class FileService:
 
     def __init__(self):
         """Inicializa o serviço de arquivos."""
-        self.storage_manager = StorageManager()
+        from synapse.core.config import settings
+        self.storage_manager = StorageManager(base_storage_path=settings.STORAGE_BASE_PATH)
         self.security_validator = SecurityValidator()
         logger.info("Serviço de arquivos inicializado")
 

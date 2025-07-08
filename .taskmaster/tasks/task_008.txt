@@ -1,0 +1,111 @@
+# Task ID: 8
+# Title: Implement Feature Usage Logging and Billing Audit
+# Status: pending
+# Dependencies: 3, 5
+# Priority: medium
+# Description: Create a comprehensive system to log feature usage by tenant/plan and implement billing vs. usage auditing.
+# Details:
+1. Create a feature usage logging table
+2. Implement middleware to log feature access attempts
+3. Create a billing audit system to compare plan vs. usage
+4. Use TimescaleDB extension for time-series data
+5. SQL implementation:
+```sql
+-- Create feature usage logging table
+CREATE TABLE feature_usage_logs (
+  id BIGSERIAL PRIMARY KEY,
+  tenant_id INTEGER NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  feature_id INTEGER NOT NULL REFERENCES features(id) ON DELETE CASCADE,
+  workspace_id INTEGER REFERENCES workspaces(id) ON DELETE SET NULL,
+  accessed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  success BOOLEAN NOT NULL,
+  plan_id INTEGER NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+  metadata JSONB
+);
+
+-- Create hypertable if using TimescaleDB
+-- SELECT create_hypertable('feature_usage_logs', 'accessed_at');
+
+-- Create indexes
+CREATE INDEX idx_feature_usage_tenant ON feature_usage_logs(tenant_id, accessed_at DESC);
+CREATE INDEX idx_feature_usage_feature ON feature_usage_logs(feature_id, accessed_at DESC);
+
+-- Create billing audit view
+CREATE OR REPLACE VIEW billing_audit AS
+SELECT 
+  t.id as tenant_id,
+  t.name as tenant_name,
+  p.id as plan_id,
+  p.name as plan_name,
+  p.price as plan_price,
+  COUNT(DISTINCT f.id) as total_features_in_plan,
+  COUNT(DISTINCT ful.feature_id) as total_features_used,
+  COUNT(DISTINCT CASE WHEN ful.success = false THEN ful.feature_id END) as attempted_premium_features,
+  MAX(ful.accessed_at) as last_activity,
+  jsonb_object_agg(f.name, COUNT(ful.id)) FILTER (WHERE ful.success = true) as feature_usage_counts
+FROM tenants t
+JOIN plans p ON t.plan_id = p.id
+LEFT JOIN plan_features pf ON p.id = pf.plan_id
+LEFT JOIN features f ON pf.feature_id = f.id
+LEFT JOIN feature_usage_logs ful ON t.id = ful.tenant_id AND (f.id = ful.feature_id OR ful.feature_id IS NULL)
+GROUP BY t.id, t.name, p.id, p.name, p.price;
+```
+6. Python implementation for logging middleware:
+```python
+from fastapi import Request, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
+
+async def log_feature_usage(request: Request, feature_name: str, success: bool, db: AsyncSession):
+    tenant_id = request.state.tenant_id
+    user_id = request.state.user_id if hasattr(request.state, "user_id") else None
+    workspace_id = request.state.workspace_id if hasattr(request.state, "workspace_id") else None
+    
+    # Get feature_id
+    feature_query = "SELECT id FROM features WHERE name = :name"
+    feature_result = await db.execute(text(feature_query), {"name": feature_name})
+    feature_id = feature_result.scalar_one_or_none()
+    
+    if not feature_id:
+        return  # Feature doesn't exist, can't log
+    
+    # Get tenant's current plan
+    plan_query = "SELECT plan_id FROM tenants WHERE id = :tenant_id"
+    plan_result = await db.execute(text(plan_query), {"tenant_id": tenant_id})
+    plan_id = plan_result.scalar_one_or_none()
+    
+    # Log the usage
+    query = """
+    INSERT INTO feature_usage_logs 
+      (tenant_id, user_id, feature_id, workspace_id, success, plan_id, metadata)
+    VALUES 
+      (:tenant_id, :user_id, :feature_id, :workspace_id, :success, :plan_id, :metadata)
+    """
+    
+    await db.execute(text(query), {
+        "tenant_id": tenant_id,
+        "user_id": user_id,
+        "feature_id": feature_id,
+        "workspace_id": workspace_id,
+        "success": success,
+        "plan_id": plan_id,
+        "metadata": json.dumps({
+            "path": request.url.path,
+            "method": request.method,
+            "user_agent": request.headers.get("user-agent")
+        })
+    })
+    
+    await db.commit()
+```
+7. Create a dashboard using Grafana 10.0+ for visualization
+
+# Test Strategy:
+1. Unit tests for the logging middleware
+2. Integration tests with various feature access scenarios
+3. Test the billing audit view with different tenant configurations
+4. Verify logging performance under load
+5. Test data retention and aggregation
+6. Verify dashboard functionality and accuracy
+7. Test edge cases like deleted features or tenants

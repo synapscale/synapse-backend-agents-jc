@@ -67,6 +67,7 @@ class TemplateService:
         db: AsyncSession,
         template_data: TemplateCreate,
         author_id: int,
+        tenant_id: uuid.UUID,
         workflow_id: Optional[int] = None,
     ) -> TemplateResponse:
         """
@@ -218,6 +219,7 @@ class TemplateService:
         self,
         db: AsyncSession,
         template_id: str,
+        tenant_id: uuid.UUID,
         user_id: Optional[int] = None,
         include_private: bool = False,
     ) -> Optional[TemplateDetailResponse]:
@@ -321,6 +323,7 @@ class TemplateService:
         self,
         db: AsyncSession,
         filters: TemplateFilter,
+        tenant_id: uuid.UUID,
         user_id: int | None = None,
     ) -> TemplateListResponse:
         """
@@ -467,6 +470,7 @@ class TemplateService:
         db: AsyncSession,
         template_id: str,
         user_id: int,
+        tenant_id: uuid.UUID,
         download_type: str = "full",
     ) -> bool:
         """
@@ -517,6 +521,7 @@ class TemplateService:
         db: AsyncSession,
         install_data: TemplateInstall,
         user_id: int,
+        tenant_id: uuid.UUID,
     ) -> TemplateInstallResponse:
         """
         Instala um template como novo workflow
@@ -630,6 +635,7 @@ class TemplateService:
         db: AsyncSession,
         favorite_data: FavoriteCreate,
         user_id: int,
+        tenant_id: uuid.UUID,
     ) -> FavoriteResponse | None:
         """
         Adiciona template aos favoritos

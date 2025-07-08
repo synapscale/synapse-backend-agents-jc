@@ -1,0 +1,118 @@
+# Task ID: 11
+# Title: Implement Performance Optimization
+# Status: pending
+# Dependencies: 6, 8
+# Priority: medium
+# Description: Optimize database queries and application code to ensure all operations meet the performance requirements specified in the PRD.
+# Details:
+1. Analyze and optimize critical queries
+2. Implement appropriate indexes
+3. Add query caching where appropriate
+4. Use PostgreSQL 14+ query optimization features
+5. SQL implementation for indexes:
+```sql
+-- Add indexes for feature verification queries
+CREATE INDEX IF NOT EXISTS idx_plan_features_plan_id ON plan_features(plan_id);
+CREATE INDEX IF NOT EXISTS idx_tenants_plan_id ON tenants(plan_id);
+CREATE INDEX IF NOT EXISTS idx_workspaces_tenant_id ON workspaces(tenant_id);
+
+-- Add composite indexes for common query patterns
+CREATE INDEX IF NOT EXISTS idx_tenant_feature_access ON plan_features(plan_id, feature_id);
+
+-- Add partial indexes for performance
+CREATE INDEX IF NOT EXISTS idx_active_tenants ON tenants(id) WHERE status = 'active';
+
+-- Add GIN index for JSONB
+CREATE INDEX IF NOT EXISTS idx_plans_restrictions ON plans USING GIN (restrictions);
+CREATE INDEX IF NOT EXISTS idx_tenants_settings ON tenants USING GIN (settings);
+```
+6. Query optimization examples:
+```sql
+-- Original slow query
+-- SELECT EXISTS (
+--   SELECT 1 FROM tenants t
+--   JOIN plans p ON t.plan_id = p.id
+--   JOIN plan_features pf ON p.id = pf.plan_id
+--   JOIN features f ON pf.feature_id = f.id
+--   WHERE t.id = :tenant_id AND f.name = :feature_name
+-- ) as has_access
+
+-- Optimized query
+CREATE OR REPLACE FUNCTION check_feature_access_optimized(tenant_id INT, feature_name TEXT) 
+RETURNS BOOLEAN AS $$
+DECLARE
+  result BOOLEAN;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1 FROM plan_features pf
+    WHERE pf.plan_id = (SELECT plan_id FROM tenants WHERE id = tenant_id)
+    AND pf.feature_id = (SELECT id FROM features WHERE name = feature_name)
+  ) INTO result;
+  
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+```
+7. Caching implementation with Redis:
+```python
+import redis
+import json
+from functools import wraps
+
+redis_client = redis.Redis(host='redis', port=6379, db=0)
+
+def cache_result(ttl_seconds=60):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Create cache key
+            cache_key = f"{func.__name__}:{json.dumps(args)}:{json.dumps(kwargs)}"
+            
+            # Try to get from cache
+            cached = redis_client.get(cache_key)
+            if cached:
+                return json.loads(cached)
+                
+            # Execute function
+            result = await func(*args, **kwargs)
+            
+            # Cache result
+            redis_client.setex(cache_key, ttl_seconds, json.dumps(result))
+            return result
+        return wrapper
+    return decorator
+
+# Usage
+@cache_result(ttl_seconds=30)
+async def get_tenant_features(tenant_id: int):
+    # Database query to get features
+    pass
+```
+8. Implement connection pooling with SQLAlchemy:
+```python
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
+
+# Create engine with connection pooling
+engine = create_async_engine(
+    "postgresql+asyncpg://user:password@localhost/synapscale_db",
+    pool_size=20,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=1800,
+    pool_pre_ping=True
+)
+
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+```
+
+# Test Strategy:
+1. Benchmark critical queries before and after optimization
+2. Test query performance with different data volumes
+3. Verify cache hit rates and effectiveness
+4. Load test with concurrent users
+5. Verify all queries meet the <100ms requirement
+6. Test connection pool behavior under load
+7. Verify index usage with EXPLAIN ANALYZE

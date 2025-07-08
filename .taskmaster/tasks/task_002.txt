@@ -1,0 +1,54 @@
+# Task ID: 2
+# Title: Configure Premium Plans Features
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Fix the critical issue with premium plans (BASIC, PRO, ENTERPRISE) that currently have NULL features and restrictions.
+# Details:
+1. Create a migration script to properly configure features for each premium plan
+2. Use SQLAlchemy 2.0 with Alembic for migrations
+3. Configure specific features per plan according to PRD requirements:
+   - BASIC: API access, webhooks, analytics (5 features)
+   - PRO: + Custom branding, team collaboration (8 features)
+   - ENTERPRISE: + SSO, white label, priority support (12 features)
+4. SQL implementation:
+```sql
+-- Clear existing incorrect configurations
+DELETE FROM plan_features WHERE plan_id IN 
+  (SELECT id FROM plans WHERE name IN ('BASIC', 'PRO', 'ENTERPRISE'));
+
+-- Insert correct BASIC plan features
+INSERT INTO plan_features (plan_id, feature_id)
+SELECT p.id, f.id FROM plans p, features f
+WHERE p.name = 'BASIC' AND f.name IN 
+  ('api_access', 'webhooks', 'basic_analytics', 'data_export', 'email_support');
+
+-- Insert correct PRO plan features (includes BASIC + additional)
+INSERT INTO plan_features (plan_id, feature_id)
+SELECT p.id, f.id FROM plans p, features f
+WHERE p.name = 'PRO' AND f.name IN 
+  ('api_access', 'webhooks', 'advanced_analytics', 'data_export', 'email_support',
+   'custom_branding', 'team_collaboration', 'priority_email_support');
+
+-- Insert correct ENTERPRISE plan features (includes PRO + additional)
+INSERT INTO plan_features (plan_id, feature_id)
+SELECT p.id, f.id FROM plans p, features f
+WHERE p.name = 'ENTERPRISE' AND f.name IN 
+  ('api_access', 'webhooks', 'advanced_analytics', 'data_export', 'email_support',
+   'custom_branding', 'team_collaboration', 'priority_email_support',
+   'sso_integration', 'white_label', 'priority_support', 'dedicated_account_manager');
+
+-- Update plans table to remove NULL values
+UPDATE plans
+SET restrictions = '{}'
+WHERE restrictions IS NULL AND name IN ('BASIC', 'PRO', 'ENTERPRISE');
+```
+5. Create a validation function to verify plan configuration integrity
+
+# Test Strategy:
+1. Unit tests to verify each premium plan has the correct number of features
+2. Integration tests to ensure the application correctly identifies premium features
+3. Create test cases for each plan to verify feature access boundaries
+4. Test upgrade/downgrade scenarios between plans
+5. Verify feature gates work correctly in the application
+6. Performance test to ensure plan feature verification completes in <100ms

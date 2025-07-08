@@ -170,6 +170,10 @@ async def endpoint_error_categorizer_middleware(request: Request, call_next):
         endpoint_category = "authentication"
     elif "/marketplace" in path:
         endpoint_category = "marketplace"
+    elif "/nodes" in path:
+        endpoint_category = "nodes"
+    elif "/executions" in path:
+        endpoint_category = "executions"
 
     # Adicionar categoria ao request state
     request.state.endpoint_category = endpoint_category
@@ -208,6 +212,10 @@ async def endpoint_error_categorizer_middleware(request: Request, call_next):
                 raise WorkflowError(f"Erro no workflow: {str(exc)}")
             elif endpoint_category == "llm_services":
                 raise LLMServiceError(f"Erro no serviço LLM: {str(exc)}")
+            elif endpoint_category == "nodes":
+                raise WorkflowError(f"Erro no node: {str(exc)}")
+            elif endpoint_category == "executions":
+                raise WorkflowError(f"Erro na execução: {str(exc)}")
 
         # Se não conseguiu categorizar, repassar o erro original
         raise
@@ -241,5 +249,7 @@ def get_error_stats():
             "llm_services": 0,
             "authentication": 0,
             "marketplace": 0,
+            "nodes": 0,
+            "executions": 0,
         },
     }

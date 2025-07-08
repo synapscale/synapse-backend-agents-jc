@@ -10,11 +10,36 @@ Todas as configurações são validadas usando Pydantic v2.
 import json
 import logging
 import os
+from pathlib import Path
 from typing import Any
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 from synapse.constants import FILE_CATEGORIES
+
+# === DETECÇÃO INTELIGENTE DE PROJECT_ROOT (APÓS LINHA 18) ===
+def _detect_project_root():
+    """Detecta raiz do projeto com múltiplas estratégias para máxima robustez"""
+    
+    # Estratégia 1: Environment variable (containers/deploy)
+    if env_root := os.getenv("PROJECT_ROOT"):
+        return Path(env_root)
+    
+    # Estratégia 2: Calcular a partir do arquivo atual
+    calculated_root = Path(__file__).resolve().parents[3]
+    
+    # Estratégia 3: Validar se é válida (existe src/ e main.py)
+    if (calculated_root / "src" / "synapse" / "main.py").exists():
+        return calculated_root
+    
+    # Estratégia 4: Working directory como fallback
+    if (Path.cwd() / "src" / "synapse" / "main.py").exists():
+        return Path.cwd()
+    
+    # Estratégia 5: Fallback seguro para containers
+    return Path("/app")
+
+_PROJECT_ROOT = _detect_project_root()
 
 
 def _parse_list_env(value: str | None) -> list[str]:
@@ -44,6 +69,15 @@ class Settings(BaseSettings):
         default_factory=lambda: os.getenv("ENVIRONMENT", "development"),
         description="Ambiente de execução",
     )
+    
+    # ============================
+    # CONFIGURAÇÕES DE PATHS (NOVO) - INSERIR APÓS LINHA 46
+    # ============================
+    PROJECT_ROOT: Path = Field(
+        default_factory=lambda: _PROJECT_ROOT,
+        description="Raiz do projeto (absoluta) - detectada inteligentemente",
+    )
+    
     DEBUG: bool = Field(
         default_factory=lambda: os.getenv("DEBUG", "False").lower() == "true",
         description="Modo debug",
@@ -385,7 +419,7 @@ class Settings(BaseSettings):
         description="Tipo de armazenamento",
     )
     STORAGE_BASE_PATH: str = Field(
-        default_factory=lambda: os.getenv("STORAGE_BASE_PATH", "./storage"),
+        default_factory=lambda: os.getenv("STORAGE_BASE_PATH", str(_PROJECT_ROOT / "storage")),
         description="Caminho base para armazenamento",
     )
     MAX_UPLOAD_SIZE: int = Field(
@@ -393,11 +427,11 @@ class Settings(BaseSettings):
         description="Tamanho máximo de upload",
     )
     UPLOAD_DIR: str = Field(
-        default_factory=lambda: os.getenv("UPLOAD_DIR", "./uploads"),
+        default_factory=lambda: os.getenv("UPLOAD_DIR", str(_PROJECT_ROOT / "uploads")),
         description="Diretório de uploads",
     )
     UPLOAD_FOLDER: str = Field(
-        default_factory=lambda: os.getenv("UPLOAD_FOLDER", "./uploads"),
+        default_factory=lambda: os.getenv("UPLOAD_FOLDER", str(_PROJECT_ROOT / "uploads")),
         description="Pasta de uploads (alias para UPLOAD_DIR)",
     )
     ALLOWED_FILE_TYPES: str = Field(
@@ -534,7 +568,7 @@ class Settings(BaseSettings):
         description="Formato do log",
     )
     LOG_FILE: str = Field(
-        default_factory=lambda: os.getenv("LOG_FILE", "logs/synapscale.log"),
+        default_factory=lambda: os.getenv("LOG_FILE", str(_PROJECT_ROOT / "logs" / "synapscale.log")),
         description="Arquivo de log",
     )
     ENABLE_METRICS: bool = Field(
@@ -576,7 +610,7 @@ class Settings(BaseSettings):
         description="Habilitar saída para arquivo de log",
     )
     LOG_DIRECTORY: str = Field(
-        default_factory=lambda: os.getenv("LOG_DIRECTORY", "logs"),
+        default_factory=lambda: os.getenv("LOG_DIRECTORY", str(_PROJECT_ROOT / "logs")),
         description="Diretório de logs",
     )
 
@@ -698,6 +732,16 @@ class Settings(BaseSettings):
         default_factory=lambda: os.getenv("ENABLE_PROFILING", "False").lower()
         == "true",
         description="Habilitar profiling",
+    )
+    EXECUTION_ENGINE_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("EXECUTION_ENGINE_ENABLED", "True").lower()
+        == "true",
+        description="Habilitar engine de execução de workflows",
+    )
+    ALERT_SYSTEM_ENABLED: bool = Field(
+        default_factory=lambda: os.getenv("ALERT_SYSTEM_ENABLED", "True").lower()
+        == "true",
+        description="Habilitar sistema de alertas",
     )
 
     # ============================

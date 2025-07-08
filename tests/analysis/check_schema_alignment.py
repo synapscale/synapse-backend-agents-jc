@@ -3,7 +3,7 @@
 scripts/check_schema_alignment.py
 
 Verifica o alinhamento entre a estrutura atual do banco de dados
-(fonte da verdade) e os schemas definidos no OpenAPI (current_openapi.json).
+(fonte da verdade) e os schemas definidos no OpenAPI (openapi.json).
 Utiliza as variáveis do .env para conectar ao banco.
 """
 import os
@@ -33,10 +33,11 @@ def get_db_tables(schema):
     return insp.get_table_names(schema=schema), insp
 
 
-def load_openapi(path="current_openapi.json"):
+def load_openapi(path="openapi.json"):
     """Carrega o spec OpenAPI JSON"""
     if not os.path.isfile(path):
         print(f"Erro: não encontrou {path}")
+        print("Execute 'python -c \"import sys; sys.path.insert(0, 'src'); from synapse.main import app; import json; spec=app.openapi(); json.dump(spec, open('openapi.json', 'w'), indent=2)\"'")
         sys.exit(1)
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)

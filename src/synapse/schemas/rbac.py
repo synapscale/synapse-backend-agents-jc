@@ -337,3 +337,130 @@ class PermissionPreset(BaseModel):
     category: PermissionCategory = Field(..., description="Categoria do preset")
     permissions: List[PermissionCreate] = Field(..., description="Permissões do preset")
     description: Optional[str] = Field(None, description="Descrição do preset")
+
+
+# ==================== RBAC ROLE SCHEMAS ====================
+
+class RBACRoleCreate(BaseModel):
+    """Schema para criação de role RBAC"""
+    
+    model_config = ConfigDict(str_strip_whitespace=True)
+    
+    name: str = Field(..., description="Nome do role")
+    description: Optional[str] = Field(None, description="Descrição")
+    is_system: bool = Field(False, description="Se é um role do sistema")
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Metadados")
+
+
+class RBACRoleUpdate(BaseModel):
+    """Schema para atualização de role RBAC"""
+    
+    model_config = ConfigDict(str_strip_whitespace=True)
+    
+    name: Optional[str] = Field(None, description="Nome")
+    description: Optional[str] = Field(None, description="Descrição")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Metadados")
+
+
+class RBACRoleResponse(BaseModel):
+    """Schema de resposta para role RBAC"""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: uuid.UUID = Field(..., description="ID do role")
+    name: str = Field(..., description="Nome")
+    description: Optional[str] = Field(None, description="Descrição")
+    is_system: bool = Field(..., description="Se é do sistema")
+    metadata: Dict[str, Any] = Field(..., description="Metadados")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+    tenant_id: Optional[uuid.UUID] = Field(None, description="ID do tenant")
+
+
+class RBACRoleListResponse(BaseModel):
+    """Schema de resposta para listagem de roles RBAC"""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    items: List[RBACRoleResponse] = Field(..., description="Lista de roles")
+    total: int = Field(..., description="Total de registros")
+    page: int = Field(..., description="Página atual")
+    pages: int = Field(..., description="Total de páginas")
+    size: int = Field(..., description="Tamanho da página")
+
+
+class RBACPermissionCreate(BaseModel):
+    """Schema para criação de permission RBAC"""
+    
+    model_config = ConfigDict(str_strip_whitespace=True)
+    
+    key: str = Field(..., description="Chave da permissão")
+    description: Optional[str] = Field(None, description="Descrição")
+    category: Optional[str] = Field(None, description="Categoria")
+    resource: Optional[str] = Field(None, description="Recurso")
+    action: Optional[str] = Field(None, description="Ação")
+
+
+class RBACPermissionResponse(BaseModel):
+    """Schema de resposta para permission RBAC"""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: uuid.UUID = Field(..., description="ID da permissão")
+    key: str = Field(..., description="Chave")
+    description: Optional[str] = Field(None, description="Descrição")
+    category: Optional[str] = Field(None, description="Categoria")
+    resource: Optional[str] = Field(None, description="Recurso")
+    action: Optional[str] = Field(None, description="Ação")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+    tenant_id: Optional[uuid.UUID] = Field(None, description="ID do tenant")
+
+
+class RBACPermissionListResponse(BaseModel):
+    """Schema de resposta para listagem de permissions RBAC"""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    items: List[RBACPermissionResponse] = Field(..., description="Lista de permissões")
+    total: int = Field(..., description="Total de registros")
+    page: int = Field(..., description="Página atual")
+    pages: int = Field(..., description="Total de páginas")
+    size: int = Field(..., description="Tamanho da página")
+
+
+class UserTenantRoleCreate(BaseModel):
+    """Schema para criação de role de usuário no tenant"""
+    
+    model_config = ConfigDict(str_strip_whitespace=True)
+    
+    user_id: uuid.UUID = Field(..., description="ID do usuário")
+    role_id: uuid.UUID = Field(..., description="ID do role")
+    granted: bool = Field(True, description="Se está concedido")
+    conditions: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Condições")
+
+
+class UserTenantRoleResponse(BaseModel):
+    """Schema de resposta para role de usuário no tenant"""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: uuid.UUID = Field(..., description="ID do user tenant role")
+    user_id: uuid.UUID = Field(..., description="ID do usuário")
+    role_id: uuid.UUID = Field(..., description="ID do role")
+    tenant_id: uuid.UUID = Field(..., description="ID do tenant")
+    granted: bool = Field(..., description="Se está concedido")
+    conditions: Dict[str, Any] = Field(..., description="Condições")
+    created_at: datetime = Field(..., description="Data de criação")
+    updated_at: datetime = Field(..., description="Última atualização")
+
+
+class PaginatedResponse(BaseModel):
+    """Schema base para respostas paginadas"""
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    total: int = Field(..., description="Total de registros")
+    page: int = Field(..., description="Página atual")
+    pages: int = Field(..., description="Total de páginas")
+    size: int = Field(..., description="Tamanho da página")

@@ -49,7 +49,6 @@ class Tenant(Base):
     tenant_features = relationship("synapse.models.tenant_feature.TenantFeature", back_populates="tenant")
     plan = relationship("synapse.models.plan.Plan", back_populates="tenants")
     workspaces = relationship("synapse.models.workspace.Workspace", back_populates="tenant")
-    plan_entitlements = relationship("synapse.models.plan_entitlement.PlanEntitlement", back_populates="tenant", cascade="all, delete-orphan")
     workspace_activities = relationship("synapse.models.workspace_activity.WorkspaceActivity", back_populates="tenant", cascade="all, delete-orphan")
     workspace_invitations = relationship("synapse.models.workspace_invitation.WorkspaceInvitation", back_populates="tenant", cascade="all, delete-orphan")
     workspace_projects = relationship("synapse.models.workspace_project.WorkspaceProject", back_populates="tenant", cascade="all, delete-orphan")
@@ -67,7 +66,6 @@ class Tenant(Base):
 
     # Relacionamentos de Pagamento
     payment_customers = relationship("synapse.models.payment_customer.PaymentCustomer", back_populates="tenant", cascade="all, delete-orphan")
-    payment_providers = relationship("synapse.models.payment_provider.PaymentProvider", back_populates="tenant", cascade="all, delete-orphan")
     invoices = relationship("synapse.models.invoice.Invoice", back_populates="tenant", cascade="all, delete-orphan")
     coupons = relationship("synapse.models.coupon.Coupon", back_populates="tenant", cascade="all, delete-orphan")
     workspace_members = relationship("synapse.models.workspace_member.WorkspaceMember", back_populates="tenant", cascade="all, delete-orphan")
@@ -107,9 +105,6 @@ class Tenant(Base):
     # Message Relationships
     message_feedbacks = relationship("synapse.models.message_feedback.MessageFeedback", back_populates="tenant", cascade="all, delete-orphan")
     
-    # Plan Provider Mappings
-    plan_provider_mappings = relationship("synapse.models.plan_provider_mapping.PlanProviderMapping", back_populates="tenant", cascade="all, delete-orphan")
-
     # LLM Relationships
     llms = relationship("synapse.models.llm.LLM", back_populates="tenant", cascade="all, delete-orphan")
     conversations = relationship("synapse.models.conversation.Conversation", back_populates="tenant", cascade="all, delete-orphan")

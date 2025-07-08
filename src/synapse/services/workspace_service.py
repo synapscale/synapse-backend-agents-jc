@@ -12,7 +12,7 @@ import logging
 
 from synapse.models.workspace import Workspace, WorkspaceType
 from synapse.models.user import User
-from synapse.schemas.models import (
+from synapse.schemas.workspace import (
     WorkspaceCreate,
     WorkspaceUpdate,
     MemberInvite,

@@ -1,0 +1,45 @@
+# Task ID: 1
+# Title: Fix FREE Plan Features Discrepancy
+# Status: pending
+# Dependencies: None
+# Priority: high
+# Description: Resolve the critical dual truth problem between JSON and relational storage of plan features, focusing on the FREE plan.
+# Details:
+1. Create a migration script to ensure `plan_features` table is the single source of truth
+2. Remove premium features from FREE plan in `plan_features` table
+3. Add a deprecation notice to `plans.features` JSON field
+4. Create a data migration to ensure all FREE plan tenants have correct feature access
+5. Implement using PostgreSQL 14+ and SQLAlchemy 2.0 with Alembic for migrations
+6. SQL implementation:
+```sql
+-- Remove premium features from FREE plan
+DELETE FROM plan_features 
+WHERE plan_id = (SELECT id FROM plans WHERE name = 'FREE') 
+AND feature_id IN (SELECT id FROM features WHERE is_premium = true);
+
+-- Add deprecation comment to plans table
+COMMENT ON COLUMN plans.features IS 'DEPRECATED: Use plan_features table instead. Will be removed in future version.';
+```
+7. Add database function to validate feature access:
+```sql
+CREATE OR REPLACE FUNCTION check_feature_access(tenant_id INT, feature_name TEXT) 
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM tenants t
+    JOIN plans p ON t.plan_id = p.id
+    JOIN plan_features pf ON p.id = pf.plan_id
+    JOIN features f ON pf.feature_id = f.id
+    WHERE t.id = tenant_id AND f.name = feature_name
+  );
+END;
+$$ LANGUAGE plpgsql;
+```
+
+# Test Strategy:
+1. Unit tests to verify FREE plan has only the correct features
+2. Integration tests to ensure the application uses only the relational source
+3. Create test cases for each feature to verify access control
+4. Verify all FREE tenants have exactly the features defined in the relational model
+5. Performance test to ensure feature verification completes in <100ms
+6. Test rollback procedures in case of migration failure

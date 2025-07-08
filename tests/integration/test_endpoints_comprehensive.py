@@ -49,7 +49,7 @@ class TestConfig:
 
 
 class ComprehensiveEndpointTester:
-    def __init__(self, config: TestConfig):
+    def __init__(self, config: TestConfig, user_email=None, user_password=None):
         self.config = config
         self.auth_headers = {}
         self.endpoints = []
@@ -65,6 +65,8 @@ class ComprehensiveEndpointTester:
             "by_category": {},
             "performance": {},
         }
+        self.user_email = user_email
+        self.user_password = user_password
 
     def log(self, message: str, level: str = "info"):
         """Log padronizado"""
@@ -160,42 +162,64 @@ class ComprehensiveEndpointTester:
         return "general"
 
     def setup_auth(self) -> bool:
-        """Configura autenticação robusta"""
+        """Configura autenticação robusta ou com usuário fornecido"""
         if not self.config.test_auth:
             return True
-
         import requests
-
+        # Se usuário/senha fornecidos, tentar login direto
+        if self.user_email and self.user_password:
+            login_data = {
+                "username": self.user_email,
+                "password": self.user_password,
+            }
+            login_resp = requests.post(
+                f"{self.config.base_url}{API_V1_PREFIX}/auth/login",
+                data=login_data,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=10,
+            )
+            if login_resp.status_code == 200:
+                auth_data = login_resp.json()
+                # Corrigir: buscar token em data.access_token
+                token = None
+                if isinstance(auth_data, dict):
+                    if "access_token" in auth_data:
+                        token = auth_data["access_token"]
+                    elif "data" in auth_data and isinstance(auth_data["data"], dict):
+                        token = auth_data["data"].get("access_token")
+                if token:
+                    self.auth_headers = {"Authorization": f"Bearer {token}"}
+                    self.log(f"Login bem-sucedido para {self.user_email}", "success")
+                    return True
+                else:
+                    self.log(f"Login falhou: token não encontrado na resposta: {auth_data}", "error")
+                    sys.exit(1)
+            else:
+                self.log(f"Login falhou para {self.user_email}: {login_resp.status_code} - {login_resp.text}", "error")
+                sys.exit(1)
+        # Fluxo padrão (usuário de teste)
         unique_id = uuid.uuid4().hex[:8]
-
-        # Dados de teste mais robustos incluindo novos campos
         self.test_user_data = {
             "email": f"test_{unique_id}@synapscale.test",
             "password": "StrongTestPass123!@#$",
             "full_name": f"Test User {unique_id}",
             "username": f"testuser_{unique_id}",
-            # Novos campos de perfil
             "bio": f"Test user bio for automated testing {unique_id}",
             "timezone": "UTC",
             "phone": "+1234567890",
         }
-
         try:
-            # Tentar múltiplas estratégias de autenticação
             auth_strategies = [
                 self._try_register_login,
                 self._try_existing_user,
                 self._try_demo_user,
             ]
-
             for strategy in auth_strategies:
                 if strategy():
                     self.log("Autenticação configurada", "success")
                     return True
-
             self.log("Continuando sem autenticação", "warning")
             return True
-
         except Exception as e:
             self.log(f"Erro na autenticação: {e}", "warning")
             return True
@@ -632,9 +656,13 @@ def main():
     parser.add_argument(
         "--no-auth", action="store_true", help="Não testar autenticação"
     )
-
+    parser.add_argument(
+        "--user-email", type=str, default=None, help="E-mail do usuário para autenticação automática"
+    )
+    parser.add_argument(
+        "--user-password", type=str, default=None, help="Senha do usuário para autenticação automática"
+    )
     args = parser.parse_args()
-
     config = TestConfig(
         base_url=args.base_url,
         timeout=args.timeout,
@@ -642,10 +670,8 @@ def main():
         save_json=args.save_json,
         test_auth=not args.no_auth,
     )
-
-    tester = ComprehensiveEndpointTester(config)
+    tester = ComprehensiveEndpointTester(config, user_email=args.user_email, user_password=args.user_password)
     success = tester.run()
-
     sys.exit(0 if success else 1)
 
 

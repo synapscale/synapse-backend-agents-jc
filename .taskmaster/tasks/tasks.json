@@ -3,315 +3,224 @@
     "tasks": [
       {
         "id": 1,
-        "title": "Fix SQLAlchemy Relationship Error Between Tenant and Billing Events",
-        "description": "Resolve the SQLAlchemy error in the Tenant model relationships by properly defining the relationship with ComponentDownload model.",
-        "status": "done",
-        "dependencies": [],
+        "title": "Setup Secure Webhook Endpoint",
+        "description": "Create a secure endpoint for receiving Stripe webhooks with proper signature validation and error handling.",
+        "details": "Implement a dedicated endpoint at `/api/v1/billing/stripe/webhook` that validates incoming Stripe webhook events using the Stripe-Signature header. Use the Stripe SDK's webhook construction method (e.g., `stripe.Webhook.construct_event()` in Node.js) to verify the signature against the STRIPE_WEBHOOK_SECRET environment variable. Implement rate limiting middleware (30 req/min recommended) and proper error handling. Log all webhook attempts, including invalid ones, to the billing_events table for audit purposes. Ensure the endpoint returns appropriate HTTP status codes (200 for success, 4xx for client errors).",
+        "testStrategy": "Test the endpoint with valid and invalid signatures using Stripe's webhook testing tools. Verify that valid events are processed and invalid ones are rejected with appropriate error messages. Test rate limiting by sending multiple requests in quick succession. Verify that all webhook attempts are properly logged in the billing_events table.",
         "priority": "high",
-        "details": "The error message indicates that SQLAlchemy cannot locate the ComponentDownload model when initializing the Tenant mapper.\n\nSteps to resolve this issue:\n\n1. Locate the model definitions for both Tenant and ComponentDownload in the codebase.\n\n2. Analyze the current relationship definition:\n   - Check how the `Tenant` model is referencing `ComponentDownload`\n   - Verify if the ComponentDownload model exists and is properly defined\n   - Check import paths and module structure\n\n3. Fix the relationship definition in the Tenant model:\n\n```python\n# In the Tenant model\nclass Tenant(Base):\n    __tablename__ = 'tenants'\n    \n    id = Column(Integer, primary_key=True)\n    # Other existing columns\n    \n    # Update the relationship definition with correct import path\n    component_downloads = relationship(\"path.to.ComponentDownload\", back_populates=\"tenant\")\n```\n\n4. Ensure the ComponentDownload model exists and has the corresponding relationship back to Tenant:\n\n```python\n# In the ComponentDownload model\nclass ComponentDownload(Base):\n    __tablename__ = 'component_downloads'\n    \n    id = Column(Integer, primary_key=True)\n    # Other columns\n    \n    tenant_id = Column(Integer, ForeignKey('tenants.id'), nullable=False)\n    tenant = relationship(\"Tenant\", back_populates=\"component_downloads\")\n```\n\n5. If the ComponentDownload model doesn't exist, create it with the appropriate schema.\n\n6. Update import statements to ensure all models are properly imported and registered with SQLAlchemy.\n\n7. If needed, create migration scripts to update the database schema.\n\n<info added on 2025-07-04T16:44:30.359Z>\n## 🔍 INVESTIGAÇÃO CONCLUÍDA - PROBLEMA IDENTIFICADO\n\n### ❌ Problema Identificado\n\nAnalisei os modelos SQLAlchemy e identifiquei o problema exato:\n\n**No modelo Tenant (src/synapse/models/tenant.py):**\n- Linha 86: `billing_events = relationship(\"synapse.models.billing_event.BillingEvent\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n- ✅ O relacionamento está CORRETAMENTE definido\n\n**No modelo BillingEvent (src/synapse/models/billing_event.py):**\n- ❌ NÃO há coluna `tenant_id` \n- ❌ NÃO há ForeignKey para tabela tenants\n- ❌ NÃO há relacionamento `tenant = relationship(\"Tenant\", back_populates=\"billing_events\")`\n\n### 🛠️ Correção Necessária\n\nO modelo BillingEvent precisa de:\n\n1. **Adicionar coluna tenant_id:**\n```python\ntenant_id = Column(\n    UUID(as_uuid=True),\n    ForeignKey(\"synapscale_db.tenants.id\", ondelete=\"CASCADE\"),\n    nullable=False,\n    index=True,\n)\n```\n\n2. **Adicionar relacionamento:**\n```python\ntenant = relationship(\"Tenant\", back_populates=\"billing_events\")\n```\n\n### 📍 Localização dos Arquivos\n- **Tenant:** `src/synapse/models/tenant.py` (linha 86 - relacionamento correto)\n- **BillingEvent:** `src/synapse/models/billing_event.py` (falta foreign key e relacionamento)\n\n### 🎯 Próximos Passos\n1. Implementar correção no modelo BillingEvent\n2. Criar migração de banco de dados (se necessário)\n3. Testar relacionamento\n4. Verificar se erro desaparece dos logs\n</info added on 2025-07-04T16:44:30.359Z>\n\n<info added on 2025-07-05>\n## 🔍 NOVA INVESTIGAÇÃO - PROBLEMA ATUALIZADO\n\nAnalisando o novo log, o erro mudou e agora está relacionado ao modelo ComponentDownload:\n\n**Erro atual:**\n```\nERROR: When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.component_download.ComponentDownload' failed to locate a name (\"Module 'models' has no mapped classes registered under the name 'component_download'\")\n```\n\n### ❌ Problema Identificado\n\nO modelo Tenant está tentando referenciar um modelo ComponentDownload que:\n1. Não existe no caminho especificado, ou\n2. Não está sendo importado corretamente, ou\n3. Não está registrado no sistema de mapeamento do SQLAlchemy\n\n### 🛠️ Possíveis Correções\n\n1. **Verificar se o modelo ComponentDownload existe:**\n   - Procurar por `src/synapse/models/component_download.py`\n   - Se não existir, criar o modelo\n\n2. **Corrigir o caminho de importação no modelo Tenant:**\n   - Verificar como está definido o relacionamento com ComponentDownload\n   - Atualizar para o caminho correto\n\n3. **Garantir que o modelo ComponentDownload está registrado:**\n   - Verificar se o modelo está sendo importado no arquivo `__init__.py` do pacote models\n\n### 📍 Próximos Passos\n1. Localizar a definição do relacionamento no modelo Tenant\n2. Verificar a existência do modelo ComponentDownload\n3. Corrigir o caminho de importação ou criar o modelo se necessário\n4. Testar se o erro foi resolvido\n</info>\n\n<info added on 2025-07-06>\n## ✅ CORREÇÃO IMPLEMENTADA\n\n### 🔍 Problema Identificado e Corrigido\n\nO problema foi identificado e corrigido com sucesso:\n\n1. **Problema**: O modelo Tenant estava referenciando `synapse.models.component_download.ComponentDownload`, mas o modelo ComponentDownload está definido em `marketplace.py`, não em `component_download.py`.\n\n2. **Correções feitas**:\n   - tenant.py linha 125: `component_downloads = relationship(\"synapse.models.marketplace.ComponentDownload\", ...)`\n   - tenant.py: corrigidas também referências para ComponentPurchase e ComponentRating\n   - user.py: corrigidas referências para MarketplaceComponent, ComponentRating, ComponentDownload e ComponentPurchase\n\n3. **Status**: Aguardando teste para verificar se o erro SQLAlchemy foi resolvido\n</info>",
-        "testStrategy": "1. Unit Tests:\n   - Create unit tests that verify the relationship between Tenant and ComponentDownload works in both directions\n   - Test creating a new Tenant and associating ComponentDownload instances with it\n   - Test querying ComponentDownload instances for a specific Tenant\n   - Test querying the Tenant for specific ComponentDownload instances\n\n2. Import Path Testing:\n   - Verify that all import statements are correct and models are properly registered\n   - Test that SQLAlchemy can initialize all mappers without errors\n   - Check that circular import issues are avoided\n\n3. Database Migration Testing (if applicable):\n   - If a migration was created, test that it runs successfully on a test database\n   - Verify that existing data maintains integrity after the migration\n\n4. Integration Testing:\n   - Test any API endpoints or services that use the Tenant-ComponentDownload relationship\n   - Verify that CRUD operations work correctly with the updated relationship\n\n5. Manual Verification:\n   - Run the application and verify no SQLAlchemy errors are thrown during startup\n   - Check that relationships can be accessed without errors\n   - Verify that data is displayed correctly in the UI\n\n6. Edge Cases:\n   - Test with null or invalid tenant_id values if applicable\n   - Test with a Tenant that has no ComponentDownload instances\n   - Test with a Tenant that has multiple ComponentDownload instances\n\n7. Performance Check:\n   - Verify that queries using this relationship are properly optimized\n   - Check for any N+1 query issues that might arise from the relationship",
+        "dependencies": [],
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Design custom exception class hierarchy",
-            "description": "Create a hierarchy of custom exception classes to categorize different types of errors in the application",
-            "status": "done",
+            "title": "Create webhook endpoint structure",
+            "description": "Set up the basic webhook endpoint route and handler in the application",
             "dependencies": [],
-            "details": "Define a base ApplicationException class and extend it with specific exception types like ValidationException, AuthorizationException, ResourceNotFoundException, etc. Include properties for error codes, user-friendly messages, and technical details.",
+            "details": "Create the webhook endpoint route in the application, define the HTTP method (POST), set up the basic handler function structure, and ensure it can receive and parse incoming JSON payloads. Include initial request validation to verify the payload format.\n<info added on 2025-07-08T05:33:05.890Z>\nI've created the webhook endpoint route at `/api/v1/billing/stripe/webhook` that only accepts POST requests. The endpoint is structured to receive events from Stripe securely and parse incoming JSON payloads. \n\nThe implementation includes:\n- Basic request validation to verify payload format\n- Preparation for signature validation in the next subtask\n- Error handling for malformed requests\n- Logging infrastructure for security monitoring\n- Rate limiting setup to prevent abuse\n\nThe handler function is designed with a modular structure that will allow easy integration with the event-specific handlers to be defined in future tasks. I've documented the integration points where these handlers will connect.\n\nThe endpoint is ready for the next step of implementing the signature validation mechanism as outlined in subtask 1.2.\n</info added on 2025-07-08T05:33:05.890Z>",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 2,
-            "title": "Implement global error handling middleware",
-            "description": "Create middleware to catch and process all unhandled exceptions in the application",
-            "status": "done",
+            "title": "Implement signature validation mechanism",
+            "description": "Add security by validating webhook signatures to ensure requests are authentic",
             "dependencies": [
               1
             ],
-            "details": "Develop middleware that intercepts exceptions, identifies their type, transforms them into appropriate HTTP responses with correct status codes, and includes relevant error information. Ensure sensitive information is not exposed in production environments.",
+            "details": "Implement HMAC signature validation to verify webhook authenticity. Extract the signature from request headers, compute the expected signature using a shared secret, and compare them using a timing-safe comparison method to prevent timing attacks. Reject requests with invalid signatures.\n<info added on 2025-07-08T05:33:17.681Z>\nStarted implementing Stripe webhook signature validation.\n\nThe implementation will:\n- Extract the Stripe-Signature header from incoming requests\n- Use the STRIPE_WEBHOOK_SECRET environment variable as the shared secret\n- Utilize Stripe's official library method stripe.Webhook.construct_event() to validate the signature\n- Implement proper error handling for invalid signatures or malformed payloads\n- Return appropriate status codes (400/401) for failed validations\n- Log validation failures for security auditing purposes\n- Ensure no sensitive information is exposed in logs or error responses\n\nThis signature validation ensures only legitimate Stripe-originated events are processed by our webhook endpoint.\n</info added on 2025-07-08T05:33:17.681Z>",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 3,
-            "title": "Set up error logging system",
-            "description": "Implement comprehensive error logging functionality to record error details for monitoring and debugging",
-            "status": "done",
+            "title": "Add rate limiting protection",
+            "description": "Implement rate limiting to prevent abuse of the webhook endpoint",
             "dependencies": [
-              2
+              1
             ],
-            "details": "Configure logging to capture exception details, request information, stack traces, and contextual data. Implement different logging levels (error, warning, info) and ensure logs are properly formatted for analysis. Set up log rotation and storage policies.",
+            "details": "Set up rate limiting middleware to restrict the number of webhook calls from a single source within a time period. Define appropriate rate limits, implement storage for tracking request counts (Redis or in-memory), and configure the system to return 429 Too Many Requests responses when limits are exceeded.\n<info added on 2025-07-08T05:35:34.081Z>\nI've started implementing rate limiting for the Stripe webhook endpoint. The recommended limit is 30 requests per minute per IP/source. The implementation will use Redis as the preferred storage method for tracking request counts, with in-memory storage as a fallback option. All rate limiting events will be logged for audit purposes. The system will return HTTP 429 (Too Many Requests) when limits are exceeded.\n\nImplementation plan:\n1. Define and configure the rate limiting middleware\n2. Integrate the middleware with the webhook endpoint\n3. Ensure the logging system captures blocked attempts\n4. Test the system under load and at boundary conditions\n\nThis implementation builds upon the existing endpoint structure and signature validation, and will be followed by comprehensive error handling in the next subtask.\n</info added on 2025-07-08T05:35:34.081Z>",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 4,
-            "title": "Create standardized error response format",
-            "description": "Define a consistent structure for error responses returned to clients",
-            "status": "done",
+            "title": "Create comprehensive error handling",
+            "description": "Implement robust error handling for various failure scenarios",
             "dependencies": [
               1,
-              2
+              2,
+              3
             ],
-            "details": "Design a JSON error response format that includes error code, user-friendly message, timestamp, request ID, and optional debugging information. Ensure the format is consistent across all API endpoints and error types.",
+            "details": "Develop error handling for all potential failure cases including invalid payloads, signature verification failures, rate limit exceedances, and internal processing errors. Ensure appropriate HTTP status codes are returned, error responses are standardized, and sensitive information is not leaked in error messages.\n<info added on 2025-07-08T05:35:52.786Z>\nStarting implementation of comprehensive error handling for the Stripe webhook endpoint.\n\nThe error handling implementation will cover:\n- Invalid payloads (400 Bad Request)\n- Signature verification failures (401 Unauthorized)\n- Rate limit exceedances (429 Too Many Requests)\n- Internal processing errors (500 Internal Server Error)\n\nImplementation plan:\n1. Create specific error handlers for each expected error type\n2. Implement an error middleware to catch unhandled exceptions\n3. Standardize error response format with appropriate HTTP status codes\n4. Ensure no sensitive information is exposed in error messages\n5. Integrate detailed logging for all failures to support audit and monitoring\n\nAll errors will be logged with appropriate context for later analysis. Testing will include verification of all error scenarios to ensure proper handling.\n</info added on 2025-07-08T05:35:52.786Z>",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 5,
-            "title": "Implement error monitoring and alerting",
-            "description": "Set up a system to monitor error occurrences and send alerts for critical issues",
-            "status": "done",
-            "dependencies": [
-              3
-            ],
-            "details": "Integrate with monitoring tools to track error rates and patterns. Configure alerting thresholds and notification channels (email, Slack, etc.) for different error types and severity levels. Set up dashboards to visualize error metrics.",
-            "testStrategy": ""
-          },
-          {
-            "id": 6,
-            "title": "Create comprehensive tests for error handling",
-            "description": "Develop tests to verify the correct functioning of the error handling system",
-            "status": "done",
+            "title": "Set up logging and monitoring",
+            "description": "Implement detailed logging and monitoring for webhook activities",
             "dependencies": [
               1,
               2,
               3,
               4
             ],
-            "details": "Write unit tests for custom exception classes, integration tests for middleware functionality, and end-to-end tests that verify proper error responses from API endpoints. Include tests for different error scenarios, validation failures, and edge cases.",
+            "details": "Create a comprehensive logging system for the webhook endpoint that records incoming requests, validation results, processing outcomes, and errors. Implement structured logging with appropriate log levels, ensure PII/sensitive data is not logged, and set up monitoring alerts for suspicious activities or high error rates.\n<info added on 2025-07-08T05:36:07.399Z>\nI'm implementing a structured logging and monitoring system for the Stripe webhook endpoint with the following specifications:\n\n- Logging will capture all incoming requests (status, IP, timestamp, event type), signature validation results, rate limiting occurrences, errors/exceptions, and event processing outcomes (success/failure)\n- All logs will be structured in JSON format, ensuring no sensitive data or PII is exposed\n- Critical logs will be persisted in the billing_events table in the PostgreSQL database (synapscale_db schema)\n- Monitoring alerts will be configured to detect suspicious patterns such as error spikes or unusual request volumes\n\nImplementation plan:\n1. Define log format and destinations (console, file, database)\n2. Integrate logging at all critical points in the webhook processing flow\n3. Configure monitoring alerts based on log patterns\n4. Test the logging and monitoring system with both real and simulated scenarios\n\nUpon completion, I'll conduct a comprehensive review of the entire endpoint integration and prepare for end-to-end testing.\n</info added on 2025-07-08T05:36:07.399Z>",
+            "status": "pending",
             "testStrategy": ""
-          },
-          {
-            "id": 7,
-            "title": "Investigate ComponentDownload model reference in Tenant model",
-            "description": "Locate and analyze how the Tenant model is referencing the ComponentDownload model",
-            "status": "done",
-            "dependencies": [],
-            "details": "Check the Tenant model file (src/synapse/models/tenant.py) to find how it's referencing ComponentDownload. Identify the exact line and relationship definition that's causing the error.\n<info added on 2025-07-04T16:52:15.665Z>\nProblem identified! The reference in the Tenant model is incorrect:\n- Line 125 of tenant.py: `component_downloads = relationship(\"synapse.models.component_download.ComponentDownload\", ...)`\n- But the ComponentDownload model is defined in `marketplace.py`, not in `component_download.py`\n\nThe correct reference should be: `\"synapse.models.marketplace.ComponentDownload\"`\n</info added on 2025-07-04T16:52:15.665Z>",
-            "testStrategy": "Verify that the reference can be found and documented correctly."
-          },
-          {
-            "id": 8,
-            "title": "Check existence of ComponentDownload model",
-            "description": "Verify if the ComponentDownload model exists and is properly defined",
-            "status": "done",
-            "dependencies": [
-              7
-            ],
-            "details": "Search for the ComponentDownload model file (likely at src/synapse/models/component_download.py). If it exists, check its definition. If not, determine if it needs to be created.\n\nFindings: The ComponentDownload model does not exist in component_download.py but is actually defined in marketplace.py. This explains the import error in the Tenant model.",
-            "testStrategy": "Document findings about the model's existence and structure."
-          },
-          {
-            "id": 9,
-            "title": "Fix import path for ComponentDownload model in Tenant model",
-            "description": "Correct the import path for ComponentDownload in the Tenant model",
-            "status": "done",
-            "dependencies": [
-              8
-            ],
-            "details": "Update the reference in the Tenant model from \"synapse.models.component_download.ComponentDownload\" to \"synapse.models.marketplace.ComponentDownload\" at line 125.\n\nAlso corrected references for ComponentPurchase and ComponentRating in the Tenant model to point to the marketplace.py file.",
-            "testStrategy": "Test that the model can be imported correctly and that SQLAlchemy can initialize it."
-          },
-          {
-            "id": 10,
-            "title": "Fix import paths in User model",
-            "description": "Correct import paths for marketplace-related models in the User model",
-            "status": "done",
-            "dependencies": [
-              9
-            ],
-            "details": "Fixed references in user.py for MarketplaceComponent, ComponentRating, ComponentDownload, and ComponentPurchase to ensure they all point to the correct location in marketplace.py.",
-            "testStrategy": "Verify that the model is properly registered and can be referenced by other models."
-          },
-          {
-            "id": 11,
-            "title": "Test application startup with corrected model references",
-            "description": "Verify that the application starts without SQLAlchemy errors after fixing the model references",
-            "status": "done",
-            "dependencies": [
-              9,
-              10
-            ],
-            "details": "Start the application and check the logs to ensure that no SQLAlchemy errors related to model references are occurring. Verify that the Tenant model can properly reference ComponentDownload and other marketplace models.",
-            "testStrategy": "Run the application in a test environment and monitor logs for any SQLAlchemy errors."
-          },
-          {
-            "id": 12,
-            "title": "Test relationship between Tenant and ComponentDownload",
-            "description": "Verify that the relationship works correctly after fixes",
-            "status": "done",
-            "dependencies": [
-              9,
-              10,
-              11
-            ],
-            "details": "Write and run tests to ensure that Tenant can reference ComponentDownload instances and vice versa. Test both creation and querying operations.",
-            "testStrategy": "Create unit tests that verify the relationship works in both directions."
-          },
-          {
-            "id": 13,
-            "title": "Document model relationship structure",
-            "description": "Create documentation about the correct model relationships for future reference",
-            "status": "done",
-            "dependencies": [
-              9,
-              10
-            ],
-            "details": "Document the correct relationship structure between Tenant, User, and marketplace-related models (ComponentDownload, ComponentPurchase, ComponentRating, MarketplaceComponent). Include information about where each model is defined and how they reference each other.",
-            "testStrategy": "Review documentation for accuracy and completeness."
           }
         ]
       },
       {
         "id": 2,
-        "title": "Investigate PostgreSQL Database Structure for Tenants and Billing Events Tables",
-        "description": "Analyze the existing PostgreSQL database schema for tenants and billing_events tables, documenting their structure, columns, foreign keys, and the intended relationship between them.",
-        "status": "in-progress",
-        "dependencies": [
-          1
-        ],
+        "title": "Create Database Schema for Billing Entities",
+        "description": "Design and implement the database schema for all billing-related entities with proper relationships, constraints, and indexes.",
+        "details": "Create the following tables with appropriate columns, constraints, and indexes:\n\n1. `payment_customers`: `id`, `user_id`, `provider_id`, `external_customer_id`, `created_at`, `updated_at`\n2. `payment_methods`: `id`, `customer_id`, `provider_id`, `external_method_id`, `type`, `is_default`, `is_active`, `created_at`, `updated_at`\n3. `subscriptions`: `id`, `customer_id`, `provider_id`, `external_subscription_id`, `plan_id`, `status`, `start_date`, `end_date`, `created_at`, `updated_at`\n4. `invoices`: `id`, `customer_id`, `subscription_id`, `provider_id`, `external_invoice_id`, `amount`, `currency`, `status`, `due_date`, `paid_at`, `created_at`, `updated_at`\n5. `billing_events`: `id`, `provider_id`, `event_id`, `event_type`, `payload`, `processed_at`, `status`, `related_table`, `related_id`, `created_at`\n\nEnsure unique constraints on (`provider_id`, `external_*_id`) pairs for all tables. Update the `plan_provider_mappings` table to have a unique constraint on the triad (`provider_id`, `external_plan_id`, `external_price_id`). Add appropriate foreign key constraints with `ON UPDATE CASCADE` and `ON DELETE SET NULL` where applicable.",
+        "testStrategy": "Verify the schema by running SQL queries to check constraints, indexes, and relationships. Test inserting, updating, and deleting records to ensure constraints work as expected. Verify that the unique constraints prevent duplicate external IDs. Test foreign key constraints by attempting to insert records with invalid references.",
         "priority": "high",
-        "details": "This task involves a thorough investigation of the database schema to understand how the tenants and billing_events tables are currently structured and how they relate to each other. The investigation has been completed with the following findings:\n\n## Tenants Table Structure:\n- **Primary Key**: id (UUID, not null, auto-generated)\n- **Main Fields**: name, slug (unique), domain, status (default 'active')\n- **Configuration Settings**: theme, default_language, timezone, mfa_required, session_timeout\n- **Limitation Fields**: max_storage_mb, max_workspaces, max_api_calls_per_day, max_members_per_workspace\n- **Relationships**: plan_id (FK to plans.id), enabled_features (array)\n\n## Billing_Events Table Structure:\n- **Primary Key**: id (UUID, not null, auto-generated)\n- **Main Relationships**: \n  - user_id (FK to users.id)\n  - workspace_id (FK to workspaces.id) - OPTIONAL\n  - tenant_id (FK to tenants.id) - OPTIONAL\n- **Billing Fields**: event_type, amount_usd, description, status\n- **Tracking Fields**: related_usage_log_id, related_message_id, invoice_id\n- **Payment Fields**: payment_provider, payment_transaction_id, billing_metadata\n\n## Confirmed Relationship:\n- The billing_events table ALREADY HAS the correct foreign key to tenants\n- **Foreign Key**: billing_events.tenant_id → tenants.id\n- **Constraint Name**: billing_events_tenant_id_fkey\n\n## Next Steps:\n1. Verify the SQLAlchemy Tenant model to correct any incorrect references\n2. Verify the BillingEvent model to ensure proper bidirectional relationship\n3. Fix imports and references causing mapping errors",
-        "testStrategy": "1. Database Schema Verification:\n   - Execute SQL queries to verify the existence of both tables\n   - Run `SELECT * FROM information_schema.columns WHERE table_name IN ('tenants', 'billing_events')` to confirm column definitions\n   - Check foreign key constraints with `SELECT * FROM information_schema.table_constraints WHERE table_name IN ('tenants', 'billing_events')`\n\n2. Relationship Testing:\n   - Write and execute test queries that join the tables using the confirmed relationship\n   - Test queries like `SELECT * FROM billing_events b JOIN tenants t ON b.tenant_id = t.id LIMIT 5;`\n   - Verify that the join produces the expected results without errors\n\n3. SQLAlchemy Model Verification:\n   - Review the Tenant and BillingEvent SQLAlchemy models\n   - Ensure the relationship definitions match the actual database schema\n   - Test the bidirectional relationship in code with sample queries\n\n4. Report Preparation:\n   - Create a comprehensive report with schema diagrams\n   - Include SQL scripts that can be used to verify findings\n   - Document the next steps for fixing any model inconsistencies",
+        "dependencies": [],
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Implement structured logging framework",
-            "description": "Set up a structured logging framework that standardizes log formats across the application",
-            "status": "pending",
+            "title": "Define Core Tables Structure",
+            "description": "Define the basic structure of all core tables including columns, data types, and primary keys",
             "dependencies": [],
-            "details": "Implement JSON-based structured logging using a library compatible with our stack. Define standard log levels, context fields (request ID, user ID, etc.), and ensure consistent formatting across all services. Create helper functions or middleware to simplify logging usage throughout the codebase.",
+            "details": "Create table definitions for users, products, orders, categories, inventory, and any other core entities. For each table, specify column names, appropriate data types, and identify primary keys. Document the purpose of each table and its role in the overall schema.",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 2,
-            "title": "Configure distributed tracing with OpenTelemetry",
-            "description": "Implement distributed tracing to track requests across multiple services",
-            "status": "pending",
+            "title": "Implement Foreign Key Constraints",
+            "description": "Establish relationships between tables using foreign key constraints",
             "dependencies": [
               1
             ],
-            "details": "Set up OpenTelemetry instrumentation for all services. Configure trace context propagation across service boundaries. Implement custom span creation for critical business operations. Set up a trace visualization backend (Jaeger or Zipkin) and configure sampling rates appropriate for production.",
+            "details": "Define all foreign key constraints to establish relationships between tables (one-to-many, many-to-many). Ensure referential integrity by specifying appropriate ON DELETE and ON UPDATE behaviors (CASCADE, SET NULL, RESTRICT, etc.). Document each relationship with a clear explanation of the business logic it represents.",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 3,
-            "title": "Implement metrics collection with Prometheus",
-            "description": "Set up metrics collection to monitor system performance and business KPIs",
-            "status": "pending",
+            "title": "Set Up Check and Unique Constraints",
+            "description": "Implement check constraints and unique constraints to ensure data integrity",
             "dependencies": [
               1
             ],
-            "details": "Configure Prometheus metrics endpoints in all services. Define and implement key metrics including request rates, error rates, and latency histograms. Create custom metrics for business-specific KPIs. Set up metric scraping configuration in Prometheus and ensure proper labeling for effective querying.",
+            "details": "Define check constraints to enforce business rules (e.g., price > 0, valid email format). Implement unique constraints for columns or column combinations that must contain unique values. Include NOT NULL constraints where appropriate. Document the business rule each constraint is enforcing.",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 4,
-            "title": "Set up centralized log management system",
-            "description": "Implement a centralized log collection, storage, and search solution",
-            "status": "pending",
+            "title": "Create Indexes for Performance Optimization",
+            "description": "Design and implement indexes to improve query performance",
             "dependencies": [
-              1
+              1,
+              2,
+              3
             ],
-            "details": "Deploy a log aggregation stack (ELK, Grafana Loki, or similar). Configure log shipping from all services to the central repository. Set up log retention policies and indices. Create basic search templates and dashboards for common troubleshooting scenarios.",
+            "details": "Identify columns frequently used in WHERE clauses, JOIN conditions, and ORDER BY statements. Create appropriate indexes (B-tree, hash, etc.) based on query patterns. Consider composite indexes for multi-column conditions. Document the performance benefit expected from each index.",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 5,
-            "title": "Create monitoring dashboards and alerts",
-            "description": "Develop comprehensive dashboards and alerting rules based on logs and metrics",
-            "status": "pending",
+            "title": "Implement Junction Tables for Many-to-Many Relationships",
+            "description": "Create and configure junction tables to handle many-to-many relationships",
             "dependencies": [
-              3,
-              4
+              1,
+              2
             ],
-            "details": "Design and implement dashboards for system health, performance metrics, and business KPIs. Configure alerting rules for critical conditions with appropriate thresholds. Set up notification channels (email, Slack, PagerDuty). Document dashboard usage and alert response procedures for the operations team.",
+            "details": "Identify all many-to-many relationships in the schema. Create junction tables with appropriate naming conventions. Ensure proper foreign key constraints to both related tables. Add any additional metadata columns needed in the relationship. Document each junction table's purpose and the relationship it represents.",
+            "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 6,
-            "title": "Verify SQLAlchemy Tenant model",
-            "description": "Review and correct the SQLAlchemy Tenant model to ensure it matches the database schema",
-            "status": "in-progress",
-            "dependencies": [],
-            "details": "Examine the current SQLAlchemy Tenant model implementation. Ensure all fields match the database schema (id, name, slug, domain, status, theme, default_language, timezone, mfa_required, session_timeout, max_storage_mb, max_workspaces, max_api_calls_per_day, max_members_per_workspace, plan_id, enabled_features). Fix any incorrect references or missing fields.\n<info added on 2025-07-04T17:42:19.678Z>\n**SQLAlchemy Relationship Issues Found in Tenant Model**\n\nAfter examining the Tenant model (src/synapse/models/tenant.py), I identified the exact issues causing the SQLAlchemy mapping errors:\n\n**Problem 1: Incorrect ComponentVersion relationship reference (line 119)**\n- Current: `component_versions = relationship(\"ComponentVersion\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n- Issue: Using short class name instead of full module path\n- Should be: `relationship(\"synapse.models.component_version.ComponentVersion\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n\n**Problem 2: Incorrect ContactListMembership relationship reference (line 129)**\n- Current: `contact_list_memberships = relationship(\"ContactListMembership\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n- Issue: Using short class name instead of full module path\n- Should be: `relationship(\"synapse.models.contact_list_membership.ContactListMembership\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n\n**Database Schema Comparison:**\n- The Tenant model structure matches the database schema correctly (19 columns)\n- All field types and constraints are properly defined\n- The issue is specifically with the relationship string references\n\n**Next Steps:**\n1. Fix the ComponentVersion relationship reference\n2. Fix the ContactListMembership relationship reference\n3. Verify that these models exist and have the correct back_populates\n4. Test the application startup to confirm fixes\n\nThis explains the original error: \"When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.component_version.ComponentVersion' failed to locate a name\" - SQLAlchemy couldn't resolve the relationship because it was looking for a class named \"ComponentVersion\" in the current module scope rather than the full module path.\n</info added on 2025-07-04T17:42:19.678Z>\n<info added on 2025-07-04T17:44:30.955Z>\n**✅ SUBTASK COMPLETED SUCCESSFULLY**\n\n**Fixes Applied:**\n1. **Fixed ComponentVersion relationship in Tenant model:**\n   - Changed: `relationship(\"ComponentVersion\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n   - To: `relationship(\"synapse.models.component_version.ComponentVersion\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n\n2. **Fixed ContactListMembership relationship in Tenant model:**\n   - Changed: `relationship(\"ContactListMembership\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n   - To: `relationship(\"synapse.models.contact_list_membership.ContactListMembership\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")`\n\n3. **Fixed all BillingEvent relationships:**\n   - Updated all 5 relationships to use full module paths (tenant, user, workspace, related_usage_log, message)\n\n**Verification Results:**\n- ✅ All models import successfully (110 classes loaded)\n- ✅ AlertEvaluationEngine can be imported (was failing before with the original error)\n- ✅ All relationship attributes exist and are accessible\n- ✅ No more SQLAlchemy mapping errors\n\n**Original Error Resolved:**\nThe error \"When initializing mapper Mapper[Tenant(tenants)], expression 'synapse.models.component_version.ComponentVersion' failed to locate a name\" is completely fixed.\n\n**Database Schema Compliance:**\nThe Tenant model structure matches the database schema perfectly with all 19 columns and proper foreign key relationships.\n\n**Status:** ✅ COMPLETED - SQLAlchemy Tenant model verification and fixes are done.\n</info added on 2025-07-04T17:44:30.955Z>",
-            "testStrategy": "Verify model accuracy by comparing with database schema. Test model instantiation and database operations. Ensure all fields can be properly accessed and modified."
-          },
-          {
-            "id": 7,
-            "title": "Verify BillingEvent SQLAlchemy model",
-            "description": "Review and correct the BillingEvent SQLAlchemy model to ensure proper bidirectional relationship with Tenant",
-            "status": "pending",
+            "title": "Test and Validate Schema Implementation",
+            "description": "Verify the schema implementation through testing and validation",
             "dependencies": [
-              6
+              1,
+              2,
+              3,
+              4,
+              5
             ],
-            "details": "Examine the current SQLAlchemy BillingEvent model implementation. Ensure the relationship with Tenant is properly defined. Check that the tenant_id foreign key is correctly mapped. Implement or fix the bidirectional relationship between BillingEvent and Tenant models.",
-            "testStrategy": "Test relationship queries in both directions. Verify that billing events can be accessed from tenant objects and vice versa. Test creation of new billing events with tenant associations."
-          },
-          {
-            "id": 8,
-            "title": "Fix imports and references causing mapping errors",
-            "description": "Identify and fix any import issues or circular references in the SQLAlchemy models",
+            "details": "Create test data to validate all constraints and relationships. Test insertion, update, and deletion operations to ensure referential integrity. Verify index performance with EXPLAIN queries. Document any issues found and corrections made. Create a final schema diagram showing all tables, relationships, and constraints.",
             "status": "pending",
-            "dependencies": [
-              6,
-              7
-            ],
-            "details": "Review import statements in the model files. Resolve any circular import issues. Fix any incorrect module references. Ensure proper SQLAlchemy relationship definitions that don't cause mapping errors during application startup.",
-            "testStrategy": "Test application startup to ensure no mapping errors occur. Verify all models can be imported without issues. Run sample queries that utilize the relationships to confirm proper functionality."
+            "testStrategy": ""
           }
         ]
       },
       {
         "id": 3,
-        "title": "Analyze SQLAlchemy Python Models for Tenant and BillingEvent Classes",
-        "description": "Examine the SQLAlchemy model definitions for Tenant and BillingEvent classes, verifying relationship definitions and foreign key configurations to ensure proper database mapping.",
-        "details": "This task involves a thorough code review of the SQLAlchemy model definitions for the Tenant and BillingEvent classes:\n\n1. Locate the model definition files:\n   - Search for Python files containing SQLAlchemy model definitions (typically in models/ or similar directories)\n   - Identify files containing the Tenant and BillingEvent class definitions\n\n2. Analyze the Tenant model:\n   - Verify table name and schema attributes\n   - Document all column definitions, data types, and constraints\n   - Examine relationship definitions, particularly the relationship to BillingEvent\n   - Check for proper foreign key references and cascade behaviors\n\n3. Analyze the BillingEvent model:\n   - Verify table name and schema attributes\n   - Document all column definitions, data types, and constraints\n   - Examine relationship definitions, particularly the relationship to Tenant\n   - Check for proper foreign key references and cascade behaviors\n\n4. Verify relationship consistency:\n   - Ensure foreign key columns are properly defined in the correct table\n   - Confirm that relationship() calls include appropriate parameters (back_populates, cascade, etc.)\n   - Check that lazy loading settings are appropriate for the application's needs\n   - Verify that any many-to-many relationships have proper association tables\n\n5. Document findings:\n   - Create a detailed report of the current model definitions\n   - Identify any issues or inconsistencies in the relationship definitions\n   - Recommend specific changes needed to fix any problems found\n   - Document the correct relationship pattern that should be implemented\n\n6. Prepare for implementation:\n   - Create code snippets showing the correct model definitions\n   - Note any migration requirements that will be needed when fixing the models",
-        "testStrategy": "1. Code Review Verification:\n   - Use SQLAlchemy's inspect functionality to programmatically verify model definitions\n   - Run `inspect(Tenant).relationships` and `inspect(BillingEvent).relationships` to confirm relationship definitions\n   - Check that foreign keys are properly defined using `inspect(Tenant).foreign_keys` and `inspect(BillingEvent).foreign_keys`\n\n2. Relationship Testing:\n   - Create a test script that imports the models and attempts to establish relationships\n   - Test creating a Tenant and associating BillingEvents\n   - Test querying BillingEvents for a specific Tenant\n   - Test querying the Tenant for a specific BillingEvent\n\n3. SQLAlchemy Metadata Validation:\n   - Use SQLAlchemy's metadata.create_all() with a test database to verify models can create valid schema\n   - Check that no errors are raised during schema generation\n   - Verify the generated SQL matches expectations using metadata.tables['table_name'].create_statement()\n\n4. Documentation Review:\n   - Have another team member review the findings and recommendations\n   - Ensure all relationship types (one-to-many, many-to-one, etc.) are correctly identified\n   - Verify that the proposed solutions align with the application's requirements",
-        "status": "pending",
+        "title": "Implement Customer Creation and Management Service",
+        "description": "Create a service to manage Stripe customers, including creation, retrieval, and synchronization with the local database.",
+        "details": "Implement a service that handles Stripe customer operations:\n\n1. Create a new Stripe customer when a user signs up or initiates billing\n2. Store the Stripe customer ID in the `payment_customers` table\n3. Retrieve customer details from Stripe when needed\n4. Update local customer records based on Stripe webhook events\n5. Handle customer deletion and data cleanup\n\nUse Stripe's Node.js SDK (v12.x or later) for all Stripe API calls. Implement proper error handling and retries for API failures. Ensure idempotency by checking if a customer already exists before creating a new one. Use the latest Stripe API version (2023-10-16 or newer) for all requests.",
+        "testStrategy": "Test customer creation with various user scenarios. Verify that Stripe customer IDs are correctly stored in the database. Test retrieval of customer details from Stripe. Test handling of webhook events related to customers. Test error scenarios such as API failures and duplicate customer creation attempts.",
+        "priority": "high",
         "dependencies": [
           1,
           2
         ],
-        "priority": "high",
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Implement Connection Pooling",
-            "description": "Set up and configure database connection pooling to efficiently manage database connections",
+            "title": "Implement Customer Creation Functionality",
+            "description": "Develop the functionality to create customers both in the local database and in Stripe, ensuring consistency between the two systems.",
             "dependencies": [],
-            "details": "Implement connection pooling to reduce the overhead of creating new connections for each request. Configure minimum and maximum pool sizes, connection timeout settings, and idle connection management. Test the connection pool under various load conditions to ensure optimal performance.",
+            "details": "Create API endpoints for customer creation, implement validation logic, handle Stripe API integration for customer creation, ensure idempotency to prevent duplicate customers, and implement transaction management to maintain consistency between local DB and Stripe.",
             "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 2,
-            "title": "Optimize Database Queries",
-            "description": "Analyze and optimize slow-performing database queries to improve response times",
+            "title": "Develop Customer Retrieval System",
+            "description": "Create functionality to retrieve customer information from both the local database and Stripe when necessary.",
             "dependencies": [
               1
             ],
-            "details": "Identify slow queries using database profiling tools. Optimize SQL statements by rewriting queries, using appropriate JOIN techniques, and limiting result sets. Implement query caching where appropriate and consider using stored procedures for complex operations. Document query optimization patterns for future reference.",
+            "details": "Implement API endpoints for fetching customer details, create caching mechanisms for frequently accessed customer data, develop logic to reconcile differences between local and Stripe data, and implement pagination for listing multiple customers.",
             "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 3,
-            "title": "Implement Database Indexing Strategy",
-            "description": "Design and implement an effective indexing strategy to improve query performance",
+            "title": "Build Customer Synchronization Mechanism",
+            "description": "Create a robust system to keep customer data synchronized between the local database and Stripe.",
             "dependencies": [
+              1,
               2
             ],
-            "details": "Analyze query patterns to identify columns that would benefit from indexing. Create appropriate indexes (B-tree, hash, etc.) based on query types. Consider composite indexes for multi-column queries. Monitor index usage and performance impact. Be careful not to over-index as it can negatively impact write operations.",
+            "details": "Implement webhook handlers for Stripe events, create background jobs for periodic synchronization, develop conflict resolution strategies, implement logging for synchronization activities, and create admin tools to manually trigger synchronization when needed.",
             "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 4,
-            "title": "Set Up Database Migration Framework",
-            "description": "Implement a database migration system for version control of database schema changes",
+            "title": "Implement Customer Deletion and Deactivation",
+            "description": "Develop functionality to safely delete or deactivate customers while maintaining data integrity across systems.",
             "dependencies": [
-              3
+              1
             ],
-            "details": "Select and implement a database migration tool/framework. Create a migration strategy for schema changes, including rollback procedures. Set up automated migration execution during deployment. Ensure migrations are idempotent and can be applied safely. Document the migration process for the development team.",
+            "details": "Create API endpoints for customer deletion/deactivation, implement soft delete functionality in the local database, handle Stripe customer deletion or archiving, manage cascading effects on related data (subscriptions, payment methods, etc.), and implement authorization checks for deletion operations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Develop Error Handling and Retry Mechanisms",
+            "description": "Create comprehensive error handling and retry logic for all customer management operations to ensure system resilience.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Implement exponential backoff for Stripe API calls, create dead-letter queues for failed operations, develop monitoring and alerting for repeated failures, implement circuit breakers to prevent cascading failures, and create detailed error logging with contextual information for debugging.",
             "status": "pending",
             "testStrategy": ""
           }
@@ -319,46 +228,71 @@
       },
       {
         "id": 4,
-        "title": "Fix SQLAlchemy Relationship Between Tenant and Billing Events",
-        "description": "Implement the correction for the SQLAlchemy relationship between Tenant and billing_events models by applying the most appropriate solution based on previous analysis: adding foreign key, defining primaryjoin, or correcting the relationship definition.",
-        "details": "Based on the analysis from previous tasks, implement the necessary corrections to fix the SQLAlchemy relationship between Tenant and billing_events:\n\n1. Review findings from Task #2 (database structure analysis) and Task #3 (model analysis) to determine the most appropriate solution:\n\n2. Implement one of the following solutions based on the analysis:\n\n   a. If the foreign key is missing in the database:\n      - Add the missing foreign key constraint to the billing_events table\n      - Example:\n      ```python\n      # In the BillingEvent model\n      tenant_id = Column(Integer, ForeignKey('tenants.id'), nullable=False)\n      tenant = relationship(\"Tenant\", back_populates=\"billing_events\")\n      \n      # In the Tenant model\n      billing_events = relationship(\"BillingEvent\", back_populates=\"tenant\")\n      ```\n      - Create a database migration script to add the foreign key constraint to the existing table\n\n   b. If the foreign key exists but the relationship definition is incorrect:\n      - Update the relationship definition with explicit primaryjoin condition\n      - Example:\n      ```python\n      # In the Tenant model\n      billing_events = relationship(\n          \"BillingEvent\",\n          primaryjoin=\"Tenant.id == BillingEvent.tenant_id\",\n          back_populates=\"tenant\"\n      )\n      ```\n\n   c. If there's a naming mismatch or other issue:\n      - Correct the relationship definition to match the actual database schema\n      - Ensure both sides of the relationship are properly defined with matching back_populates attributes\n\n3. Update any affected queries in the codebase that use this relationship\n\n4. Document the changes made and the reasoning behind the chosen solution\n\n5. If database migrations are required:\n   - Create a new migration file using Alembic or the project's migration tool\n   - Ensure the migration is reversible with a proper downgrade path\n   - Test the migration on a development database before applying to production",
-        "testStrategy": "1. Unit Tests:\n   - Create unit tests that verify the corrected relationship works in both directions:\n     ```python\n     def test_tenant_billing_events_relationship():\n         # Create a tenant and associated billing events\n         tenant = Tenant(name=\"Test Tenant\")\n         billing_event1 = BillingEvent(description=\"Test Event 1\", tenant=tenant)\n         billing_event2 = BillingEvent(description=\"Test Event 2\", tenant=tenant)\n         \n         session.add(tenant)\n         session.add_all([billing_event1, billing_event2])\n         session.commit()\n         \n         # Test querying from tenant to billing events\n         assert len(tenant.billing_events) == 2\n         \n         # Test querying from billing event to tenant\n         assert billing_event1.tenant.id == tenant.id\n     ```\n\n2. Integration Tests:\n   - Test the relationship in the context of the application's service layer\n   - Verify that any business logic that depends on this relationship works correctly\n   - Test edge cases like null relationships or cascading deletes if applicable\n\n3. Migration Tests (if applicable):\n   - Test the migration script on a copy of the production database\n   - Verify that existing data relationships are preserved after migration\n   - Test the rollback procedure to ensure it works correctly\n\n4. Manual Verification:\n   - Use the application's admin interface or API to create and query related entities\n   - Verify that the relationship is displayed correctly in any UI components\n   - Check database queries using logging or profiling to ensure they're efficient\n\n5. Performance Testing:\n   - Compare query performance before and after the fix\n   - Ensure that the relationship doesn't introduce N+1 query problems\n   - Verify that any existing optimizations (like eager loading) still work correctly",
-        "status": "pending",
+        "title": "Implement Payment Method Management",
+        "description": "Create a service to manage payment methods, including addition, removal, and setting default methods.",
+        "details": "Implement a service that handles payment method operations:\n\n1. Add new payment methods to a Stripe customer\n2. Store payment method details in the `payment_methods` table\n3. Set a payment method as default\n4. Remove payment methods\n5. Update local payment method records based on Stripe webhook events\n\nSupport multiple payment method types (card, ACH, etc.). Use Stripe's Payment Methods API rather than the legacy Sources API. Implement proper error handling for declined cards and other payment method issues. Ensure that the `is_default` flag is properly managed (only one payment method per customer can be default).",
+        "testStrategy": "Test adding various types of payment methods. Test setting a payment method as default. Test removing payment methods. Test handling of webhook events related to payment methods. Test error scenarios such as adding invalid payment methods.",
+        "priority": "high",
         "dependencies": [
-          2,
           3
         ],
-        "priority": "high",
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Update OpenAI Configuration Settings",
-            "description": "Modify the configuration files to properly connect with the OpenAI API",
+            "title": "Implement payment method addition flow",
+            "description": "Create functionality to add new payment methods to a user's account and synchronize with Stripe",
             "dependencies": [],
-            "details": "Update API endpoint URLs, version parameters, and authentication methods in the configuration files. Ensure environment variables are properly set up for API keys. Test the configuration with a simple API call to verify connectivity.",
+            "details": "Develop UI components for adding credit cards and other payment methods. Implement secure token generation for Stripe Elements integration. Create API endpoints to handle payment method creation requests. Store payment method references in the local database with proper encryption. Handle validation of payment method details before submission to Stripe.",
             "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 2,
-            "title": "Implement Robust Error Handling",
-            "description": "Create comprehensive error handling for all OpenAI API interactions",
+            "title": "Implement payment method removal functionality",
+            "description": "Create system to safely remove payment methods from both Stripe and local database",
             "dependencies": [
               1
             ],
-            "details": "Implement try-catch blocks for API calls. Create specific error types for different failure scenarios (network issues, authentication errors, rate limiting, etc.). Add logging for errors with appropriate severity levels. Implement retry logic for transient failures with exponential backoff.",
+            "details": "Develop API endpoints for payment method deletion. Implement confirmation flow to prevent accidental removal. Create service to delete payment method from Stripe API. Update database to reflect removed payment methods. Handle edge cases like removing a default payment method.",
             "status": "pending",
             "testStrategy": ""
           },
           {
             "id": 3,
-            "title": "Develop Token Management System",
-            "description": "Create a system to efficiently manage and track API token usage",
+            "title": "Develop default payment method handling",
+            "description": "Implement functionality to set, update and manage default payment methods",
+            "dependencies": [
+              1
+            ],
+            "details": "Create UI for selecting default payment method. Implement API endpoints to update default payment method status. Synchronize default payment method changes with Stripe. Ensure default payment method is used for recurring charges. Handle scenarios where default payment method becomes invalid.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Stripe webhook synchronization",
+            "description": "Create webhook handlers to keep payment method data synchronized between Stripe and local database",
             "dependencies": [
               1,
-              2
+              2,
+              3
             ],
-            "details": "Implement token counting for requests to stay within limits. Create a caching mechanism to reduce duplicate API calls. Add monitoring for token usage with alerts for approaching limits. Develop a token budget allocation system for different application features.",
+            "details": "Set up webhook endpoints to receive Stripe events. Implement handlers for payment method updated, expired, and failed events. Create database update logic based on webhook payloads. Implement webhook signature verification for security. Add logging for webhook processing for debugging and auditing.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement comprehensive error handling",
+            "description": "Create robust error handling for all payment method operations",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Develop user-friendly error messages for common payment issues. Implement retry mechanisms for transient errors. Create fallback strategies for failed payment method operations. Add monitoring and alerting for critical payment errors. Implement proper error logging for debugging and compliance purposes.",
             "status": "pending",
             "testStrategy": ""
           }
@@ -366,63 +300,639 @@
       },
       {
         "id": 5,
-        "title": "Validate Alert System After Correction",
-        "description": "Verify that the synapse.core.alerts.alert_engine component can access active alerts without errors and that there are no more SQLAlchemy error messages in the logs.",
-        "details": "This task involves validating that the alert system is functioning correctly after the SQLAlchemy relationship errors have been fixed:\n\n1. Environment Setup:\n   - Ensure the application is running with the latest code changes from Tasks #1 and #4\n   - Configure logging to capture all SQLAlchemy-related messages\n   - Prepare test data with active alerts in the database\n\n2. Alert Engine Component Testing:\n   - Import and initialize the synapse.core.alerts.alert_engine component\n   - Attempt to retrieve active alerts using the component's API\n   - Monitor for any exceptions or error messages during execution\n   - Verify that all alerts are correctly retrieved from the database\n   - Check that relationships between alerts and related entities (including tenants) are properly loaded\n\n3. Log Analysis:\n   - Examine application logs during alert system operation\n   - Search specifically for SQLAlchemy-related error messages\n   - Look for any messages containing \"relationship\" or \"foreign key\" errors\n   - Verify that previously observed errors related to Tenant and billing_events are no longer present\n\n4. Performance Verification:\n   - Measure response time for alert retrieval operations\n   - Compare with baseline performance metrics from before the fixes\n   - Ensure that the relationship fixes haven't introduced any performance regressions\n\n5. Edge Case Testing:\n   - Test with a large number of alerts\n   - Test with alerts that have complex relationships to other entities\n   - Test scenarios where alerts are being created, updated, and deleted concurrently\n\n6. Documentation:\n   - Document any remaining issues or warnings\n   - Update system documentation to reflect the corrected relationships\n   - Add notes about the fix to help prevent similar issues in the future",
-        "testStrategy": "1. Functional Testing:\n   - Execute a test script that initializes the alert_engine component\n   - Call methods to retrieve active alerts: `alert_engine.get_active_alerts()`\n   - Verify that all expected alerts are returned without errors\n   - Check that related entities are properly loaded with the alerts\n\n2. Log Verification:\n   - Run the application with DEBUG level logging enabled\n   - Execute operations that trigger alert system functionality\n   - Capture all logs during execution\n   - Use grep or similar tools to search for SQLAlchemy errors:\n     ```\n     grep -i \"sqlalchemy\" application.log | grep -i \"error\"\n     ```\n   - Confirm absence of the specific errors that were previously occurring\n\n3. Integration Testing:\n   - Create test scenarios that exercise the full alert workflow\n   - Generate alerts through normal application operations\n   - Verify that alerts are properly processed by the alert_engine\n   - Confirm that all database relationships are correctly traversed\n\n4. Regression Testing:\n   - Run the full test suite to ensure no regressions were introduced\n   - Pay special attention to tests involving Tenant and billing_events\n   - Verify that all previously failing tests now pass\n\n5. Performance Testing:\n   - Benchmark alert retrieval operations with varying numbers of alerts\n   - Compare performance metrics before and after the fix\n   - Ensure response times remain within acceptable thresholds\n\n6. Documentation Review:\n   - Verify that all changes are properly documented\n   - Ensure that the alert system documentation is up-to-date\n   - Confirm that any workarounds previously implemented can be removed",
-        "status": "pending",
+        "title": "Implement Subscription Management Service",
+        "description": "Create a service to manage subscriptions, including creation, updates, cancellations, and synchronization with the local database.",
+        "details": "Implement a service that handles subscription operations:\n\n1. Create a new Stripe subscription for a customer\n2. Store subscription details in the `subscriptions` table\n3. Update subscription details (plan changes, etc.)\n4. Cancel subscriptions\n5. Update local subscription records based on Stripe webhook events\n\nUse the plan mappings from `plan_provider_mappings` to determine the correct Stripe price ID for each plan. Implement proper handling of subscription lifecycle events (created, updated, canceled, etc.). Ensure that subscription status is correctly reflected in the local database.",
+        "testStrategy": "Test subscription creation with various plans. Test subscription updates (plan changes, etc.). Test subscription cancellation. Test handling of webhook events related to subscriptions. Test error scenarios such as creating a subscription with an invalid payment method.",
+        "priority": "medium",
         "dependencies": [
+          3,
           4
         ],
-        "priority": "medium",
-        "subtasks": []
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Subscription Creation Flow",
+            "description": "Implement the subscription creation process that handles new subscription requests and synchronizes with Stripe.",
+            "dependencies": [],
+            "details": "Create endpoints for subscription creation, validate customer data, implement plan selection, handle initial payment processing, store subscription metadata, and generate confirmation notifications. Ensure proper error handling for failed creation attempts.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Subscription Update Mechanisms",
+            "description": "Develop functionality to handle subscription modifications such as plan changes, quantity adjustments, and payment method updates.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement endpoints for subscription updates, calculate prorations for plan changes, handle upgrade/downgrade logic, update billing cycles, and synchronize changes with Stripe. Include validation to prevent invalid state transitions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Cancellation and Pause Workflows",
+            "description": "Create processes for handling subscription cancellations, pauses, and resumptions while maintaining data integrity.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement immediate and end-of-billing-period cancellations, subscription pausing with defined timeframes, resumption logic, refund processing where applicable, and retention workflows. Ensure proper state tracking throughout these processes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Webhook Integration System",
+            "description": "Build a robust webhook handling system to process Stripe events and maintain subscription state synchronization.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Implement webhook endpoints with signature verification, event parsing, idempotency handling, retry mechanisms for failed processing, and comprehensive logging. Handle events like payment_succeeded, payment_failed, subscription_updated, and subscription_canceled.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Plan and Product Mapping",
+            "description": "Develop a flexible mapping system between internal product offerings and Stripe plans/products.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a configuration system for plan mapping, implement versioning for plan changes, handle grandfathered plans, manage feature entitlements based on subscription status, and build admin interfaces for plan management.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Subscription Lifecycle Event Handling",
+            "description": "Implement comprehensive handling of subscription lifecycle events including renewals, expirations, trial conversions, and grace periods.",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "Create event handlers for renewal processing, trial expiration and conversion, failed payment recovery, grace period management, and subscription expiration. Implement notification systems for upcoming renewals, payment failures, and other critical lifecycle events.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 6,
-        "title": "Fix ComponentVersion Import Path in Tenant Model",
-        "description": "Resolve the SQLAlchemy error by correcting the import path for ComponentVersion in the Tenant model that's causing the 'failed to locate a name' error.",
-        "details": "This task involves fixing an import path issue in the Tenant model that's causing SQLAlchemy to fail when initializing the mapper:\n\n1. Locate the Tenant model definition:\n   - Search for the file containing the Tenant model class definition (likely in a models directory)\n   - Identify where relationships are defined within this model\n\n2. Identify the incorrect reference:\n   - Find the reference to `synapse.models.component_version.ComponentVersion` that's causing the error\n   - This could be in a relationship definition, foreign key constraint, or import statement\n   - The error suggests the path `synapse.models.component_version.ComponentVersion` is incorrect\n\n3. Determine the correct path:\n   - Search the codebase for the actual location of the ComponentVersion class\n   - Check if it's in a different module or package than expected\n   - Verify the correct import path by examining the project structure\n\n4. Fix the reference:\n   - Update the import statement if necessary:\n     ```python\n     # Example: Change from\n     from synapse.models.component_version import ComponentVersion\n     # to something like\n     from synapse.models.components import ComponentVersion\n     # or\n     from synapse.core.models.component_version import ComponentVersion\n     ```\n   - If the reference is in a relationship definition, update it:\n     ```python\n     # Example: Change from\n     component_versions = relationship(\"synapse.models.component_version.ComponentVersion\", back_populates=\"tenant\")\n     # to\n     component_versions = relationship(\"ComponentVersion\", back_populates=\"tenant\")\n     ```\n   - Ensure any necessary imports are added at the top of the file\n\n5. Check for other references:\n   - Look for any other places in the Tenant model that might reference ComponentVersion\n   - Ensure all references use the correct path\n\n6. Update any related models:\n   - If ComponentVersion has a back-reference to Tenant, ensure that's correctly defined as well\n<info added on 2025-07-04T17:00:52.660Z>\n## Problem Located\n\nThe incorrect reference has been found on line 128 of tenant.py:\n```python\ncomponent_versions = relationship(\"synapse.models.component_version.ComponentVersion\", back_populates=\"tenant\", cascade=\"all, delete-orphan\")\n```\n\nThis line is attempting to reference a `ComponentVersion` class that doesn't exist at the path `synapse.models.component_version.ComponentVersion`.\n\nAfter searching the codebase, the `ComponentVersion` class (singular) wasn't found anywhere. Only `ComponentVersions` (plural) was found, but these are Pydantic schemas, not SQLAlchemy models.\n\n### Next Steps:\n1. Verify if a `component_versions` table exists in the database\n2. Decide whether to remove the reference entirely or create the correct model\n</info added on 2025-07-04T17:00:52.660Z>\n<info added on 2025-07-04T17:02:15.140Z>\n## Solution Found\n\nThe issue is now clear - the `ComponentVersion` model is missing entirely from the codebase, even though:\n1. The table exists in the database as `component_versions`\n2. The Tenant model references it at `synapse.models.component_version.ComponentVersion`\n\nTo fix this issue:\n\n1. Create a new file at `src/synapse/models/component_version.py` with the following model structure:\n```python\nimport uuid\nfrom datetime import datetime\nfrom sqlalchemy import Column, String, Boolean, Text, Integer, ForeignKey, TIMESTAMP, JSON\nfrom sqlalchemy.dialects.postgresql import UUID, JSONB\nfrom sqlalchemy.orm import relationship\nfrom synapse.database import Base\n\nclass ComponentVersion(Base):\n    __tablename__ = \"component_versions\"\n    \n    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)\n    component_id = Column(UUID(as_uuid=True), ForeignKey(\"marketplace_components.id\"))\n    version = Column(String(20))\n    is_latest = Column(Boolean)\n    is_stable = Column(Boolean)\n    changelog = Column(Text)\n    breaking_changes = Column(Text)\n    migration_guide = Column(Text)\n    component_data = Column(JSONB)\n    file_size = Column(Integer)\n    min_platform_version = Column(String(20))\n    max_platform_version = Column(String(20))\n    dependencies = Column(JSONB)\n    download_count = Column(Integer)\n    status = Column(String(20))\n    created_at = Column(TIMESTAMP(timezone=True))\n    deprecated_at = Column(TIMESTAMP(timezone=True))\n    tenant_id = Column(UUID(as_uuid=True), ForeignKey(\"tenants.id\"))\n    updated_at = Column(TIMESTAMP(timezone=True))\n    \n    # Relationship back to Tenant\n    tenant = relationship(\"Tenant\", back_populates=\"component_versions\")\n    # Add relationship to marketplace_components if needed\n    # component = relationship(\"MarketplaceComponent\", back_populates=\"versions\")\n```\n\n2. Keep the existing reference in tenant.py as it's correctly pointing to where the model should be\n3. Ensure the model is imported in the SQLAlchemy models initialization file (likely `__init__.py`)\n</info added on 2025-07-04T17:02:15.140Z>",
-        "testStrategy": "1. Unit Testing:\n   - Create a unit test that instantiates the Tenant model and verifies it can be initialized without errors\n   - Test creating a new Tenant and associating it with ComponentVersion instances\n   - Test querying ComponentVersion instances for a specific Tenant\n   \n2. Integration Testing:\n   - Start the application and verify no SQLAlchemy errors appear in logs\n   - Create a test script that performs CRUD operations involving both Tenant and ComponentVersion\n   - Verify relationships work in both directions\n\n3. Manual Verification:\n   - Run a Python shell or interactive debugger session to manually inspect the model:\n     ```python\n     from sqlalchemy import inspect\n     from synapse.models import Tenant\n     \n     # Verify the relationship is properly configured\n     relationships = inspect(Tenant).relationships\n     print([r.key for r in relationships])\n     \n     # Check if the ComponentVersion relationship is present and correctly configured\n     component_version_rel = next(r for r in relationships if r.key == 'component_versions')\n     print(component_version_rel.mapper.class_.__name__)  # Should print \"ComponentVersion\"\n     ```\n\n4. Log Analysis:\n   - Check application logs during startup to confirm the error is resolved\n   - Verify no new errors are introduced related to the Tenant or ComponentVersion models",
-        "status": "done",
+        "title": "Implement Invoice and Payment Processing",
+        "description": "Create a service to handle invoices and payments, including creation, payment processing, and synchronization with the local database.",
+        "details": "Implement a service that handles invoice and payment operations:\n\n1. Store invoice details in the `invoices` table\n2. Process payments for invoices\n3. Handle payment successes and failures\n4. Update local invoice records based on Stripe webhook events\n\nImplement proper handling of invoice lifecycle events (created, finalized, paid, etc.). Ensure that invoice status is correctly reflected in the local database. Handle payment failures and retries according to Stripe's best practices.",
+        "testStrategy": "Test invoice creation and payment processing. Test handling of webhook events related to invoices and payments. Test payment failures and retries. Test refunds and disputes.",
+        "priority": "medium",
         "dependencies": [
-          3
+          5
         ],
-        "priority": "high",
-        "subtasks": []
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Invoice Creation Module",
+            "description": "Develop the functionality to create and store invoices in the system and synchronize with Stripe.",
+            "dependencies": [],
+            "details": "Create models for invoice data, implement API endpoints for invoice creation, add validation logic for invoice data, integrate with Stripe API to create corresponding invoice objects, and implement database transactions to ensure data consistency.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Build Payment Processing Pipeline",
+            "description": "Implement the core payment processing functionality including payment method handling and transaction execution.",
+            "dependencies": [
+              1
+            ],
+            "details": "Develop payment method selection and validation, integrate with Stripe payment intents, implement payment execution flow, create transaction records, and handle successful payment scenarios with proper receipt generation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Payment Failure Handling",
+            "description": "Create robust error handling for payment failures including retry mechanisms and user notifications.",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement error classification for different payment failure types, create retry logic with exponential backoff, develop user notification system for payment issues, implement logging for failed transactions, and create admin dashboard for monitoring payment failures.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Develop Webhook Handler for Stripe Events",
+            "description": "Create a webhook system to process Stripe events and keep the local database synchronized with Stripe's state.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement webhook endpoint with proper security validation, create event handlers for relevant Stripe events (payment_intent.succeeded, payment_intent.failed, etc.), implement idempotent event processing, and ensure database consistency through transaction management.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Invoice and Payment Status Management",
+            "description": "Create a comprehensive status tracking system for invoices and payments throughout their lifecycle.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Design and implement state machine for invoice statuses, create payment status tracking system, develop API endpoints for status queries, implement automated status transitions based on events, and create reporting functionality for financial reconciliation.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 7,
-        "title": "Create SQLAlchemy ContactSource Model",
-        "description": "Implement the missing ContactSource model that is referenced in the Tenant model but currently causing a SQLAlchemy mapper initialization error.",
-        "details": "This task involves creating the missing ContactSource model that is being referenced in the Tenant model:\n\n1. First, examine the Tenant model to understand how it's referencing the ContactSource:\n   - Locate the Tenant model definition file (likely in models/ directory)\n   - Identify the relationship definition that references 'synapse.models.contact_source.ContactSource'\n   - Note the relationship type (one-to-many, many-to-one, etc.) and any additional parameters\n\n2. Check if the contact_sources table exists in the PostgreSQL database:\n   ```sql\n   \\d contact_sources\n   ```\n   - If it exists, document its structure (columns, primary key, foreign keys)\n   - If it doesn't exist, you'll need to create a migration to add this table\n\n3. Create the ContactSource model in a new file at synapse/models/contact_source.py:\n   ```python\n   from sqlalchemy import Column, Integer, String, ForeignKey, DateTime\n   from sqlalchemy.orm import relationship\n   from sqlalchemy.sql import func\n   from synapse.database import Base\n\n   class ContactSource(Base):\n       __tablename__ = 'contact_sources'\n       \n       id = Column(Integer, primary_key=True)\n       # Add other columns based on database schema or requirements\n       # Example fields (adjust based on actual needs):\n       name = Column(String(255), nullable=False)\n       description = Column(String(1000))\n       tenant_id = Column(Integer, ForeignKey('tenants.id'), nullable=False)\n       created_at = Column(DateTime, default=func.now())\n       updated_at = Column(DateTime, default=func.now(), onupdate=func.now())\n       \n       # Define relationship back to Tenant if needed\n       tenant = relationship(\"Tenant\", back_populates=\"contact_sources\")\n       \n       def __repr__(self):\n           return f\"<ContactSource(id={self.id}, name='{self.name}')>\"\n   ```\n\n4. Update the models/__init__.py file to import and register the new model:\n   ```python\n   # Add this line to the imports section\n   from synapse.models.contact_source import ContactSource\n   \n   # Make sure ContactSource is included in __all__ if that's being used\n   __all__ = [..., 'ContactSource', ...]\n   ```\n\n5. Verify that the Tenant model's relationship to ContactSource is correctly defined:\n   - If the Tenant model has a relationship like:\n     ```python\n     contact_sources = relationship(\"synapse.models.contact_source.ContactSource\", back_populates=\"tenant\")\n     ```\n   - It might need to be simplified to:\n     ```python\n     contact_sources = relationship(\"ContactSource\", back_populates=\"tenant\")\n     ```\n\n6. If a database migration is needed, create one using your migration tool (Alembic, etc.):\n   ```python\n   # Example Alembic migration\n   def upgrade():\n       op.create_table(\n           'contact_sources',\n           sa.Column('id', sa.Integer(), nullable=False),\n           sa.Column('name', sa.String(255), nullable=False),\n           sa.Column('description', sa.String(1000)),\n           sa.Column('tenant_id', sa.Integer(), nullable=False),\n           sa.Column('created_at', sa.DateTime(), server_default=sa.func.now()),\n           sa.Column('updated_at', sa.DateTime(), server_default=sa.func.now(), onupdate=sa.func.now()),\n           sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ),\n           sa.PrimaryKeyConstraint('id')\n       )\n   ```",
-        "testStrategy": "1. Unit Testing:\n   - Create a unit test for the ContactSource model:\n     ```python\n     def test_contact_source_model():\n         # Test model instantiation\n         contact_source = ContactSource(name=\"Test Source\", description=\"Test Description\")\n         assert contact_source.name == \"Test Source\"\n         assert contact_source.description == \"Test Description\"\n     ```\n   \n   - Test the relationship between Tenant and ContactSource:\n     ```python\n     def test_tenant_contact_source_relationship():\n         # Create a tenant\n         tenant = Tenant(name=\"Test Tenant\")\n         db.session.add(tenant)\n         db.session.commit()\n         \n         # Create a contact source associated with the tenant\n         contact_source = ContactSource(name=\"Test Source\", tenant_id=tenant.id)\n         db.session.add(contact_source)\n         db.session.commit()\n         \n         # Test relationship from tenant to contact source\n         assert len(tenant.contact_sources) == 1\n         assert tenant.contact_sources[0].name == \"Test Source\"\n         \n         # Test relationship from contact source to tenant\n         assert contact_source.tenant.name == \"Test Tenant\"\n     ```\n\n2. Integration Testing:\n   - Start the application and verify no SQLAlchemy errors appear in the logs\n   - Check that the application can successfully initialize all models\n   - Verify that the Tenant model can be loaded without errors\n\n3. Database Verification:\n   - Connect to the database and verify the contact_sources table exists with the correct structure:\n     ```sql\n     \\d contact_sources\n     ```\n   - Insert test data and verify it can be retrieved through the ORM:\n     ```python\n     # Insert via ORM\n     new_source = ContactSource(name=\"Test Source\", tenant_id=1)\n     db.session.add(new_source)\n     db.session.commit()\n     \n     # Query and verify\n     retrieved = db.session.query(ContactSource).filter_by(name=\"Test Source\").first()\n     assert retrieved is not None\n     assert retrieved.name == \"Test Source\"\n     ```\n\n4. Error Resolution Verification:\n   - Check server logs to confirm the original error is no longer present:\n     ```\n     grep -r \"Module 'models' has no mapped classes registered under the name 'contact_source'\" /path/to/logs\n     ```\n   - Restart the server and verify it initializes without errors",
-        "status": "done",
+        "title": "Implement Webhook Event Handlers",
+        "description": "Implement handlers for all critical Stripe webhook events to update the local database.",
+        "details": "Implement handlers for the following webhook events:\n\n1. `customer.*`: Update customer details\n2. `customer.source.*`: Update payment method details\n3. `subscription.*`: Update subscription details\n4. `invoice.*`: Update invoice details\n5. `payment_intent.*`: Process payment events\n6. `charge.*`: Process charge events\n7. `refund.*`: Process refund events\n8. `dispute.*`: Process dispute events\n\nEnsure idempotency by checking if an event has already been processed before handling it. Log all webhook events in the `billing_events` table for audit purposes. Implement proper error handling and retries for database operations.",
+        "testStrategy": "Test each webhook handler with sample event payloads. Verify that the local database is correctly updated based on the event type. Test idempotency by sending the same event multiple times. Test error scenarios such as database failures during event processing.",
+        "priority": "high",
         "dependencies": [
+          1,
+          2,
           3,
+          4,
+          5,
           6
         ],
-        "priority": "high",
-        "subtasks": []
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design webhook architecture and idempotency framework",
+            "description": "Create the overall architecture for webhook handling including idempotency mechanism and error handling patterns",
+            "dependencies": [],
+            "details": "Design a robust webhook handling system that includes: 1) Webhook signature verification, 2) Event logging mechanism, 3) Idempotency key tracking to prevent duplicate processing, 4) Error handling and retry logic, 5) Monitoring and alerting for failed webhooks",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement customer event handlers",
+            "description": "Create handlers for customer.created, customer.updated, and customer.deleted events",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement handlers that sync customer data with our database, handle customer creation, updates, and deletion. Include idempotency checks and appropriate error handling with logging. Update relevant user accounts and associated data.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement payment method event handlers",
+            "description": "Create handlers for payment_method.attached, payment_method.updated, and payment_method.detached events",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement handlers that track payment methods in our system, including adding new payment methods, updating existing ones, and removing detached payment methods. Ensure proper association with customer records and implement idempotency checks.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement subscription event handlers",
+            "description": "Create handlers for subscription lifecycle events including created, updated, canceled, and various status changes",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement handlers for subscription.created, subscription.updated, subscription.deleted, subscription.trial_will_end, subscription.pending_update_applied, and status change events. Update subscription records and trigger appropriate business logic for each state change.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement invoice event handlers",
+            "description": "Create handlers for invoice.created, invoice.updated, invoice.paid, invoice.payment_failed, and other invoice-related events",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "Implement handlers that track invoice status changes, update billing records, and trigger appropriate notifications. Handle payment success and failure scenarios with proper error handling and recovery paths.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement payment intent and charge event handlers",
+            "description": "Create handlers for payment_intent and charge events including successes, failures, and status changes",
+            "dependencies": [
+              1,
+              5
+            ],
+            "details": "Implement handlers for payment_intent.succeeded, payment_intent.failed, charge.succeeded, charge.failed, and related events. Update payment records and trigger appropriate business logic based on payment outcomes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement refund and dispute event handlers",
+            "description": "Create handlers for refund.created, dispute.created, and related dispute lifecycle events",
+            "dependencies": [
+              1,
+              6
+            ],
+            "details": "Implement handlers that process refunds and disputes, update order/payment records, and trigger appropriate business logic including customer service notifications. Handle the full dispute lifecycle including dispute.updated and dispute.closed events.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement comprehensive testing and monitoring",
+            "description": "Create tests for all webhook handlers and implement monitoring for webhook processing",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "details": "Develop unit and integration tests for all webhook handlers. Implement monitoring dashboards to track webhook processing success rates, error rates, and processing times. Set up alerts for failed webhooks and implement a retry mechanism for failed events.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 8,
-        "title": "Create SQLAlchemy ContactTag Model",
-        "description": "Implement the missing ContactTag model that is referenced in the Tenant model but currently causing a SQLAlchemy mapper initialization error in the alert engine.",
-        "details": "This task involves creating the missing ContactTag model that is being referenced in the Tenant model:\n\n1. First, examine the Tenant model to understand how it's referencing the ContactTag:\n   - Locate the Tenant model definition file (likely in models/ directory)\n   - Identify the relationship definition that references 'synapse.models.contact_tag.ContactTag'\n   - Note the relationship type (one-to-many, many-to-one, etc.) and any additional parameters\n\n2. Check if the contact_tags table exists in the PostgreSQL database:\n   - Connect to the PostgreSQL database using psql or a similar tool\n   - Run `\\dt` to list all tables\n   - If the table exists, examine its structure with `\\d contact_tags`\n   - Note column names, data types, constraints, and foreign keys\n\n3. Create the ContactTag model:\n   - Create a new file at `synapse/models/contact_tag.py` (or appropriate path based on project structure)\n   - Define the ContactTag class with SQLAlchemy Base\n   - Include appropriate columns based on database schema or requirements\n   - Define relationships with other models (especially Tenant)\n   - Example implementation:\n   ```python\n   from sqlalchemy import Column, Integer, String, ForeignKey\n   from sqlalchemy.orm import relationship\n   from .base import Base\n\n   class ContactTag(Base):\n       __tablename__ = 'contact_tags'\n       \n       id = Column(Integer, primary_key=True)\n       name = Column(String, nullable=False)\n       description = Column(String)\n       tenant_id = Column(Integer, ForeignKey('tenants.id'))\n       \n       # Define relationship back to tenant\n       tenant = relationship(\"Tenant\", back_populates=\"contact_tags\")\n       \n       # Add any other relationships as needed\n   ```\n\n4. Update the imports in models/__init__.py:\n   - Open the models/__init__.py file\n   - Add an import for the new ContactTag model\n   - Example:\n   ```python\n   from .contact_tag import ContactTag\n   ```\n   - Ensure the model is included in any __all__ list if one exists\n\n5. Verify the Tenant model's relationship with ContactTag:\n   - Check that the Tenant model correctly references the ContactTag model\n   - Update the relationship definition if necessary\n   - Example in Tenant model:\n   ```python\n   contact_tags = relationship(\"ContactTag\", back_populates=\"tenant\")\n   ```\n\n6. If the contact_tags table doesn't exist in the database:\n   - Create an Alembic migration script to create the table\n   - Run the migration to update the database schema",
-        "testStrategy": "1. Unit Testing:\n   - Create a unit test for the ContactTag model:\n   ```python\n   def test_contact_tag_model():\n       # Test model instantiation\n       contact_tag = ContactTag(name=\"Test Tag\", description=\"Test Description\")\n       assert contact_tag.name == \"Test Tag\"\n       assert contact_tag.description == \"Test Description\"\n       \n       # Test relationship with Tenant\n       tenant = Tenant(name=\"Test Tenant\")\n       contact_tag.tenant = tenant\n       assert contact_tag.tenant.name == \"Test Tenant\"\n       assert tenant.contact_tags[0] == contact_tag\n   ```\n\n2. Integration Testing:\n   - Test database operations with the new model:\n   ```python\n   def test_contact_tag_database_operations():\n       # Create and save a new contact tag\n       with session_scope() as session:\n           tenant = Tenant(name=\"Test Tenant\")\n           contact_tag = ContactTag(name=\"Test Tag\", description=\"Test Description\", tenant=tenant)\n           session.add(contact_tag)\n           session.commit()\n           tag_id = contact_tag.id\n       \n       # Retrieve and verify\n       with session_scope() as session:\n           retrieved_tag = session.query(ContactTag).filter_by(id=tag_id).first()\n           assert retrieved_tag.name == \"Test Tag\"\n           assert retrieved_tag.tenant.name == \"Test Tenant\"\n   ```\n\n3. Alert Engine Testing:\n   - Start the alert engine and verify no SQLAlchemy errors are logged\n   - Check server logs for any remaining \"Module has no mapped classes registered\" errors\n   - Verify that the alert engine can properly access and use the ContactTag model if needed\n\n4. Database Schema Verification:\n   - Use SQLAlchemy's inspect functionality to verify the model is properly mapped:\n   ```python\n   from sqlalchemy import inspect\n   inspector = inspect(ContactTag)\n   assert 'tenant' in [r.key for r in inspector.relationships]\n   ```",
-        "status": "done",
+        "title": "Implement Idempotency and Error Handling",
+        "description": "Ensure all operations are idempotent and implement robust error handling throughout the integration.",
+        "details": "Implement idempotency for all operations:\n\n1. Use Stripe's idempotency keys for API requests\n2. Check for existing records before creating new ones\n3. Use the `billing_events` table to track processed webhook events\n\nImplement robust error handling:\n\n1. Handle Stripe API errors (rate limits, authentication, etc.)\n2. Handle database errors (constraints, connections, etc.)\n3. Implement retries with exponential backoff for transient errors\n4. Log all errors with sufficient context for debugging\n\nEnsure that all operations are atomic and consistent, using transactions where appropriate.",
+        "testStrategy": "Test idempotency by repeating operations and verifying that they have the expected effect only once. Test error handling by simulating various error conditions (API failures, database errors, etc.) and verifying that they are handled correctly. Test recovery from errors by verifying that the system returns to a consistent state after an error.",
+        "priority": "high",
         "dependencies": [
           3,
+          4,
+          5,
+          6,
           7
         ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and implement idempotency mechanisms",
+            "description": "Create a system-wide approach for ensuring operations can be safely retried without causing duplicate effects",
+            "dependencies": [],
+            "details": "Implement idempotency keys for API requests, design database schemas to track operation status, create deduplication logic for processing requests, and implement idempotency checks in critical workflows. Include mechanisms to detect and handle duplicate requests at different system layers.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Develop comprehensive error handling strategies",
+            "description": "Create a standardized approach to error handling across the application",
+            "dependencies": [],
+            "details": "Define error categories (transient vs. permanent), implement consistent error response formats, create centralized error logging and monitoring, develop error recovery procedures, and establish error propagation policies across system boundaries. Include custom exception types and handlers for different error scenarios.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement retry mechanisms with backoff strategies",
+            "description": "Create intelligent retry logic for handling transient failures",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement exponential backoff algorithms, circuit breaker patterns to prevent cascading failures, retry queues for asynchronous processing, configurable retry policies per operation type, and monitoring for retry attempts. Ensure retry mechanisms work in conjunction with idempotency controls.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Design transaction management and atomic operations",
+            "description": "Ensure data consistency across distributed operations through proper transaction handling",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement distributed transaction patterns (saga pattern, two-phase commit), create compensation mechanisms for failed operations, design state machines for complex workflows, implement database transaction isolation levels, and create transaction monitoring tools. Ensure proper rollback mechanisms for partial failures.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Implement Reconciliation Service",
+        "description": "Create a service to reconcile local database records with Stripe data to ensure consistency.",
+        "details": "Implement a reconciliation service that:\n\n1. Compares local customer, payment method, subscription, and invoice records with Stripe data\n2. Identifies discrepancies (missing records, status mismatches, etc.)\n3. Resolves discrepancies by updating local records or creating missing ones\n4. Generates a reconciliation report\n\nThe service should run periodically (e.g., daily) and on-demand. It should handle pagination for large datasets and implement rate limiting to avoid Stripe API limits. The reconciliation process should be idempotent and safe to run multiple times.",
+        "testStrategy": "Test reconciliation with various scenarios (missing records, status mismatches, etc.). Verify that discrepancies are correctly identified and resolved. Test handling of large datasets with pagination. Test error scenarios such as API failures during reconciliation.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Data Comparison Engine",
+            "description": "Develop a robust engine to compare data between source and target systems with support for different data types and structures",
+            "dependencies": [],
+            "details": "Create a flexible comparison engine that can handle various data formats (JSON, XML, CSV), support field-level comparisons, manage large datasets through pagination, implement checksums for quick comparison, and handle rate limiting when fetching data from external systems.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Build Discrepancy Identification System",
+            "description": "Create a system to identify, categorize, and prioritize data discrepancies between systems",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement logic to detect missing records, mismatched field values, and structural differences. Create a classification system for discrepancy types (critical, major, minor). Develop algorithms to identify patterns in discrepancies and potential root causes. Include threshold configuration for acceptable variance in numeric values.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop Resolution Strategy Framework",
+            "description": "Create a framework for implementing various resolution strategies for different types of discrepancies",
+            "dependencies": [
+              2
+            ],
+            "details": "Design pluggable resolution strategies (e.g., source-wins, target-wins, manual review). Implement transaction management for safe updates. Create retry mechanisms for failed resolutions. Build a workflow system for approvals on critical changes. Include rollback capabilities for failed reconciliation attempts.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Comprehensive Reporting System",
+            "description": "Implement a reporting system to track reconciliation activities, results, and unresolved issues",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Develop detailed reconciliation run reports with statistics on processed records, identified discrepancies, and resolution outcomes. Create dashboards for monitoring reconciliation health. Implement alerting for critical discrepancies. Build audit logs for all reconciliation activities and changes made. Generate exportable reports in multiple formats.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Scheduling and Orchestration Mechanism",
+            "description": "Build a system to schedule, trigger, and manage reconciliation jobs with proper error handling",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Create configurable scheduling for reconciliation jobs (periodic, event-based, manual). Implement job prioritization and queuing. Develop parallel processing capabilities for improved performance. Build comprehensive error handling and notification system. Include monitoring for job health, duration, and resource usage.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Implement Reporting and Analytics",
+        "description": "Create reporting and analytics capabilities using the local database for billing data.",
+        "details": "Implement reporting and analytics features:\n\n1. Revenue reports (daily, monthly, annual)\n2. Subscription metrics (active subscriptions, churn rate, etc.)\n3. Payment success/failure rates\n4. Customer lifetime value\n\nCreate SQL queries and/or ORM methods to extract the required data from the local database. Implement caching for frequently accessed reports to improve performance. Ensure that all reports are accurate and consistent with Stripe data.",
+        "testStrategy": "Test each report with various data scenarios. Verify that report results match expected values based on test data. Test performance with large datasets. Test caching mechanisms.",
+        "priority": "low",
+        "dependencies": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Revenue Reports",
+            "description": "Design and implement comprehensive revenue reports showing income streams, trends, and breakdowns by product/service.",
+            "dependencies": [],
+            "details": "Create SQL queries for revenue aggregation, design report templates with charts and tables, implement filtering by date ranges and categories, and ensure accurate currency handling and reconciliation with payment processor data.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Develop Subscription Metrics Dashboard",
+            "description": "Build a dashboard displaying key subscription metrics including MRR, churn rate, LTV, and growth indicators.",
+            "dependencies": [
+              1
+            ],
+            "details": "Calculate subscription KPIs (MRR, ARR, churn, retention, etc.), create visualization components, implement cohort analysis functionality, and design alert mechanisms for negative trends.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Payment Analytics System",
+            "description": "Implement detailed payment analytics tracking successful transactions, failures, refunds, and payment method distribution.",
+            "dependencies": [
+              1
+            ],
+            "details": "Build payment funnel analysis, track payment failure reasons and recovery rates, implement refund monitoring, analyze payment method preferences, and create geographical payment distribution reports.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Caching Mechanisms for Reports",
+            "description": "Design and implement efficient caching strategies to optimize performance of complex financial reports and analytics.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Implement time-based cache invalidation for reports, create background jobs for pre-generating common reports, develop cache warming strategies, implement partial cache updates for real-time metrics, and add cache monitoring tools.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Implement Security and Compliance Measures",
+        "description": "Implement security and compliance measures for handling sensitive billing data.",
+        "details": "Implement security and compliance measures:\n\n1. Encrypt sensitive data in the database (payment method details, etc.)\n2. Implement access controls for billing data\n3. Set up audit logging for all billing operations\n4. Ensure compliance with PCI DSS requirements\n5. Implement data retention policies\n\nUse Stripe's recommended practices for handling sensitive data (never store full card numbers, use Stripe's tokenization, etc.). Implement proper authentication and authorization for all billing endpoints. Set up audit logging to track all access to and modifications of billing data.",
+        "testStrategy": "Test encryption of sensitive data. Test access controls by attempting to access billing data with various user roles. Test audit logging by verifying that all billing operations are properly logged. Test compliance with PCI DSS requirements using a compliance checklist.",
         "priority": "high",
-        "subtasks": []
+        "dependencies": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Data Encryption",
+            "description": "Set up encryption for data at rest and in transit to protect sensitive financial information",
+            "dependencies": [],
+            "details": "Implement TLS/SSL for all data in transit. Configure database encryption for data at rest. Create encryption key management procedures. Document encryption standards and implementation details. Test encryption effectiveness with security tools.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Establish Access Controls",
+            "description": "Design and implement role-based access control (RBAC) system for the application",
+            "dependencies": [
+              1
+            ],
+            "details": "Define user roles and permission levels. Implement authentication mechanisms (MFA, SSO). Create user provisioning and deprovisioning workflows. Set up IP restrictions for admin access. Document access control policies and procedures.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Configure Audit Logging",
+            "description": "Set up comprehensive audit logging for all system activities and data access",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement logging for all authentication attempts, data access, and administrative actions. Set up log storage with appropriate retention periods. Create log analysis and alerting mechanisms. Ensure logs are tamper-proof. Document logging standards and review procedures.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Ensure PCI DSS Compliance",
+            "description": "Implement all necessary controls to meet PCI DSS requirements for handling payment card data",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Review PCI DSS requirements and create compliance checklist. Implement cardholder data environment segmentation. Set up vulnerability scanning and penetration testing. Create incident response procedures. Prepare documentation for PCI DSS certification.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Develop Data Retention Policies",
+            "description": "Create and implement data retention and deletion policies in compliance with regulations",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Research applicable regulations (GDPR, CCPA, etc.). Define data retention periods for different data types. Implement automated data purging mechanisms. Create data backup and recovery procedures. Document data lifecycle management policies.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Create Comprehensive Documentation and Testing Suite",
+        "description": "Create comprehensive documentation and a testing suite for the Stripe integration.",
+        "details": "Create comprehensive documentation:\n\n1. Architecture overview\n2. Database schema\n3. API endpoints\n4. Webhook handling\n5. Reconciliation process\n6. Troubleshooting guide\n\nImplement a testing suite:\n\n1. Unit tests for all services and handlers\n2. Integration tests for Stripe API interactions\n3. End-to-end tests for complete workflows\n4. Load tests for webhook handling\n\nUse Jest or Mocha for unit and integration tests. Use Stripe's test mode for all tests. Implement test fixtures and mocks for Stripe API responses and webhook events.",
+        "testStrategy": "Review documentation for completeness and accuracy. Test the testing suite itself by verifying that it catches issues when code is intentionally broken. Ensure that all tests pass in the CI/CD pipeline.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create System Architecture Documentation",
+            "description": "Document the overall system architecture, component interactions, and data flow of the billing system",
+            "dependencies": [],
+            "details": "Create comprehensive diagrams and explanations of the system architecture including component relationships, data flow, database schema, and infrastructure setup. Include design patterns used, scalability considerations, and security measures implemented.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Develop API Documentation",
+            "description": "Create detailed documentation for all API endpoints, request/response formats, and authentication mechanisms",
+            "dependencies": [
+              1
+            ],
+            "details": "Document all API endpoints with request parameters, response formats, authentication requirements, rate limits, and example usage. Include error codes and handling. Use OpenAPI/Swagger specification for interactive documentation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Define Testing Strategy",
+            "description": "Develop a comprehensive testing strategy document outlining approach, tools, and coverage goals",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a testing strategy document that outlines the testing approach, tools to be used, test environments, coverage goals, and CI/CD integration. Include test data management, mocking strategies, and performance testing considerations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Unit Tests",
+            "description": "Develop unit tests for individual components and functions of the billing system",
+            "dependencies": [
+              3
+            ],
+            "details": "Create unit tests for all core functions and components, focusing on business logic, calculations, validation rules, and error handling. Aim for high code coverage and include edge cases. Implement mocking for external dependencies.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Integration Tests",
+            "description": "Develop integration tests to verify interactions between system components",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Create integration tests that verify correct interactions between system components, database operations, external service integrations, and API functionality. Test data consistency across components and error propagation between services.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement End-to-End Tests",
+            "description": "Develop end-to-end tests to validate complete user workflows and system behavior",
+            "dependencies": [
+              3,
+              5
+            ],
+            "details": "Create end-to-end tests that simulate real user workflows from start to finish. Include tests for billing cycle processing, payment processing, invoice generation, reporting, and user account management. Test across different browsers/clients if applicable.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       }
     ],
     "metadata": {
-      "created": "2025-07-04T16:38:06.412Z",
-      "updated": "2025-07-04T17:42:00.889Z",
-      "description": "Correção do erro SQLAlchemy no relacionamento Tenant-billing_events"
+      "created": "2025-07-08T05:28:53.406Z",
+      "updated": "2025-07-08T08:39:08.396Z",
+      "description": "Tasks for master context"
     }
   }
 }

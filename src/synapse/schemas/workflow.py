@@ -2,12 +2,13 @@
 Schemas Pydantic para workflows
 """
 
-import datetime
-from typing import Any, Dict, List, Optional
-import uuid
+from pydantic import BaseModel, Field, ConfigDict, validator
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field, validator
+import uuid
+import re
 
 
 class WorkflowStatus(str, Enum):
@@ -53,12 +54,12 @@ class WorkflowResponse(WorkflowBase):
     definition: dict[str, Any]
     thumbnail_url: str | None = None
     downloads_count: int
-    rating_average: int
+    rating_average: float  # Changed from int to float
     rating_count: int
     execution_count: int
-    last_executed_at: Optional[datetime.datetime] = None
-    created_at: Optional[datetime.datetime] = None
-    updated_at: Optional[datetime.datetime] = None
+    last_executed_at: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -95,10 +96,10 @@ class WorkflowExecutionResponse(BaseModel):
     input_data: Optional[dict]
     output_data: Optional[dict]
     error_message: Optional[str]
-    started_at: Optional[datetime.datetime]
-    completed_at: Optional[datetime.datetime]
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
 
 
 class WorkflowSearch(BaseModel):
@@ -116,7 +117,7 @@ class WorkflowStats(BaseModel):
     total_executions: int = Field(0, description="Total de execuções")
     success_rate: float = Field(0.0, description="Taxa de sucesso")
     avg_execution_time: float = Field(0.0, description="Tempo médio de execução")
-    last_execution: Optional[datetime.datetime] = Field(
+    last_execution: Optional[datetime] = Field(
         None, description="Última execução"
     )
 
@@ -126,7 +127,7 @@ class WorkflowVersion(BaseModel):
 
     version: str = Field(..., description="Número da versão")
     changelog: Optional[str] = Field(None, description="Log de mudanças")
-    created_at: datetime.datetime = Field(..., description="Data de criação")
+    created_at: datetime = Field(..., description="Data de criação")
     is_active: bool = Field(True, description="Versão ativa")
 
 
@@ -143,7 +144,7 @@ class WorkflowTemplateResponse(WorkflowTemplate):
     """Schema de resposta para template de workflow"""
 
     id: uuid.UUID = Field(..., description="ID do template")
-    created_at: datetime.datetime = Field(..., description="Data de criação")
+    created_at: datetime = Field(..., description="Data de criação")
 
 
 class NodeBase(BaseModel):
@@ -175,7 +176,7 @@ class NodeResponse(NodeBase):
 
     id: uuid.UUID = Field(..., description="ID do nó")
     workflow_id: uuid.UUID = Field(..., description="ID do workflow")
-    created_at: datetime.datetime = Field(..., description="Data de criação")
+    created_at: datetime = Field(..., description="Data de criação")
 
 
 class ConnectionBase(BaseModel):
@@ -203,7 +204,7 @@ class ConnectionResponse(ConnectionBase):
 
     id: uuid.UUID = Field(..., description="ID da conexão")
     workflow_id: uuid.UUID = Field(..., description="ID do workflow")
-    created_at: datetime.datetime = Field(..., description="Data de criação")
+    created_at: datetime = Field(..., description="Data de criação")
 
 
 class ExecutionLogResponse(BaseModel):
@@ -213,7 +214,7 @@ class ExecutionLogResponse(BaseModel):
     execution_id: uuid.UUID = Field(..., description="ID da execução")
     level: str = Field(..., description="Nível do log")
     message: str = Field(..., description="Mensagem")
-    timestamp: datetime.datetime = Field(..., description="Timestamp")
+    timestamp: datetime = Field(..., description="Timestamp")
 
 
 class WorkflowExecutionCreate(BaseModel):
@@ -236,7 +237,7 @@ class WorkflowMetrics(BaseModel):
     total_runs: int = Field(0, description="Total de execuções")
     success_rate: float = Field(0.0, description="Taxa de sucesso")
     avg_execution_time: float = Field(0.0, description="Tempo médio de execução")
-    last_execution: Optional[datetime.datetime] = Field(
+    last_execution: Optional[datetime] = Field(
         None, description="Última execução"
     )
 

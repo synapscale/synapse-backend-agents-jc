@@ -28,6 +28,9 @@ from synapse.schemas.conversation import (
     MessageListResponse
 )
 from fastapi import HTTPException
+from synapse.logger_config import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -114,12 +117,11 @@ async def list_conversations(
         
         return response_conversations
         
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao listar conversas",
-            details=str(e)
-        )
+        logger.error(f"Erro ao listar conversas: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 @router.post("/", response_model=ConversationResponse)
 async def create_conversation(
@@ -136,9 +138,9 @@ async def create_conversation(
                     Agent.id == conversation_data.agent_id,
                     or_(
                         Agent.user_id == current_user.id,  # User owns the agent
-                        Agent.scope == "global",  # Global agent
+                        Agent.status == "global",  # Global agent
                         and_(
-                            Agent.scope == "workspace",
+                            Agent.status == "workspace",
                             # TODO: Check workspace membership
                             Agent.workspace_id.in_(
                                 # Get user's workspaces
@@ -204,12 +206,9 @@ async def create_conversation(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao criar conversação: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao criar conversação",
-            details=str(e)
-        )
+        raise
 
 @router.get("/{conversation_id}", response_model=ConversationResponse)
 async def get_conversation(
@@ -273,11 +272,8 @@ async def get_conversation(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao buscar conversação",
-            details=str(e)
-        )
+        logger.error(f"Erro ao buscar conversação: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 @router.delete("/{conversation_id}")
 async def delete_conversation(
@@ -312,12 +308,9 @@ async def delete_conversation(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao deletar conversação: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao deletar conversação",
-            details=str(e)
-        )
+        raise
 
 # Messages endpoints
 @router.get("/{conversation_id}/messages", response_model=List[MessageResponse])
@@ -376,11 +369,8 @@ async def list_messages(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao listar mensagens",
-            details=str(e)
-        )
+        logger.error(f"Erro ao listar mensagens: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 @router.post("/{conversation_id}/messages", response_model=MessageResponse)
 async def send_message(
@@ -446,12 +436,9 @@ async def send_message(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao enviar mensagem: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao enviar mensagem",
-            details=str(e)
-        )
+        raise
 
 # Conversation management endpoints
 @router.put("/{conversation_id}/title", response_model=ConversationResponse)
@@ -524,12 +511,9 @@ async def update_conversation_title(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao atualizar título: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao atualizar título",
-            details=str(e)
-        )
+        raise
 
 @router.post("/{conversation_id}/archive")
 async def archive_conversation(
@@ -562,12 +546,9 @@ async def archive_conversation(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao arquivar conversação: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao arquivar conversação",
-            details=str(e)
-        )
+        raise
 
 @router.post("/{conversation_id}/unarchive")
 async def unarchive_conversation(
@@ -600,9 +581,6 @@ async def unarchive_conversation(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao desarquivar conversação: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=500,
-            message="Erro ao desarquivar conversação",
-            details=str(e)
-        )
+        raise

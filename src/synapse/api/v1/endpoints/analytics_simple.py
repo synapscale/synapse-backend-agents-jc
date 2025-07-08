@@ -35,7 +35,20 @@ router = APIRouter()
 @router.get("/health")
 async def analytics_health():
     """Health check for analytics service"""
-    return {"status": "healthy", "service": "analytics"}
+    try:
+        service = AnalyticsService(db)
+        # Simplified response
+        return {
+            "total_events": 0,
+            "total_dashboards": 0,
+            "total_reports": 0,
+            "user_id": str(current_user.id)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro inesperado em analytics_health: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 # Simple analytics overview
 @router.get("/overview")
@@ -53,8 +66,11 @@ async def analytics_overview(
             "total_reports": 0,
             "user_id": str(current_user.id)
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro no overview: {str(e)}")
+        logger.error(f"Erro inesperado em analytics_overview: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 # Basic event creation
 @router.post("/events", response_model=Dict[str, Any])
@@ -72,8 +88,11 @@ async def create_event(
             "event_type": event_data.event_type,
             "user_id": str(current_user.id)
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao criar evento: {str(e)}")
+        logger.error(f"Erro ao criar evento: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 # Basic dashboard endpoints
 @router.post("/dashboards", response_model=Dict[str, Any])
@@ -90,8 +109,11 @@ async def create_dashboard(
             "name": dashboard_data.name,
             "user_id": str(current_user.id)
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao criar dashboard: {str(e)}")
+        logger.error(f"Erro ao criar dashboard: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 @router.get("/dashboards", response_model=List[Dict[str, Any]])
 async def list_dashboards(
@@ -109,5 +131,8 @@ async def list_dashboards(
                 "created_at": datetime.utcnow().isoformat()
             }
         ]
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao listar dashboards: {str(e)}")
+        logger.error(f"Erro ao listar dashboards: {str(e)}", extra={"error_type": type(e).__name__})
+        raise

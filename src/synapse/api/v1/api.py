@@ -6,7 +6,16 @@ from synapse.api.v1.endpoints import (
     tenants,  # ✅ Adicionado - endpoints de tenant (Task 5)
     workspaces,
     files,
-    llm,  # ✅ Adicionado de volta - existe no diretório
+    contacts, # CRM
+    contact_lists, # CRM
+    campaigns, # CRM
+    contact_tags, # CRM
+    contact_sources, # CRM
+    contact_notes, # CRM
+    analytics_dashboards, # Analytics
+    analytics_alerts, # Analytics
+    analytics_exports, # Analytics
+    billing_events, # Enterprise
     llms,  # 🆕 Adicionado - novos endpoints completos de LLM
     llm_catalog,  # ✅ Adicionado - rotas /llms/*
     analytics,
@@ -27,7 +36,6 @@ from synapse.api.v1.endpoints import (
     tag,  # ✅ Corrigido de 'tags' para 'tag'
     websockets,
     marketplace,
-    admin_migration,  # ✅ Existe (migração)
     admin,  # ✅ Novo arquivo completo de admin
     # 🆕 NEW ENTERPRISE ENDPOINTS 🆕
     rbac,  # ✅ RBAC - Role-Based Access Control
@@ -49,7 +57,6 @@ api_router.include_router(users.router, prefix="/users", tags=["authentication"]
 api_router.include_router(tenants.router, prefix="/tenants", tags=["authentication"])  # Tenants são parte da auth
 
 # 🤖 AI (CONSOLIDADO) - Tudo relacionado a IA exceto agentes específicos
-api_router.include_router(llm.router, prefix="/llm", tags=["ai"])
 api_router.include_router(llms.router, prefix="/llms", tags=["ai"])  # Novos endpoints completos de LLM
 api_router.include_router(llm_catalog.router, prefix="/llm-catalog", tags=["ai"])  # Catálogo de modelos
 api_router.include_router(conversations.router, prefix="/conversations", tags=["ai"])
@@ -70,6 +77,9 @@ api_router.include_router(nodes.router, prefix="/nodes", tags=["workflows"])
 # 📊 ANALYTICS (CONSOLIDADO)
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(usage_log.router, prefix="/usage-log", tags=["analytics"])
+api_router.include_router(analytics_dashboards.router, prefix="/analytics/dashboards", tags=["analytics"]) # Analytics
+api_router.include_router(analytics_alerts.router, prefix="/analytics/alerts", tags=["analytics"]) # Analytics
+api_router.include_router(analytics_exports.router, prefix="/analytics/exports", tags=["analytics"]) # Analytics
 
 # 💾 DATA (CONSOLIDADO) - Todos os dados e arquivos
 api_router.include_router(files.router, prefix="/files", tags=["data"])
@@ -78,21 +88,30 @@ api_router.include_router(tag.router, prefix="/tags", tags=["data"])
 api_router.include_router(workspaces.router, prefix="/workspaces", tags=["data"])  # Workspaces são dados também
 api_router.include_router(workspace_members.router, prefix="/workspace-members", tags=["data"])
 
+# 📞 CRM (CONSOLIDADO)
+api_router.include_router(contacts.router, prefix="/crm/contacts", tags=["crm"])
+api_router.include_router(contact_lists.router, prefix="/crm/contact-lists", tags=["crm"])
+api_router.include_router(campaigns.router, prefix="/crm/campaigns", tags=["crm"])
+api_router.include_router(contact_tags.router, prefix="/crm/contact-tags", tags=["crm"])
+api_router.include_router(contact_sources.router, prefix="/crm/contact-sources", tags=["crm"])
+api_router.include_router(contact_notes.router, prefix="/crm/contact-notes", tags=["crm"]) 
+
 # 🏢 ENTERPRISE (CONSOLIDADO) - Todas as funcionalidades empresariais
 api_router.include_router(rbac.router, prefix="/enterprise/rbac", tags=["enterprise"])  # Mudança: /enterprise/rbac
 api_router.include_router(features.router, prefix="/enterprise/features", tags=["enterprise"])  # Mudança: /enterprise/features
 api_router.include_router(payments.router, prefix="/enterprise/payments", tags=["enterprise"])  # Mudança: /enterprise/payments
+api_router.include_router(billing_events.router, prefix="/enterprise/billing-events", tags=["enterprise"]) # Enterprise
 
 # 🛒 MARKETPLACE (YÁ ESTÁ ORGANIZADO)
 api_router.include_router(templates.router, prefix="/templates", tags=["marketplace"])
 api_router.include_router(marketplace.router, prefix="/marketplace", tags=["marketplace"])
 
 # 👨‍💼 ADMIN (CONSOLIDADO)
-api_router.include_router(admin_migration.router, prefix="/admin/migration", tags=["admin"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 
 # 🏠 SYSTEM (YÁ ESTÁ ORGANIZADO)
 api_router.include_router(websockets.router, prefix="/ws", tags=["system"])
 
 # Integrar o Memory Bank (comentado temporariamente - arquivo não existe)
+# from synapse.api.v1.memory_bank_integration import integrate_memory_bank
 # integrate_memory_bank(api_router)

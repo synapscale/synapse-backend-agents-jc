@@ -1,0 +1,100 @@
+# Task ID: 7
+# Title: Implement Tenant Settings Differentiation
+# Status: pending
+# Dependencies: 2, 6
+# Priority: medium
+# Description: Address the medium-severity issue where all tenants have identical settings regardless of plan.
+# Details:
+1. Create a migration to add plan-specific settings to tenant configuration
+2. Implement a system to update tenant settings when plan changes
+3. Create default settings templates for each plan
+4. Use PostgreSQL 14+ JSONB features for flexible settings
+5. SQL implementation:
+```sql
+-- Create default settings templates for each plan
+CREATE TABLE plan_default_settings (
+  id SERIAL PRIMARY KEY,
+  plan_id INTEGER NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
+  settings JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE (plan_id)
+);
+
+-- Insert default settings for each plan
+INSERT INTO plan_default_settings (plan_id, settings)
+VALUES 
+  ((SELECT id FROM plans WHERE name = 'FREE'), 
+   '{"ui_theme": "default", "notification_level": "basic", "max_export_rows": 1000}'),
+  ((SELECT id FROM plans WHERE name = 'BASIC'), 
+   '{"ui_theme": "custom", "notification_level": "standard", "max_export_rows": 5000}'),
+  ((SELECT id FROM plans WHERE name = 'PRO'), 
+   '{"ui_theme": "custom", "notification_level": "advanced", "max_export_rows": 10000}'),
+  ((SELECT id FROM plans WHERE name = 'ENTERPRISE'), 
+   '{"ui_theme": "white_label", "notification_level": "complete", "max_export_rows": 50000}');
+
+-- Create function to apply default settings
+CREATE OR REPLACE FUNCTION apply_plan_default_settings()
+RETURNS TRIGGER AS $$
+DECLARE
+  default_settings JSONB;
+BEGIN
+  -- Get default settings for the new plan
+  SELECT settings INTO default_settings 
+  FROM plan_default_settings 
+  WHERE plan_id = NEW.plan_id;
+  
+  -- Apply default settings while preserving custom settings
+  -- Only override settings that should be controlled by plan
+  NEW.settings = jsonb_merge(default_settings, 
+                            COALESCE(NEW.settings, '{}'::jsonb),
+                            '{"ui_theme", "notification_level", "max_export_rows"}');
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create jsonb_merge function if not exists
+CREATE OR REPLACE FUNCTION jsonb_merge(default_settings JSONB, custom_settings JSONB, plan_controlled TEXT[])
+RETURNS JSONB AS $$
+DECLARE
+  result JSONB;
+  key TEXT;
+BEGIN
+  result = custom_settings;
+  
+  -- Override plan-controlled settings
+  FOREACH key IN ARRAY plan_controlled LOOP
+    IF default_settings ? key THEN
+      result = result || jsonb_build_object(key, default_settings->key);
+    END IF;
+  END LOOP;
+  
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger on tenants table
+CREATE TRIGGER apply_plan_settings_trigger
+BEFORE INSERT OR UPDATE OF plan_id ON tenants
+FOR EACH ROW EXECUTE FUNCTION apply_plan_default_settings();
+
+-- Update existing tenants
+UPDATE tenants t
+SET settings = jsonb_merge(
+  (SELECT settings FROM plan_default_settings WHERE plan_id = t.plan_id),
+  t.settings,
+  ARRAY['ui_theme', 'notification_level', 'max_export_rows']
+);
+```
+6. Create an API endpoint to view and update tenant settings
+7. Implement validation to prevent changing plan-controlled settings
+
+# Test Strategy:
+1. Unit tests for the jsonb_merge function
+2. Integration tests for plan change scenarios
+3. Test the trigger with various settings combinations
+4. Verify existing tenants are updated correctly
+5. Test API endpoints for settings management
+6. Verify plan-controlled settings cannot be overridden
+7. Test edge cases like NULL settings or missing keys

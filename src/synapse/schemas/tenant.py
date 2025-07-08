@@ -47,6 +47,13 @@ class BillingCycle(str, Enum):
 class TenantBase(BaseModel):
     """Schema base para tenants - ALINHADO COM tenants TABLE"""
 
+    model_config = ConfigDict(
+        from_attributes=True,
+        use_enum_values=True,
+        validate_assignment=True,
+        str_strip_whitespace=True,
+    )
+
     name: str = Field(..., min_length=1, max_length=255, description="Nome do tenant")
     slug: str = Field(
         ..., min_length=3, max_length=100, description="Slug único do tenant"
@@ -60,6 +67,9 @@ class TenantBase(BaseModel):
     theme: TenantTheme = Field(TenantTheme.LIGHT, description="Tema da interface")
     default_language: str = Field("en", max_length=10, description="Idioma padrão")
     timezone: str = Field("UTC", max_length=50, description="Fuso horário padrão")
+    logo_url: Optional[str] = Field(None, max_length=500, description="URL do logo do tenant")
+    favicon_url: Optional[str] = Field(None, max_length=500, description="URL do favicon do tenant")
+    custom_css: Optional[str] = Field(None, description="CSS customizado para o tenant")
 
     # Configurações de segurança
     mfa_required: bool = Field(False, description="Se MFA é obrigatório")
@@ -88,6 +98,8 @@ class TenantBase(BaseModel):
     enabled_features: List[str] = Field(
         default_factory=list, description="Features habilitadas"
     )
+    settings: Dict[str, Any] = Field(default_factory=dict, description="Configurações avançadas do tenant")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadados adicionais do tenant")
 
     @validator("slug")
     def validate_slug(cls, v):
@@ -151,6 +163,9 @@ class TenantUpdate(BaseModel):
     timezone: Optional[str] = Field(
         None, max_length=50, description="Novo fuso horário"
     )
+    logo_url: Optional[str] = Field(None, max_length=500, description="URL do logo do tenant")
+    favicon_url: Optional[str] = Field(None, max_length=500, description="URL do favicon do tenant")
+    custom_css: Optional[str] = Field(None, description="CSS customizado para o tenant")
 
     # Configurações de segurança
     mfa_required: Optional[bool] = Field(None, description="Novo status MFA")
@@ -177,6 +192,8 @@ class TenantUpdate(BaseModel):
     enabled_features: Optional[List[str]] = Field(
         None, description="Novas features habilitadas"
     )
+    settings: Optional[Dict[str, Any]] = Field(None, description="Configurações avançadas do tenant")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Metadados adicionais do tenant")
 
 
 class TenantResponse(TenantBase):

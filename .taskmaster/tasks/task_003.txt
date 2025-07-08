@@ -1,0 +1,72 @@
+# Task ID: 3
+# Title: Implement Feature Gates in Application
+# Status: pending
+# Dependencies: 1, 2
+# Priority: high
+# Description: Create feature gates in the application to enforce plan-based access control using the corrected database structure.
+# Details:
+1. Implement a FastAPI middleware for feature verification
+2. Create a feature gate service that queries the database for access control
+3. Cache feature access results to improve performance
+4. Implement using FastAPI 0.100.0+ and Redis 7.0+ for caching
+5. Code implementation:
+```python
+from fastapi import FastAPI, Depends, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+from redis import Redis
+import json
+
+# Feature gate service
+class FeatureGateService:
+    def __init__(self, db_session, redis_client):
+        self.db = db_session
+        self.redis = redis_client
+        self.cache_ttl = 300  # 5 minutes
+
+    async def has_access(self, tenant_id: int, feature_name: str) -> bool:
+        # Check cache first
+        cache_key = f"feature_access:{tenant_id}:{feature_name}"
+        cached = self.redis.get(cache_key)
+        if cached:
+            return json.loads(cached)
+            
+        # Query database
+        query = """
+        SELECT EXISTS (
+            SELECT 1 FROM tenants t
+            JOIN plans p ON t.plan_id = p.id
+            JOIN plan_features pf ON p.id = pf.plan_id
+            JOIN features f ON pf.feature_id = f.id
+            WHERE t.id = :tenant_id AND f.name = :feature_name
+        ) as has_access
+        """
+        result = await self.db.execute(query, {"tenant_id": tenant_id, "feature_name": feature_name})
+        has_access = result.scalar_one()
+        
+        # Cache result
+        self.redis.setex(cache_key, self.cache_ttl, json.dumps(has_access))
+        return has_access
+
+# Middleware
+async def feature_gate_middleware(request: Request, feature_name: str, feature_gate: FeatureGateService = Depends()):
+    tenant_id = request.state.tenant_id  # Assuming tenant_id is set in a previous middleware
+    if not await feature_gate.has_access(tenant_id, feature_name):
+        raise HTTPException(status_code=403, detail=f"Access to {feature_name} not allowed in your plan")
+    return True
+
+# Usage in endpoint
+@app.get("/api/premium-feature")
+async def premium_feature(has_access: bool = Depends(lambda: feature_gate_middleware("premium_feature"))):
+    return {"message": "You have access to this premium feature"}
+```
+6. Implement feature gate decorators for easy usage across the application
+7. Add logging for feature access attempts
+
+# Test Strategy:
+1. Unit tests for the FeatureGateService class
+2. Integration tests with mocked database responses
+3. Test caching behavior and TTL
+4. Performance tests to ensure <100ms response time
+5. Test all feature combinations across different plans
+6. Test edge cases like deleted features, plan changes
+7. Load testing with concurrent requests

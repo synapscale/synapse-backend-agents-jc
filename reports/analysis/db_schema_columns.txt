@@ -1,0 +1,1459 @@
+         table_name         |          column_name           |        data_type         | is_nullable |                            column_default                            
+----------------------------+--------------------------------+--------------------------+-------------+----------------------------------------------------------------------
+ agent_acl                  | agent_id                       | uuid                     | NO          | 
+ agent_acl                  | user_id                        | uuid                     | NO          | 
+ agent_acl                  | can_read                       | boolean                  | NO          | true
+ agent_acl                  | can_write                      | boolean                  | NO          | false
+ agent_configurations       | config_id                      | uuid                     | NO          | gen_random_uuid()
+ agent_configurations       | agent_id                       | uuid                     | NO          | 
+ agent_configurations       | version_num                    | integer                  | NO          | 
+ agent_configurations       | params                         | jsonb                    | NO          | 
+ agent_configurations       | created_by                     | uuid                     | NO          | 
+ agent_configurations       | created_at                     | timestamp with time zone | NO          | now()
+ agent_error_logs           | error_id                       | uuid                     | NO          | gen_random_uuid()
+ agent_error_logs           | agent_id                       | uuid                     | NO          | 
+ agent_error_logs           | occurred_at                    | timestamp with time zone | NO          | now()
+ agent_error_logs           | error_code                     | text                     | YES         | 
+ agent_error_logs           | payload                        | jsonb                    | YES         | 
+ agent_hierarchy            | ancestor                       | uuid                     | NO          | 
+ agent_hierarchy            | descendant                     | uuid                     | NO          | 
+ agent_hierarchy            | depth                          | integer                  | NO          | 
+ agent_kbs                  | agent_id                       | uuid                     | NO          | 
+ agent_kbs                  | kb_id                          | uuid                     | NO          | 
+ agent_kbs                  | config                         | jsonb                    | NO          | '{}'::jsonb
+ agent_models               | agent_id                       | uuid                     | NO          | 
+ agent_models               | llm_id                         | uuid                     | NO          | 
+ agent_models               | override                       | jsonb                    | NO          | '{}'::jsonb
+ agent_quotas               | quota_id                       | uuid                     | NO          | gen_random_uuid()
+ agent_quotas               | agent_id                       | uuid                     | NO          | 
+ agent_quotas               | tenant_id                      | uuid                     | NO          | 
+ agent_quotas               | max_calls                      | bigint                   | NO          | 
+ agent_quotas               | max_tokens                     | bigint                   | NO          | 
+ agent_quotas               | period                         | interval                 | NO          | 
+ agent_quotas               | created_at                     | timestamp with time zone | NO          | now()
+ agent_tools                | agent_id                       | uuid                     | NO          | 
+ agent_tools                | tool_id                        | uuid                     | NO          | 
+ agent_tools                | config                         | jsonb                    | NO          | '{}'::jsonb
+ agent_triggers             | trigger_id                     | uuid                     | NO          | gen_random_uuid()
+ agent_triggers             | agent_id                       | uuid                     | NO          | 
+ agent_triggers             | trigger_type                   | USER-DEFINED             | NO          | 
+ agent_triggers             | cron_expr                      | text                     | YES         | 
+ agent_triggers             | event_name                     | text                     | YES         | 
+ agent_triggers             | active                         | boolean                  | NO          | true
+ agent_triggers             | last_run_at                    | timestamp with time zone | YES         | 
+ agent_usage_metrics        | metric_id                      | uuid                     | NO          | gen_random_uuid()
+ agent_usage_metrics        | agent_id                       | uuid                     | NO          | 
+ agent_usage_metrics        | period_start                   | timestamp with time zone | NO          | 
+ agent_usage_metrics        | period_end                     | timestamp with time zone | NO          | 
+ agent_usage_metrics        | calls_count                    | bigint                   | NO          | 
+ agent_usage_metrics        | tokens_used                    | bigint                   | NO          | 
+ agent_usage_metrics        | cost_est                       | numeric                  | NO          | 
+ agent_usage_metrics        | created_at                     | timestamp with time zone | NO          | now()
+ agents                     | id                             | uuid                     | NO          | 
+ agents                     | name                           | character varying        | NO          | 
+ agents                     | description                    | text                     | YES         | 
+ agents                     | is_active                      | boolean                  | NO          | true
+ agents                     | user_id                        | uuid                     | NO          | 
+ agents                     | created_at                     | timestamp with time zone | NO          | now()
+ agents                     | updated_at                     | timestamp with time zone | NO          | now()
+ agents                     | workspace_id                   | uuid                     | YES         | 
+ agents                     | tenant_id                      | uuid                     | NO          | 
+ agents                     | status                         | character varying        | YES         | 'active'::character varying
+ agents                     | priority                       | integer                  | YES         | 1
+ agents                     | version                        | character varying        | YES         | '1.0.0'::character varying
+ agents                     | environment                    | character varying        | YES         | 'development'::character varying
+ agents                     | current_config                 | uuid                     | YES         | 
+ alembic_version            | version_num                    | character varying        | NO          | 
+ analytics_alerts           | id                             | uuid                     | NO          | 
+ analytics_alerts           | name                           | character varying        | NO          | 
+ analytics_alerts           | description                    | text                     | YES         | 
+ analytics_alerts           | condition                      | jsonb                    | NO          | 
+ analytics_alerts           | notification_config            | jsonb                    | NO          | 
+ analytics_alerts           | is_active                      | boolean                  | NO          | true
+ analytics_alerts           | owner_id                       | uuid                     | NO          | 
+ analytics_alerts           | last_triggered_at              | timestamp with time zone | YES         | 
+ analytics_alerts           | created_at                     | timestamp with time zone | NO          | now()
+ analytics_alerts           | updated_at                     | timestamp with time zone | NO          | now()
+ analytics_alerts           | tenant_id                      | uuid                     | YES         | 
+ analytics_dashboards       | id                             | uuid                     | NO          | 
+ analytics_dashboards       | name                           | character varying        | NO          | 
+ analytics_dashboards       | description                    | text                     | YES         | 
+ analytics_dashboards       | icon                           | character varying        | YES         | 
+ analytics_dashboards       | color                          | character varying        | YES         | 
+ analytics_dashboards       | user_id                        | uuid                     | NO          | 
+ analytics_dashboards       | layout                         | jsonb                    | NO          | 
+ analytics_dashboards       | widgets                        | jsonb                    | NO          | 
+ analytics_dashboards       | filters                        | jsonb                    | YES         | 
+ analytics_dashboards       | auto_refresh                   | boolean                  | NO          | 
+ analytics_dashboards       | refresh_interval               | integer                  | YES         | 
+ analytics_dashboards       | is_public                      | boolean                  | NO          | false
+ analytics_dashboards       | shared_with                    | jsonb                    | YES         | 
+ analytics_dashboards       | is_default                     | boolean                  | NO          | 
+ analytics_dashboards       | status                         | character varying        | NO          | 
+ analytics_dashboards       | created_at                     | timestamp with time zone | NO          | now()
+ analytics_dashboards       | updated_at                     | timestamp with time zone | NO          | now()
+ analytics_dashboards       | last_viewed_at                 | timestamp with time zone | YES         | 
+ analytics_dashboards       | workspace_id                   | uuid                     | YES         | 
+ analytics_dashboards       | tenant_id                      | uuid                     | YES         | 
+ analytics_events           | id                             | uuid                     | NO          | 
+ analytics_events           | event_id                       | character varying        | NO          | 
+ analytics_events           | event_type                     | character varying        | NO          | 
+ analytics_events           | category                       | character varying        | NO          | 
+ analytics_events           | action                         | character varying        | NO          | 
+ analytics_events           | label                          | character varying        | YES         | 
+ analytics_events           | user_id                        | uuid                     | YES         | 
+ analytics_events           | session_id                     | character varying        | YES         | 
+ analytics_events           | anonymous_id                   | character varying        | YES         | 
+ analytics_events           | ip_address                     | text                     | YES         | 
+ analytics_events           | user_agent                     | text                     | YES         | 
+ analytics_events           | referrer                       | character varying        | YES         | 
+ analytics_events           | page_url                       | character varying        | YES         | 
+ analytics_events           | properties                     | jsonb                    | NO          | '{}'::jsonb
+ analytics_events           | value                          | double precision         | YES         | 
+ analytics_events           | workspace_id                   | uuid                     | YES         | 
+ analytics_events           | project_id                     | uuid                     | NO          | 
+ analytics_events           | workflow_id                    | uuid                     | YES         | 
+ analytics_events           | country                        | character varying        | YES         | 
+ analytics_events           | region                         | character varying        | YES         | 
+ analytics_events           | city                           | character varying        | YES         | 
+ analytics_events           | timezone                       | character varying        | YES         | 
+ analytics_events           | device_type                    | character varying        | YES         | 
+ analytics_events           | os                             | character varying        | YES         | 
+ analytics_events           | browser                        | character varying        | YES         | 
+ analytics_events           | screen_resolution              | character varying        | YES         | 
+ analytics_events           | timestamp                      | timestamp with time zone | NO          | now()
+ analytics_events           | tenant_id                      | uuid                     | YES         | 
+ analytics_events           | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ analytics_events           | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ analytics_exports          | id                             | uuid                     | NO          | 
+ analytics_exports          | name                           | character varying        | NO          | 
+ analytics_exports          | export_type                    | character varying        | NO          | 
+ analytics_exports          | query                          | jsonb                    | NO          | 
+ analytics_exports          | file_path                      | character varying        | YES         | 
+ analytics_exports          | status                         | character varying        | NO          | 'pending'::character varying
+ analytics_exports          | owner_id                       | uuid                     | NO          | 
+ analytics_exports          | created_at                     | timestamp with time zone | NO          | now()
+ analytics_exports          | completed_at                   | timestamp with time zone | YES         | 
+ analytics_exports          | tenant_id                      | uuid                     | YES         | 
+ analytics_exports          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ analytics_metrics          | id                             | uuid                     | NO          | 
+ analytics_metrics          | metric_name                    | character varying        | NO          | 
+ analytics_metrics          | metric_value                   | numeric                  | NO          | 
+ analytics_metrics          | dimensions                     | jsonb                    | NO          | '{}'::jsonb
+ analytics_metrics          | timestamp                      | timestamp with time zone | NO          | now()
+ analytics_metrics          | created_at                     | timestamp with time zone | NO          | now()
+ analytics_metrics          | tenant_id                      | uuid                     | YES         | 
+ analytics_metrics          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ analytics_reports          | id                             | uuid                     | NO          | 
+ analytics_reports          | name                           | character varying        | NO          | 
+ analytics_reports          | description                    | text                     | YES         | 
+ analytics_reports          | query                          | jsonb                    | NO          | 
+ analytics_reports          | schedule                       | character varying        | YES         | 
+ analytics_reports          | owner_id                       | uuid                     | NO          | 
+ analytics_reports          | is_active                      | boolean                  | NO          | true
+ analytics_reports          | created_at                     | timestamp with time zone | NO          | now()
+ analytics_reports          | updated_at                     | timestamp with time zone | NO          | now()
+ analytics_reports          | tenant_id                      | uuid                     | YES         | 
+ audit_log                  | audit_id                       | uuid                     | NO          | gen_random_uuid()
+ audit_log                  | table_name                     | text                     | NO          | 
+ audit_log                  | record_id                      | uuid                     | NO          | 
+ audit_log                  | changed_by                     | uuid                     | YES         | 
+ audit_log                  | changed_at                     | timestamp with time zone | NO          | now()
+ audit_log                  | operation                      | text                     | NO          | 
+ audit_log                  | diffs                          | jsonb                    | YES         | 
+ billing_events             | id                             | uuid                     | NO          | gen_random_uuid()
+ billing_events             | user_id                        | uuid                     | NO          | 
+ billing_events             | workspace_id                   | uuid                     | YES         | 
+ billing_events             | event_type                     | character varying        | NO          | 
+ billing_events             | amount_usd                     | double precision         | NO          | 
+ billing_events             | description                    | text                     | YES         | 
+ billing_events             | related_usage_log_id           | uuid                     | YES         | 
+ billing_events             | related_message_id             | uuid                     | YES         | 
+ billing_events             | invoice_id                     | character varying        | YES         | 
+ billing_events             | payment_provider               | character varying        | YES         | 
+ billing_events             | payment_transaction_id         | character varying        | YES         | 
+ billing_events             | billing_metadata               | jsonb                    | YES         | 
+ billing_events             | status                         | character varying        | YES         | 'pending'::character varying
+ billing_events             | processed_at                   | timestamp with time zone | YES         | 
+ billing_events             | created_at                     | timestamp with time zone | NO          | now()
+ billing_events             | tenant_id                      | uuid                     | YES         | 
+ billing_events             | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ business_metrics           | id                             | integer                  | NO          | nextval('synapscale_db.business_metrics_id_seq'::regclass)
+ business_metrics           | date                           | timestamp with time zone | NO          | 
+ business_metrics           | period_type                    | character varying        | NO          | 
+ business_metrics           | total_users                    | integer                  | NO          | 
+ business_metrics           | new_users                      | integer                  | NO          | 
+ business_metrics           | active_users                   | integer                  | NO          | 
+ business_metrics           | churned_users                  | integer                  | NO          | 
+ business_metrics           | total_sessions                 | integer                  | NO          | 
+ business_metrics           | avg_session_duration           | double precision         | NO          | 
+ business_metrics           | total_page_views               | integer                  | NO          | 
+ business_metrics           | bounce_rate                    | double precision         | NO          | 
+ business_metrics           | workflows_created              | integer                  | NO          | 
+ business_metrics           | workflows_executed             | integer                  | NO          | 
+ business_metrics           | components_published           | integer                  | NO          | 
+ business_metrics           | components_downloaded          | integer                  | NO          | 
+ business_metrics           | workspaces_created             | integer                  | NO          | 
+ business_metrics           | teams_formed                   | integer                  | NO          | 
+ business_metrics           | collaborative_sessions         | integer                  | NO          | 
+ business_metrics           | total_revenue                  | double precision         | NO          | 
+ business_metrics           | recurring_revenue              | double precision         | NO          | 
+ business_metrics           | marketplace_revenue            | double precision         | NO          | 
+ business_metrics           | avg_revenue_per_user           | double precision         | NO          | 
+ business_metrics           | error_rate                     | double precision         | NO          | 
+ business_metrics           | avg_response_time              | double precision         | NO          | 
+ business_metrics           | uptime_percentage              | double precision         | NO          | 
+ business_metrics           | customer_satisfaction          | double precision         | NO          | 
+ business_metrics           | created_at                     | timestamp with time zone | NO          | 
+ business_metrics           | updated_at                     | timestamp with time zone | NO          | 
+ business_metrics           | tenant_id                      | uuid                     | YES         | 
+ campaign_contacts          | id                             | uuid                     | NO          | gen_random_uuid()
+ campaign_contacts          | campaign_id                    | uuid                     | NO          | 
+ campaign_contacts          | contact_id                     | uuid                     | NO          | 
+ campaign_contacts          | status                         | character varying        | YES         | 'pending'::character varying
+ campaign_contacts          | sent_at                        | timestamp with time zone | YES         | 
+ campaign_contacts          | opened_at                      | timestamp with time zone | YES         | 
+ campaign_contacts          | clicked_at                     | timestamp with time zone | YES         | 
+ campaign_contacts          | bounced_at                     | timestamp with time zone | YES         | 
+ campaign_contacts          | unsubscribed_at                | timestamp with time zone | YES         | 
+ campaign_contacts          | error_message                  | text                     | YES         | 
+ campaign_contacts          | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ campaign_contacts          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ campaign_contacts          | tenant_id                      | uuid                     | YES         | 
+ campaigns                  | id                             | uuid                     | NO          | gen_random_uuid()
+ campaigns                  | tenant_id                      | uuid                     | NO          | 
+ campaigns                  | name                           | character varying        | NO          | 
+ campaigns                  | description                    | text                     | YES         | 
+ campaigns                  | type                           | character varying        | NO          | 
+ campaigns                  | status                         | character varying        | YES         | 'draft'::character varying
+ campaigns                  | subject                        | character varying        | YES         | 
+ campaigns                  | content                        | text                     | YES         | 
+ campaigns                  | template_id                    | uuid                     | YES         | 
+ campaigns                  | scheduled_at                   | timestamp with time zone | YES         | 
+ campaigns                  | sent_at                        | timestamp with time zone | YES         | 
+ campaigns                  | stats                          | jsonb                    | YES         | '{}'::jsonb
+ campaigns                  | settings                       | jsonb                    | YES         | '{}'::jsonb
+ campaigns                  | created_by                     | uuid                     | NO          | 
+ campaigns                  | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ campaigns                  | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ component_downloads        | id                             | uuid                     | NO          | 
+ component_downloads        | component_id                   | uuid                     | NO          | 
+ component_downloads        | user_id                        | uuid                     | NO          | 
+ component_downloads        | version                        | character varying        | NO          | 
+ component_downloads        | download_type                  | character varying        | NO          | 
+ component_downloads        | ip_address                     | character varying        | YES         | 
+ component_downloads        | user_agent                     | character varying        | YES         | 
+ component_downloads        | referrer                       | character varying        | YES         | 
+ component_downloads        | status                         | character varying        | NO          | 
+ component_downloads        | file_size                      | integer                  | YES         | 
+ component_downloads        | created_at                     | timestamp with time zone | NO          | 
+ component_downloads        | completed_at                   | timestamp with time zone | YES         | 
+ component_downloads        | tenant_id                      | uuid                     | YES         | 
+ component_downloads        | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ component_purchases        | id                             | uuid                     | NO          | 
+ component_purchases        | component_id                   | uuid                     | NO          | 
+ component_purchases        | user_id                        | uuid                     | NO          | 
+ component_purchases        | amount                         | double precision         | NO          | 
+ component_purchases        | currency                       | character varying        | NO          | 
+ component_purchases        | payment_method                 | character varying        | YES         | 
+ component_purchases        | transaction_id                 | character varying        | NO          | 
+ component_purchases        | payment_provider               | character varying        | YES         | 
+ component_purchases        | provider_transaction_id        | character varying        | YES         | 
+ component_purchases        | status                         | character varying        | NO          | 
+ component_purchases        | license_key                    | character varying        | YES         | 
+ component_purchases        | license_expires_at             | timestamp with time zone | YES         | 
+ component_purchases        | created_at                     | timestamp with time zone | NO          | 
+ component_purchases        | completed_at                   | timestamp with time zone | YES         | 
+ component_purchases        | refunded_at                    | timestamp with time zone | YES         | 
+ component_purchases        | tenant_id                      | uuid                     | YES         | 
+ component_purchases        | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ component_ratings          | id                             | uuid                     | NO          | 
+ component_ratings          | component_id                   | uuid                     | NO          | 
+ component_ratings          | user_id                        | uuid                     | NO          | 
+ component_ratings          | rating                         | integer                  | NO          | 
+ component_ratings          | title                          | character varying        | YES         | 
+ component_ratings          | review                         | text                     | YES         | 
+ component_ratings          | ease_of_use                    | integer                  | YES         | 
+ component_ratings          | documentation_quality          | integer                  | YES         | 
+ component_ratings          | performance                    | integer                  | YES         | 
+ component_ratings          | reliability                    | integer                  | YES         | 
+ component_ratings          | support_quality                | integer                  | YES         | 
+ component_ratings          | version_used                   | character varying        | YES         | 
+ component_ratings          | use_case                       | character varying        | YES         | 
+ component_ratings          | experience_level               | character varying        | YES         | 
+ component_ratings          | helpful_count                  | integer                  | NO          | 
+ component_ratings          | reported_count                 | integer                  | NO          | 
+ component_ratings          | is_verified_purchase           | boolean                  | NO          | 
+ component_ratings          | is_featured                    | boolean                  | NO          | 
+ component_ratings          | status                         | character varying        | NO          | 
+ component_ratings          | created_at                     | timestamp with time zone | NO          | 
+ component_ratings          | updated_at                     | timestamp with time zone | NO          | 
+ component_ratings          | tenant_id                      | uuid                     | YES         | 
+ component_versions         | id                             | uuid                     | NO          | 
+ component_versions         | component_id                   | uuid                     | NO          | 
+ component_versions         | version                        | character varying        | NO          | 
+ component_versions         | is_latest                      | boolean                  | NO          | 
+ component_versions         | is_stable                      | boolean                  | NO          | 
+ component_versions         | changelog                      | text                     | YES         | 
+ component_versions         | breaking_changes               | text                     | YES         | 
+ component_versions         | migration_guide                | text                     | YES         | 
+ component_versions         | component_data                 | jsonb                    | NO          | 
+ component_versions         | file_size                      | integer                  | YES         | 
+ component_versions         | min_platform_version           | character varying        | YES         | 
+ component_versions         | max_platform_version           | character varying        | YES         | 
+ component_versions         | dependencies                   | jsonb                    | YES         | 
+ component_versions         | download_count                 | integer                  | NO          | 
+ component_versions         | status                         | character varying        | NO          | 
+ component_versions         | created_at                     | timestamp with time zone | NO          | 
+ component_versions         | deprecated_at                  | timestamp with time zone | YES         | 
+ component_versions         | tenant_id                      | uuid                     | YES         | 
+ component_versions         | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_events             | id                             | uuid                     | NO          | gen_random_uuid()
+ contact_events             | contact_id                     | uuid                     | NO          | 
+ contact_events             | event_type                     | character varying        | NO          | 
+ contact_events             | event_data                     | jsonb                    | YES         | '{}'::jsonb
+ contact_events             | occurred_at                    | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_events             | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_events             | tenant_id                      | uuid                     | YES         | 
+ contact_events             | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_interactions       | id                             | uuid                     | NO          | gen_random_uuid()
+ contact_interactions       | contact_id                     | uuid                     | NO          | 
+ contact_interactions       | user_id                        | uuid                     | YES         | 
+ contact_interactions       | type                           | character varying        | NO          | 
+ contact_interactions       | channel                        | character varying        | YES         | 
+ contact_interactions       | subject                        | character varying        | YES         | 
+ contact_interactions       | content                        | text                     | YES         | 
+ contact_interactions       | direction                      | character varying        | YES         | 'outbound'::character varying
+ contact_interactions       | status                         | character varying        | YES         | 'completed'::character varying
+ contact_interactions       | scheduled_at                   | timestamp with time zone | YES         | 
+ contact_interactions       | completed_at                   | timestamp with time zone | YES         | 
+ contact_interactions       | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ contact_interactions       | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_interactions       | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_interactions       | tenant_id                      | uuid                     | YES         | 
+ contact_list_memberships   | id                             | uuid                     | NO          | gen_random_uuid()
+ contact_list_memberships   | list_id                        | uuid                     | NO          | 
+ contact_list_memberships   | contact_id                     | uuid                     | NO          | 
+ contact_list_memberships   | added_by                       | uuid                     | YES         | 
+ contact_list_memberships   | added_at                       | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_list_memberships   | status                         | character varying        | YES         | 'active'::character varying
+ contact_list_memberships   | tenant_id                      | uuid                     | YES         | 
+ contact_list_memberships   | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_list_memberships   | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_lists              | id                             | uuid                     | NO          | gen_random_uuid()
+ contact_lists              | tenant_id                      | uuid                     | NO          | 
+ contact_lists              | name                           | character varying        | NO          | 
+ contact_lists              | description                    | text                     | YES         | 
+ contact_lists              | type                           | character varying        | YES         | 'static'::character varying
+ contact_lists              | filters                        | jsonb                    | YES         | '{}'::jsonb
+ contact_lists              | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_lists              | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_notes              | id                             | uuid                     | NO          | gen_random_uuid()
+ contact_notes              | contact_id                     | uuid                     | NO          | 
+ contact_notes              | user_id                        | uuid                     | NO          | 
+ contact_notes              | content                        | text                     | NO          | 
+ contact_notes              | type                           | character varying        | YES         | 'note'::character varying
+ contact_notes              | is_private                     | boolean                  | YES         | false
+ contact_notes              | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_notes              | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_notes              | tenant_id                      | uuid                     | YES         | 
+ contact_sources            | id                             | uuid                     | NO          | gen_random_uuid()
+ contact_sources            | tenant_id                      | uuid                     | NO          | 
+ contact_sources            | name                           | character varying        | NO          | 
+ contact_sources            | description                    | text                     | YES         | 
+ contact_sources            | integration_type               | character varying        | YES         | 
+ contact_sources            | config                         | jsonb                    | YES         | '{}'::jsonb
+ contact_sources            | is_active                      | boolean                  | YES         | true
+ contact_sources            | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_sources            | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_tags               | id                             | uuid                     | NO          | gen_random_uuid()
+ contact_tags               | tenant_id                      | uuid                     | NO          | 
+ contact_tags               | name                           | character varying        | NO          | 
+ contact_tags               | color                          | character varying        | YES         | '#6B7280'::character varying
+ contact_tags               | description                    | text                     | YES         | 
+ contact_tags               | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contact_tags               | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contacts                   | id                             | uuid                     | NO          | gen_random_uuid()
+ contacts                   | tenant_id                      | uuid                     | NO          | 
+ contacts                   | email                          | character varying        | NO          | 
+ contacts                   | first_name                     | character varying        | YES         | 
+ contacts                   | last_name                      | character varying        | YES         | 
+ contacts                   | phone                          | character varying        | YES         | 
+ contacts                   | company                        | character varying        | YES         | 
+ contacts                   | job_title                      | character varying        | YES         | 
+ contacts                   | status                         | character varying        | YES         | 'active'::character varying
+ contacts                   | lead_score                     | integer                  | YES         | 0
+ contacts                   | source_id                      | uuid                     | YES         | 
+ contacts                   | custom_fields                  | jsonb                    | YES         | '{}'::jsonb
+ contacts                   | tags                           | ARRAY                    | YES         | 
+ contacts                   | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ contacts                   | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ conversion_journeys        | id                             | uuid                     | NO          | gen_random_uuid()
+ conversion_journeys        | contact_id                     | uuid                     | NO          | 
+ conversion_journeys        | tenant_id                      | uuid                     | NO          | 
+ conversion_journeys        | journey_name                   | character varying        | YES         | 
+ conversion_journeys        | current_stage                  | character varying        | YES         | 
+ conversion_journeys        | stages_completed               | jsonb                    | YES         | '[]'::jsonb
+ conversion_journeys        | conversion_probability         | numeric                  | YES         | 
+ conversion_journeys        | last_interaction_at            | timestamp with time zone | YES         | 
+ conversion_journeys        | converted_at                   | timestamp with time zone | YES         | 
+ conversion_journeys        | conversion_value               | numeric                  | YES         | 
+ conversion_journeys        | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ conversion_journeys        | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ conversion_journeys        | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ coupons                    | id                             | uuid                     | NO          | gen_random_uuid()
+ coupons                    | code                           | character varying        | NO          | 
+ coupons                    | name                           | character varying        | YES         | 
+ coupons                    | description                    | text                     | YES         | 
+ coupons                    | type                           | character varying        | NO          | 'percentage'::character varying
+ coupons                    | value                          | numeric                  | NO          | 
+ coupons                    | currency                       | character varying        | YES         | 'USD'::character varying
+ coupons                    | max_uses                       | integer                  | YES         | 
+ coupons                    | used_count                     | integer                  | YES         | 0
+ coupons                    | min_amount                     | numeric                  | YES         | 
+ coupons                    | max_discount                   | numeric                  | YES         | 
+ coupons                    | valid_from                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ coupons                    | valid_until                    | timestamp with time zone | YES         | 
+ coupons                    | is_active                      | boolean                  | YES         | true
+ coupons                    | is_stackable                   | boolean                  | YES         | false
+ coupons                    | applicable_plans               | jsonb                    | YES         | '[]'::jsonb
+ coupons                    | restrictions                   | jsonb                    | YES         | '{}'::jsonb
+ coupons                    | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ coupons                    | created_by                     | uuid                     | YES         | 
+ coupons                    | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ coupons                    | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ coupons                    | tenant_id                      | uuid                     | YES         | 
+ custom_reports             | id                             | uuid                     | NO          | 
+ custom_reports             | user_id                        | uuid                     | NO          | 
+ custom_reports             | workspace_id                   | uuid                     | YES         | 
+ custom_reports             | name                           | character varying        | NO          | 
+ custom_reports             | description                    | text                     | YES         | 
+ custom_reports             | category                       | character varying        | YES         | 
+ custom_reports             | query_config                   | jsonb                    | NO          | 
+ custom_reports             | visualization_config           | jsonb                    | YES         | 
+ custom_reports             | filters                        | jsonb                    | YES         | 
+ custom_reports             | is_scheduled                   | boolean                  | NO          | 
+ custom_reports             | schedule_config                | jsonb                    | YES         | 
+ custom_reports             | last_run_at                    | timestamp with time zone | YES         | 
+ custom_reports             | next_run_at                    | timestamp with time zone | YES         | 
+ custom_reports             | is_public                      | boolean                  | NO          | 
+ custom_reports             | shared_with                    | jsonb                    | YES         | 
+ custom_reports             | cached_data                    | jsonb                    | YES         | 
+ custom_reports             | cache_expires_at               | timestamp with time zone | YES         | 
+ custom_reports             | status                         | character varying        | NO          | 
+ custom_reports             | created_at                     | timestamp with time zone | NO          | 
+ custom_reports             | updated_at                     | timestamp with time zone | NO          | 
+ custom_reports             | tenant_id                      | uuid                     | YES         | 
+ email_verification_tokens  | id                             | uuid                     | NO          | 
+ email_verification_tokens  | token                          | character varying        | NO          | 
+ email_verification_tokens  | user_id                        | uuid                     | NO          | 
+ email_verification_tokens  | expires_at                     | timestamp with time zone | NO          | 
+ email_verification_tokens  | is_used                        | boolean                  | YES         | 
+ email_verification_tokens  | created_at                     | timestamp with time zone | YES         | now()
+ email_verification_tokens  | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ features                   | id                             | uuid                     | NO          | gen_random_uuid()
+ features                   | key                            | character varying        | NO          | 
+ features                   | name                           | character varying        | NO          | 
+ features                   | description                    | text                     | YES         | 
+ features                   | category                       | character varying        | YES         | 
+ features                   | is_active                      | boolean                  | YES         | true
+ features                   | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ features                   | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ files                      | id                             | uuid                     | NO          | 
+ files                      | filename                       | character varying        | NO          | 
+ files                      | original_name                  | character varying        | NO          | 
+ files                      | file_path                      | character varying        | NO          | 
+ files                      | file_size                      | integer                  | NO          | 
+ files                      | mime_type                      | character varying        | NO          | 
+ files                      | category                       | character varying        | NO          | 
+ files                      | is_public                      | boolean                  | NO          | false
+ files                      | user_id                        | uuid                     | NO          | 
+ files                      | created_at                     | timestamp with time zone | NO          | now()
+ files                      | updated_at                     | timestamp with time zone | NO          | now()
+ files                      | tags                           | jsonb                    | YES         | 
+ files                      | description                    | text                     | YES         | 
+ files                      | tenant_id                      | uuid                     | YES         | 
+ files                      | status                         | character varying        | YES         | 'active'::character varying
+ files                      | scan_status                    | character varying        | YES         | 'pending'::character varying
+ files                      | access_count                   | integer                  | YES         | 0
+ files                      | last_accessed_at               | timestamp with time zone | YES         | 
+ invoices                   | id                             | uuid                     | NO          | gen_random_uuid()
+ invoices                   | tenant_id                      | uuid                     | NO          | 
+ invoices                   | subscription_id                | uuid                     | YES         | 
+ invoices                   | invoice_number                 | character varying        | NO          | 
+ invoices                   | status                         | character varying        | NO          | 'draft'::character varying
+ invoices                   | currency                       | character varying        | NO          | 'USD'::character varying
+ invoices                   | subtotal                       | numeric                  | NO          | 0
+ invoices                   | tax_amount                     | numeric                  | NO          | 0
+ invoices                   | discount_amount                | numeric                  | NO          | 0
+ invoices                   | total_amount                   | numeric                  | NO          | 0
+ invoices                   | due_date                       | date                     | YES         | 
+ invoices                   | paid_at                        | timestamp with time zone | YES         | 
+ invoices                   | items                          | jsonb                    | YES         | '[]'::jsonb
+ invoices                   | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ invoices                   | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ invoices                   | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ knowledge_bases            | kb_id                          | uuid                     | NO          | gen_random_uuid()
+ knowledge_bases            | title                          | text                     | NO          | 
+ knowledge_bases            | content                        | jsonb                    | NO          | 
+ knowledge_bases            | tenant_id                      | uuid                     | YES         | 
+ knowledge_bases            | updated_at                     | timestamp with time zone | NO          | now()
+ llms                       | id                             | uuid                     | NO          | gen_random_uuid()
+ llms                       | name                           | character varying        | NO          | 
+ llms                       | provider                       | character varying        | NO          | 
+ llms                       | model_version                  | character varying        | YES         | 
+ llms                       | cost_per_token_input           | double precision         | NO          | 0.0
+ llms                       | cost_per_token_output          | double precision         | NO          | 0.0
+ llms                       | max_tokens_supported           | integer                  | YES         | 
+ llms                       | supports_function_calling      | boolean                  | YES         | false
+ llms                       | supports_vision                | boolean                  | YES         | false
+ llms                       | supports_streaming             | boolean                  | YES         | true
+ llms                       | context_window                 | integer                  | YES         | 
+ llms                       | is_active                      | boolean                  | YES         | true
+ llms                       | llm_metadata                   | jsonb                    | YES         | 
+ llms                       | created_at                     | timestamp with time zone | NO          | now()
+ llms                       | updated_at                     | timestamp with time zone | NO          | now()
+ llms                       | tenant_id                      | uuid                     | YES         | 
+ llms                       | status                         | character varying        | YES         | 'active'::character varying
+ llms                       | health_status                  | character varying        | YES         | 'unknown'::character varying
+ llms                       | response_time_avg_ms           | integer                  | YES         | 0
+ llms                       | availability_percentage        | numeric                  | YES         | 99.9
+ llms_conversations         | id                             | uuid                     | NO          | 
+ llms_conversations         | user_id                        | uuid                     | NO          | 
+ llms_conversations         | agent_id                       | uuid                     | YES         | 
+ llms_conversations         | workspace_id                   | uuid                     | YES         | 
+ llms_conversations         | title                          | character varying        | YES         | 
+ llms_conversations         | status                         | character varying        | YES         | 
+ llms_conversations         | message_count                  | integer                  | YES         | 
+ llms_conversations         | total_tokens_used              | integer                  | YES         | 
+ llms_conversations         | context                        | jsonb                    | YES         | 
+ llms_conversations         | settings                       | jsonb                    | YES         | 
+ llms_conversations         | last_message_at                | timestamp with time zone | YES         | 
+ llms_conversations         | created_at                     | timestamp with time zone | NO          | now()
+ llms_conversations         | updated_at                     | timestamp with time zone | NO          | now()
+ llms_conversations         | tenant_id                      | uuid                     | NO          | 
+ llms_conversations_turns   | id                             | uuid                     | NO          | gen_random_uuid()
+ llms_conversations_turns   | conversation_id                | uuid                     | NO          | 
+ llms_conversations_turns   | llm_id                         | uuid                     | NO          | 
+ llms_conversations_turns   | first_used_at                  | timestamp with time zone | NO          | now()
+ llms_conversations_turns   | last_used_at                   | timestamp with time zone | NO          | now()
+ llms_conversations_turns   | message_count                  | integer                  | YES         | 0
+ llms_conversations_turns   | total_input_tokens             | integer                  | YES         | 0
+ llms_conversations_turns   | total_output_tokens            | integer                  | YES         | 0
+ llms_conversations_turns   | total_cost_usd                 | double precision         | YES         | 0.0
+ llms_conversations_turns   | tenant_id                      | uuid                     | YES         | 
+ llms_conversations_turns   | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ llms_conversations_turns   | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ llms_messages              | id                             | uuid                     | NO          | 
+ llms_messages              | conversation_id                | uuid                     | NO          | 
+ llms_messages              | role                           | character varying        | NO          | 
+ llms_messages              | content                        | text                     | NO          | 
+ llms_messages              | attachments                    | jsonb                    | YES         | 
+ llms_messages              | model_used                     | character varying        | YES         | 
+ llms_messages              | model_provider                 | character varying        | YES         | 
+ llms_messages              | tokens_used                    | integer                  | YES         | 
+ llms_messages              | processing_time_ms             | integer                  | YES         | 
+ llms_messages              | temperature                    | double precision         | YES         | 
+ llms_messages              | max_tokens                     | integer                  | YES         | 
+ llms_messages              | status                         | character varying        | YES         | 
+ llms_messages              | error_message                  | text                     | YES         | 
+ llms_messages              | created_at                     | timestamp with time zone | NO          | now()
+ llms_messages              | updated_at                     | timestamp with time zone | YES         | now()
+ llms_messages              | tenant_id                      | uuid                     | YES         | 
+ llms_usage_logs            | id                             | uuid                     | NO          | gen_random_uuid()
+ llms_usage_logs            | message_id                     | uuid                     | NO          | 
+ llms_usage_logs            | user_id                        | uuid                     | NO          | 
+ llms_usage_logs            | conversation_id                | uuid                     | NO          | 
+ llms_usage_logs            | llm_id                         | uuid                     | NO          | 
+ llms_usage_logs            | workspace_id                   | uuid                     | YES         | 
+ llms_usage_logs            | input_tokens                   | integer                  | NO          | 0
+ llms_usage_logs            | output_tokens                  | integer                  | NO          | 0
+ llms_usage_logs            | total_tokens                   | integer                  | NO          | 0
+ llms_usage_logs            | cost_usd                       | double precision         | NO          | 0.0
+ llms_usage_logs            | latency_ms                     | integer                  | YES         | 
+ llms_usage_logs            | api_status_code                | integer                  | YES         | 
+ llms_usage_logs            | api_request_payload            | jsonb                    | YES         | 
+ llms_usage_logs            | api_response_metadata          | jsonb                    | YES         | 
+ llms_usage_logs            | user_api_key_used              | boolean                  | YES         | false
+ llms_usage_logs            | model_settings                 | jsonb                    | YES         | 
+ llms_usage_logs            | error_message                  | text                     | YES         | 
+ llms_usage_logs            | status                         | character varying        | YES         | 'success'::character varying
+ llms_usage_logs            | created_at                     | timestamp with time zone | NO          | now()
+ llms_usage_logs            | tenant_id                      | uuid                     | YES         | 
+ llms_usage_logs            | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ marketplace_components     | id                             | uuid                     | NO          | 
+ marketplace_components     | name                           | character varying        | NO          | 
+ marketplace_components     | description                    | text                     | YES         | 
+ marketplace_components     | category                       | character varying        | NO          | 
+ marketplace_components     | component_type                 | character varying        | NO          | 
+ marketplace_components     | tags                           | ARRAY                    | YES         | 
+ marketplace_components     | price                          | numeric                  | NO          | 0.00
+ marketplace_components     | is_free                        | boolean                  | NO          | true
+ marketplace_components     | author_id                      | uuid                     | NO          | 
+ marketplace_components     | version                        | character varying        | NO          | '1.0.0'::character varying
+ marketplace_components     | content                        | text                     | YES         | 
+ marketplace_components     | component_metadata             | text                     | YES         | 
+ marketplace_components     | downloads_count                | integer                  | NO          | 0
+ marketplace_components     | rating_average                 | double precision         | NO          | 
+ marketplace_components     | rating_count                   | integer                  | NO          | 
+ marketplace_components     | is_featured                    | boolean                  | NO          | false
+ marketplace_components     | is_approved                    | boolean                  | NO          | false
+ marketplace_components     | status                         | character varying        | NO          | 'pending'::character varying
+ marketplace_components     | created_at                     | timestamp with time zone | NO          | now()
+ marketplace_components     | updated_at                     | timestamp with time zone | NO          | now()
+ marketplace_components     | title                          | character varying        | NO          | 
+ marketplace_components     | short_description              | character varying        | YES         | 
+ marketplace_components     | subcategory                    | character varying        | YES         | 
+ marketplace_components     | organization                   | character varying        | YES         | 
+ marketplace_components     | configuration_schema           | jsonb                    | YES         | 
+ marketplace_components     | dependencies                   | jsonb                    | YES         | 
+ marketplace_components     | compatibility                  | jsonb                    | YES         | 
+ marketplace_components     | documentation                  | text                     | YES         | 
+ marketplace_components     | readme                         | text                     | YES         | 
+ marketplace_components     | changelog                      | text                     | YES         | 
+ marketplace_components     | examples                       | jsonb                    | YES         | 
+ marketplace_components     | icon_url                       | character varying        | YES         | 
+ marketplace_components     | screenshots                    | jsonb                    | YES         | 
+ marketplace_components     | demo_url                       | character varying        | YES         | 
+ marketplace_components     | video_url                      | character varying        | YES         | 
+ marketplace_components     | currency                       | character varying        | YES         | 
+ marketplace_components     | license_type                   | character varying        | YES         | 
+ marketplace_components     | install_count                  | integer                  | NO          | 
+ marketplace_components     | view_count                     | integer                  | NO          | 
+ marketplace_components     | like_count                     | integer                  | NO          | 
+ marketplace_components     | is_verified                    | boolean                  | NO          | 
+ marketplace_components     | moderation_notes               | text                     | YES         | 
+ marketplace_components     | keywords                       | jsonb                    | YES         | 
+ marketplace_components     | search_vector                  | text                     | YES         | 
+ marketplace_components     | popularity_score               | double precision         | NO          | 
+ marketplace_components     | published_at                   | timestamp with time zone | YES         | 
+ marketplace_components     | last_download_at               | timestamp with time zone | YES         | 
+ marketplace_components     | tenant_id                      | uuid                     | YES         | 
+ message_feedbacks          | id                             | uuid                     | NO          | gen_random_uuid()
+ message_feedbacks          | message_id                     | uuid                     | NO          | 
+ message_feedbacks          | user_id                        | uuid                     | NO          | 
+ message_feedbacks          | rating_type                    | character varying        | NO          | 
+ message_feedbacks          | rating_value                   | integer                  | YES         | 
+ message_feedbacks          | feedback_text                  | text                     | YES         | 
+ message_feedbacks          | feedback_category              | character varying        | YES         | 
+ message_feedbacks          | improvement_suggestions        | text                     | YES         | 
+ message_feedbacks          | is_public                      | boolean                  | YES         | false
+ message_feedbacks          | feedback_metadata              | jsonb                    | YES         | 
+ message_feedbacks          | created_at                     | timestamp with time zone | NO          | now()
+ message_feedbacks          | updated_at                     | timestamp with time zone | NO          | now()
+ message_feedbacks          | tenant_id                      | uuid                     | YES         | 
+ node_categories            | id                             | uuid                     | NO          | 
+ node_categories            | name                           | character varying        | NO          | 
+ node_categories            | description                    | text                     | YES         | 
+ node_categories            | icon                           | character varying        | YES         | 
+ node_categories            | color                          | character varying        | YES         | 
+ node_categories            | parent_id                      | uuid                     | YES         | 
+ node_categories            | sort_order                     | integer                  | YES         | 
+ node_categories            | is_active                      | boolean                  | YES         | 
+ node_categories            | created_at                     | timestamp with time zone | YES         | now()
+ node_categories            | tenant_id                      | uuid                     | YES         | 
+ node_categories            | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ node_executions            | id                             | integer                  | NO          | nextval('synapscale_db.node_executions_id_seq'::regclass)
+ node_executions            | execution_id                   | character varying        | YES         | 
+ node_executions            | workflow_execution_id          | uuid                     | NO          | 
+ node_executions            | node_id                        | uuid                     | NO          | 
+ node_executions            | node_key                       | character varying        | NO          | 
+ node_executions            | node_type                      | character varying        | NO          | 
+ node_executions            | node_name                      | character varying        | YES         | 
+ node_executions            | execution_order                | integer                  | NO          | 
+ node_executions            | input_data                     | jsonb                    | YES         | 
+ node_executions            | output_data                    | jsonb                    | YES         | 
+ node_executions            | config_data                    | jsonb                    | YES         | 
+ node_executions            | started_at                     | timestamp with time zone | YES         | 
+ node_executions            | completed_at                   | timestamp with time zone | YES         | 
+ node_executions            | timeout_at                     | timestamp with time zone | YES         | 
+ node_executions            | duration_ms                    | integer                  | YES         | 
+ node_executions            | execution_log                  | text                     | YES         | 
+ node_executions            | error_message                  | text                     | YES         | 
+ node_executions            | error_details                  | jsonb                    | YES         | 
+ node_executions            | debug_info                     | jsonb                    | YES         | 
+ node_executions            | retry_count                    | integer                  | YES         | 
+ node_executions            | max_retries                    | integer                  | YES         | 
+ node_executions            | retry_delay                    | integer                  | YES         | 
+ node_executions            | dependencies                   | jsonb                    | YES         | 
+ node_executions            | dependents                     | jsonb                    | YES         | 
+ node_executions            | metadata                       | jsonb                    | YES         | 
+ node_executions            | created_at                     | timestamp with time zone | YES         | now()
+ node_executions            | updated_at                     | timestamp with time zone | YES         | now()
+ node_executions            | tenant_id                      | uuid                     | YES         | 
+ node_ratings               | id                             | uuid                     | NO          | 
+ node_ratings               | node_id                        | uuid                     | NO          | 
+ node_ratings               | user_id                        | uuid                     | NO          | 
+ node_ratings               | rating                         | integer                  | NO          | 
+ node_ratings               | created_at                     | timestamp with time zone | YES         | now()
+ node_ratings               | updated_at                     | timestamp with time zone | YES         | now()
+ node_ratings               | tenant_id                      | uuid                     | YES         | 
+ node_templates             | id                             | uuid                     | NO          | 
+ node_templates             | name                           | character varying        | NO          | 
+ node_templates             | description                    | text                     | YES         | 
+ node_templates             | category                       | character varying        | YES         | 
+ node_templates             | code_template                  | text                     | NO          | 
+ node_templates             | input_schema                   | jsonb                    | NO          | 
+ node_templates             | output_schema                  | jsonb                    | NO          | 
+ node_templates             | parameters_schema              | jsonb                    | YES         | 
+ node_templates             | icon                           | character varying        | YES         | 
+ node_templates             | color                          | character varying        | YES         | 
+ node_templates             | documentation                  | text                     | YES         | 
+ node_templates             | examples                       | jsonb                    | YES         | 
+ node_templates             | is_system                      | boolean                  | YES         | 
+ node_templates             | is_active                      | boolean                  | YES         | 
+ node_templates             | created_at                     | timestamp with time zone | YES         | now()
+ node_templates             | tenant_id                      | uuid                     | YES         | 
+ node_templates             | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ nodes                      | id                             | uuid                     | NO          | 
+ nodes                      | name                           | character varying        | NO          | 
+ nodes                      | category                       | character varying        | NO          | 
+ nodes                      | description                    | text                     | YES         | 
+ nodes                      | version                        | character varying        | NO          | '1.0.0'::character varying
+ nodes                      | definition                     | jsonb                    | NO          | 
+ nodes                      | is_public                      | boolean                  | NO          | false
+ nodes                      | created_at                     | timestamp with time zone | YES         | now()
+ nodes                      | updated_at                     | timestamp with time zone | YES         | now()
+ nodes                      | code_template                  | text                     | NO          | 
+ nodes                      | input_schema                   | jsonb                    | NO          | 
+ nodes                      | output_schema                  | jsonb                    | NO          | 
+ nodes                      | parameters_schema              | jsonb                    | YES         | 
+ nodes                      | icon                           | character varying        | YES         | 
+ nodes                      | color                          | character varying        | YES         | 
+ nodes                      | documentation                  | text                     | YES         | 
+ nodes                      | examples                       | jsonb                    | YES         | 
+ nodes                      | downloads_count                | integer                  | YES         | 
+ nodes                      | usage_count                    | integer                  | YES         | 
+ nodes                      | rating_average                 | integer                  | YES         | 
+ nodes                      | rating_count                   | integer                  | YES         | 
+ nodes                      | user_id                        | uuid                     | NO          | 
+ nodes                      | workspace_id                   | uuid                     | YES         | 
+ nodes                      | tenant_id                      | uuid                     | YES         | 
+ nodes                      | status                         | character varying        | YES         | 'active'::character varying
+ nodes                      | timeout_seconds                | integer                  | YES         | 300
+ nodes                      | retry_count                    | integer                  | YES         | 3
+ password_reset_tokens      | id                             | uuid                     | NO          | 
+ password_reset_tokens      | token                          | character varying        | NO          | 
+ password_reset_tokens      | user_id                        | uuid                     | NO          | 
+ password_reset_tokens      | expires_at                     | timestamp with time zone | NO          | 
+ password_reset_tokens      | is_used                        | boolean                  | YES         | 
+ password_reset_tokens      | created_at                     | timestamp with time zone | YES         | now()
+ password_reset_tokens      | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ payment_customers          | id                             | uuid                     | NO          | gen_random_uuid()
+ payment_customers          | tenant_id                      | uuid                     | NO          | 
+ payment_customers          | provider_id                    | uuid                     | NO          | 
+ payment_customers          | external_customer_id           | character varying        | NO          | 
+ payment_customers          | customer_data                  | jsonb                    | YES         | '{}'::jsonb
+ payment_customers          | is_active                      | boolean                  | YES         | true
+ payment_customers          | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ payment_customers          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ payment_methods            | id                             | uuid                     | NO          | gen_random_uuid()
+ payment_methods            | customer_id                    | uuid                     | NO          | 
+ payment_methods            | external_method_id             | character varying        | NO          | 
+ payment_methods            | type                           | character varying        | NO          | 
+ payment_methods            | last4                          | character varying        | YES         | 
+ payment_methods            | brand                          | character varying        | YES         | 
+ payment_methods            | exp_month                      | integer                  | YES         | 
+ payment_methods            | exp_year                       | integer                  | YES         | 
+ payment_methods            | is_default                     | boolean                  | YES         | false
+ payment_methods            | is_active                      | boolean                  | YES         | true
+ payment_methods            | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ payment_methods            | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ payment_methods            | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ payment_methods            | tenant_id                      | uuid                     | YES         | 
+ payment_providers          | id                             | uuid                     | NO          | gen_random_uuid()
+ payment_providers          | name                           | character varying        | NO          | 
+ payment_providers          | display_name                   | character varying        | NO          | 
+ payment_providers          | is_active                      | boolean                  | YES         | true
+ payment_providers          | config                         | jsonb                    | YES         | '{}'::jsonb
+ payment_providers          | webhook_secret                 | character varying        | YES         | 
+ payment_providers          | api_version                    | character varying        | YES         | 
+ payment_providers          | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ payment_providers          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ payment_providers          | tenant_id                      | uuid                     | YES         | 
+ plan_entitlements          | id                             | uuid                     | NO          | gen_random_uuid()
+ plan_entitlements          | plan_id                        | uuid                     | NO          | 
+ plan_entitlements          | feature_id                     | uuid                     | NO          | 
+ plan_entitlements          | limit_value                    | integer                  | YES         | 
+ plan_entitlements          | is_unlimited                   | boolean                  | YES         | false
+ plan_entitlements          | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ plan_entitlements          | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ plan_entitlements          | tenant_id                      | uuid                     | YES         | 
+ plan_entitlements          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ plan_features              | id                             | uuid                     | NO          | gen_random_uuid()
+ plan_features              | plan_id                        | uuid                     | NO          | 
+ plan_features              | feature_id                     | uuid                     | NO          | 
+ plan_features              | is_enabled                     | boolean                  | YES         | true
+ plan_features              | config                         | jsonb                    | YES         | '{}'::jsonb
+ plan_features              | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ plan_features              | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ plan_provider_mappings     | id                             | uuid                     | NO          | gen_random_uuid()
+ plan_provider_mappings     | plan_id                        | uuid                     | NO          | 
+ plan_provider_mappings     | provider_id                    | uuid                     | NO          | 
+ plan_provider_mappings     | external_plan_id               | character varying        | NO          | 
+ plan_provider_mappings     | external_price_id              | character varying        | YES         | 
+ plan_provider_mappings     | is_active                      | boolean                  | YES         | true
+ plan_provider_mappings     | config                         | jsonb                    | YES         | '{}'::jsonb
+ plan_provider_mappings     | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ plan_provider_mappings     | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ plan_provider_mappings     | tenant_id                      | uuid                     | YES         | 
+ plans                      | id                             | uuid                     | NO          | 
+ plans                      | name                           | character varying        | NO          | 
+ plans                      | slug                           | character varying        | NO          | 
+ plans                      | description                    | text                     | YES         | 
+ plans                      | price_monthly                  | double precision         | NO          | 0.0
+ plans                      | price_yearly                   | double precision         | NO          | 0.0
+ plans                      | max_workspaces                 | integer                  | NO          | 1
+ plans                      | max_members_per_workspace      | integer                  | NO          | 1
+ plans                      | max_projects_per_workspace     | integer                  | NO          | 10
+ plans                      | max_storage_mb                 | integer                  | NO          | 100
+ plans                      | max_executions_per_month       | integer                  | NO          | 100
+ plans                      | allow_collaborative_workspaces | boolean                  | NO          | false
+ plans                      | allow_custom_domains           | boolean                  | NO          | false
+ plans                      | allow_api_access               | boolean                  | NO          | false
+ plans                      | allow_advanced_analytics       | boolean                  | NO          | false
+ plans                      | allow_priority_support         | boolean                  | NO          | false
+ plans                      | is_active                      | boolean                  | NO          | true
+ plans                      | is_public                      | boolean                  | NO          | true
+ plans                      | created_at                     | timestamp with time zone | NO          | now()
+ plans                      | updated_at                     | timestamp with time zone | NO          | now()
+ plans                      | status                         | character varying        | YES         | 'active'::character varying
+ plans                      | version                        | character varying        | YES         | '1.0.0'::character varying
+ plans                      | sort_order                     | integer                  | YES         | 0
+ project_collaborators      | id                             | uuid                     | NO          | 
+ project_collaborators      | project_id                     | uuid                     | NO          | 
+ project_collaborators      | user_id                        | uuid                     | NO          | 
+ project_collaborators      | can_edit                       | boolean                  | NO          | 
+ project_collaborators      | can_comment                    | boolean                  | NO          | 
+ project_collaborators      | can_share                      | boolean                  | NO          | 
+ project_collaborators      | can_delete                     | boolean                  | NO          | 
+ project_collaborators      | is_online                      | boolean                  | NO          | 
+ project_collaborators      | current_cursor_position        | jsonb                    | YES         | 
+ project_collaborators      | last_edit_at                   | timestamp with time zone | YES         | 
+ project_collaborators      | added_at                       | timestamp with time zone | NO          | 
+ project_collaborators      | last_seen_at                   | timestamp with time zone | NO          | 
+ project_collaborators      | tenant_id                      | uuid                     | YES         | 
+ project_collaborators      | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ project_collaborators      | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ project_comments           | id                             | uuid                     | NO          | 
+ project_comments           | project_id                     | uuid                     | NO          | 
+ project_comments           | user_id                        | uuid                     | NO          | 
+ project_comments           | parent_id                      | uuid                     | YES         | 
+ project_comments           | content                        | text                     | NO          | 
+ project_comments           | content_type                   | character varying        | NO          | 
+ project_comments           | node_id                        | character varying        | YES         | 
+ project_comments           | position_x                     | double precision         | YES         | 
+ project_comments           | position_y                     | double precision         | YES         | 
+ project_comments           | is_resolved                    | boolean                  | NO          | 
+ project_comments           | is_edited                      | boolean                  | NO          | 
+ project_comments           | created_at                     | timestamp with time zone | NO          | 
+ project_comments           | updated_at                     | timestamp with time zone | NO          | 
+ project_comments           | resolved_at                    | timestamp with time zone | YES         | 
+ project_comments           | tenant_id                      | uuid                     | YES         | 
+ project_versions           | id                             | uuid                     | NO          | 
+ project_versions           | project_id                     | uuid                     | NO          | 
+ project_versions           | user_id                        | uuid                     | NO          | 
+ project_versions           | version_number                 | integer                  | NO          | 
+ project_versions           | version_name                   | character varying        | YES         | 
+ project_versions           | description                    | text                     | YES         | 
+ project_versions           | workflow_data                  | jsonb                    | NO          | 
+ project_versions           | changes_summary                | jsonb                    | YES         | 
+ project_versions           | file_size                      | integer                  | YES         | 
+ project_versions           | checksum                       | character varying        | YES         | 
+ project_versions           | is_major                       | boolean                  | NO          | 
+ project_versions           | is_auto_save                   | boolean                  | NO          | 
+ project_versions           | created_at                     | timestamp with time zone | NO          | 
+ project_versions           | tenant_id                      | uuid                     | YES         | 
+ project_versions           | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ rbac_permissions           | id                             | uuid                     | NO          | gen_random_uuid()
+ rbac_permissions           | key                            | character varying        | NO          | 
+ rbac_permissions           | description                    | text                     | YES         | 
+ rbac_permissions           | category                       | character varying        | YES         | 
+ rbac_permissions           | resource                       | character varying        | YES         | 
+ rbac_permissions           | action                         | character varying        | YES         | 
+ rbac_permissions           | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ rbac_permissions           | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ rbac_permissions           | tenant_id                      | uuid                     | YES         | 
+ rbac_role_permissions      | id                             | uuid                     | NO          | gen_random_uuid()
+ rbac_role_permissions      | role_id                        | uuid                     | NO          | 
+ rbac_role_permissions      | permission_id                  | uuid                     | NO          | 
+ rbac_role_permissions      | granted                        | boolean                  | YES         | true
+ rbac_role_permissions      | conditions                     | jsonb                    | YES         | '{}'::jsonb
+ rbac_role_permissions      | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ rbac_role_permissions      | tenant_id                      | uuid                     | YES         | 
+ rbac_role_permissions      | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ rbac_roles                 | id                             | uuid                     | NO          | gen_random_uuid()
+ rbac_roles                 | name                           | character varying        | NO          | 
+ rbac_roles                 | description                    | text                     | YES         | 
+ rbac_roles                 | is_system                      | boolean                  | YES         | false
+ rbac_roles                 | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ rbac_roles                 | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ rbac_roles                 | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ rbac_roles                 | tenant_id                      | uuid                     | YES         | 
+ refresh_tokens             | id                             | uuid                     | NO          | 
+ refresh_tokens             | token                          | character varying        | NO          | 
+ refresh_tokens             | user_id                        | uuid                     | NO          | 
+ refresh_tokens             | expires_at                     | timestamp with time zone | NO          | 
+ refresh_tokens             | is_revoked                     | boolean                  | YES         | 
+ refresh_tokens             | created_at                     | timestamp with time zone | YES         | now()
+ refresh_tokens             | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ report_executions          | id                             | uuid                     | NO          | 
+ report_executions          | report_id                      | uuid                     | NO          | 
+ report_executions          | user_id                        | uuid                     | YES         | 
+ report_executions          | execution_type                 | character varying        | NO          | 
+ report_executions          | parameters                     | json                     | YES         | 
+ report_executions          | status                         | character varying        | NO          | 
+ report_executions          | result_data                    | json                     | YES         | 
+ report_executions          | error_message                  | text                     | YES         | 
+ report_executions          | execution_time_ms              | integer                  | YES         | 
+ report_executions          | rows_processed                 | integer                  | YES         | 
+ report_executions          | data_size_bytes                | integer                  | YES         | 
+ report_executions          | started_at                     | timestamp with time zone | NO          | 
+ report_executions          | completed_at                   | timestamp with time zone | YES         | 
+ report_executions          | tenant_id                      | uuid                     | YES         | 
+ report_executions          | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ report_executions          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ subscriptions              | id                             | uuid                     | NO          | gen_random_uuid()
+ subscriptions              | tenant_id                      | uuid                     | NO          | 
+ subscriptions              | plan_id                        | uuid                     | NO          | 
+ subscriptions              | provider_id                    | uuid                     | YES         | 
+ subscriptions              | external_subscription_id       | character varying        | YES         | 
+ subscriptions              | status                         | character varying        | NO          | 'active'::character varying
+ subscriptions              | current_period_start           | timestamp with time zone | YES         | 
+ subscriptions              | current_period_end             | timestamp with time zone | YES         | 
+ subscriptions              | trial_start                    | timestamp with time zone | YES         | 
+ subscriptions              | trial_end                      | timestamp with time zone | YES         | 
+ subscriptions              | cancel_at_period_end           | boolean                  | YES         | false
+ subscriptions              | canceled_at                    | timestamp with time zone | YES         | 
+ subscriptions              | ended_at                       | timestamp with time zone | YES         | 
+ subscriptions              | payment_method_id              | uuid                     | YES         | 
+ subscriptions              | coupon_id                      | uuid                     | YES         | 
+ subscriptions              | quantity                       | integer                  | YES         | 1
+ subscriptions              | discount_amount                | numeric                  | YES         | 0
+ subscriptions              | tax_percent                    | numeric                  | YES         | 0
+ subscriptions              | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ subscriptions              | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ subscriptions              | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ system_health              | component                      | text                     | YES         | 
+ system_health              | status                         | text                     | YES         | 
+ system_health              | last_check                     | timestamp with time zone | YES         | 
+ system_health              | metrics                        | json                     | YES         | 
+ system_performance_metrics | id                             | integer                  | NO          | nextval('synapscale_db.system_performance_metrics_id_seq'::regclass)
+ system_performance_metrics | metric_name                    | character varying        | NO          | 
+ system_performance_metrics | metric_type                    | character varying        | NO          | 
+ system_performance_metrics | service                        | character varying        | NO          | 
+ system_performance_metrics | environment                    | character varying        | NO          | 
+ system_performance_metrics | value                          | double precision         | NO          | 
+ system_performance_metrics | unit                           | character varying        | YES         | 
+ system_performance_metrics | tags                           | jsonb                    | YES         | 
+ system_performance_metrics | timestamp                      | timestamp with time zone | NO          | 
+ system_performance_metrics | tenant_id                      | uuid                     | YES         | 
+ system_performance_metrics | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ system_performance_metrics | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ tags                       | id                             | uuid                     | NO          | gen_random_uuid()
+ tags                       | target_type                    | character varying        | NO          | 
+ tags                       | target_id                      | uuid                     | NO          | 
+ tags                       | tag_name                       | character varying        | NO          | 
+ tags                       | tag_value                      | text                     | YES         | 
+ tags                       | tag_category                   | character varying        | YES         | 
+ tags                       | is_system_tag                  | boolean                  | YES         | false
+ tags                       | created_by_user_id             | uuid                     | YES         | 
+ tags                       | auto_generated                 | boolean                  | YES         | false
+ tags                       | confidence_score               | double precision         | YES         | 
+ tags                       | tag_metadata                   | jsonb                    | YES         | 
+ tags                       | created_at                     | timestamp with time zone | NO          | now()
+ tags                       | tenant_id                      | uuid                     | YES         | 
+ tags                       | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ template_collections       | id                             | integer                  | NO          | nextval('synapscale_db.template_collections_id_seq'::regclass)
+ template_collections       | collection_id                  | character varying        | YES         | 
+ template_collections       | name                           | character varying        | NO          | 
+ template_collections       | description                    | text                     | YES         | 
+ template_collections       | creator_id                     | uuid                     | NO          | 
+ template_collections       | is_public                      | boolean                  | YES         | 
+ template_collections       | is_featured                    | boolean                  | YES         | 
+ template_collections       | template_ids                   | jsonb                    | NO          | 
+ template_collections       | tags                           | jsonb                    | YES         | 
+ template_collections       | thumbnail_url                  | character varying        | YES         | 
+ template_collections       | view_count                     | integer                  | YES         | 
+ template_collections       | follow_count                   | integer                  | YES         | 
+ template_collections       | created_at                     | timestamp with time zone | YES         | now()
+ template_collections       | updated_at                     | timestamp with time zone | YES         | now()
+ template_collections       | tenant_id                      | uuid                     | YES         | 
+ template_downloads         | id                             | integer                  | NO          | nextval('synapscale_db.template_downloads_id_seq'::regclass)
+ template_downloads         | template_id                    | uuid                     | NO          | 
+ template_downloads         | user_id                        | uuid                     | NO          | 
+ template_downloads         | download_type                  | character varying        | YES         | 
+ template_downloads         | ip_address                     | character varying        | YES         | 
+ template_downloads         | user_agent                     | character varying        | YES         | 
+ template_downloads         | template_version               | character varying        | YES         | 
+ template_downloads         | downloaded_at                  | timestamp with time zone | YES         | now()
+ template_downloads         | tenant_id                      | uuid                     | YES         | 
+ template_downloads         | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ template_downloads         | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ template_favorites         | id                             | integer                  | NO          | nextval('synapscale_db.template_favorites_id_seq'::regclass)
+ template_favorites         | template_id                    | uuid                     | NO          | 
+ template_favorites         | user_id                        | uuid                     | NO          | 
+ template_favorites         | notes                          | text                     | YES         | 
+ template_favorites         | created_at                     | timestamp with time zone | YES         | now()
+ template_favorites         | tenant_id                      | uuid                     | YES         | 
+ template_favorites         | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ template_reviews           | id                             | integer                  | NO          | nextval('synapscale_db.template_reviews_id_seq'::regclass)
+ template_reviews           | template_id                    | uuid                     | NO          | 
+ template_reviews           | user_id                        | uuid                     | NO          | 
+ template_reviews           | rating                         | integer                  | NO          | 
+ template_reviews           | title                          | character varying        | YES         | 
+ template_reviews           | comment                        | text                     | YES         | 
+ template_reviews           | ease_of_use                    | integer                  | YES         | 
+ template_reviews           | documentation_quality          | integer                  | YES         | 
+ template_reviews           | performance                    | integer                  | YES         | 
+ template_reviews           | value_for_money                | integer                  | YES         | 
+ template_reviews           | is_verified_purchase           | boolean                  | YES         | 
+ template_reviews           | is_helpful_count               | integer                  | YES         | 
+ template_reviews           | is_reported                    | boolean                  | YES         | 
+ template_reviews           | version_reviewed               | character varying        | YES         | 
+ template_reviews           | created_at                     | timestamp with time zone | YES         | now()
+ template_reviews           | updated_at                     | timestamp with time zone | YES         | now()
+ template_reviews           | tenant_id                      | uuid                     | YES         | 
+ template_usage             | id                             | integer                  | NO          | nextval('synapscale_db.template_usage_id_seq'::regclass)
+ template_usage             | template_id                    | uuid                     | NO          | 
+ template_usage             | user_id                        | uuid                     | NO          | 
+ template_usage             | workflow_id                    | uuid                     | YES         | 
+ template_usage             | usage_type                     | character varying        | NO          | 
+ template_usage             | success                        | boolean                  | YES         | 
+ template_usage             | template_version               | character varying        | YES         | 
+ template_usage             | modifications_made             | jsonb                    | YES         | 
+ template_usage             | execution_time                 | integer                  | YES         | 
+ template_usage             | ip_address                     | character varying        | YES         | 
+ template_usage             | user_agent                     | character varying        | YES         | 
+ template_usage             | used_at                        | timestamp with time zone | YES         | now()
+ template_usage             | tenant_id                      | uuid                     | YES         | 
+ template_usage             | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ template_usage             | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ tenant_features            | id                             | uuid                     | NO          | gen_random_uuid()
+ tenant_features            | tenant_id                      | uuid                     | NO          | 
+ tenant_features            | feature_id                     | uuid                     | NO          | 
+ tenant_features            | is_enabled                     | boolean                  | YES         | true
+ tenant_features            | usage_count                    | integer                  | YES         | 0
+ tenant_features            | limit_value                    | integer                  | YES         | 
+ tenant_features            | config                         | jsonb                    | YES         | '{}'::jsonb
+ tenant_features            | expires_at                     | timestamp with time zone | YES         | 
+ tenant_features            | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ tenant_features            | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ tenants                    | id                             | uuid                     | NO          | gen_random_uuid()
+ tenants                    | name                           | character varying        | NO          | 
+ tenants                    | slug                           | character varying        | NO          | 
+ tenants                    | domain                         | character varying        | YES         | 
+ tenants                    | status                         | character varying        | NO          | 'active'::character varying
+ tenants                    | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ tenants                    | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ tenants                    | plan_id                        | uuid                     | NO          | 
+ tenants                    | theme                          | character varying        | YES         | 'light'::character varying
+ tenants                    | default_language               | character varying        | YES         | 'en'::character varying
+ tenants                    | timezone                       | character varying        | YES         | 'UTC'::character varying
+ tenants                    | mfa_required                   | boolean                  | YES         | false
+ tenants                    | session_timeout                | integer                  | YES         | 3600
+ tenants                    | ip_whitelist                   | jsonb                    | YES         | '[]'::jsonb
+ tenants                    | max_storage_mb                 | integer                  | YES         | 
+ tenants                    | max_workspaces                 | integer                  | YES         | 
+ tenants                    | max_api_calls_per_day          | integer                  | YES         | 
+ tenants                    | max_members_per_workspace      | integer                  | YES         | 
+ tenants                    | enabled_features               | ARRAY                    | YES         | 
+ tools                      | tool_id                        | uuid                     | NO          | gen_random_uuid()
+ tools                      | name                           | text                     | NO          | 
+ tools                      | category                       | text                     | YES         | 
+ tools                      | base_config                    | jsonb                    | NO          | '{}'::jsonb
+ tools                      | tenant_id                      | uuid                     | YES         | 
+ tools                      | created_at                     | timestamp with time zone | NO          | now()
+ tools                      | updated_at                     | timestamp with time zone | NO          | now()
+ user_behavior_metrics      | id                             | uuid                     | NO          | 
+ user_behavior_metrics      | user_id                        | uuid                     | NO          | 
+ user_behavior_metrics      | date                           | timestamp with time zone | NO          | 
+ user_behavior_metrics      | period_type                    | character varying        | NO          | 
+ user_behavior_metrics      | session_count                  | integer                  | NO          | 
+ user_behavior_metrics      | total_session_duration         | integer                  | NO          | 
+ user_behavior_metrics      | avg_session_duration           | double precision         | NO          | 
+ user_behavior_metrics      | page_views                     | integer                  | NO          | 
+ user_behavior_metrics      | unique_pages_visited           | integer                  | NO          | 
+ user_behavior_metrics      | workflows_created              | integer                  | NO          | 
+ user_behavior_metrics      | workflows_executed             | integer                  | NO          | 
+ user_behavior_metrics      | components_used                | integer                  | NO          | 
+ user_behavior_metrics      | collaborations_initiated       | integer                  | NO          | 
+ user_behavior_metrics      | marketplace_purchases          | integer                  | NO          | 
+ user_behavior_metrics      | revenue_generated              | double precision         | NO          | 
+ user_behavior_metrics      | components_published           | integer                  | NO          | 
+ user_behavior_metrics      | error_count                    | integer                  | NO          | 
+ user_behavior_metrics      | support_tickets                | integer                  | NO          | 
+ user_behavior_metrics      | feature_requests               | integer                  | NO          | 
+ user_behavior_metrics      | engagement_score               | double precision         | NO          | 
+ user_behavior_metrics      | satisfaction_score             | double precision         | NO          | 
+ user_behavior_metrics      | value_score                    | double precision         | NO          | 
+ user_behavior_metrics      | created_at                     | timestamp with time zone | NO          | 
+ user_behavior_metrics      | updated_at                     | timestamp with time zone | NO          | 
+ user_behavior_metrics      | tenant_id                      | uuid                     | YES         | 
+ user_insights              | id                             | uuid                     | NO          | 
+ user_insights              | user_id                        | uuid                     | NO          | 
+ user_insights              | insight_type                   | character varying        | NO          | 
+ user_insights              | category                       | character varying        | NO          | 
+ user_insights              | priority                       | character varying        | NO          | 
+ user_insights              | title                          | character varying        | NO          | 
+ user_insights              | description                    | text                     | NO          | 
+ user_insights              | recommendation                 | text                     | YES         | 
+ user_insights              | supporting_data                | jsonb                    | YES         | 
+ user_insights              | confidence_score               | double precision         | NO          | 
+ user_insights              | suggested_action               | character varying        | YES         | 
+ user_insights              | action_url                     | character varying        | YES         | 
+ user_insights              | action_data                    | jsonb                    | YES         | 
+ user_insights              | is_read                        | boolean                  | NO          | 
+ user_insights              | is_dismissed                   | boolean                  | NO          | 
+ user_insights              | is_acted_upon                  | boolean                  | NO          | 
+ user_insights              | user_feedback                  | character varying        | YES         | 
+ user_insights              | expires_at                     | timestamp with time zone | YES         | 
+ user_insights              | is_evergreen                   | boolean                  | NO          | 
+ user_insights              | created_at                     | timestamp with time zone | NO          | 
+ user_insights              | read_at                        | timestamp with time zone | YES         | 
+ user_insights              | acted_at                       | timestamp with time zone | YES         | 
+ user_insights              | tenant_id                      | uuid                     | YES         | 
+ user_insights              | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ user_subscriptions         | id                             | uuid                     | NO          | 
+ user_subscriptions         | user_id                        | uuid                     | NO          | 
+ user_subscriptions         | plan_id                        | uuid                     | NO          | 
+ user_subscriptions         | started_at                     | timestamp with time zone | NO          | now()
+ user_subscriptions         | expires_at                     | timestamp with time zone | YES         | 
+ user_subscriptions         | cancelled_at                   | timestamp with time zone | YES         | 
+ user_subscriptions         | payment_method                 | character varying        | YES         | 
+ user_subscriptions         | payment_provider               | character varying        | YES         | 
+ user_subscriptions         | external_subscription_id       | character varying        | YES         | 
+ user_subscriptions         | billing_cycle                  | character varying        | YES         | 'monthly'::character varying
+ user_subscriptions         | current_period_start           | timestamp with time zone | YES         | 
+ user_subscriptions         | current_period_end             | timestamp with time zone | YES         | 
+ user_subscriptions         | current_workspaces             | integer                  | NO          | 0
+ user_subscriptions         | current_storage_mb             | double precision         | NO          | 0.0
+ user_subscriptions         | current_executions_this_month  | integer                  | NO          | 0
+ user_subscriptions         | subscription_metadata          | jsonb                    | YES         | 
+ user_subscriptions         | created_at                     | timestamp with time zone | NO          | now()
+ user_subscriptions         | updated_at                     | timestamp with time zone | NO          | now()
+ user_subscriptions         | tenant_id                      | uuid                     | YES         | 
+ user_subscriptions         | status                         | character varying        | YES         | 'active'::character varying
+ user_tenant_roles          | id                             | uuid                     | NO          | gen_random_uuid()
+ user_tenant_roles          | user_id                        | uuid                     | NO          | 
+ user_tenant_roles          | tenant_id                      | uuid                     | NO          | 
+ user_tenant_roles          | role_id                        | uuid                     | NO          | 
+ user_tenant_roles          | granted_by                     | uuid                     | YES         | 
+ user_tenant_roles          | granted_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ user_tenant_roles          | expires_at                     | timestamp with time zone | YES         | 
+ user_tenant_roles          | is_active                      | boolean                  | YES         | true
+ user_tenant_roles          | conditions                     | jsonb                    | YES         | '{}'::jsonb
+ user_tenant_roles          | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ user_tenant_roles          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ user_variables             | id                             | uuid                     | NO          | 
+ user_variables             | key                            | character varying        | NO          | 
+ user_variables             | value                          | text                     | NO          | 
+ user_variables             | is_secret                      | boolean                  | NO          | false
+ user_variables             | user_id                        | uuid                     | NO          | 
+ user_variables             | created_at                     | timestamp with time zone | NO          | now()
+ user_variables             | updated_at                     | timestamp with time zone | NO          | now()
+ user_variables             | category                       | character varying        | YES         | 
+ user_variables             | description                    | text                     | YES         | 
+ user_variables             | is_encrypted                   | boolean                  | NO          | false
+ user_variables             | is_active                      | boolean                  | NO          | true
+ user_variables             | tenant_id                      | uuid                     | YES         | 
+ users                      | id                             | uuid                     | NO          | 
+ users                      | email                          | character varying        | NO          | 
+ users                      | username                       | character varying        | NO          | 
+ users                      | hashed_password                | character varying        | NO          | 
+ users                      | full_name                      | character varying        | NO          | 
+ users                      | is_active                      | boolean                  | YES         | true
+ users                      | is_verified                    | boolean                  | YES         | false
+ users                      | is_superuser                   | boolean                  | YES         | false
+ users                      | profile_image_url              | character varying        | YES         | 
+ users                      | bio                            | character varying        | YES         | 
+ users                      | created_at                     | timestamp with time zone | YES         | now()
+ users                      | updated_at                     | timestamp with time zone | YES         | now()
+ users                      | status                         | character varying        | YES         | 'active'::character varying
+ users                      | metadata                       | jsonb                    | YES         | '{}'::jsonb
+ users                      | last_login_at                  | timestamp with time zone | YES         | 
+ users                      | login_count                    | integer                  | YES         | 0
+ users                      | failed_login_attempts          | integer                  | YES         | 0
+ users                      | account_locked_until           | timestamp with time zone | YES         | 
+ users                      | tenant_id                      | uuid                     | YES         | 
+ webhook_logs               | id                             | uuid                     | NO          | gen_random_uuid()
+ webhook_logs               | provider_id                    | uuid                     | NO          | 
+ webhook_logs               | event_type                     | character varying        | NO          | 
+ webhook_logs               | event_id                       | character varying        | YES         | 
+ webhook_logs               | payload                        | jsonb                    | NO          | 
+ webhook_logs               | headers                        | jsonb                    | YES         | '{}'::jsonb
+ webhook_logs               | status                         | character varying        | YES         | 'pending'::character varying
+ webhook_logs               | processed_at                   | timestamp with time zone | YES         | 
+ webhook_logs               | error_message                  | text                     | YES         | 
+ webhook_logs               | retry_count                    | integer                  | YES         | 0
+ webhook_logs               | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ webhook_logs               | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ webhook_logs               | tenant_id                      | uuid                     | YES         | 
+ workflow_connections       | id                             | uuid                     | NO          | 
+ workflow_connections       | workflow_id                    | uuid                     | NO          | 
+ workflow_connections       | source_node_id                 | uuid                     | NO          | 
+ workflow_connections       | target_node_id                 | uuid                     | NO          | 
+ workflow_connections       | source_port                    | character varying        | YES         | 
+ workflow_connections       | target_port                    | character varying        | YES         | 
+ workflow_connections       | created_at                     | timestamp with time zone | YES         | now()
+ workflow_connections       | tenant_id                      | uuid                     | YES         | 
+ workflow_connections       | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workflow_execution_metrics | id                             | integer                  | NO          | nextval('synapscale_db.execution_metrics_id_seq'::regclass)
+ workflow_execution_metrics | workflow_execution_id          | uuid                     | NO          | 
+ workflow_execution_metrics | node_execution_id              | integer                  | YES         | 
+ workflow_execution_metrics | metric_type                    | character varying        | NO          | 
+ workflow_execution_metrics | metric_name                    | character varying        | NO          | 
+ workflow_execution_metrics | value_numeric                  | integer                  | YES         | 
+ workflow_execution_metrics | value_float                    | character varying        | YES         | 
+ workflow_execution_metrics | value_text                     | text                     | YES         | 
+ workflow_execution_metrics | value_json                     | jsonb                    | YES         | 
+ workflow_execution_metrics | context                        | character varying        | YES         | 
+ workflow_execution_metrics | tags                           | jsonb                    | YES         | 
+ workflow_execution_metrics | measured_at                    | timestamp with time zone | YES         | now()
+ workflow_execution_metrics | created_at                     | timestamp with time zone | YES         | now()
+ workflow_execution_metrics | tenant_id                      | uuid                     | YES         | 
+ workflow_execution_metrics | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workflow_execution_queue   | id                             | integer                  | NO          | nextval('synapscale_db.execution_queue_id_seq'::regclass)
+ workflow_execution_queue   | queue_id                       | character varying        | YES         | 
+ workflow_execution_queue   | workflow_execution_id          | uuid                     | NO          | 
+ workflow_execution_queue   | user_id                        | uuid                     | NO          | 
+ workflow_execution_queue   | priority                       | integer                  | YES         | 
+ workflow_execution_queue   | scheduled_at                   | timestamp with time zone | YES         | 
+ workflow_execution_queue   | started_at                     | timestamp with time zone | YES         | 
+ workflow_execution_queue   | completed_at                   | timestamp with time zone | YES         | 
+ workflow_execution_queue   | status                         | character varying        | YES         | 
+ workflow_execution_queue   | worker_id                      | character varying        | YES         | 
+ workflow_execution_queue   | max_execution_time             | integer                  | YES         | 
+ workflow_execution_queue   | retry_count                    | integer                  | YES         | 
+ workflow_execution_queue   | max_retries                    | integer                  | YES         | 
+ workflow_execution_queue   | meta_data                      | jsonb                    | YES         | 
+ workflow_execution_queue   | created_at                     | timestamp with time zone | YES         | now()
+ workflow_execution_queue   | updated_at                     | timestamp with time zone | YES         | now()
+ workflow_execution_queue   | tenant_id                      | uuid                     | YES         | 
+ workflow_executions        | id                             | uuid                     | NO          | 
+ workflow_executions        | execution_id                   | character varying        | YES         | 
+ workflow_executions        | workflow_id                    | uuid                     | NO          | 
+ workflow_executions        | user_id                        | uuid                     | NO          | 
+ workflow_executions        | status                         | character varying        | NO          | 'pending'::character varying
+ workflow_executions        | priority                       | integer                  | YES         | 
+ workflow_executions        | input_data                     | jsonb                    | YES         | 
+ workflow_executions        | output_data                    | jsonb                    | YES         | 
+ workflow_executions        | context_data                   | jsonb                    | YES         | 
+ workflow_executions        | variables                      | jsonb                    | YES         | 
+ workflow_executions        | total_nodes                    | integer                  | YES         | 
+ workflow_executions        | completed_nodes                | integer                  | YES         | 
+ workflow_executions        | failed_nodes                   | integer                  | YES         | 
+ workflow_executions        | progress_percentage            | integer                  | YES         | 
+ workflow_executions        | started_at                     | timestamp with time zone | NO          | now()
+ workflow_executions        | completed_at                   | timestamp with time zone | YES         | 
+ workflow_executions        | timeout_at                     | timestamp with time zone | YES         | 
+ workflow_executions        | estimated_duration             | integer                  | YES         | 
+ workflow_executions        | actual_duration                | integer                  | YES         | 
+ workflow_executions        | execution_log                  | text                     | YES         | 
+ workflow_executions        | error_message                  | text                     | YES         | 
+ workflow_executions        | error_details                  | jsonb                    | YES         | 
+ workflow_executions        | debug_info                     | jsonb                    | YES         | 
+ workflow_executions        | retry_count                    | integer                  | YES         | 
+ workflow_executions        | max_retries                    | integer                  | YES         | 
+ workflow_executions        | auto_retry                     | boolean                  | YES         | 
+ workflow_executions        | notify_on_completion           | boolean                  | YES         | 
+ workflow_executions        | notify_on_failure              | boolean                  | YES         | 
+ workflow_executions        | tags                           | jsonb                    | YES         | 
+ workflow_executions        | metadata                       | json                     | YES         | 
+ workflow_executions        | created_at                     | timestamp with time zone | YES         | now()
+ workflow_executions        | updated_at                     | timestamp with time zone | YES         | now()
+ workflow_executions        | tenant_id                      | uuid                     | YES         | 
+ workflow_nodes             | id                             | uuid                     | NO          | 
+ workflow_nodes             | workflow_id                    | uuid                     | NO          | 
+ workflow_nodes             | node_id                        | uuid                     | NO          | 
+ workflow_nodes             | instance_name                  | character varying        | YES         | 
+ workflow_nodes             | position_x                     | integer                  | NO          | 
+ workflow_nodes             | position_y                     | integer                  | NO          | 
+ workflow_nodes             | configuration                  | jsonb                    | YES         | 
+ workflow_nodes             | created_at                     | timestamp with time zone | YES         | now()
+ workflow_nodes             | tenant_id                      | uuid                     | YES         | 
+ workflow_nodes             | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workflow_templates         | id                             | uuid                     | NO          | 
+ workflow_templates         | name                           | character varying        | NO          | 
+ workflow_templates         | description                    | text                     | YES         | 
+ workflow_templates         | category                       | character varying        | NO          | 
+ workflow_templates         | tags                           | jsonb                    | YES         | 
+ workflow_templates         | workflow_definition            | jsonb                    | NO          | 
+ workflow_templates         | preview_image                  | character varying        | YES         | 
+ workflow_templates         | author_id                      | uuid                     | NO          | 
+ workflow_templates         | version                        | character varying        | NO          | '1.0.0'::character varying
+ workflow_templates         | is_public                      | boolean                  | NO          | false
+ workflow_templates         | is_featured                    | boolean                  | NO          | false
+ workflow_templates         | downloads_count                | integer                  | NO          | 0
+ workflow_templates         | rating_average                 | numeric                  | NO          | 0.00
+ workflow_templates         | rating_count                   | integer                  | NO          | 0
+ workflow_templates         | price                          | numeric                  | NO          | 0.00
+ workflow_templates         | is_free                        | boolean                  | NO          | true
+ workflow_templates         | license                        | character varying        | NO          | 'MIT'::character varying
+ workflow_templates         | created_at                     | timestamp with time zone | NO          | now()
+ workflow_templates         | updated_at                     | timestamp with time zone | NO          | now()
+ workflow_templates         | title                          | character varying        | NO          | 
+ workflow_templates         | short_description              | character varying        | YES         | 
+ workflow_templates         | original_workflow_id           | uuid                     | YES         | 
+ workflow_templates         | status                         | character varying        | YES         | 
+ workflow_templates         | is_verified                    | boolean                  | YES         | 
+ workflow_templates         | license_type                   | character varying        | YES         | 
+ workflow_templates         | workflow_data                  | jsonb                    | NO          | 
+ workflow_templates         | nodes_data                     | jsonb                    | NO          | 
+ workflow_templates         | connections_data               | jsonb                    | YES         | 
+ workflow_templates         | required_variables             | jsonb                    | YES         | 
+ workflow_templates         | optional_variables             | jsonb                    | YES         | 
+ workflow_templates         | default_config                 | jsonb                    | YES         | 
+ workflow_templates         | compatibility_version          | character varying        | YES         | 
+ workflow_templates         | estimated_duration             | integer                  | YES         | 
+ workflow_templates         | complexity_level               | integer                  | YES         | 
+ workflow_templates         | download_count                 | integer                  | YES         | 
+ workflow_templates         | usage_count                    | integer                  | YES         | 
+ workflow_templates         | view_count                     | integer                  | YES         | 
+ workflow_templates         | keywords                       | jsonb                    | YES         | 
+ workflow_templates         | use_cases                      | jsonb                    | YES         | 
+ workflow_templates         | industries                     | jsonb                    | YES         | 
+ workflow_templates         | thumbnail_url                  | character varying        | YES         | 
+ workflow_templates         | preview_images                 | jsonb                    | YES         | 
+ workflow_templates         | demo_video_url                 | character varying        | YES         | 
+ workflow_templates         | documentation                  | text                     | YES         | 
+ workflow_templates         | setup_instructions             | text                     | YES         | 
+ workflow_templates         | changelog                      | jsonb                    | YES         | 
+ workflow_templates         | support_email                  | character varying        | YES         | 
+ workflow_templates         | repository_url                 | character varying        | YES         | 
+ workflow_templates         | documentation_url              | character varying        | YES         | 
+ workflow_templates         | published_at                   | timestamp with time zone | YES         | 
+ workflow_templates         | last_used_at                   | timestamp with time zone | YES         | 
+ workflow_templates         | tenant_id                      | uuid                     | YES         | 
+ workflows                  | id                             | uuid                     | NO          | 
+ workflows                  | name                           | character varying        | NO          | 
+ workflows                  | description                    | text                     | YES         | 
+ workflows                  | definition                     | jsonb                    | NO          | 
+ workflows                  | is_active                      | boolean                  | NO          | true
+ workflows                  | user_id                        | uuid                     | NO          | 
+ workflows                  | workspace_id                   | uuid                     | YES         | 
+ workflows                  | is_public                      | boolean                  | YES         | false
+ workflows                  | category                       | character varying        | YES         | 
+ workflows                  | tags                           | jsonb                    | YES         | 
+ workflows                  | version                        | character varying        | YES         | 
+ workflows                  | thumbnail_url                  | character varying        | YES         | 
+ workflows                  | downloads_count                | integer                  | YES         | 
+ workflows                  | rating_average                 | integer                  | YES         | 
+ workflows                  | rating_count                   | integer                  | YES         | 
+ workflows                  | execution_count                | integer                  | YES         | 
+ workflows                  | last_executed_at               | timestamp with time zone | YES         | 
+ workflows                  | created_at                     | timestamp with time zone | NO          | now()
+ workflows                  | updated_at                     | timestamp with time zone | NO          | now()
+ workflows                  | tenant_id                      | uuid                     | NO          | 
+ workflows                  | status                         | character varying        | YES         | 'draft'::character varying
+ workflows                  | priority                       | integer                  | YES         | 1
+ workflows                  | timeout_seconds                | integer                  | YES         | 3600
+ workflows                  | retry_count                    | integer                  | YES         | 3
+ workspace_activities       | id                             | uuid                     | NO          | 
+ workspace_activities       | workspace_id                   | uuid                     | NO          | 
+ workspace_activities       | user_id                        | uuid                     | NO          | 
+ workspace_activities       | action                         | character varying        | NO          | 
+ workspace_activities       | resource_type                  | character varying        | NO          | 
+ workspace_activities       | resource_id                    | character varying        | YES         | 
+ workspace_activities       | description                    | character varying        | NO          | 
+ workspace_activities       | metadata                       | jsonb                    | YES         | 
+ workspace_activities       | ip_address                     | character varying        | YES         | 
+ workspace_activities       | user_agent                     | character varying        | YES         | 
+ workspace_activities       | created_at                     | timestamp with time zone | NO          | 
+ workspace_activities       | tenant_id                      | uuid                     | YES         | 
+ workspace_activities       | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workspace_activities       | meta_data                      | jsonb                    | YES         | '{}'::jsonb
+ workspace_features         | id                             | uuid                     | NO          | gen_random_uuid()
+ workspace_features         | workspace_id                   | uuid                     | NO          | 
+ workspace_features         | feature_id                     | uuid                     | NO          | 
+ workspace_features         | is_enabled                     | boolean                  | YES         | true
+ workspace_features         | config                         | jsonb                    | YES         | '{}'::jsonb
+ workspace_features         | usage_count                    | integer                  | YES         | 0
+ workspace_features         | limit_value                    | integer                  | YES         | 
+ workspace_features         | expires_at                     | timestamp with time zone | YES         | 
+ workspace_features         | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workspace_features         | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workspace_features         | tenant_id                      | uuid                     | YES         | 
+ workspace_invitations      | id                             | uuid                     | NO          | 
+ workspace_invitations      | workspace_id                   | uuid                     | NO          | 
+ workspace_invitations      | inviter_id                     | uuid                     | NO          | 
+ workspace_invitations      | invited_user_id                | uuid                     | YES         | 
+ workspace_invitations      | email                          | character varying        | NO          | 
+ workspace_invitations      | message                        | text                     | YES         | 
+ workspace_invitations      | token                          | character varying        | NO          | 
+ workspace_invitations      | status                         | character varying        | NO          | 
+ workspace_invitations      | created_at                     | timestamp with time zone | NO          | 
+ workspace_invitations      | expires_at                     | timestamp with time zone | NO          | 
+ workspace_invitations      | responded_at                   | timestamp with time zone | YES         | 
+ workspace_invitations      | tenant_id                      | uuid                     | YES         | 
+ workspace_invitations      | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workspace_members          | id                             | integer                  | NO          | nextval('synapscale_db.workspace_members_id_seq'::regclass)
+ workspace_members          | workspace_id                   | uuid                     | NO          | 
+ workspace_members          | user_id                        | uuid                     | NO          | 
+ workspace_members          | custom_permissions             | jsonb                    | YES         | 
+ workspace_members          | status                         | character varying        | NO          | 'active'::character varying
+ workspace_members          | is_favorite                    | boolean                  | NO          | false
+ workspace_members          | notification_preferences       | jsonb                    | YES         | 
+ workspace_members          | last_seen_at                   | timestamp with time zone | NO          | 
+ workspace_members          | joined_at                      | timestamp with time zone | NO          | 
+ workspace_members          | left_at                        | timestamp with time zone | YES         | 
+ workspace_members          | created_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workspace_members          | updated_at                     | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workspace_members          | tenant_id                      | uuid                     | NO          | 
+ workspace_members          | role                           | character varying        | NO          | 'member'::character varying
+ workspace_projects         | id                             | uuid                     | NO          | 
+ workspace_projects         | workspace_id                   | uuid                     | NO          | 
+ workspace_projects         | workflow_id                    | uuid                     | NO          | 
+ workspace_projects         | name                           | character varying        | NO          | 
+ workspace_projects         | description                    | text                     | YES         | 
+ workspace_projects         | color                          | character varying        | YES         | 
+ workspace_projects         | allow_concurrent_editing       | boolean                  | NO          | 
+ workspace_projects         | auto_save_interval             | integer                  | YES         | 
+ workspace_projects         | version_control_enabled        | boolean                  | NO          | 
+ workspace_projects         | status                         | character varying        | NO          | 
+ workspace_projects         | is_template                    | boolean                  | NO          | 
+ workspace_projects         | is_public                      | boolean                  | NO          | 
+ workspace_projects         | collaborator_count             | integer                  | NO          | 
+ workspace_projects         | edit_count                     | integer                  | NO          | 
+ workspace_projects         | comment_count                  | integer                  | NO          | 
+ workspace_projects         | created_at                     | timestamp with time zone | NO          | 
+ workspace_projects         | updated_at                     | timestamp with time zone | NO          | 
+ workspace_projects         | last_edited_at                 | timestamp with time zone | NO          | 
+ workspace_projects         | tenant_id                      | uuid                     | NO          | 
+ workspaces                 | id                             | uuid                     | NO          | 
+ workspaces                 | name                           | character varying        | NO          | 
+ workspaces                 | slug                           | character varying        | NO          | 
+ workspaces                 | description                    | text                     | YES         | 
+ workspaces                 | avatar_url                     | character varying        | YES         | 
+ workspaces                 | color                          | character varying        | YES         | 
+ workspaces                 | owner_id                       | uuid                     | NO          | 
+ workspaces                 | is_public                      | boolean                  | NO          | false
+ workspaces                 | is_template                    | boolean                  | NO          | false
+ workspaces                 | allow_guest_access             | boolean                  | NO          | false
+ workspaces                 | require_approval               | boolean                  | NO          | 
+ workspaces                 | max_members                    | integer                  | YES         | 
+ workspaces                 | max_projects                   | integer                  | YES         | 
+ workspaces                 | max_storage_mb                 | integer                  | YES         | 
+ workspaces                 | enable_real_time_editing       | boolean                  | NO          | 
+ workspaces                 | enable_comments                | boolean                  | NO          | 
+ workspaces                 | enable_chat                    | boolean                  | NO          | 
+ workspaces                 | enable_video_calls             | boolean                  | NO          | 
+ workspaces                 | member_count                   | integer                  | NO          | 
+ workspaces                 | project_count                  | integer                  | NO          | 
+ workspaces                 | activity_count                 | integer                  | NO          | 
+ workspaces                 | storage_used_mb                | double precision         | NO          | 
+ workspaces                 | status                         | character varying        | NO          | 'active'::character varying
+ workspaces                 | created_at                     | timestamp with time zone | NO          | now()
+ workspaces                 | updated_at                     | timestamp with time zone | NO          | now()
+ workspaces                 | last_activity_at               | timestamp with time zone | NO          | 
+ workspaces                 | tenant_id                      | uuid                     | NO          | 
+ workspaces                 | email_notifications            | boolean                  | YES         | true
+ workspaces                 | push_notifications             | boolean                  | YES         | false
+ workspaces                 | api_calls_today                | integer                  | YES         | 0
+ workspaces                 | api_calls_this_month           | integer                  | YES         | 0
+ workspaces                 | last_api_reset_daily           | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workspaces                 | last_api_reset_monthly         | timestamp with time zone | YES         | CURRENT_TIMESTAMP
+ workspaces                 | feature_usage_count            | jsonb                    | YES         | '{}'::jsonb
+ workspaces                 | type                           | USER-DEFINED             | NO          | 'individual'::synapscale_db.workspacetype
+(1455 rows)
+

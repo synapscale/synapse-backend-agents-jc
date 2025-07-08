@@ -1,0 +1,145 @@
+# Task ID: 10
+# Title: Implement Automated Consistency Checks
+# Status: pending
+# Dependencies: 5, 6, 7
+# Priority: medium
+# Description: Create automated consistency checks to continuously validate the integrity of the tenant-plan-feature relationship and detect anomalies.
+# Details:
+1. Create a database function for consistency validation
+2. Implement a scheduled job to run checks
+3. Create an API endpoint for manual validation
+4. Use PostgreSQL 14+ for advanced validation features
+5. SQL implementation:
+```sql
+-- Create consistency check function
+CREATE OR REPLACE FUNCTION check_system_consistency()
+RETURNS TABLE (
+  check_name TEXT,
+  entity_type TEXT,
+  entity_id INTEGER,
+  issue_description TEXT,
+  severity TEXT
+) AS $$
+BEGIN
+  -- Check 1: FREE plans with premium features
+  RETURN QUERY
+  SELECT 
+    'free_plan_premium_features' as check_name,
+    'tenant' as entity_type,
+    t.id as entity_id,
+    'FREE plan tenant has access to premium feature: ' || f.name as issue_description,
+    'CRITICAL' as severity
+  FROM tenants t
+  JOIN plans p ON t.plan_id = p.id
+  JOIN plan_features pf ON p.id = pf.plan_id
+  JOIN features f ON pf.feature_id = f.id
+  WHERE p.name = 'FREE' AND f.is_premium = true;
+  
+  -- Check 2: Workspaces exceeding plan limits
+  RETURN QUERY
+  SELECT 
+    'workspace_exceeds_plan_limits' as check_name,
+    'workspace' as entity_type,
+    w.id as entity_id,
+    'Workspace exceeds plan limits: ' || 
+    CASE 
+      WHEN w.max_users > (p.restrictions->>'max_workspace_users')::INT 
+        THEN 'users (' || w.max_users || ' > ' || (p.restrictions->>'max_workspace_users')::INT || ')'
+      WHEN w.max_storage > (p.restrictions->>'max_workspace_storage')::INT 
+        THEN 'storage (' || w.max_storage || ' > ' || (p.restrictions->>'max_workspace_storage')::INT || ')'
+      ELSE 'other limits'
+    END as issue_description,
+    'CRITICAL' as severity
+  FROM workspaces w
+  JOIN tenants t ON w.tenant_id = t.id
+  JOIN plans p ON t.plan_id = p.id
+  WHERE w.max_users > (p.restrictions->>'max_workspace_users')::INT
+     OR w.max_storage > (p.restrictions->>'max_workspace_storage')::INT;
+  
+  -- Check 3: Plans with NULL features
+  RETURN QUERY
+  SELECT 
+    'plan_null_features' as check_name,
+    'plan' as entity_type,
+    p.id as entity_id,
+    'Plan has NULL features: ' || p.name as issue_description,
+    'CRITICAL' as severity
+  FROM plans p
+  LEFT JOIN plan_features pf ON p.id = pf.plan_id
+  WHERE pf.id IS NULL;
+  
+  -- Check 4: Inconsistent tenant settings
+  RETURN QUERY
+  SELECT 
+    'inconsistent_tenant_settings' as check_name,
+    'tenant' as entity_type,
+    t.id as entity_id,
+    'Tenant settings inconsistent with plan: ' || p.name as issue_description,
+    'MEDIUM' as severity
+  FROM tenants t
+  JOIN plans p ON t.plan_id = p.id
+  JOIN plan_default_settings pds ON p.id = pds.plan_id
+  WHERE (t.settings->>'ui_theme') IS DISTINCT FROM (pds.settings->>'ui_theme')
+     OR (t.settings->>'notification_level') IS DISTINCT FROM (pds.settings->>'notification_level')
+     OR (t.settings->>'max_export_rows') IS DISTINCT FROM (pds.settings->>'max_export_rows');
+  
+  -- Add more checks as needed
+END;
+$$ LANGUAGE plpgsql;
+```
+6. Python implementation for scheduled job:
+```python
+import asyncio
+from sqlalchemy import text
+from datetime import datetime
+import logging
+
+async def run_consistency_checks(db_session):
+    try:
+        # Run consistency checks
+        query = "SELECT * FROM check_system_consistency()"
+        result = await db_session.execute(text(query))
+        issues = result.fetchall()
+        
+        # Log issues
+        for issue in issues:
+            logging.warning(f"Consistency issue: {issue.check_name} - {issue.entity_type} {issue.entity_id} - {issue.issue_description} (Severity: {issue.severity})")
+            
+            # Store in issues table for tracking
+            insert_query = """
+            INSERT INTO system_consistency_issues 
+              (check_name, entity_type, entity_id, issue_description, severity, detected_at, resolved)
+            VALUES 
+              (:check_name, :entity_type, :entity_id, :issue_description, :severity, NOW(), false)
+            """
+            await db_session.execute(text(insert_query), {
+                "check_name": issue.check_name,
+                "entity_type": issue.entity_type,
+                "entity_id": issue.entity_id,
+                "issue_description": issue.issue_description,
+                "severity": issue.severity
+            })
+        
+        # Send alerts for critical issues
+        critical_issues = [i for i in issues if i.severity == 'CRITICAL']
+        if critical_issues:
+            # Send alert (implement based on your notification system)
+            pass
+            
+        await db_session.commit()
+        return len(issues)
+    except Exception as e:
+        await db_session.rollback()
+        logging.error(f"Error in run_consistency_checks: {str(e)}")
+        raise
+```
+7. Create a dashboard to visualize consistency issues
+
+# Test Strategy:
+1. Unit tests for the consistency check function
+2. Integration tests with various inconsistency scenarios
+3. Test the scheduled job
+4. Verify issue detection accuracy
+5. Test performance with large datasets
+6. Verify alert functionality for critical issues
+7. Test resolution tracking

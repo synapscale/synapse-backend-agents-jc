@@ -1,0 +1,98 @@
+# Task ID: 5
+# Title: Implement Tenant-Plan-Workspace Synchronization
+# Status: pending
+# Dependencies: 4
+# Priority: high
+# Description: Create a robust synchronization system to ensure workspaces always inherit the correct limits from their tenant's plan.
+# Details:
+1. Implement database triggers for automatic synchronization
+2. Create a background job for periodic validation
+3. Add API endpoints for manual synchronization
+4. Use PostgreSQL 14+ for triggers and SQLAlchemy 2.0 for ORM
+5. SQL implementation:
+```sql
+-- Create a trigger function for tenant plan changes
+CREATE OR REPLACE FUNCTION sync_tenant_plan_changes()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If plan_id changed, update all workspaces
+  IF OLD.plan_id IS DISTINCT FROM NEW.plan_id THEN
+    -- Get new plan limits
+    DECLARE
+      plan_limits JSON;
+    BEGIN
+      SELECT restrictions INTO plan_limits FROM plans WHERE id = NEW.plan_id;
+      
+      -- Update all workspaces for this tenant
+      UPDATE workspaces
+      SET 
+        max_users = LEAST(max_users, (plan_limits->>'max_workspace_users')::INT),
+        max_storage = LEAST(max_storage, (plan_limits->>'max_workspace_storage')::INT)
+      WHERE tenant_id = NEW.id;
+    END;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger on tenants table
+CREATE TRIGGER tenant_plan_sync_trigger
+AFTER UPDATE ON tenants
+FOR EACH ROW EXECUTE FUNCTION sync_tenant_plan_changes();
+```
+6. Python implementation for background job:
+```python
+from sqlalchemy import text
+from datetime import datetime
+import logging
+
+async def sync_tenant_workspaces(db_session):
+    try:
+        # Find inconsistencies
+        query = """
+        SELECT t.id as tenant_id, w.id as workspace_id, 
+               w.max_users as current_users, (p.restrictions->>'max_workspace_users')::INT as allowed_users,
+               w.max_storage as current_storage, (p.restrictions->>'max_workspace_storage')::INT as allowed_storage
+        FROM tenants t
+        JOIN plans p ON t.plan_id = p.id
+        JOIN workspaces w ON w.tenant_id = t.id
+        WHERE w.max_users > (p.restrictions->>'max_workspace_users')::INT
+           OR w.max_storage > (p.restrictions->>'max_workspace_storage')::INT
+        """
+        result = await db_session.execute(text(query))
+        inconsistencies = result.fetchall()
+        
+        # Fix inconsistencies
+        for row in inconsistencies:
+            update_query = """
+            UPDATE workspaces
+            SET max_users = :allowed_users,
+                max_storage = :allowed_storage
+            WHERE id = :workspace_id
+            """
+            await db_session.execute(text(update_query), {
+                "allowed_users": row.allowed_users,
+                "allowed_storage": row.allowed_storage,
+                "workspace_id": row.workspace_id
+            })
+            
+            logging.info(f"Fixed workspace {row.workspace_id} for tenant {row.tenant_id}")
+            
+        await db_session.commit()
+        return len(inconsistencies)
+    except Exception as e:
+        await db_session.rollback()
+        logging.error(f"Error in sync_tenant_workspaces: {str(e)}")
+        raise
+```
+7. Implement validation functions to check workspace operations against plan limits
+
+# Test Strategy:
+1. Unit tests for trigger functions
+2. Integration tests for plan change scenarios
+3. Test the background job with various inconsistency scenarios
+4. Verify synchronization happens correctly after plan upgrades/downgrades
+5. Test edge cases like NULL values in restrictions
+6. Performance testing to ensure synchronization completes in <100ms
+7. Test concurrent plan changes and workspace operations

@@ -14,8 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from synapse.database import get_async_db
 from synapse.models.user import User
-from synapse.schemas.models import UserProfileUpdate
-from synapse.schemas.models import UserProfileResponse
+from synapse.schemas.user import UserProfileUpdate, UserProfileResponse
 from synapse.core.services import BaseService, BaseRepository, get_service
 from synapse.exceptions import NotFoundError, ValidationError, DatabaseError
 

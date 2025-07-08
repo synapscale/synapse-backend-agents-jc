@@ -15,13 +15,16 @@ from synapse.core.file_validation import (
 class StorageManager:
     """Classe para gerenciar o armazenamento de arquivos"""
 
-    def __init__(self, base_storage_path: str = "storage"):
+    def __init__(self, base_storage_path: str = None):
         """
         Inicializa o gerenciador de armazenamento
 
         Args:
             base_storage_path: Caminho base para armazenamento
         """
+        from synapse.core.config import settings
+        if base_storage_path is None:
+            base_storage_path = settings.STORAGE_BASE_PATH
         self.base_path = Path(base_storage_path)
         self.base_path.mkdir(exist_ok=True)
 

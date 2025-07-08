@@ -1,0 +1,188 @@
+# Task ID: 13
+# Title: Implement Stripe Webhook Endpoint for Event Processing
+# Status: pending
+# Dependencies: 5, 8
+# Priority: high
+# Description: Create a secure webhook endpoint to capture and process all relevant Stripe events, ensuring proper integration with the PostgreSQL database while maintaining security, resilience, and traceability.
+# Details:
+1. Create a dedicated endpoint at `/api/webhooks/stripe` to receive Stripe webhook events
+2. Implement signature verification using Stripe's webhook secret to ensure security:
+```python
+@app.post("/api/webhooks/stripe")
+async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
+    payload = await request.body()
+    sig_header = request.headers.get("Stripe-Signature")
+    
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        raise HTTPException(status_code=400, message="Invalid payload")
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, message="Invalid signature")
+```
+
+3. Implement event handlers for all relevant Stripe events:
+   - Payment events: `payment_intent.succeeded`, `payment_intent.failed`
+   - Subscription events: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
+   - Customer events: `customer.created`, `customer.updated`
+   - Invoice events: `invoice.paid`, `invoice.payment_failed`
+   - Refund events: `charge.refunded`
+
+4. Create a database transaction manager to ensure data consistency:
+```python
+async def process_stripe_event(event, db):
+    event_type = event.type
+    event_data = event.data.object
+    
+    # Log the event first for traceability
+    await log_stripe_event(event, db)
+    
+    async with db.begin():
+        # Process based on event type
+        if event_type == "payment_intent.succeeded":
+            await handle_payment_success(event_data, db)
+        elif event_type == "customer.subscription.created":
+            await handle_subscription_created(event_data, db)
+        # ... other event handlers
+```
+
+5. Implement database update functions for each event type that map Stripe data to the synapscale_db schema:
+```python
+async def handle_subscription_created(subscription_data, db):
+    # Map Stripe subscription to tenant plan
+    tenant_id = get_tenant_from_stripe_customer(subscription_data.customer, db)
+    plan_id = get_plan_from_stripe_price(subscription_data.items.data[0].price.id, db)
+    
+    # Update tenant's plan in database
+    await db.execute(
+        update(Tenant)
+        .where(Tenant.id == tenant_id)
+        .values(
+            plan_id=plan_id,
+            stripe_subscription_id=subscription_data.id,
+            subscription_status=subscription_data.status,
+            current_period_end=datetime.fromtimestamp(subscription_data.current_period_end)
+        )
+    )
+    
+    # Trigger tenant-plan-workspace synchronization
+    await sync_tenant_plan_to_workspaces(tenant_id, db)
+```
+
+6. Implement comprehensive logging for all webhook events:
+```python
+async def log_stripe_event(event, db):
+    await db.execute(
+        insert(StripeEventLog).values(
+            stripe_event_id=event.id,
+            event_type=event.type,
+            event_data=json.dumps(event),
+            created_at=datetime.now(),
+            processed=False
+        )
+    )
+```
+
+7. Create a retry mechanism for failed event processing:
+```python
+async def retry_failed_events():
+    async with get_db_session() as db:
+        failed_events = await db.execute(
+            select(StripeEventLog)
+            .where(StripeEventLog.processed == False)
+            .where(StripeEventLog.retry_count < 3)
+            .order_by(StripeEventLog.created_at)
+        )
+        
+        for event in failed_events:
+            try:
+                # Reprocess the event
+                stripe_event = json.loads(event.event_data)
+                await process_stripe_event(stripe_event, db)
+                
+                # Mark as processed
+                await db.execute(
+                    update(StripeEventLog)
+                    .where(StripeEventLog.id == event.id)
+                    .values(processed=True)
+                )
+            except Exception as e:
+                # Increment retry count
+                await db.execute(
+                    update(StripeEventLog)
+                    .where(StripeEventLog.id == event.id)
+                    .values(
+                        retry_count=event.retry_count + 1,
+                        last_error=str(e)
+                    )
+                )
+```
+
+8. Implement database schema changes (with approval process):
+   - Create a migration plan for any required schema changes
+   - Document all proposed changes in detail
+   - Implement a review process for approval before execution
+   - Use Alembic for database migrations
+
+9. Configure proper error handling and monitoring:
+   - Log all webhook processing errors
+   - Set up alerts for repeated failures
+   - Implement monitoring for webhook processing time
+
+10. Ensure idempotency by checking for duplicate event IDs:
+```python
+async def is_duplicate_event(event_id, db):
+    result = await db.execute(
+        select(StripeEventLog)
+        .where(StripeEventLog.stripe_event_id == event_id)
+    )
+    return result.scalar_one_or_none() is not None
+```
+
+# Test Strategy:
+1. Unit tests for each event handler function:
+   - Test each handler with mock Stripe event data
+   - Verify correct database updates for each event type
+   - Test error handling and retry logic
+
+2. Integration tests for the webhook endpoint:
+   - Test signature verification with valid and invalid signatures
+   - Test handling of malformed payloads
+   - Test idempotency with duplicate event IDs
+
+3. End-to-end tests with Stripe's test mode:
+   - Create test customers, subscriptions, and payments in Stripe test mode
+   - Verify webhook events are received and processed correctly
+   - Verify database state after event processing
+
+4. Security testing:
+   - Verify signature validation rejects tampered payloads
+   - Test rate limiting and DDoS protection
+   - Verify proper error responses that don't leak sensitive information
+
+5. Performance testing:
+   - Test webhook processing under load
+   - Verify response times remain under 5 seconds (Stripe timeout)
+   - Test concurrent webhook processing
+
+6. Database consistency tests:
+   - Verify transactions maintain data integrity
+   - Test recovery from partial failures
+   - Verify no orphaned or inconsistent records after processing
+
+7. Monitoring and logging tests:
+   - Verify all events are properly logged
+   - Test alert triggers for failed events
+   - Verify traceability of event processing
+
+8. Manual testing with Stripe CLI:
+   - Use Stripe CLI to forward test events to local environment
+   - Verify correct processing of each event type
+   - Test with various edge cases (cancellations, refunds, etc.)
+
+9. Deployment verification:
+   - Test webhook endpoint in staging environment
+   - Verify proper configuration in production
+   - Confirm Stripe webhook configuration points to correct endpoint

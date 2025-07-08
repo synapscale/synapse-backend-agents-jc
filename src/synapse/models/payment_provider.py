@@ -27,10 +27,8 @@ class PaymentProvider(Base):
     api_version = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
     updated_at = Column(DateTime(timezone=True), nullable=True, server_default=func.current_timestamp())
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id"), nullable=True)
 
     # Relacionamentos
-    tenant = relationship("Tenant", back_populates="payment_providers")
     customers = relationship("PaymentCustomer", back_populates="provider", cascade="all, delete-orphan")
     plan_mappings = relationship("synapse.models.plan_provider_mapping.PlanProviderMapping", back_populates="provider", cascade="all, delete-orphan")
     subscriptions = relationship("Subscription", back_populates="provider", cascade="all, delete-orphan")
@@ -48,7 +46,6 @@ class PaymentProvider(Base):
             "config": self.config,
             "webhook_secret": self.webhook_secret,
             "api_version": self.api_version,
-            "tenant_id": str(self.tenant_id) if self.tenant_id else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -134,8 +131,7 @@ class PaymentProvider(Base):
         display_name: str = "Stripe",
         api_key: str = None,
         secret_key: str = None,
-        webhook_secret: str = None,
-        tenant_id: str = None
+        webhook_secret: str = None
     ):
         """Cria um provedor Stripe"""
         config = {
@@ -151,8 +147,7 @@ class PaymentProvider(Base):
             display_name=display_name,
             config=config,
             webhook_secret=webhook_secret,
-            api_version="2023-10-16",
-            tenant_id=tenant_id
+            api_version="2023-10-16"
         )
 
     @classmethod
@@ -160,8 +155,7 @@ class PaymentProvider(Base):
         cls,
         display_name: str = "PayPal",
         client_id: str = None,
-        client_secret: str = None,
-        tenant_id: str = None
+        client_secret: str = None
     ):
         """Cria um provedor PayPal"""
         config = {
@@ -175,8 +169,7 @@ class PaymentProvider(Base):
         return cls(
             name="paypal",
             display_name=display_name,
-            config=config,
-            tenant_id=tenant_id
+            config=config
         )
 
     def get_customer_count(self, session):
@@ -192,9 +185,7 @@ class PaymentProvider(Base):
         return 0.0
 
     @classmethod
-    def get_active_providers(cls, session, tenant_id: str = None):
+    def get_active_providers(cls, session):
         """Retorna todos os provedores ativos"""
         query = session.query(cls).filter(cls.is_active == True)
-        if tenant_id:
-            query = query.filter(cls.tenant_id == tenant_id)
         return query.all()

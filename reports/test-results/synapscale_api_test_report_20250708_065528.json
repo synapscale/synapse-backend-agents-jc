@@ -1,0 +1,2292 @@
+{
+  "test_config": {
+    "base_url": "http://localhost:8000",
+    "timestamp": "2025-07-08T06:55:28.333936",
+    "total_endpoints": 220,
+    "tested_endpoints": 220
+  },
+  "metrics": {
+    "total": 220,
+    "tested": 220,
+    "passed": 152,
+    "failed": 68,
+    "by_method": {
+      "GET": {
+        "passed": 59,
+        "failed": 49
+      },
+      "POST": {
+        "passed": 64,
+        "failed": 10
+      },
+      "DELETE": {
+        "passed": 15,
+        "failed": 5
+      },
+      "PUT": {
+        "passed": 14,
+        "failed": 4
+      }
+    },
+    "by_category": {
+      "system": {
+        "passed": 6,
+        "failed": 0,
+        "avg_time": 0
+      },
+      "authentication": {
+        "passed": 27,
+        "failed": 4,
+        "avg_time": 0
+      },
+      "ai": {
+        "passed": 19,
+        "failed": 8,
+        "avg_time": 0
+      },
+      "agents": {
+        "passed": 12,
+        "failed": 0,
+        "avg_time": 0
+      },
+      "workflows": {
+        "passed": 7,
+        "failed": 17,
+        "avg_time": 0
+      },
+      "analytics": {
+        "passed": 5,
+        "failed": 2,
+        "avg_time": 0
+      },
+      "data": {
+        "passed": 17,
+        "failed": 9,
+        "avg_time": 0
+      },
+      "enterprise": {
+        "passed": 35,
+        "failed": 5,
+        "avg_time": 0
+      },
+      "marketplace": {
+        "passed": 19,
+        "failed": 23,
+        "avg_time": 0
+      },
+      "admin": {
+        "passed": 5,
+        "failed": 0,
+        "avg_time": 0
+      }
+    },
+    "performance": {
+      "avg_response_time": 0.6608804334293712,
+      "min_response_time": 0.002579927444458008,
+      "max_response_time": 2.645591974258423,
+      "total_time": 145.39369535446167
+    }
+  },
+  "detailed_results": [
+    {
+      "path": "/health",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.5474679470062256,
+      "success": true,
+      "category": "system",
+      "error": null,
+      "response_size": 617
+    },
+    {
+      "path": "/health/detailed",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.8258609771728516,
+      "success": true,
+      "category": "system",
+      "error": null,
+      "response_size": 307
+    },
+    {
+      "path": "/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0034601688385009766,
+      "success": true,
+      "category": "system",
+      "error": null,
+      "response_size": 624
+    },
+    {
+      "path": "/info",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0031638145446777344,
+      "success": true,
+      "category": "system",
+      "error": null,
+      "response_size": 565
+    },
+    {
+      "path": "/current-url",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.0027358531951904297,
+      "success": true,
+      "category": "system",
+      "error": null,
+      "response_size": 592
+    },
+    {
+      "path": "/.identity",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0030670166015625,
+      "success": true,
+      "category": "system",
+      "error": null,
+      "response_size": 133
+    },
+    {
+      "path": "/api/v1/auth/docs-login",
+      "method": "POST",
+      "status_code": 401,
+      "response_time": 0.0029370784759521484,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 223
+    },
+    {
+      "path": "/api/v1/auth/register",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.04599905014038086,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 355
+    },
+    {
+      "path": "/api/v1/auth/login",
+      "method": "POST",
+      "status_code": 401,
+      "response_time": 0.5454559326171875,
+      "success": false,
+      "category": "authentication",
+      "error": null,
+      "response_size": 227
+    },
+    {
+      "path": "/api/v1/auth/refresh",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.004302024841308594,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 308
+    },
+    {
+      "path": "/api/v1/auth/logout",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5498239994049072,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 307
+    },
+    {
+      "path": "/api/v1/auth/logout-all",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 1.2392759323120117,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 185
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5500810146331787,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 342
+    },
+    {
+      "path": "/api/v1/auth/verify-email",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.007431983947753906,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 313
+    },
+    {
+      "path": "/api/v1/auth/resend-verification",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.5458269119262695,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 158
+    },
+    {
+      "path": "/api/v1/auth/forgot-password",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.5462610721588135,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 196
+    },
+    {
+      "path": "/api/v1/auth/reset-password",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.004606962203979492,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 361
+    },
+    {
+      "path": "/api/v1/auth/change-password",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5456399917602539,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 362
+    },
+    {
+      "path": "/api/v1/auth/account",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.548677921295166,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 310
+    },
+    {
+      "path": "/api/v1/auth/test-token",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.554434061050415,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 455
+    },
+    {
+      "path": "/api/v1/auth/test-hybrid-auth",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.5527989864349365,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 727
+    },
+    {
+      "path": "/api/v1/users/profile",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5509099960327148,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 348
+    },
+    {
+      "path": "/api/v1/users/profile",
+      "method": "PUT",
+      "status_code": 500,
+      "response_time": 1.5124092102050781,
+      "success": false,
+      "category": "authentication",
+      "error": null,
+      "response_size": 243
+    },
+    {
+      "path": "/api/v1/users/",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 1.7767009735107422,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 341
+    },
+    {
+      "path": "/api/v1/users/{user_id}",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 1.502821922302246,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 248
+    },
+    {
+      "path": "/api/v1/users/{user_id}",
+      "method": "PUT",
+      "status_code": 404,
+      "response_time": 1.362220048904419,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 248
+    },
+    {
+      "path": "/api/v1/users/{user_id}",
+      "method": "DELETE",
+      "status_code": 404,
+      "response_time": 1.3627569675445557,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 251
+    },
+    {
+      "path": "/api/v1/users/{user_id}/activate",
+      "method": "POST",
+      "status_code": 404,
+      "response_time": 1.3650548458099365,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 258
+    },
+    {
+      "path": "/api/v1/users/{user_id}/deactivate",
+      "method": "POST",
+      "status_code": 404,
+      "response_time": 1.3595190048217773,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 260
+    },
+    {
+      "path": "/api/v1/tenants/me",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 1.7817449569702148,
+      "success": false,
+      "category": "authentication",
+      "error": null,
+      "response_size": 298
+    },
+    {
+      "path": "/api/v1/tenants/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 2.0475618839263916,
+      "success": false,
+      "category": "authentication",
+      "error": null,
+      "response_size": 296
+    },
+    {
+      "path": "/api/v1/tenants/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5548899173736572,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 396
+    },
+    {
+      "path": "/api/v1/tenants/{tenant_id}",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5511250495910645,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 440
+    },
+    {
+      "path": "/api/v1/tenants/{tenant_id}",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5501499176025391,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 440
+    },
+    {
+      "path": "/api/v1/tenants/{tenant_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5474059581756592,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 443
+    },
+    {
+      "path": "/api/v1/tenants/{tenant_id}/activate",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5448310375213623,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 450
+    },
+    {
+      "path": "/api/v1/tenants/{tenant_id}/suspend",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5498859882354736,
+      "success": true,
+      "category": "authentication",
+      "error": null,
+      "response_size": 449
+    },
+    {
+      "path": "/api/v1/llm/generate",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.5490231513977051,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 28
+    },
+    {
+      "path": "/api/v1/llm/chat",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.54964280128479,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 27
+    },
+    {
+      "path": "/api/v1/llm/models",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.003990888595581055,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 2
+    },
+    {
+      "path": "/api/v1/llm/providers",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0031843185424804688,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 2
+    },
+    {
+      "path": "/api/v1/llms/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.549299955368042,
+      "success": false,
+      "category": "ai",
+      "error": null,
+      "response_size": 296
+    },
+    {
+      "path": "/api/v1/llms/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5500979423522949,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 393
+    },
+    {
+      "path": "/api/v1/llms/{llm_id}",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5472869873046875,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 434
+    },
+    {
+      "path": "/api/v1/llms/{llm_id}",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 1.8062560558319092,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 434
+    },
+    {
+      "path": "/api/v1/llms/{llm_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5480127334594727,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 437
+    },
+    {
+      "path": "/api/v1/llms/{llm_id}/conversations",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5471312999725342,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 448
+    },
+    {
+      "path": "/api/v1/llms/{llm_id}/conversations",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.545374870300293,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 495
+    },
+    {
+      "path": "/api/v1/llms/conversations/{conversation_id}/messages",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 1.506052017211914,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 270
+    },
+    {
+      "path": "/api/v1/llms/conversations/{conversation_id}/messages",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5529060363769531,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 452
+    },
+    {
+      "path": "/api/v1/llm-catalog/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 1.4972798824310303,
+      "success": false,
+      "category": "ai",
+      "error": null,
+      "response_size": 242
+    },
+    {
+      "path": "/api/v1/llm-catalog/{llm_id}",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.550117015838623,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 441
+    },
+    {
+      "path": "/api/v1/conversations/",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.9679698944091797,
+      "success": false,
+      "category": "ai",
+      "error": null,
+      "response_size": 318
+    },
+    {
+      "path": "/api/v1/conversations/",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 1.2297358512878418,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 458
+    },
+    {
+      "path": "/api/v1/conversations/{conversation_id}",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.6803991794586182,
+      "success": false,
+      "category": "ai",
+      "error": null,
+      "response_size": 354
+    },
+    {
+      "path": "/api/v1/conversations/{conversation_id}",
+      "method": "DELETE",
+      "status_code": 400,
+      "response_time": 0.6822941303253174,
+      "success": false,
+      "category": "ai",
+      "error": null,
+      "response_size": 357
+    },
+    {
+      "path": "/api/v1/conversations/{conversation_id}/messages",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.6857800483703613,
+      "success": false,
+      "category": "ai",
+      "error": null,
+      "response_size": 363
+    },
+    {
+      "path": "/api/v1/conversations/{conversation_id}/messages",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5497448444366455,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 401
+    },
+    {
+      "path": "/api/v1/conversations/{conversation_id}/title",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5516579151153564,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 351
+    },
+    {
+      "path": "/api/v1/conversations/{conversation_id}/archive",
+      "method": "POST",
+      "status_code": 400,
+      "response_time": 0.681920051574707,
+      "success": false,
+      "category": "ai",
+      "error": null,
+      "response_size": 363
+    },
+    {
+      "path": "/api/v1/conversations/{conversation_id}/unarchive",
+      "method": "POST",
+      "status_code": 400,
+      "response_time": 0.6852657794952393,
+      "success": false,
+      "category": "ai",
+      "error": null,
+      "response_size": 365
+    },
+    {
+      "path": "/api/v1/feedback/messages/{message_id}/feedback",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5483968257904053,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 461
+    },
+    {
+      "path": "/api/v1/feedback/messages/{message_id}/feedback",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5453879833221436,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 460
+    },
+    {
+      "path": "/api/v1/feedback/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.685089111328125,
+      "success": true,
+      "category": "ai",
+      "error": null,
+      "response_size": 2
+    },
+    {
+      "path": "/api/v1/agents/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 1.7805578708648682,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 22
+    },
+    {
+      "path": "/api/v1/agents/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5562129020690918,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 303
+    },
+    {
+      "path": "/api/v1/agents/{agent_id}",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 1.5012760162353516,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 247
+    },
+    {
+      "path": "/api/v1/agents/{agent_id}",
+      "method": "PUT",
+      "status_code": 404,
+      "response_time": 1.36604905128479,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 247
+    },
+    {
+      "path": "/api/v1/agents/{agent_id}",
+      "method": "DELETE",
+      "status_code": 404,
+      "response_time": 1.3578767776489258,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 250
+    },
+    {
+      "path": "/api/v1/agents/{agent_id}/activate",
+      "method": "POST",
+      "status_code": 404,
+      "response_time": 1.3588659763336182,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 257
+    },
+    {
+      "path": "/api/v1/agents/{agent_id}/deactivate",
+      "method": "POST",
+      "status_code": 404,
+      "response_time": 1.3609297275543213,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 259
+    },
+    {
+      "path": "/api/v1/agents/{agent_id}/clone",
+      "method": "POST",
+      "status_code": 404,
+      "response_time": 1.356827974319458,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 254
+    },
+    {
+      "path": "/api/v1/agents/tools/test",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0027048587799072266,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 42
+    },
+    {
+      "path": "/api/v1/agents/models/test",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.002579927444458008,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 43
+    },
+    {
+      "path": "/api/v1/agents/configs/test",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.002711057662963867,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 51
+    },
+    {
+      "path": "/api/v1/agents/advanced/advanced",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.545280933380127,
+      "success": true,
+      "category": "agents",
+      "error": null,
+      "response_size": 33
+    },
+    {
+      "path": "/api/v1/workflows/",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.5485870838165283,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 314
+    },
+    {
+      "path": "/api/v1/workflows/",
+      "method": "POST",
+      "status_code": 400,
+      "response_time": 0.5603539943695068,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 315
+    },
+    {
+      "path": "/api/v1/workflows/{workflow_id}",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.5506589412689209,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 350
+    },
+    {
+      "path": "/api/v1/workflows/{workflow_id}",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5548980236053467,
+      "success": true,
+      "category": "workflows",
+      "error": null,
+      "response_size": 400
+    },
+    {
+      "path": "/api/v1/workflows/{workflow_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5525288581848145,
+      "success": true,
+      "category": "workflows",
+      "error": null,
+      "response_size": 403
+    },
+    {
+      "path": "/api/v1/workflows/{workflow_id}/execute",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5550808906555176,
+      "success": true,
+      "category": "workflows",
+      "error": null,
+      "response_size": 455
+    },
+    {
+      "path": "/api/v1/workflows/{workflow_id}/executions",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.5518908500671387,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 361
+    },
+    {
+      "path": "/api/v1/workflows/{workflow_id}/duplicate",
+      "method": "POST",
+      "status_code": 400,
+      "response_time": 0.5489227771759033,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 361
+    },
+    {
+      "path": "/api/v1/executions/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.7013850212097168,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 323
+    },
+    {
+      "path": "/api/v1/executions/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5540740489959717,
+      "success": true,
+      "category": "workflows",
+      "error": null,
+      "response_size": 307
+    },
+    {
+      "path": "/api/v1/executions/{execution_id}",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.699498176574707,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 6403
+    },
+    {
+      "path": "/api/v1/executions/{execution_id}",
+      "method": "DELETE",
+      "status_code": 500,
+      "response_time": 0.6879668235778809,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 4170
+    },
+    {
+      "path": "/api/v1/executions/{execution_id}/status",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5499510765075684,
+      "success": true,
+      "category": "workflows",
+      "error": null,
+      "response_size": 349
+    },
+    {
+      "path": "/api/v1/executions/{execution_id}/logs",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6862151622772217,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 4177
+    },
+    {
+      "path": "/api/v1/executions/{execution_id}/metrics",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6864938735961914,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 4183
+    },
+    {
+      "path": "/api/v1/executions/{execution_id}/nodes",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6820940971374512,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 4179
+    },
+    {
+      "path": "/api/v1/nodes/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6895151138305664,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 318
+    },
+    {
+      "path": "/api/v1/nodes/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5506298542022705,
+      "success": true,
+      "category": "workflows",
+      "error": null,
+      "response_size": 486
+    },
+    {
+      "path": "/api/v1/nodes/{node_id}",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6915581226348877,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 5546
+    },
+    {
+      "path": "/api/v1/nodes/{node_id}",
+      "method": "PUT",
+      "status_code": 500,
+      "response_time": 0.6960220336914062,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 2629
+    },
+    {
+      "path": "/api/v1/nodes/{node_id}",
+      "method": "DELETE",
+      "status_code": 500,
+      "response_time": 0.6865940093994141,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 2632
+    },
+    {
+      "path": "/api/v1/nodes/{node_id}/executions",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.684816837310791,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 365
+    },
+    {
+      "path": "/api/v1/nodes/{node_id}/stats",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6845331192016602,
+      "success": false,
+      "category": "workflows",
+      "error": null,
+      "response_size": 2535
+    },
+    {
+      "path": "/api/v1/nodes/{node_id}/rate",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5460021495819092,
+      "success": true,
+      "category": "workflows",
+      "error": null,
+      "response_size": 343
+    },
+    {
+      "path": "/api/v1/analytics/health",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0042569637298583984,
+      "success": true,
+      "category": "analytics",
+      "error": null,
+      "response_size": 42
+    },
+    {
+      "path": "/api/v1/analytics/overview",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.5464091300964355,
+      "success": true,
+      "category": "analytics",
+      "error": null,
+      "response_size": 106
+    },
+    {
+      "path": "/api/v1/analytics/events",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5526540279388428,
+      "success": true,
+      "category": "analytics",
+      "error": null,
+      "response_size": 496
+    },
+    {
+      "path": "/api/v1/analytics/dashboards",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.5476720333099365,
+      "success": true,
+      "category": "analytics",
+      "error": null,
+      "response_size": 137
+    },
+    {
+      "path": "/api/v1/analytics/dashboards",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5487508773803711,
+      "success": true,
+      "category": "analytics",
+      "error": null,
+      "response_size": 408
+    },
+    {
+      "path": "/api/v1/usage-log/",
+      "method": "POST",
+      "status_code": 500,
+      "response_time": 0.5506858825683594,
+      "success": false,
+      "category": "analytics",
+      "error": null,
+      "response_size": 236
+    },
+    {
+      "path": "/api/v1/usage-log/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.688370943069458,
+      "success": false,
+      "category": "analytics",
+      "error": null,
+      "response_size": 236
+    },
+    {
+      "path": "/api/v1/files/upload",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5496189594268799,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 308
+    },
+    {
+      "path": "/api/v1/files/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5478458404541016,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 298
+    },
+    {
+      "path": "/api/v1/files/{file_id}",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5485360622406006,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 334
+    },
+    {
+      "path": "/api/v1/files/{file_id}",
+      "method": "PUT",
+      "status_code": 404,
+      "response_time": 1.5088062286376953,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 247
+    },
+    {
+      "path": "/api/v1/files/{file_id}",
+      "method": "DELETE",
+      "status_code": 404,
+      "response_time": 1.3647990226745605,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 250
+    },
+    {
+      "path": "/api/v1/files/{file_id}/download",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 1.3610148429870605,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 256
+    },
+    {
+      "path": "/api/v1/user-variables/",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.5511550903320312,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 319
+    },
+    {
+      "path": "/api/v1/user-variables/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5573689937591553,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 357
+    },
+    {
+      "path": "/api/v1/user-variables/{variable_id}",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5506930351257324,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 449
+    },
+    {
+      "path": "/api/v1/user-variables/{variable_id}",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5493090152740479,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 449
+    },
+    {
+      "path": "/api/v1/user-variables/{variable_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5476751327514648,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 452
+    },
+    {
+      "path": "/api/v1/user-variables/key/{key}",
+      "method": "GET",
+      "status_code": 400,
+      "response_time": 0.5482707023620605,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 331
+    },
+    {
+      "path": "/api/v1/tags/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.547360897064209,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 393
+    },
+    {
+      "path": "/api/v1/tags/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.547619104385376,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 224
+    },
+    {
+      "path": "/api/v1/tags/conversations/{conversation_id}/tags",
+      "method": "POST",
+      "status_code": 500,
+      "response_time": 0.5468077659606934,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 291
+    },
+    {
+      "path": "/api/v1/tags/conversations/{conversation_id}/tags",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5473573207855225,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 291
+    },
+    {
+      "path": "/api/v1/tags/messages/{message_id}/tags",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5513482093811035,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 453
+    },
+    {
+      "path": "/api/v1/tags/messages/{message_id}/tags",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5455338954925537,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 452
+    },
+    {
+      "path": "/api/v1/workspaces/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 2.645591974258423,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 247
+    },
+    {
+      "path": "/api/v1/workspaces/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5516691207885742,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 353
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 1.9688289165496826,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 254
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "method": "PUT",
+      "status_code": 404,
+      "response_time": 1.3634870052337646,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 254
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "method": "DELETE",
+      "status_code": 404,
+      "response_time": 1.3680729866027832,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 257
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/members",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 1.3587431907653809,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 262
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/members",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.549109697341919,
+      "success": true,
+      "category": "data",
+      "error": null,
+      "response_size": 397
+    },
+    {
+      "path": "/api/v1/workspace-members/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 1.5278069972991943,
+      "success": false,
+      "category": "data",
+      "error": null,
+      "response_size": 254
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/roles",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.826164960861206,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 51
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/roles",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5459511280059814,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 317
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/roles/{role_id}",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5453300476074219,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 452
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/roles/{role_id}",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5463259220123291,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 452
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/roles/{role_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5555288791656494,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 455
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/permissions",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.8334789276123047,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 5199
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/permissions",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5536830425262451,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 323
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/user-roles",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5496881008148193,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 368
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/user-roles/{user_role_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5474698543548584,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 465
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/roles/{role_id}/permissions",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5481588840484619,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 464
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/roles/{role_id}/permissions/{permission_id}",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5460541248321533,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 653
+    },
+    {
+      "path": "/api/v1/enterprise/rbac/roles/{role_id}/permissions/{permission_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5516698360443115,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 655
+    },
+    {
+      "path": "/api/v1/enterprise/features/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.8240230083465576,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 5271
+    },
+    {
+      "path": "/api/v1/enterprise/features/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5513889789581299,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 362
+    },
+    {
+      "path": "/api/v1/enterprise/features/{feature_id}",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5499958992004395,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 453
+    },
+    {
+      "path": "/api/v1/enterprise/features/{feature_id}",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5543570518493652,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 453
+    },
+    {
+      "path": "/api/v1/enterprise/features/{feature_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.549807071685791,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 456
+    },
+    {
+      "path": "/api/v1/enterprise/features/plans/{plan_id}/features",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5469989776611328,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 465
+    },
+    {
+      "path": "/api/v1/enterprise/features/plans/{plan_id}/features",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5480449199676514,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 512
+    },
+    {
+      "path": "/api/v1/enterprise/features/tenants/{tenant_id}/features",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5460669994354248,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 469
+    },
+    {
+      "path": "/api/v1/enterprise/features/tenants/{tenant_id}/features",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5484998226165771,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 516
+    },
+    {
+      "path": "/api/v1/enterprise/features/workspaces/{workspace_id}/features",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.8333675861358643,
+      "success": false,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 1151
+    },
+    {
+      "path": "/api/v1/enterprise/features/workspaces/{workspace_id}/features",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5481271743774414,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 372
+    },
+    {
+      "path": "/api/v1/enterprise/features/categories",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5496900081634521,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 448
+    },
+    {
+      "path": "/api/v1/enterprise/payments/providers",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.686621904373169,
+      "success": false,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 339
+    },
+    {
+      "path": "/api/v1/enterprise/payments/providers",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5549969673156738,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 371
+    },
+    {
+      "path": "/api/v1/enterprise/payments/customers/current",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6879270076751709,
+      "success": false,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 267
+    },
+    {
+      "path": "/api/v1/enterprise/payments/customers",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5536251068115234,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 417
+    },
+    {
+      "path": "/api/v1/enterprise/payments/methods",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6880230903625488,
+      "success": false,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 257
+    },
+    {
+      "path": "/api/v1/enterprise/payments/methods",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5508480072021484,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 369
+    },
+    {
+      "path": "/api/v1/enterprise/payments/methods/{method_id}",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5468578338623047,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 460
+    },
+    {
+      "path": "/api/v1/enterprise/payments/methods/{method_id}",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5487089157104492,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 460
+    },
+    {
+      "path": "/api/v1/enterprise/payments/methods/{method_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5515158176422119,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 463
+    },
+    {
+      "path": "/api/v1/enterprise/payments/invoices",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.7186019420623779,
+      "success": false,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 258
+    },
+    {
+      "path": "/api/v1/enterprise/payments/invoices",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5577297210693359,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 370
+    },
+    {
+      "path": "/api/v1/enterprise/payments/invoices/{invoice_id}",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5486159324645996,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 462
+    },
+    {
+      "path": "/api/v1/enterprise/payments/invoices/{invoice_id}",
+      "method": "PUT",
+      "status_code": 422,
+      "response_time": 0.5554409027099609,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 462
+    },
+    {
+      "path": "/api/v1/enterprise/payments/invoices/{invoice_id}",
+      "method": "DELETE",
+      "status_code": 422,
+      "response_time": 0.5455551147460938,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 465
+    },
+    {
+      "path": "/api/v1/enterprise/payments/invoices/{invoice_id}/download",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5498471260070801,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 471
+    },
+    {
+      "path": "/api/v1/enterprise/payments/invoices/{invoice_id}/pay",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5458829402923584,
+      "success": true,
+      "category": "enterprise",
+      "error": null,
+      "response_size": 467
+    },
+    {
+      "path": "/api/v1/templates/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5560450553894043,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 536
+    },
+    {
+      "path": "/api/v1/templates/",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6976912021636963,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 275
+    },
+    {
+      "path": "/api/v1/templates/{template_id}",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5486550331115723,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 305
+    },
+    {
+      "path": "/api/v1/templates/{template_id}",
+      "method": "PUT",
+      "status_code": 500,
+      "response_time": 0.6936080455780029,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 307
+    },
+    {
+      "path": "/api/v1/templates/{template_id}",
+      "method": "DELETE",
+      "status_code": 500,
+      "response_time": 0.5492081642150879,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 316
+    },
+    {
+      "path": "/api/v1/templates/{template_id}/publish",
+      "method": "POST",
+      "status_code": 500,
+      "response_time": 0.5479018688201904,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 350
+    },
+    {
+      "path": "/api/v1/templates/{template_id}/download",
+      "method": "POST",
+      "status_code": 500,
+      "response_time": 0.6863901615142822,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 316
+    },
+    {
+      "path": "/api/v1/templates/install",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5467178821563721,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 313
+    },
+    {
+      "path": "/api/v1/templates/favorites",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5485949516296387,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 315
+    },
+    {
+      "path": "/api/v1/templates/favorites/my",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5494608879089355,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 317
+    },
+    {
+      "path": "/api/v1/templates/{template_id}/reviews",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5479321479797363,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 396
+    },
+    {
+      "path": "/api/v1/templates/{template_id}/reviews",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.0039250850677490234,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 323
+    },
+    {
+      "path": "/api/v1/templates/collections",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5508649349212646,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 363
+    },
+    {
+      "path": "/api/v1/templates/collections",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5491788387298584,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 280
+    },
+    {
+      "path": "/api/v1/templates/stats",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5505640506744385,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 274
+    },
+    {
+      "path": "/api/v1/templates/marketplace",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5492017269134521,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 280
+    },
+    {
+      "path": "/api/v1/templates/my-stats",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5511770248413086,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 277
+    },
+    {
+      "path": "/api/v1/templates/test",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5556578636169434,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 273
+    },
+    {
+      "path": "/api/v1/marketplace/",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5524301528930664,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 538
+    },
+    {
+      "path": "/api/v1/marketplace/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.003693103790283203,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 80
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6897070407867432,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 242
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}",
+      "method": "PUT",
+      "status_code": 500,
+      "response_time": 0.6948337554931641,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 261
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}",
+      "method": "DELETE",
+      "status_code": 500,
+      "response_time": 0.6856479644775391,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 264
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}/download",
+      "method": "POST",
+      "status_code": 500,
+      "response_time": 0.5749099254608154,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 275
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}/ratings",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5527269840240479,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 379
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}/ratings",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.005554914474487305,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 2
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}/ratings/stats",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.027328014373779297,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 279
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}/purchase",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5500211715698242,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 426
+    },
+    {
+      "path": "/api/v1/marketplace/purchases/my",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.5529861450195312,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 2
+    },
+    {
+      "path": "/api/v1/marketplace/purchases/{purchase_id}",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.5711109638214111,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 274
+    },
+    {
+      "path": "/api/v1/marketplace/{component_id}/metadata",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.6861269474029541,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 2
+    },
+    {
+      "path": "/api/v1/marketplace/stats",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6918399333953857,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 230
+    },
+    {
+      "path": "/api/v1/marketplace/categories",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.684830904006958,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 235
+    },
+    {
+      "path": "/api/v1/marketplace/popular-tags",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6827659606933594,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 237
+    },
+    {
+      "path": "/api/v1/marketplace/recommendations",
+      "method": "GET",
+      "status_code": 500,
+      "response_time": 0.6834840774536133,
+      "success": false,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 240
+    },
+    {
+      "path": "/api/v1/marketplace/similar/{component_id}",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0038771629333496094,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 2
+    },
+    {
+      "path": "/api/v1/marketplace/moderation/pending",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0029358863830566406,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 2
+    },
+    {
+      "path": "/api/v1/marketplace/moderation/{component_id}",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5509991645812988,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 336
+    },
+    {
+      "path": "/api/v1/marketplace/bulk",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5512659549713135,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 358
+    },
+    {
+      "path": "/api/v1/marketplace/reports/revenue",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.004302024841308594,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 79
+    },
+    {
+      "path": "/api/v1/marketplace/reports/downloads",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0031299591064453125,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 80
+    },
+    {
+      "path": "/api/v1/marketplace/reports/top",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0028638839721679688,
+      "success": true,
+      "category": "marketplace",
+      "error": null,
+      "response_size": 62
+    },
+    {
+      "path": "/api/v1/admin/migration/dashboard",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 1.3635430335998535,
+      "success": true,
+      "category": "admin",
+      "error": null,
+      "response_size": 2764
+    },
+    {
+      "path": "/api/v1/admin/migration/users",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 1.226973056793213,
+      "success": true,
+      "category": "admin",
+      "error": null,
+      "response_size": 3254
+    },
+    {
+      "path": "/api/v1/admin/migration/communications/send",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.5450198650360107,
+      "success": true,
+      "category": "admin",
+      "error": null,
+      "response_size": 377
+    },
+    {
+      "path": "/api/v1/admin/migration/analytics",
+      "method": "GET",
+      "status_code": 422,
+      "response_time": 0.5440881252288818,
+      "success": true,
+      "category": "admin",
+      "error": null,
+      "response_size": 366
+    },
+    {
+      "path": "/api/v1/admin/stats",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.5472869873046875,
+      "success": true,
+      "category": "admin",
+      "error": null,
+      "response_size": 43
+    }
+  ]
+}

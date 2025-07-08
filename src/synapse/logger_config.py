@@ -210,7 +210,16 @@ class UnifiedLogger:
         """Configura handlers de arquivo para produção."""
 
         # Criar diretório de logs
-        log_dir = Path("logs")
+        def _get_log_directory():
+            """Lazy loading para evitar import circular com fallback seguro"""
+            try:
+                from synapse.core.config import settings
+                return Path(settings.LOG_DIRECTORY)
+            except ImportError:
+                # Fallback seguro se houver problema circular
+                return Path("logs")
+        
+        log_dir = _get_log_directory()
         log_dir.mkdir(exist_ok=True)
 
         # Handler principal

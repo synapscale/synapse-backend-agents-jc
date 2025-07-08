@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from typing import List, Optional
 import uuid
 
-from synapse.api.deps import get_current_active_user, get_db
+from synapse.api.deps import get_current_active_user
 from synapse.schemas.agent import (
     AgentResponse,
     AgentCreate,
@@ -20,6 +20,7 @@ from synapse.schemas.agent import (
     AgentScope,
 )
 from synapse.models import Agent, User, Workspace, Tenant
+from synapse.database import get_async_db
 
 
 router = APIRouter()
@@ -27,7 +28,7 @@ router = APIRouter()
 
 @router.get("/", response_model=AgentListResponse)
 async def list_agents(
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
     page: int = Query(1, ge=1, description="Número da página"),
     size: int = Query(20, ge=1, le=100, description="Tamanho da página"),
@@ -62,7 +63,7 @@ async def list_agents(
                 and_(
                     Workspace.id == workspace_id,
                     or_(
-                        Workspace.owner_id == current_user.id,
+                        Workspace.tenant_id == current_user.id,
                         Workspace.is_public == True,
                         # TODO: Verificar se é membro do workspace
                     ),
@@ -91,7 +92,7 @@ async def list_agents(
         conditions.append(Agent.environment == environment.value)
 
     if scope:
-        conditions.append(Agent.scope == scope.value)
+        conditions.append(Agent.status == scope.value)
 
     if is_active is not None:
         conditions.append(Agent.is_active == is_active)
@@ -126,7 +127,7 @@ async def list_agents(
                 version=agent.version,
                 environment=agent.environment,
                 status=agent.status,
-                scope=agent.scope,
+                scope=agent.status,
                 configuration=agent.configuration or {},
                 metadata=agent.metadata or {},
                 is_active=agent.is_active,
@@ -149,7 +150,7 @@ async def list_agents(
 @router.post("/", response_model=AgentResponse)
 async def create_agent(
     agent_data: AgentCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Criar novo agente"""
@@ -161,7 +162,7 @@ async def create_agent(
                 and_(
                     Workspace.id == agent_data.workspace_id,
                     or_(
-                        Workspace.owner_id == current_user.id,
+                        Workspace.tenant_id == current_user.id,
                         # TODO: Verificar se é membro do workspace
                     ),
                 )
@@ -180,7 +181,7 @@ async def create_agent(
     if agent_data.scope == AgentScope.WORKSPACE and agent_data.workspace_id:
         name_conditions.append(Agent.workspace_id == agent_data.workspace_id)
     elif agent_data.scope == AgentScope.PRIVATE:
-        name_conditions.append(Agent.scope == AgentScope.PRIVATE.value)
+        name_conditions.append(Agent.status == AgentScope.PRIVATE.value)
 
     existing_agent = await db.execute(select(Agent).where(and_(*name_conditions)))
     if existing_agent.scalar_one_or_none():
@@ -216,7 +217,7 @@ async def create_agent(
         version=agent.version,
         environment=agent.environment,
         status=agent.status,
-        scope=agent.scope,
+        scope=agent.status,
         configuration=agent.configuration or {},
         metadata=agent.metadata or {},
         is_active=agent.is_active,
@@ -232,7 +233,7 @@ async def create_agent(
 @router.get("/{agent_id}", response_model=AgentResponse)
 async def get_agent(
     agent_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Obter agente por ID"""
@@ -256,10 +257,10 @@ async def get_agent(
     if agent.user_id == current_user.id:
         has_access = True
     # Agentes globais são acessíveis por todos
-    elif agent.scope == AgentScope.GLOBAL.value:
+    elif agent.status == AgentScope.GLOBAL.value:
         has_access = True
     # Agentes de workspace são acessíveis por membros
-    elif agent.scope == AgentScope.WORKSPACE.value and agent.workspace:
+    elif agent.status == AgentScope.WORKSPACE.value and agent.workspace:
         if agent.workspace.owner_id == current_user.id or agent.workspace.is_public:
             has_access = True
         # TODO: Verificar se é membro do workspace
@@ -277,7 +278,7 @@ async def get_agent(
         version=agent.version,
         environment=agent.environment,
         status=agent.status,
-        scope=agent.scope,
+        scope=agent.status,
         configuration=agent.configuration or {},
         metadata=agent.metadata or {},
         is_active=agent.is_active,
@@ -295,7 +296,7 @@ async def get_agent(
 async def update_agent(
     agent_id: uuid.UUID,
     agent_update: AgentUpdate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Atualizar agente"""
@@ -323,10 +324,10 @@ async def update_agent(
             Agent.id != agent_id,
         ]
 
-        if agent.scope == AgentScope.WORKSPACE.value and agent.workspace_id:
+        if agent.status == AgentScope.WORKSPACE.value and agent.workspace_id:
             name_conditions.append(Agent.workspace_id == agent.workspace_id)
-        elif agent.scope == AgentScope.PRIVATE.value:
-            name_conditions.append(Agent.scope == AgentScope.PRIVATE.value)
+        elif agent.status == AgentScope.PRIVATE.value:
+            name_conditions.append(Agent.status == AgentScope.PRIVATE.value)
 
         existing = await db.execute(select(Agent).where(and_(*name_conditions)))
         if existing.scalar_one_or_none():
@@ -350,7 +351,7 @@ async def update_agent(
         version=agent.version,
         environment=agent.environment,
         status=agent.status,
-        scope=agent.scope,
+        scope=agent.status,
         configuration=agent.configuration or {},
         metadata=agent.metadata or {},
         is_active=agent.is_active,
@@ -365,7 +366,7 @@ async def update_agent(
 @router.delete("/{agent_id}")
 async def delete_agent(
     agent_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Deletar agente"""
@@ -397,7 +398,7 @@ async def delete_agent(
 @router.post("/{agent_id}/activate")
 async def activate_agent(
     agent_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Ativar agente"""
@@ -435,7 +436,7 @@ async def activate_agent(
 @router.post("/{agent_id}/deactivate")
 async def deactivate_agent(
     agent_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
 ):
     """Desativar agente"""
@@ -466,7 +467,7 @@ async def deactivate_agent(
 @router.post("/{agent_id}/clone", response_model=AgentResponse)
 async def clone_agent(
     agent_id: uuid.UUID,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user),
     new_name: Optional[str] = Query(None, description="Nome para o clone"),
 ):
@@ -484,9 +485,9 @@ async def clone_agent(
     has_access = False
     if agent.user_id == current_user.id:
         has_access = True
-    elif agent.scope == AgentScope.GLOBAL.value:
+    elif agent.status == AgentScope.GLOBAL.value:
         has_access = True
-    elif agent.scope == AgentScope.WORKSPACE.value and agent.workspace:
+    elif agent.status == AgentScope.WORKSPACE.value and agent.workspace:
         if agent.workspace.owner_id == current_user.id or agent.workspace.is_public:
             has_access = True
 
@@ -505,7 +506,7 @@ async def clone_agent(
                 and_(
                     Agent.name == clone_name,
                     Agent.user_id == current_user.id,
-                    Agent.scope == AgentScope.PRIVATE.value,
+                    Agent.status == AgentScope.PRIVATE.value,
                 )
             )
         )

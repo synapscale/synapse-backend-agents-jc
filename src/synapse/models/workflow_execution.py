@@ -56,7 +56,7 @@ class WorkflowExecution(Base):
     """
 
     __tablename__ = "workflow_executions"
-    __table_args__ = {"schema": "synapscale_db", "extend_existing": True}
+    __table_args__ = {"schema": "synapscale_db"}
 
     # Campos principais
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

@@ -35,13 +35,22 @@ class LLMCreate(BaseModel):
     """Schema para criação de LLM."""
     name: str = Field(..., description="Nome do modelo")
     provider: str = Field(..., description="Provedor do modelo")
-    model_id: str = Field(..., description="ID do modelo no provedor")
+    model_version: str = Field(..., description="Versão do modelo no provedor")
     description: Optional[str] = Field(None, description="Descrição do modelo")
     capabilities: List[str] = Field(default_factory=list, description="Capacidades do modelo")
     context_window: int = Field(default=0, description="Tamanho do contexto em tokens")
     token_limit: int = Field(default=0, description="Limite de tokens na resposta")
     pricing: Optional[Dict[str, float]] = Field(None, description="Informações de preço")
     is_active: bool = Field(default=True, description="Se o modelo está ativo")
+    cost_per_token_input: Optional[float] = Field(None, description="Custo por token de entrada")
+    cost_per_token_output: Optional[float] = Field(None, description="Custo por token de saída")
+    supports_function_calling: Optional[bool] = Field(None, description="Suporta function calling")
+    supports_vision: Optional[bool] = Field(None, description="Suporta visão")
+    supports_streaming: Optional[bool] = Field(None, description="Suporta streaming")
+    status: Optional[str] = Field(None, description="Status do LLM")
+    health_status: Optional[str] = Field(None, description="Status de saúde do LLM")
+    response_time_avg_ms: Optional[int] = Field(None, description="Tempo médio de resposta em ms")
+    availability_percentage: Optional[float] = Field(None, description="Percentual de disponibilidade")
 
 
 class LLMUpdate(BaseModel):
@@ -53,6 +62,15 @@ class LLMUpdate(BaseModel):
     token_limit: Optional[int] = Field(None, description="Limite de tokens na resposta")
     pricing: Optional[Dict[str, float]] = Field(None, description="Informações de preço")
     is_active: Optional[bool] = Field(None, description="Se o modelo está ativo")
+    cost_per_token_input: Optional[float] = Field(None, description="Custo por token de entrada")
+    cost_per_token_output: Optional[float] = Field(None, description="Custo por token de saída")
+    supports_function_calling: Optional[bool] = Field(None, description="Suporta function calling")
+    supports_vision: Optional[bool] = Field(None, description="Suporta visão")
+    supports_streaming: Optional[bool] = Field(None, description="Suporta streaming")
+    status: Optional[str] = Field(None, description="Status do LLM")
+    health_status: Optional[str] = Field(None, description="Status de saúde do LLM")
+    response_time_avg_ms: Optional[int] = Field(None, description="Tempo médio de resposta em ms")
+    availability_percentage: Optional[float] = Field(None, description="Percentual de disponibilidade")
 
 
 class LLMResponse(BaseModel):
@@ -60,7 +78,7 @@ class LLMResponse(BaseModel):
     id: UUID = Field(..., description="ID único do modelo")
     name: str = Field(..., description="Nome do modelo")
     provider: str = Field(..., description="Provedor do modelo")
-    model_id: str = Field(..., description="ID do modelo no provedor")
+    model_version: str = Field(..., description="Versão do modelo no provedor")
     description: Optional[str] = Field(None, description="Descrição do modelo")
     capabilities: List[str] = Field(default_factory=list, description="Capacidades do modelo")
     context_window: int = Field(default=0, description="Tamanho do contexto em tokens")
@@ -69,6 +87,16 @@ class LLMResponse(BaseModel):
     is_active: bool = Field(default=True, description="Se o modelo está ativo")
     created_at: datetime = Field(..., description="Data de criação")
     updated_at: datetime = Field(..., description="Data de atualização")
+    cost_per_token_input: Optional[float] = Field(None, description="Custo por token de entrada")
+    cost_per_token_output: Optional[float] = Field(None, description="Custo por token de saída")
+    supports_function_calling: Optional[bool] = Field(None, description="Suporta function calling")
+    supports_vision: Optional[bool] = Field(None, description="Suporta visão")
+    supports_streaming: Optional[bool] = Field(None, description="Suporta streaming")
+    status: Optional[str] = Field(None, description="Status do LLM")
+    health_status: Optional[str] = Field(None, description="Status de saúde do LLM")
+    response_time_avg_ms: Optional[int] = Field(None, description="Tempo médio de resposta em ms")
+    availability_percentage: Optional[float] = Field(None, description="Percentual de disponibilidade")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Metadados adicionais do LLM")
 
 
 class LLMListResponse(BaseModel):

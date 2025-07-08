@@ -1,0 +1,77 @@
+# Task ID: 4
+# Title: Synchronize Workspace Limits with Tenant Plans
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Fix the critical issue where workspaces don't respect the limits of the tenant's plan, allowing FREE users to access premium resources.
+# Details:
+1. Create a migration to add constraints that enforce workspace limits based on tenant plans
+2. Implement triggers to automatically update workspace limits when tenant plan changes
+3. Add validation functions to check workspace limits before operations
+4. Use PostgreSQL 14+ for advanced constraint features
+5. SQL implementation:
+```sql
+-- Create a function to get plan limits
+CREATE OR REPLACE FUNCTION get_plan_limits(plan_id INT) 
+RETURNS JSON AS $$
+DECLARE
+  plan_limits JSON;
+BEGIN
+  SELECT restrictions INTO plan_limits FROM plans WHERE id = plan_id;
+  RETURN plan_limits;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create a trigger function to enforce workspace limits
+CREATE OR REPLACE FUNCTION enforce_workspace_limits()
+RETURNS TRIGGER AS $$
+DECLARE
+  tenant_plan_id INT;
+  plan_limits JSON;
+BEGIN
+  -- Get tenant's plan
+  SELECT plan_id INTO tenant_plan_id FROM tenants WHERE id = NEW.tenant_id;
+  
+  -- Get plan limits
+  plan_limits := get_plan_limits(tenant_plan_id);
+  
+  -- Check workspace limits against plan
+  IF NEW.max_users > (plan_limits->>'max_workspace_users')::INT THEN
+    NEW.max_users := (plan_limits->>'max_workspace_users')::INT;
+  END IF;
+  
+  IF NEW.max_storage > (plan_limits->>'max_workspace_storage')::INT THEN
+    NEW.max_storage := (plan_limits->>'max_workspace_storage')::INT;
+  END IF;
+  
+  -- Add other limit checks as needed
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger on workspace table
+CREATE TRIGGER workspace_limits_trigger
+BEFORE INSERT OR UPDATE ON workspaces
+FOR EACH ROW EXECUTE FUNCTION enforce_workspace_limits();
+
+-- Update existing workspaces to comply with plan limits
+UPDATE workspaces w
+SET 
+  max_users = LEAST(w.max_users, (p.restrictions->>'max_workspace_users')::INT),
+  max_storage = LEAST(w.max_storage, (p.restrictions->>'max_workspace_storage')::INT)
+FROM tenants t
+JOIN plans p ON t.plan_id = p.id
+WHERE w.tenant_id = t.id;
+```
+6. Create an API endpoint to validate workspace limits before operations
+7. Implement a background job to periodically audit and fix inconsistencies
+
+# Test Strategy:
+1. Unit tests for the trigger functions
+2. Integration tests for workspace creation and updates
+3. Test plan upgrade/downgrade scenarios
+4. Verify existing workspaces are correctly updated
+5. Test edge cases like NULL values in restrictions
+6. Performance testing to ensure triggers execute in <50ms
+7. Load testing with concurrent workspace operations

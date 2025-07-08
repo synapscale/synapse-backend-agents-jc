@@ -22,8 +22,10 @@ from synapse.models.node import Node, NodeStatus
 from synapse.models.node_execution import NodeExecution
 from synapse.models.user import User
 from synapse.models.workspace import Workspace
+from synapse.logger_config import get_logger
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 
 @router.get("/", response_model=PaginatedResponse[NodeResponse])
@@ -126,11 +128,11 @@ async def list_nodes(
             has_prev=skip > 0
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error listing nodes: {str(e)}"
-        )
+        logger.error(f"Erro inesperado em list_nodes: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 
 @router.post("/", response_model=NodeResponse, status_code=status.HTTP_201_CREATED)
@@ -193,11 +195,9 @@ async def create_node(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro inesperado em create_node: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating node: {str(e)}"
-        )
+        raise
 
 
 @router.get("/{node_id}", response_model=NodeResponse)
@@ -253,10 +253,8 @@ async def get_node(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving node: {str(e)}"
-        )
+        logger.error(f"Erro inesperado em get_node: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 
 @router.put("/{node_id}", response_model=NodeResponse)
@@ -309,11 +307,9 @@ async def update_node(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro inesperado em update_node: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating node: {str(e)}"
-        )
+        raise
 
 
 @router.delete("/{node_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -351,18 +347,16 @@ async def delete_node(
             )
 
         # Soft delete by setting status to DELETED
-        node.status = NodeStatus.DELETED
+        node.status = NodeStatus.DEPRECATED
         node.updated_at = datetime.utcnow()
         db.commit()
 
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro inesperado em delete_node: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error deleting node: {str(e)}"
-        )
+        raise
 
 
 @router.get("/{node_id}/executions", response_model=PaginatedResponse[Dict[str, Any]])
@@ -460,10 +454,8 @@ async def get_node_executions(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving node executions: {str(e)}"
-        )
+        logger.error(f"Erro inesperado em get_node_executions: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 
 @router.get("/{node_id}/stats", response_model=NodeExecutionStatsResponse)
@@ -557,10 +549,8 @@ async def get_node_stats(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving node statistics: {str(e)}"
-        )
+        logger.error(f"Erro inesperado em get_node_stats: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 
 @router.post("/{node_id}/rate")
@@ -618,8 +608,6 @@ async def rate_node(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro inesperado em rate_node: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error rating node: {str(e)}"
-        )
+        raise

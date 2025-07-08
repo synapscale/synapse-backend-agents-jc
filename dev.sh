@@ -33,26 +33,24 @@ echo "🔍 Checando alinhamento de schema..."
 chmod +x tests/analysis/check_schema_alignment.py
 tests/analysis/check_schema_alignment.py || true
 
-# Desativar geração automática de modelos Pydantic e spec OpenAPI
-if false; then
-  echo "⏳ Sincronizando Pydantic models com o banco..."
-  chmod +x scripts/generate_pydantic_models.py
-  scripts/generate_pydantic_models.py
-
-  # Regenerar OpenAPI spec (desativado)
-  # echo "🔄 Regenerando current_openapi.json a partir do app FastAPI"
-  # python3 - << 'PYCODE'
-  # import json, os
-  # from dotenv import load_dotenv
-  # os.environ['PYTHONPATH'] = './src'
-  # load_dotenv('.env')
-  # from synapse.main import app
-  # spec = app.openapi()
-  # with open('current_openapi.json', 'w', encoding='utf-8') as f:
-  #     json.dump(spec, f, indent=2, ensure_ascii=False)
-  # print('✅ current_openapi.json atualizado')
-  # PYCODE
-fi
+# Regenerar OpenAPI spec atualizado
+echo "🔄 Regenerando openapi.json a partir do app FastAPI..."
+python3 - << 'PYCODE'
+import json, os, sys
+from dotenv import load_dotenv
+sys.path.insert(0, './src')
+load_dotenv('.env')
+try:
+    from synapse.main import app
+    spec = app.openapi()
+    with open('openapi.json', 'w', encoding='utf-8') as f:
+        json.dump(spec, f, indent=2, ensure_ascii=False)
+    print('✅ openapi.json atualizado com sucesso!')
+    print(f'   - Endpoints: {len(spec.get("paths", {}))}')
+    print(f'   - Schemas: {len(spec.get("components", {}).get("schemas", {}))}')
+except Exception as e:
+    print(f'❌ Erro ao gerar openapi.json: {e}')
+PYCODE
 
 # Verificar se aplicação existe
 if [ ! -d "src" ]; then

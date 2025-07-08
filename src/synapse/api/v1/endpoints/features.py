@@ -14,7 +14,7 @@ from synapse.models.user import User
 from synapse.models.feature import Feature, WorkspaceFeature
 from synapse.models.plan_feature import PlanFeature
 from synapse.models.tenant_feature import TenantFeature
-from synapse.schemas.models import (
+from synapse.schemas.feature import (
     FeatureCreate,
     FeatureUpdate,
     FeatureResponse,
@@ -31,7 +31,7 @@ from synapse.schemas.models import (
 )
 from synapse.schemas.base import PaginatedResponse
 
-router = APIRouter(prefix="/features")
+router = APIRouter()
 
 # ====================
 # FEATURES (Main table)
@@ -80,11 +80,11 @@ async def list_features(
             has_next=skip + limit < total_count,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao listar features: {str(e)}",
-        )
+        logger.error(f"Erro ao listar features: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 
 @router.post("/", response_model=FeatureResponse)
@@ -100,7 +100,7 @@ async def create_feature(
     try:
         # Verificar se já existe feature com mesmo código
         existing_feature = (
-            db.query(Feature).filter(Feature.code == feature_data.code).first()
+            db.query(Feature).filter(Feature.key == feature_data.code).first()
         )
 
         if existing_feature:
@@ -125,11 +125,9 @@ async def create_feature(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao criar feature: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao criar feature: {str(e)}",
-        )
+        raise
 
 
 @router.get("/{feature_id}", response_model=FeatureResponse)
@@ -175,7 +173,7 @@ async def update_feature(
         if feature_data.code and feature_data.code != feature.code:
             existing = (
                 db.query(Feature)
-                .filter(Feature.code == feature_data.code, Feature.id != feature_id)
+                .filter(Feature.key == feature_data.code, Feature.id != feature_id)
                 .first()
             )
 
@@ -201,11 +199,9 @@ async def update_feature(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao atualizar feature: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao atualizar feature: {str(e)}",
-        )
+        raise
 
 
 @router.delete("/{feature_id}")
@@ -243,11 +239,9 @@ async def delete_feature(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao deletar feature: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao deletar feature: {str(e)}",
-        )
+        raise
 
 
 # ========================
@@ -285,11 +279,11 @@ async def list_plan_features(
             has_next=skip + limit < total_count,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao listar features do plano: {str(e)}",
-        )
+        logger.error(f"Erro ao listar features do plano: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 
 @router.post("/plans/{plan_id}/features", response_model=PlanFeatureResponse)
@@ -337,11 +331,9 @@ async def add_feature_to_plan(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao adicionar feature ao plano: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao adicionar feature ao plano: {str(e)}",
-        )
+        raise
 
 
 # ========================
@@ -389,10 +381,8 @@ async def list_tenant_features(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao listar features do tenant: {str(e)}",
-        )
+        logger.error(f"Erro ao listar features do tenant: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 
 @router.post("/tenants/{tenant_id}/features", response_model=TenantFeatureResponse)
@@ -440,11 +430,9 @@ async def add_feature_to_tenant(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao adicionar feature ao tenant: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao adicionar feature ao tenant: {str(e)}",
-        )
+        raise
 
 
 # ========================
@@ -489,11 +477,11 @@ async def list_workspace_features(
             has_next=skip + limit < total_count,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao listar features do workspace: {str(e)}",
-        )
+        logger.error(f"Erro ao listar features do workspace: {str(e)}", extra={"error_type": type(e).__name__})
+        raise
 
 
 @router.post(
@@ -543,11 +531,9 @@ async def add_feature_to_workspace(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao adicionar feature ao workspace: {str(e)}", extra={"error_type": type(e).__name__})
         db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao adicionar feature ao workspace: {str(e)}",
-        )
+        raise
 
 
 # ========================
@@ -573,8 +559,8 @@ async def list_feature_categories(
 
         return [cat[0] for cat in categories if cat[0]]
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erro ao listar categorias: {str(e)}",
-        )
+        logger.error(f"Erro ao listar categorias: {str(e)}", extra={"error_type": type(e).__name__})
+        raise

@@ -1,229 +1,48 @@
-# PRD - CORREÇÃO CRÍTICA ESTRUTURA SAAS SYNAPSCALE
+# Product Requirements Document
 
-## 📋 RESUMO EXECUTIVO
+## Problem Statement
+Integrar o backend Synapscale ao Stripe para permitir cobrança recorrente, gestão de assinaturas, sincronização de status de pagamento e rastreabilidade completa dos eventos financeiros, garantindo segurança, rastreabilidade, idempotência e aderência às melhores práticas Stripe.
 
-**Projeto:** Correção crítica da estrutura SaaS SynapScale  
-**Baseado em:** Análise empírica consolidada do banco PostgreSQL `synapscale_db`  
-**Cronograma:** 14 dias (3 fases: Emergencial → Estrutural → Otimização)  
-**Objetivo:** Corrigir problemas críticos que impedem uso em produção e causam perda de receita  
+## Technical Requirements
+- Backend: FastAPI (Python), SQLAlchemy 2.0+, Alembic, PostgreSQL (schema: synapscale_db, database: defaultdb)
+- Endpoint seguro para webhooks Stripe: `/api/v1/billing/stripe/webhook` (POST)
+- Validação de assinatura dos eventos Stripe (usando STRIPE_WEBHOOK_SECRET)
+- Armazenamento de IDs externos (customer, subscription, payment, invoice, etc.)
+- Tabelas de rastreio: payment_customers, payment_subscriptions, payment_invoices, payment_events, payment_providers
+- Relacionamentos e constraints corretos entre tabelas (FK, índices únicos, schema synapscale_db)
+- Sincronização de status de subscription/invoice entre Stripe e Synapscale
+- Logging/auditoria de todos os eventos recebidos/processados
+- Variáveis de ambiente seguras para chaves Stripe
+- Testes automatizados para todos os fluxos críticos (webhook, sync, erros)
+- Documentação detalhada do fluxo de integração, tabelas e eventos
+- Não alterar tabelas críticas sem validação prévia e aprovação
+- Toda alteração de schema via migration Alembic
+- Testar integração em ambiente de staging antes de produção
 
-## 🚨 PROBLEMAS CRÍTICOS IDENTIFICADOS
+## Acceptance Criteria
+- [ ] Endpoint de webhook recebe e valida eventos Stripe com segurança e idempotência
+- [ ] Todos os eventos relevantes (customer, subscription, invoice, payment) são processados e registrados
+- [ ] Banco de dados reflete corretamente o status do Stripe (consistência, sem duplicidade)
+- [ ] Logs/auditoria disponíveis para todos os eventos processados
+- [ ] Testes automatizados cobrindo casos de sucesso, falha e edge cases
+- [ ] Documentação atualizada e clara para onboarding e manutenção
+- [ ] Não há duplicidade de registros (constraints e índices únicos)
+- [ ] Toda alteração de banco validada e aprovada antes de execução
 
-### 1. DUAL TRUTH PROBLEM - JSON vs RELACIONAL (CRÍTICO)
-**Gravidade:** CRÍTICA  
-**Impacto:** Sistema não sabe qual fonte usar → comportamento indefinido  
-**Problema:** Features mantidas em dois locais conflitantes:
-- `plans.features` (JSON) → Mostra TODAS features para FREE
-- `plan_features` (relacional) → Mostra apenas 2 features para FREE
+## Implementation Constraints
+- Stack obrigatória: FastAPI, SQLAlchemy 2.0+, Alembic, PostgreSQL, Stripe SDK oficial
+- Variáveis sensíveis apenas em `.env` (nunca hardcoded)
+- Models SQLAlchemy com __table_args__ para schema synapscale_db
+- Webhook deve ser idempotente e tolerante a falhas
+- Logging estruturado via sistema unificado (logger_config)
+- Migrations versionadas e revisadas antes de aplicar em produção
+- Seguir checklist de conformidade Stripe ↔ Synapscale (ver docs/stripe_integration_plan.md)
 
-### 2. PLANOS PREMIUM DESCONFIGURADOS (CRÍTICO) 
-**Gravidade:** CRÍTICA  
-**Impacto:** Impossível monetizar adequadamente  
-**Problema:** BASIC, PRO, ENTERPRISE com `features: NULL` e `restrictions: NULL`
-
-### 3. WORKSPACE LIMITS DESSINCONIZADOS (CRÍTICO)
-**Gravidade:** CRÍTICA  
-**Impacto:** Usuários FREE usando recursos premium sem pagar  
-**Problema:** Workspaces não respeitam limites do plano do tenant
-
-### 4. TENANT SETTINGS GENÉRICOS (MÉDIA)
-**Gravidade:** MÉDIA  
-**Impacto:** Tenants não diferenciados por plano  
-**Problema:** Todos tenants com configurações idênticas
-
-### 5. PROBLEMAS ESTRUTURAIS (MÉDIA)
-**Gravidade:** MÉDIA  
-**Impacto:** Inconsistência e manutenibilidade  
-**Problemas:** FK inconsistentes, constraints duplicadas, timestamps mistos
-
-## 💰 IMPACTO COMERCIAL
-
-### RECEITA PERDIDA ATUAL
-- Usuários FREE acessando features premium ($79.90-$199.90/mês perdidos)
-- SSO, White Label, Priority Support gratuitos
-- Workspaces com limites superiores ao plano
-- Impossibilidade de monetização adequada
-
-### RISCOS LEGAIS
-- Auditoria de receita (discrepâncias billing vs features)
-- Compliance SaaS (violação contratos planos pagos)
-- Customer Trust (clientes pagos descobrindo features gratuitas)
-
-## 📅 CRONOGRAMA DE IMPLEMENTAÇÃO (14 DIAS)
-
-### 🚨 FASE 1: EMERGENCIAL (1-2 DIAS)
-**Objetivo:** Parar hemorragia de receita
-
-**DIA 1: Correções Urgentes**
-1. Corrigir features do plano FREE (remover premium features)
-2. Configurar features básicas para BASIC/PRO/ENTERPRISE
-3. Implementar feature gates emergenciais na aplicação
-4. Auditoria de tenants ativos afetados
-
-**DIA 2: Sincronização Básica**
-1. Corrigir limites de workspaces desalinhados
-2. Implementar validação simples tenant → plan → workspace
-3. Comunicação com clientes afetados (se necessário)
-
-### ⚙️ FASE 2: ESTRUTURAL (3-7 DIAS)
-**Objetivo:** Corrigir problemas estruturais e implementar automações
-
-**DIAS 3-4: Database Structure**
-1. Implementar constraints NOT NULL em tenant_id
-2. Padronizar FK actions (ON DELETE/UPDATE)
-3. Remover constraints duplicadas
-4. Padronizar tipos de timestamp
-
-**DIAS 5-6: Automação**
-1. Criar triggers de sincronização tenant ↔ plan
-2. Implementar validações de limites automáticas
-3. Função de auditoria de consistência
-4. Testes de integridade completos
-
-**DIA 7: Validação**
-1. Executar bateria de testes completa
-2. Verificar sincronização de todos os tenants
-3. Auditoria final de consistência
-
-### 🔧 FASE 3: OTIMIZAÇÃO (8-14 DIAS)
-**Objetivo:** Monitoramento e performance
-
-**SEMANA 2: Monitoramento e Alertas**
-1. Implementar logs de feature usage por plano
-2. Dashboards de billing vs usage
-3. Alertas de inconsistências automáticas
-4. Sistema de auditoria contínua
-5. Performance tuning dos queries críticos
-
-## 🎯 REQUISITOS FUNCIONAIS
-
-### RF01: Correção Sistema de Features
-- Sistema deve usar APENAS fonte relacional (`plan_features`)
-- Deprecar e remover JSON de features em `plans.features`
-- Implementar feature gates baseados em `plan_features`
-
-### RF02: Configuração Planos Premium
-- BASIC: API access, webhooks, analytics (5 features)
-- PRO: + Custom branding, team collaboration (8 features)
-- ENTERPRISE: + SSO, white label, priority support (12 features)
-
-### RF03: Sincronização Tenant-Plan-Workspace
-- Workspaces devem herdar limites do plano do tenant
-- Validação automática de limites na criação/atualização
-- Triggers para sincronização automática
-
-### RF04: Auditoria e Monitoramento
-- Logs de feature usage por tenant/plano
-- Alertas de inconsistências automáticas
-- Dashboard de billing vs usage real
-
-## 🎯 REQUISITOS NÃO-FUNCIONAIS
-
-### RNF01: Performance
-- Queries de feature verification < 100ms
-- Triggers de sincronização < 50ms
-- Dashboard de monitoramento < 2s load time
-
-### RNF02: Integridade
-- 0 registros órfãos ou referências quebradas
-- 100% correspondência billing vs features
-- Validação de constraints em tempo real
-
-### RNF03: Monitoramento
-- 100% dos tenants com monitoramento ativo
-- Alertas em tempo real para inconsistências
-- Auditoria completa de todas as operações
-
-## 📊 CRITÉRIOS DE SUCESSO
-
-### ✅ Indicadores de Correção Bem-Sucedida
-- **Feature Consistency:** 100% dos planos com features corretas
-- **Tenant-Plan Sync:** 0 workspaces com limites superiores ao plano
-- **Billing Accuracy:** 100% correspondência billing vs features
-- **Data Integrity:** 0 registros órfãos ou referências quebradas
-- **Performance:** Queries < 100ms
-- **Monitoring:** 100% cobertura de monitoramento
-
-### 📈 KPIs de Monitoramento
-- Inconsistências de features: 0
-- Workspaces over-limit: 0  
-- Features premium em FREE: 0
-- Revenue leakage: $0
-- System uptime: >99.9%
-
-## 🛠️ TECNOLOGIAS E FERRAMENTAS
-
-### Backend
-- **Database:** PostgreSQL (schema `synapscale_db`)
-- **ORM:** SQLAlchemy/Alembic para migrations
-- **API:** FastAPI endpoints para feature verification
-- **Monitoring:** Prometheus + Grafana para dashboards
-
-### Validação e Testes
-- **Unit Tests:** pytest para funções críticas
-- **Integration Tests:** API endpoints de billing/features
-- **Database Tests:** Triggers e constraints
-- **Performance Tests:** Load testing com locust
-
-## 🚀 ENTREGÁVEIS
-
-### FASE 1 (1-2 dias)
-- [ ] Script SQL de correção de features FREE
-- [ ] Script SQL de configuração BASIC/PRO/ENTERPRISE
-- [ ] Feature gates emergenciais na API
-- [ ] Relatório de auditoria de tenants
-
-### FASE 2 (3-7 dias)  
-- [ ] Migrations de constraints NOT NULL
-- [ ] Migrations de padronização FK
-- [ ] Triggers de sincronização automática
-- [ ] Funções de validação de limites
-- [ ] Suite de testes de integridade
-
-### FASE 3 (8-14 dias)
-- [ ] Sistema de logs de feature usage
-- [ ] Dashboard de billing vs usage
-- [ ] Alertas automáticos de inconsistências
-- [ ] Documentação completa do sistema
-- [ ] Performance benchmarks
-
-## ⚠️ RISCOS E MITIGAÇÕES
-
-### Risco 1: Downtime durante correções
-**Mitigação:** Aplicar correções em horário de menor uso, com rollback preparado
-
-### Risco 2: Clientes afetados por mudanças
-**Mitigação:** Comunicação prévia, período de ajuste, suporte dedicado
-
-### Risco 3: Performance degradada
-**Mitigação:** Testes de carga, otimização de queries, monitoring ativo
-
-## 📞 STAKEHOLDERS
-
-### Responsáveis Técnicos
-- **Dev Team:** Implementação das correções
-- **DBA:** Validação de scripts SQL e performance
-- **DevOps:** Deploy e monitoring
-- **QA:** Testes de integridade e validação
-
-### Responsáveis de Negócio
-- **Product:** Validação de features por plano
-- **Finance:** Validação de billing accuracy  
-- **Customer Success:** Comunicação com clientes
-- **Legal:** Compliance e contratos
-
-## 🎯 DEFINIÇÃO DE PRONTO
-
-Uma tarefa está PRONTA quando:
-- [ ] Código implementado e revisado
-- [ ] Testes passando (unit + integration)
-- [ ] Migrations testadas em staging
-- [ ] Performance validada (< 100ms)
-- [ ] Documentação atualizada
-- [ ] Monitoring implementado
-- [ ] Deploy realizado com sucesso
-- [ ] Validação em produção confirmada
-
----
-
-**📋 Este PRD representa a fonte única da verdade para correção dos problemas críticos identificados na análise empírica do banco de dados SynapScale.**
+## Architecture Notes
+- Service layer para lógica de integração Stripe
+- Models e migrations sempre usando schema synapscale_db
+- Relacionamentos explícitos entre entidades de pagamento e usuários
+- Webhook: validação de assinatura, idempotência, logging, tratamento de erros
+- Sincronização de status: subscription, invoice, payment
+- Testes automatizados para todos os fluxos críticos
+- Documentação e checklist de conformidade sempre atualizados

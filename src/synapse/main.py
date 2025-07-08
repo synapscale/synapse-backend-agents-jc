@@ -109,7 +109,7 @@ async def lifespan(app: FastAPI):
             raise Exception(f"Configurações inválidas: {config_errors}")
 
         # Criar diretórios necessários usando configurações centralizadas
-        upload_dir = settings.UPLOAD_FOLDER or "uploads"
+        upload_dir = settings.UPLOAD_DIR  # Já é absoluto agora
         os.makedirs(upload_dir, exist_ok=True)
         logger.info(f"📁 Diretório de uploads criado: {upload_dir}")
 
@@ -168,9 +168,7 @@ async def lifespan(app: FastAPI):
         logger.warning(f"⚠️  WebSocket Manager não disponível: {e}")
 
     # Engine de Execução (pode ser desabilitada em desenvolvimento)
-    execution_engine_enabled = (
-        os.getenv("EXECUTION_ENGINE_ENABLED", "true").lower() == "true"
-    )
+    execution_engine_enabled = settings.EXECUTION_ENGINE_ENABLED
     if execution_engine_enabled:
         try:
             from synapse.api.v1.endpoints.executions import initialize_execution_service
@@ -186,7 +184,7 @@ async def lifespan(app: FastAPI):
 
     # Alert System and Background Tasks (always enabled if database is available)
     background_task_manager = None
-    alert_system_enabled = os.getenv("ALERT_SYSTEM_ENABLED", "true").lower() == "true"
+    alert_system_enabled = settings.ALERT_SYSTEM_ENABLED
     if alert_system_enabled:
         try:
             from synapse.core.alerts.background_tasks import (
@@ -207,9 +205,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("🔄 Finalizando SynapScale Backend...")
-    execution_engine_enabled = (
-        os.getenv("EXECUTION_ENGINE_ENABLED", "true").lower() == "true"
-    )
+    execution_engine_enabled = settings.EXECUTION_ENGINE_ENABLED
     if execution_engine_enabled:
         try:
             from synapse.api.v1.endpoints.executions import shutdown_execution_service
@@ -270,6 +266,11 @@ openapi_tags = [
     {
         "name": "data",
         "description": "💾 Dados completos: arquivos, uploads, variáveis, tags e workspace",
+    },
+    # 📞 CRM
+    {
+        "name": "crm",
+        "description": "📞 CRM: Contatos, Listas, Campanhas e Interações",
     },
     # 🏢 FUNCIONALIDADES EMPRESARIAIS (CONSOLIDADO)
     {
@@ -333,7 +334,7 @@ app = FastAPI(
     todas as duplicações e melhora a manutenibilidade.
     """,
     version=settings.VERSION,
-    docs_url=None,  # Desabilitar docs padrão para usar custom
+    docs_url=None,  # Desabilitar docs padrão para usar custom em /docs
     redoc_url="/redoc",
     openapi_tags=openapi_tags,
     swagger_ui_parameters={
@@ -385,7 +386,7 @@ app.add_middleware(
 
 # Trusted host middleware para segurança
 if not settings.DEBUG:
-    cors_origins_env = os.getenv("BACKEND_CORS_ORIGINS")
+    cors_origins_env = settings.BACKEND_CORS_ORIGINS
     trusted_hosts = None
     if cors_origins_env:
         try:
@@ -1288,6 +1289,27 @@ async def custom_swagger_ui_html():
     </html>
     """
     )
+
+
+@app.get("/openapi.json", include_in_schema=False)
+async def get_openapi_json():
+    """
+    Endpoint para servir o arquivo openapi.json estático
+    Usado por ferramentas externas e análises de consistência
+    """
+    import json
+    from pathlib import Path
+    
+    openapi_file = Path("openapi.json")
+    if openapi_file.exists():
+        try:
+            with open(openapi_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Erro ao ler openapi.json: {e}")
+    
+    # Fallback para spec dinâmico se arquivo não existir
+    return app.openapi()
 
 
 if __name__ == "__main__":

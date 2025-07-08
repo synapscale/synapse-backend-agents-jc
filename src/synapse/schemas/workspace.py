@@ -7,7 +7,7 @@ import uuid
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 # ===== ENUMS ALINHADOS COM O BANCO =====
@@ -127,3 +127,17 @@ class WorkspaceListResponse(BaseModel):
 
 # Re-export for compatibility from response_models.py
 WorkspacesResponse = WorkspaceResponse
+
+
+# ==================== MEMBER INVITE SCHEMAS ====================
+
+class MemberInvite(BaseModel):
+    """Schema para convite de membro para workspace"""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    email: str = Field(..., description="Email do usuário a ser convidado")
+    role: str = Field("member", description="Role do membro")
+    message: Optional[str] = Field(
+        None, max_length=500, description="Mensagem personalizada"
+    )

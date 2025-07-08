@@ -1,0 +1,65 @@
+# Task ID: 6
+# Title: Fix Database Structural Issues
+# Status: pending
+# Dependencies: 1, 2
+# Priority: medium
+# Description: Address the medium-severity structural problems in the database including inconsistent foreign keys, duplicate constraints, and mixed timestamp types.
+# Details:
+1. Create a comprehensive migration to fix all structural issues
+2. Implement NOT NULL constraints on tenant_id columns
+3. Standardize foreign key actions (ON DELETE/UPDATE)
+4. Remove duplicate constraints
+5. Standardize timestamp types
+6. Use Alembic 1.11+ for migrations
+7. SQL implementation:
+```sql
+-- Add NOT NULL constraints to tenant_id columns
+ALTER TABLE workspaces ALTER COLUMN tenant_id SET NOT NULL;
+ALTER TABLE user_workspaces ALTER COLUMN tenant_id SET NOT NULL;
+-- Add to other tables with tenant_id as needed
+
+-- Standardize foreign key actions
+-- First drop existing FKs
+ALTER TABLE workspaces DROP CONSTRAINT IF EXISTS workspaces_tenant_id_fkey;
+-- Then recreate with standard actions
+ALTER TABLE workspaces ADD CONSTRAINT workspaces_tenant_id_fkey 
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Repeat for other foreign keys
+
+-- Remove duplicate constraints (example)
+ALTER TABLE plan_features DROP CONSTRAINT IF EXISTS plan_features_plan_id_feature_id_key;
+ALTER TABLE plan_features ADD CONSTRAINT plan_features_plan_id_feature_id_key 
+  UNIQUE (plan_id, feature_id);
+
+-- Standardize timestamp types
+ALTER TABLE tenants ALTER COLUMN created_at TYPE TIMESTAMP WITH TIME ZONE;
+ALTER TABLE tenants ALTER COLUMN updated_at TYPE TIMESTAMP WITH TIME ZONE;
+-- Repeat for other tables
+
+-- Add updated_at trigger function if not exists
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Add updated_at triggers to all tables
+CREATE TRIGGER set_updated_at
+BEFORE UPDATE ON tenants
+FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+-- Repeat for other tables
+```
+8. Create a validation script to verify all structural fixes
+9. Document all changes for future reference
+
+# Test Strategy:
+1. Create a test database to verify migrations
+2. Test all foreign key actions (CASCADE, RESTRICT, etc.)
+3. Verify NOT NULL constraints prevent invalid data
+4. Test timestamp behavior with timezone awareness
+5. Verify updated_at triggers work correctly
+6. Test rollback procedures
+7. Verify application functionality after structural changes

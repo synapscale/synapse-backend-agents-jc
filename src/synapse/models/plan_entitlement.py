@@ -26,9 +26,6 @@ class PlanEntitlement(Base):
     is_unlimited = Column(Boolean, default=False)
     entitlement_metadata = Column("metadata", JSONB, server_default="{}")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    tenant_id = Column(
-        UUID(as_uuid=True), ForeignKey("synapscale_db.tenants.id", ondelete="CASCADE")
-    )
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -36,4 +33,3 @@ class PlanEntitlement(Base):
     # Relationships
     plan = relationship("Plan", back_populates="plan_entitlements")
     feature = relationship("Feature", back_populates="plan_entitlements")
-    tenant = relationship("Tenant", back_populates="plan_entitlements")

@@ -18,8 +18,8 @@ class UserStatus(str, Enum):
 
     ACTIVE = "active"
     INACTIVE = "inactive"
-    SUSPENDED = "suspended"
-    PENDING_VERIFICATION = "pending_verification"
+    DRAFT = "draft"
+    ERROR = "error"
     DELETED = "deleted"
 
 
@@ -28,7 +28,6 @@ class UserRole(str, Enum):
 
     ADMIN = "admin"
     USER = "user"
-    VIEWER = "viewer"
 
 
 # ===== USER SCHEMAS (ALIGNED PERFECTLY WITH THE DATABASE) =====
@@ -105,6 +104,7 @@ class UserUpdate(BaseModel):
     profile_image_url: Optional[str] = Field(
         None, max_length=500, description="URL of the profile image"
     )
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
 
 
 class UserResponse(UserBase):
@@ -138,6 +138,17 @@ class UserListResponse(BaseModel):
     page: int = Field(..., description="Current page number")
     pages: int = Field(..., description="Total number of pages")
     size: int = Field(..., description="Number of items per page")
+
+
+class UserProfileUpdate(BaseModel):
+    """Schema for updating user profile."""
+    
+    model_config = ConfigDict(str_strip_whitespace=True)
+    
+    username: Optional[str] = Field(None, description="Username")
+    full_name: Optional[str] = Field(None, description="Full name")
+    profile_image_url: Optional[str] = Field(None, description="Profile image URL")
+    bio: Optional[str] = Field(None, description="User biography")
 
 
 class UserProfileResponse(BaseModel):
