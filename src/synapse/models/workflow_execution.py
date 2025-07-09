@@ -117,7 +117,7 @@ class WorkflowExecution(Base):
 
     # Metadados
     tags = Column(JSON, nullable=True)  # Tags para organização
-    meta_data = Column(JSON, nullable=True)  # Metadados adicionais
+    metadata_info = Column("metadata", JSON, nullable=True)  # Metadados adicionais
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

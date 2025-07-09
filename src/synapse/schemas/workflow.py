@@ -51,14 +51,14 @@ class WorkflowResponse(WorkflowBase):
     user_id: uuid.UUID
     tenant_id: uuid.UUID
     workspace_id: Optional[uuid.UUID] = Field(None, description="ID do novo workspace")
-    version: str
-    status: WorkflowStatus  # Usar o enum importado
+    version: Optional[str] = None
+    status: Optional[WorkflowStatus] = None  # Usar o enum importado
     definition: dict[str, Any]
     thumbnail_url: str | None = None
-    downloads_count: int
-    rating_average: float  # Changed from int to float
-    rating_count: int
-    execution_count: int
+    downloads_count: Optional[int] = None
+    rating_average: Optional[float] = None  # Changed from int to float
+    rating_count: Optional[int] = None
+    execution_count: Optional[int] = None
     last_executed_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

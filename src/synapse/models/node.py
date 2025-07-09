@@ -84,19 +84,10 @@ class Node(Base):
     rating_average = Column(Integer, default=0)
 
     # Campos adicionais do Node
-    type: Column[str] = Column(
-        Enum(NodeType, values_callable=lambda x: [e.value for e in x], name="nodetype"),
-        nullable=False,
-        server_default="operation",
-    )
     status: Column[str] = Column(
-        Enum(
-            NodeStatus,
-            values_callable=lambda x: [e.value for e in x],
-            name="nodestatus",
-        ),
-        nullable=False,
-        server_default="draft",
+        String,
+        nullable=True,
+        server_default="active",
     )
     is_public = Column(Boolean, default=False)
     code_template = Column(Text)
@@ -108,6 +99,8 @@ class Node(Base):
     documentation = Column(Text)
     examples = Column(JSON, default=list)
     definition = Column(JSON, nullable=False, default=dict)
+    timeout_seconds = Column(Integer, nullable=True, default=300)
+    retry_count = Column(Integer, nullable=True, default=3)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))

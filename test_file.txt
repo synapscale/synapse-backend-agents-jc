@@ -1,0 +1,1 @@
+Este é um arquivo de teste para upload via API real do SynapScale.
