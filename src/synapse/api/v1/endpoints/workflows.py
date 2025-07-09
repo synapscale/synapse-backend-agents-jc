@@ -123,11 +123,24 @@ async def create_workflow(
 ):
     """Criar workflow"""
     try:
+        # Validate definition structure
+        definition = workflow_data.definition
+        if not isinstance(definition.get("nodes"), list):
+            raise HTTPException(
+                status_code=422,
+                detail="definition must have 'nodes' array"
+            )
+        if not isinstance(definition.get("connections"), list):
+            raise HTTPException(
+                status_code=422,
+                detail="definition must have 'connections' array"
+            )
+        
         # Create workflow
         new_workflow = Workflow(
             name=workflow_data.name,
             description=workflow_data.description,
-            definition=workflow_data.definition,
+            definition=definition,
             user_id=current_user.id,
             tenant_id=current_user.tenant_id,
             is_active=True
@@ -143,7 +156,7 @@ async def create_workflow(
             "name": new_workflow.name,
             "description": new_workflow.description,
             "category": new_workflow.category,
-            "tags": new_workflow.tags,
+            "tags": new_workflow.tags or [],
             "is_public": new_workflow.is_public,
             "definition": new_workflow.definition,
             "status": new_workflow.status,
@@ -151,6 +164,13 @@ async def create_workflow(
             "user_id": new_workflow.user_id,
             "tenant_id": new_workflow.tenant_id,
             "workspace_id": new_workflow.workspace_id,
+            "version": new_workflow.version or "1.0.0",
+            "thumbnail_url": new_workflow.thumbnail_url,
+            "downloads_count": new_workflow.downloads_count or 0,
+            "rating_average": new_workflow.rating_average or 0,
+            "rating_count": new_workflow.rating_count or 0,
+            "execution_count": new_workflow.execution_count or 0,
+            "last_executed_at": new_workflow.last_executed_at,
             "created_at": new_workflow.created_at,
             "updated_at": new_workflow.updated_at
         }
@@ -160,7 +180,10 @@ async def create_workflow(
     except Exception as e:
         await db.rollback()
         logger.error(f"Erro ao criar workflow: {str(e)}", extra={"error_type": type(e).__name__})
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        # Log the full error for debugging
+        import traceback
+        logger.error(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Erro interno do servidor: {str(e)}")
 
 @router.get("/{workflow_id}", response_model=WorkflowResponse)
 async def get_workflow(

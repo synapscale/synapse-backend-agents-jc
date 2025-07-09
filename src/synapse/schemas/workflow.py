@@ -31,7 +31,9 @@ class WorkflowBase(BaseModel):
 
 
 class WorkflowCreate(WorkflowBase):
-    definition: dict[str, Any] = Field(default_factory=dict)
+    definition: dict[str, Any] = Field(
+        default_factory=lambda: {"nodes": [], "connections": []}
+    )
 
 
 class WorkflowUpdate(BaseModel):
